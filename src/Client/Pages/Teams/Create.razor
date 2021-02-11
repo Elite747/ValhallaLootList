@@ -1,0 +1,73 @@
+﻿@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
+        <DataAnnotationsValidator />
+        <CustomValidator @ref="_serverValidator" />
+
+        <ModalHeader>
+            <ModalTitle>Create Team</ModalTitle>
+            <CloseButton Clicked="() => ParentModal?.Hide()" />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="inputName">Name</label>
+                <InputText @bind-Value="_team.Name" class="form-control" id="inputName" aria-describedby="emailHelp" />
+            </div>
+
+            @for (int i = 0; i < _team.Schedules.Count; i++)
+            {
+                var dayIndex = i;
+                <div class="form-group">
+                    <label>Day @(dayIndex + 1)</label>
+                    <div class="input-group">
+                        <InputSelect @bind-Value="_team.Schedules[dayIndex].Day" class="form-control">
+                            <option>-- Day --</option>
+                            <option value="@DayOfWeek.Sunday">Sun</option>
+                            <option value="@DayOfWeek.Monday">Mon</option>
+                            <option value="@DayOfWeek.Tuesday">Tue</option>
+                            <option value="@DayOfWeek.Wednesday">Wed</option>
+                            <option value="@DayOfWeek.Thursday">Thu</option>
+                            <option value="@DayOfWeek.Friday">Fri</option>
+                            <option value="@DayOfWeek.Saturday">Sat</option>
+                        </InputSelect>
+                        <div class="input-group-prepend input-group-append">
+                            <span class="input-group-text">start time</span>
+                        </div>
+                        <InputTime @bind-Value="_team.Schedules[dayIndex].StartTime" class="form-control" />
+                        <div class="input-group-prepend input-group-append">
+                            <span class="input-group-text">duration</span>
+                        </div>
+                        <InputNumber @bind-Value="_team.Schedules[dayIndex].Duration" class="form-control" step="0.25" />
+                        <div class="input-group-append">
+                            <span class="input-group-text">hrs</span>
+                            <button class="btn btn-danger" type="button" @onclick="() => RemoveScheduleClicked(dayIndex)">
+                                <span class="fas fa-minus"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AddScheduleClicked">
+                    Add Schedule
+                    <span class="fas fa-plus"></span>
+                </button>
+            </div>
+            <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+        </ModalBody>
+        <ModalFooter>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button class="btn btn-secondary" @onclick="@(() => ParentModal?.Hide())" type="button">Cancel</button>
+        </ModalFooter>
+    </EditForm>
+</div>
+
+@code {
+    private CustomValidator? _serverValidator;
+
+    [Parameter] public Modal? ParentModal { get; set; }
+}

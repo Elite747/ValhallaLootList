@@ -1,0 +1,89 @@
+﻿<div class="card shadow mb-4">
+    <div class="card-body">
+        <h5 class="card-title font-weight-bold">Bracket @(Model.Brackets.IndexOf(Bracket) + 1)</h5>
+        <div class="card-text">
+            <ul>
+                <li>
+                    Up to @(Bracket.Template.ItemsPerRow == 1 ? "1 item" : $"{Bracket.Template.ItemsPerRow} items") per rank allowed
+                </li>
+                @if (Bracket.Template.AllowOffSpec)
+                {
+                    <li>Offspec items allowed</li>
+                }
+                else
+                {
+                    <li>No offspec items</li>
+                }
+                @if (!Bracket.Template.AllowTypeDuplicates)
+                {
+                    <li>Only one item per category allowed</li>
+                }
+            </ul>
+        </div>
+    </div>
+    <ul class="list-group list-group-flush">
+        @foreach (var row in Bracket.Items.OrderByDescending(r => r.Key))
+        {
+            <li class="list-group-item p-1">
+                <div class="row mx-0">
+                    <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
+                    @for (int col = 0; col < row.Value.Length; col++)
+                    {
+                        int column = col;
+                        uint id = row.Value[col];
+                        var item = id == 0 ? null : Items.FirstOrDefault(x => x.Id == id);
+
+                        <div class="col-md">
+                            <ItemLink Id="row.Value[col]" @onclick="async () => await SelectionRequested.InvokeAsync(new() { Bracket = Bracket, Column = column, Rank = row.Key })">
+                                @if (id == 0)
+                                {
+                                    <span class="text-primary">Select Item</span>
+                                }
+                                else
+                                {
+                                    <span class="text-epic">[@(item?.Name ?? $"Unknown Item #{id}")]</span>
+                                }
+                            </ItemLink>
+                            @if (item is not null)
+                            {
+                                var restrictions = item.Restrictions.Where(r => (r.Specs & Model.MainSpec) != 0);
+
+                                if (Bracket.Template.AllowOffSpec && Model.OffSpec.HasValue)
+                                {
+                                    var offspecRestrictions = item.Restrictions.Where(r => (r.Specs & Model.OffSpec) != 0);
+
+                                    if (restrictions.Any() ^ offspecRestrictions.Any())
+                                    {
+                                        restrictions = Array.Empty<RestrictionDto>();
+                                    }
+                                }
+                                <ul>
+                                    @foreach (var restriction in restrictions)
+                                    {
+                                        <li class="@(restriction.Level == ItemRestrictionLevel.ManualReview ? "text-warning" : "text-danger")">
+                                            @restriction.Reason
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    }
+                </div>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter] public IList<ItemDto> Items { get; set; } = null!;
+    [Parameter] public LootListSubmissionBracket Bracket { get; set; } = null!;
+    [Parameter] public LootListSubmissionModel Model { get; set; } = null!;
+    [Parameter] public EventCallback<ItemSelectionContext> SelectionRequested { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Bracket is null) throw new ArgumentNullException(nameof(Bracket));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (Model is null) throw new ArgumentNullException(nameof(Model));
+    }
+}

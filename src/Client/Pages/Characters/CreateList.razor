@@ -1,0 +1,119 @@
+﻿@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<EditForm OnValidSubmit="OnSubmit" Model="_lootList">
+    <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+    <DataAnnotationsValidator />
+    <CustomValidator @ref="_serverValidator" />
+    <CustomValidator @ref="_bracketValidator" />
+    <div class="form-group">
+        <label for="inputMs">Main Spec</label>
+        <InputSelect class="form-control"
+                     id="inputMs"
+                     ValueExpression="() => _lootList.MainSpec"
+                     ValueChanged="(Func<Specializations?, Task>)MainSpecChanged"
+                     Value="@_lootList.MainSpec">
+            <option>-- Select --</option>
+            @if (_classSpecializations is not null) foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
+            {
+                <option value="@spec.Spec">@spec.DisplayName</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label for="inputOs">Off Spec</label>
+        <InputSelect class="form-control"
+                     id="inputOs"
+                     ValueExpression="() => _lootList.OffSpec"
+                     ValueChanged="(Func<Specializations?, Task>)OffSpecChanged"
+                     Value="@_lootList.OffSpec">
+            <option>None</option>
+            @if (_classSpecializations is not null) foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
+            {
+                <option value="@spec.Spec">@spec.DisplayName</option>
+            }
+        </InputSelect>
+    </div>
+    @if (_items is null)
+    {
+        <LoadingIndicator />
+    }
+    else if (_items.Count == 0)
+    {
+        <div>Select a specialization.</div>
+    }
+    else
+    {
+        <Modal @ref="_modal">
+            <ModalBackdrop />
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+                <div class="modal-content modal-lg">
+                    <ModalHeader>
+                        <ModalTitle>Select Item</ModalTitle>
+                        <CloseButton Clicked="() => _modal?.Hide()" />
+                    </ModalHeader>
+                    @if (_modalContext?.Items is not null)
+                    {
+                        <ModalBody>
+                            @foreach (var itemTypeGroup in _modalContext.Items.GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+                            {
+                                <div class="card mb-2 shadow">
+                                    <div class="card-body font-weight-bold">@itemTypeGroup.Key.Name</div>
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
+                                        {
+                                            <ItemLink Id="item.Id"
+                                                      @onclick="() => OnItemSelected(item.Id)"
+                                                      class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-1 pl-4">
+                                                @item.Name
+                                                <span>
+                                                    @if (_lootList.MainSpec.HasValue)
+                                                    {
+                                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & _lootList.MainSpec.Value) != 0)"
+                                                                           SpecPrefix="@(_lootList.OffSpec.HasValue ? "mainspec" : null)" />
+                                                    }
+
+                                                    @if (_lootList.OffSpec.HasValue)
+                                                    {
+                                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & _lootList.OffSpec.Value) != 0)"
+                                                                           SpecPrefix="offspec" />
+                                                    }
+                                                </span>
+
+                                            </ItemLink>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </ModalBody>
+                    }
+                    <ModalFooter>
+                        <button class="btn btn-secondary" @onclick="@(() => OnItemSelected(0))" type="button">Clear Selection</button>
+                        <button class="btn btn-secondary" @onclick="@(() => _modal?.Hide())" type="button">Cancel</button>
+                    </ModalFooter>
+                </div>
+            </div>
+        </Modal>
+        foreach (var bracket in _lootList.Brackets)
+        {
+            <CreateListBracket Bracket="bracket"
+                               Items="_items"
+                               Model="_lootList"
+                               SelectionRequested="OnSelectionRequested" />
+        }
+    }
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public EventCallback<LootListDto> OnLootListCreated { get; set; }
+
+    private CustomValidator? _serverValidator;
+    private CustomValidator? _bracketValidator;
+
+    private Modal? _modal;
+    private ItemSelectionContext? _modalContext;
+}

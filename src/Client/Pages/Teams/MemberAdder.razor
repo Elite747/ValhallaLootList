@@ -1,0 +1,48 @@
+﻿@inject ApiClient Api 
+
+<button type="button" class="btn btn-primary" @onclick="() => _modal?.Show()">Add Member</button>
+
+<Modal @ref="_modal">
+    <ModalBackdrop />
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <EditForm OnValidSubmit="OnSubmit" Model="_input" class="modal-content">
+            <DataAnnotationsValidator />
+            <CustomValidator @ref="_serverValidator" />
+
+            <ModalHeader>
+                <ModalTitle>Add to Roster</ModalTitle>
+                <CloseButton Clicked="() => _modal?.Hide()" />
+            </ModalHeader>
+            <ModalBody Class="form-group">
+                @if (_characters is null)
+                {
+                    <LoadingIndicator />
+                }
+                else
+                {
+                    <label for="charId">Character</label>
+                    <InputSelect @bind-Value="_input.Id" class="form-control" id="charId">
+                        <option></option>
+                        @foreach (var character in _characters)
+                        {
+                            <option class="bg-pc-@character.Class.GetLowercaseName()" value="@character.Id">@character.Name</option>
+                        }
+                    </InputSelect>
+                }
+                <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+            </ModalBody>
+            <ModalFooter>
+                <button type="submit" class="btn btn-primary">Add</button>
+                <button class="btn btn-secondary" @onclick="() => _modal?.Hide()" type="button">Cancel</button>
+            </ModalFooter>
+        </EditForm>
+    </div>
+</Modal>
+
+@code {
+    private Modal? _modal;
+    private CustomValidator? _serverValidator;
+
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public EventCallback MemberAdded { get; set; }
+}

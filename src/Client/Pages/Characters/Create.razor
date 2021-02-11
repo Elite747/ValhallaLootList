@@ -1,0 +1,65 @@
+﻿@attribute [Authorize]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
+        <DataAnnotationsValidator />
+        <CustomValidator @ref="_customValidator" />
+
+        <ModalHeader>
+            <ModalTitle>Create Character</ModalTitle>
+            <CloseButton Clicked="() => ParentModal?.Hide()" />
+        </ModalHeader>
+        <ModalBody>
+            <div class="form-group">
+                <label for="inputName">Name</label>
+                <InputText @bind-Value="_character.Name" class="form-control" id="inputName" aria-describedby="emailHelp" />
+                <small id="emailHelp" class="form-text text-muted">Enter your character's name <i>exactly</i> as it is spelled in-game.</small>
+            </div>
+            <div class="form-group">
+                <label for="inputGender">Gender</label>
+                <InputSelect class="form-control" id="inputGender" @bind-Value="_character.Gender">
+                    <option>-- Select Gender --</option>
+                    <option value="@Gender.Male">Male</option>
+                    <option value="@Gender.Female">Female</option>
+                </InputSelect>
+            </div>
+            <div class="form-group">
+                <label for="inputRace">Race</label>
+                <InputSelect class="form-control" id="inputRace" ValueExpression="() => _character.Race" ValueChanged="(PlayerRace? race) => RaceChanged(race)" Value="@_character.Race">
+                    <option>-- Select Race --</option>
+                    @foreach (var race in Enum.GetValues<PlayerRace>())
+                    {
+                        <option value="@race">
+                            @race.GetDisplayName()
+                        </option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="form-group">
+                <label for="inputClass">Class</label>
+                <InputSelect class="form-control" id="inputClass" @bind-Value="_character.Class">
+                    <option>-- Select Class --</option>
+                    @foreach (var playerClass in _raceClasses)
+                    {
+                        <option value="@playerClass">
+                            @playerClass
+                        </option>
+                    }
+                </InputSelect>
+            </div>
+            <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+        </ModalBody>
+        <ModalFooter>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button class="btn btn-secondary" @onclick="@(() => ParentModal?.Hide())" type="button">Cancel</button>
+        </ModalFooter>
+    </EditForm>
+</div>
+
+@code {
+    private CustomValidator? _customValidator;
+
+    [Parameter] public Modal? ParentModal { get; set; }
+}

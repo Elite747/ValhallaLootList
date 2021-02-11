@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Server", "src\Server\ValhallaLootList.Server.csproj", "{1944253D-1B64-4F32-90C6-B0E096CD0D83}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Client", "src\Client\ValhallaLootList.Client.csproj", "{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Shared", "src\Shared\ValhallaLootList.Shared.csproj", "{235034AF-95C5-437F-9D6F-E437144332E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.ItemImporter", "src\ItemImporter\ValhallaLootList.ItemImporter.csproj", "{890B71D0-9D14-44A3-A001-B7EC13C9C0A9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.ItemDeterminer", "src\ItemDeterminer\ValhallaLootList.ItemDeterminer.csproj", "{3257FFBA-C6C4-4B86-8242-BAD107F956A7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFD128CE-9F14-4408-A4B1-78EC2AA3AFC7}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1944253D-1B64-4F32-90C6-B0E096CD0D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1944253D-1B64-4F32-90C6-B0E096CD0D83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1944253D-1B64-4F32-90C6-B0E096CD0D83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1944253D-1B64-4F32-90C6-B0E096CD0D83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{235034AF-95C5-437F-9D6F-E437144332E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{235034AF-95C5-437F-9D6F-E437144332E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{235034AF-95C5-437F-9D6F-E437144332E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{235034AF-95C5-437F-9D6F-E437144332E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9} = {4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}
+		{3257FFBA-C6C4-4B86-8242-BAD107F956A7} = {4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B16C1DAE-97D1-4062-9B69-39A60B065E07}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+
+<AuthorizeView>
+    <Authorized>
+        <div class="align-text-bottom">
+            @context.User.Identity!.Name<small class="font-weight-light text-muted">#@context.User.GetDiscordDiscriminator()</small>
+        </div>
+        &nbsp;
+        <img src="@context.User.GetDiscordAvatarUrl()" class="rounded-circle img-thumbnail img-fluid" width="48" height="48" />
+        <button class="nav-link btn btn-link" @onclick="BeginSignOut">Log out</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login?returnUrl=@Navigation.Uri">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+}

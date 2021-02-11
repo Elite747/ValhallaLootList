@@ -1,0 +1,29 @@
+﻿@page "/loginerror"
+
+<h3>Login Error</h3>
+
+<div class="alert alert-danger" role="alert">
+    @(Reason switch
+    {
+        Reasons.FromDiscord => $"An error has occurred from Discord: '{RemoteError}'",
+        Reasons.FromLoginProvider => "Error loading external login information.",
+        Reasons.LockedOut => "Your account has been locked out.",
+        Reasons.FromAccountCreation => "An error has occurred while trying to create your user profile.",
+        _ => "An unknown error has occurred while trying to log in."
+    })
+</div>
+
+@code {
+    [Parameter] public Reasons Reason { get; set; }
+
+    [Parameter] public string? RemoteError { get; set; }
+
+    public enum Reasons
+    {
+        Unknown = 0,
+        FromDiscord = 1,
+        FromLoginProvider = 2,
+        LockedOut = 3,
+        FromAccountCreation = 4
+    }
+}

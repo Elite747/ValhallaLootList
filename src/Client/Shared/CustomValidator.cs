@@ -14,7 +14,7 @@ namespace ValhallaLootList.Client.Shared
         private ValidationMessageStore? _messageStore;
 
         [CascadingParameter]
-        private EditContext? CurrentEditContext { get; }
+        public EditContext? CurrentEditContext { get; set; }
 
         protected override void OnInitialized()
         {

@@ -30,7 +30,7 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<PersistedGrant> PersistedGrants { get; set; } = null!;
         public virtual DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; } = null!;
         public virtual DbSet<Encounter> Encounters { get; set; } = null!;
-        public virtual DbSet<BossKill> BossKills { get; set; } = null!;
+        public virtual DbSet<EncounterKill> EncounterKills { get; set; } = null!;
         public virtual DbSet<Character> Characters { get; set; } = null!;
         public virtual DbSet<CharacterLootList> CharacterLootLists { get; set; } = null!;
         public virtual DbSet<LootListEntry> LootListEntries { get; set; } = null!;
@@ -50,32 +50,25 @@ namespace ValhallaLootList.Server.Data
 
             builder.ConfigurePersistedGrantContext(_operationalStoreOptions);
 
-            builder.Entity<Encounter>().HasIndex(e => e.Name).IsUnique();
-
-            builder.Entity<BossKill>().HasKey(e => new { e.BossId, e.RaidId });
-
             builder.Entity<Character>().HasIndex(e => e.Name).IsUnique();
+
+            builder.Entity<CharacterEncounterKill>().HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.CharacterId });
 
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
 
-            //builder.Entity<CharacterRank>();
-
-            builder.Entity<Drop>().HasKey(e => new { e.BossKillId, e.ItemId });
+            builder.Entity<Drop>().HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.ItemId });
 
             builder.Entity<DropPass>().HasKey(e => new { e.CharacterId, e.DropId });
 
+            builder.Entity<Encounter>().HasIndex(e => e.Name).IsUnique();
+
+            builder.Entity<EncounterKill>().HasKey(e => new { e.EncounterId, e.RaidId });
+
             builder.Entity<Instance>().HasIndex(e => e.Name).IsUnique();
-
-            //builder.Entity<Item>();
-
-            //builder.Entity<Raid>();
 
             builder.Entity<RaidAttendee>().HasKey(e => new { e.CharacterId, e.RaidId });
 
             builder.Entity<RaidTeam>().HasIndex(e => e.Name).IsUnique();
-
-            //builder.Entity<RaidTeamSchedule>();
-
         }
 
         Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();

@@ -62,7 +62,7 @@ namespace ValhallaLootList.Server.Data
 
             var attendances = await _context.Raids
                 .AsNoTracking()
-                .Where(r => r.Schedule.RaidTeam.Id == entry.TeamId)
+                .Where(r => r.RaidTeam.Id == entry.TeamId)
                 .OrderByDescending(r => r.StartedAtUtc)
                 .Select(r => r.Attendees.Any(a => a.CharacterId == characterId))
                 .Take(ObservedRaidsForAttendance)

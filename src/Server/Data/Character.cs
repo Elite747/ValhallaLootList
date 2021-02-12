@@ -34,5 +34,7 @@ namespace ValhallaLootList.Server.Data
         public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
 
         public virtual ICollection<CharacterLootList> CharacterLootLists { get; set; } = new HashSet<CharacterLootList>();
+
+        public virtual ICollection<CharacterEncounterKill> EncounterKills { get; set; } = new HashSet<CharacterEncounterKill>();
     }
 }

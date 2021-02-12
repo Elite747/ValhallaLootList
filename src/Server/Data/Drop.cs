@@ -14,13 +14,16 @@ namespace ValhallaLootList.Server.Data
         public DateTime AwardedAtUtc { get; set; }
 
         [Required]
-        public string BossKillId { get; set; } = null!;
-
-        [Required]
         public uint ItemId { get; set; }
 
         [Required]
-        public virtual BossKill BossKill { get; set; } = null!;
+        public string EncounterKillRaidId { get; set; } = null!;
+
+        [Required]
+        public string EncounterKillEncounterId { get; set; } = null!;
+
+        [Required]
+        public virtual EncounterKill EncounterKill { get; set; } = null!;
 
         [Required]
         public virtual Item Item { get; set; } = null!;

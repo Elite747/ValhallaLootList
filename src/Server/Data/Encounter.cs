@@ -11,6 +11,10 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public string Name { get; set; } = string.Empty;
 
+        [Required]
+        public string InstanceId { get; set; } = null!;
+
+        [Required]
         public virtual Instance Instance { get; set; } = null!;
 
         public virtual ICollection<Item> Items { get; set; } = new HashSet<Item>();

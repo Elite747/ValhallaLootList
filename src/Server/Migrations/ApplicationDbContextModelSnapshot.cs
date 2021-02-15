@@ -436,29 +436,24 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.DropPass", b =>
                 {
-                    b.Property<string>("CharacterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<string>("DropId")
+                    b.Property<string>("DropEncounterKillRaidId")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<string>("DropEncounterKillEncounterId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<string>("DropEncounterKillRaidId")
-                        .IsRequired()
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<uint>("DropItemId")
                         .HasColumnType("int unsigned");
 
+                    b.Property<string>("CharacterId")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+
                     b.Property<int>("RelativePriority")
                         .HasColumnType("int");
 
-                    b.HasKey("CharacterId", "DropId");
+                    b.HasKey("DropEncounterKillRaidId", "DropEncounterKillEncounterId", "DropItemId", "CharacterId");
 
-                    b.HasIndex("DropEncounterKillRaidId", "DropEncounterKillEncounterId", "DropItemId");
+                    b.HasIndex("CharacterId");
 
                     b.ToTable("DropPasses");
                 });

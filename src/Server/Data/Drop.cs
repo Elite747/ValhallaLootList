@@ -16,6 +16,8 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public uint ItemId { get; set; }
 
+        public string? WinnerId { get; set; }
+
         [Required]
         public string EncounterKillRaidId { get; set; } = null!;
 

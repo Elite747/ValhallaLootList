@@ -8,10 +8,16 @@ namespace ValhallaLootList.Server.Data
     public class DropPass
     {
         [Required]
-        public string DropId { get; set; } = null!;
+        public string CharacterId { get; set; } = null!;
 
         [Required]
-        public string CharacterId { get; set; } = null!;
+        public string DropEncounterKillRaidId { get; set; } = null!;
+
+        [Required]
+        public string DropEncounterKillEncounterId { get; set; } = null!;
+
+        [Required]
+        public uint DropItemId { get; set; }
 
         [Required]
         public virtual Drop Drop { get; set; } = null!;

@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -98,7 +99,7 @@ namespace ValhallaLootList.Server.Data
         /// <param name="underPrioCount">The number of times the player was not considered for the item due to others having higher priority.</param>
         /// <param name="notDroppedCount">*UNUSED* The number of times the player witnessed the boss die from where the item drops from, but it did not drop.</param>
         /// <returns>The final calculated priority of an item for a player.</returns>
-        private static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount)//, int notDroppedCount)
+        public static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount)//, int notDroppedCount)
         {
             int attendanceBonus = (int)Math.Floor((double)attendances / AttendancesPerPrioPoint);
 

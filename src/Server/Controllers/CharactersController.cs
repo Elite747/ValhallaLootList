@@ -48,7 +48,7 @@ namespace ValhallaLootList.Server.Controllers
                 }
                 else
                 {
-                    query = query.Where(c => c.TeamId == team);
+                    query = query.Where(c => c.TeamId == team || c.Team!.Name == team);
                 }
             }
 
@@ -169,101 +169,29 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            return Ok(EnumerateLootLists(character));
+            var dtos = await CreateDtosAsync(character.Id, character.TeamId, null);
 
-            async IAsyncEnumerable<LootListDto> EnumerateLootLists(Character character)
-            {
-                var allEntries = await _context.LootListEntries
-                    .AsNoTracking()
-                    .Where(e => e.LootList.CharacterId == character.Id)
-                    .Select(e => new
-                    {
-                        e.Id,
-                        e.ItemId,
-                        ItemName = (string?)e.Item!.Name,
-                        e.LootList.Phase,
-                        e.PassCount,
-                        e.Rank,
-                        e.Won
-                    })
-                    .ToListAsync();
-
-                await foreach (var list in _context.CharacterLootLists
-                    .AsNoTracking()
-                    .Where(ll => ll.CharacterId == character.Id)
-                    .OrderBy(ll => ll.Phase)
-                    .AsAsyncEnumerable())
-                {
-                    var dto = new LootListDto
-                    {
-                        ApprovedBy = list.ApprovedBy,
-                        CharacterId = character.Id,
-                        CharacterName = character.Name,
-                        MainSpec = list.MainSpec,
-                        OffSpec = list.OffSpec,
-                        Phase = list.Phase,
-                        Locked = list.Locked
-                    };
-
-                    foreach (var entry in allEntries.Where(e => e.Phase == list.Phase).OrderByDescending(e => e.Rank))
-                    {
-                        dto.Entries.Add(new LootListEntryDto
-                        {
-                            Id = entry.Id,
-                            ItemId = entry.ItemId,
-                            ItemName = entry.ItemName,
-                            PassCount = entry.PassCount,
-                            Rank = entry.Rank,
-                            Won = entry.Won
-                        });
-                    }
-
-                    yield return dto;
-                }
-            }
+            return Ok(dtos.Values);
         }
 
         [HttpGet("{id}/LootLists/{phase:int}")]
         public async Task<ActionResult<LootListDto>> GetLootList(string id, byte phase)
         {
-            var dto = await _context.CharacterLootLists
-                .AsNoTracking()
-                .Where(ll => ll.Phase == phase && (ll.CharacterId == id || ll.Character.Name.Equals(id, StringComparison.OrdinalIgnoreCase)))
-                .Select(ll => new LootListDto
-                {
-                    ApprovedBy = ll.ApprovedBy,
-                    CharacterId = ll.CharacterId,
-                    CharacterName = ll.Character.Name,
-                    Locked = ll.Locked,
-                    MainSpec = ll.MainSpec,
-                    OffSpec = ll.OffSpec,
-                    Phase = ll.Phase
-                })
-                .FirstOrDefaultAsync();
+            var character = await FindCharacterByIdOrNameAsync(id);
 
-            if (dto is null)
+            if (character is null)
             {
                 return NotFound();
             }
 
-            dto.Phase = phase;
+            var dtos = await CreateDtosAsync(character.Id, character.TeamId, phase);
 
-            dto.Entries = await _context.LootListEntries
-                .AsNoTracking()
-                .Where(e => e.LootList.CharacterId == dto.CharacterId && e.LootList.Phase == phase)
-                .OrderByDescending(e => e.Rank)
-                .Select(e => new LootListEntryDto
-                {
-                    Id = e.Id,
-                    ItemId = e.ItemId,
-                    ItemName = e.Item!.Name,
-                    PassCount = e.PassCount,
-                    Rank = e.Rank,
-                    Won = e.Won
-                })
-                .ToListAsync();
+            if (dtos.TryGetValue(phase, out var dto))
+            {
+                return dto;
+            }
 
-            return dto;
+            return NotFound();
         }
 
         [HttpGet("LootListTemplate")]
@@ -449,36 +377,9 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
-            var returnDto = new LootListDto
-            {
-                ApprovedBy = list.ApprovedBy,
-                CharacterId = list.CharacterId,
-                CharacterName = character.Name,
-                Phase = list.Phase,
-                Locked = list.Locked,
-                Entries = new()
-            };
+            var dtos = await CreateDtosAsync(character.Id, character.TeamId, phase);
 
-            foreach (var entry in list.Entries)
-            {
-                var entryDto = new LootListEntryDto
-                {
-                    Id = entry.Id,
-                    ItemId = entry.ItemId,
-                    PassCount = entry.PassCount,
-                    Rank = entry.Rank,
-                    Won = entry.Won
-                };
-
-                if (entry.ItemId.HasValue && items.TryGetValue(entry.ItemId.Value, out var item))
-                {
-                    entryDto.ItemName = item.Name;
-                }
-
-                returnDto.Entries.Add(entryDto);
-            }
-
-            return CreatedAtAction(nameof(GetLootList), new { id, phase }, returnDto);
+            return CreatedAtAction(nameof(GetLootList), new { id, phase }, dtos[phase]);
         }
 
         private async Task<Character?> FindCharacterByIdOrNameAsync(string idOrName, CancellationToken cancellationToken = default)
@@ -540,6 +441,130 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return null;
+        }
+
+        private async Task<Dictionary<byte, LootListDto>> CreateDtosAsync(string characterId, string? teamId, byte? phase)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            const bool isAdmin = false; // TODO: role checking which should override editability.
+
+            var lootListQuery = _context.CharacterLootLists.AsNoTracking().Where(ll => ll.CharacterId == characterId);
+
+            if (phase.HasValue)
+            {
+                lootListQuery = lootListQuery.Where(ll => ll.Phase == phase.Value);
+            }
+
+            var dtos = await lootListQuery
+                .Select(ll => new LootListDto
+                {
+                    ApprovedBy = ll.ApprovedBy,
+                    CharacterId = ll.CharacterId,
+                    CharacterName = ll.Character.Name,
+                    CharacterMemberStatus = ll.Character.MemberStatus,
+                    Owned = isAdmin || ll.Character.OwnerId == currentUserId,
+                    TeamId = ll.Character.TeamId,
+                    TeamName = ll.Character.Team!.Name,
+                    Locked = ll.Locked,
+                    MainSpec = ll.MainSpec,
+                    OffSpec = ll.OffSpec,
+                    Phase = ll.Phase
+                })
+                .ToDictionaryAsync(ll => ll.Phase);
+
+            // TODO: role check to make sure user is allowed to view prios & ranks while the loot list is unlocked.
+
+            var passRecords = await _context.DropPasses
+                .AsNoTracking()
+                .Where(dp => dp.CharacterId == characterId)
+                .Select(dp => new { dp.DropItemId, dp.RelativePriority })
+                .ToListAsync();
+
+            var winRecords = new HashSet<uint>();
+
+            await foreach (var drop in _context.Drops
+                .AsNoTracking()
+                .Where(d => d.WinnerId == characterId)
+                .Select(d => d.ItemId)
+                .AsAsyncEnumerable())
+            {
+                winRecords.Add(drop);
+            }
+
+            var attendances = teamId?.Length > 0 ? await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(x => !x.IgnoreAttendance && x.CharacterId == characterId && x.Raid.RaidTeamId == teamId)
+                .OrderByDescending(x => x.Raid.StartedAtUtc)
+                .Take(PrioCalculator.ObservedRaidsForAttendance)
+                .CountAsync() : 0;
+
+            var entryQuery = _context.LootListEntries.AsNoTracking().Where(e => e.LootList.CharacterId == characterId);
+
+            if (phase.HasValue)
+            {
+                entryQuery = entryQuery.Where(e => e.LootList.Phase == phase.Value);
+            }
+
+            await foreach (var entry in entryQuery
+                .OrderByDescending(e => e.Rank)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.ItemId,
+                    ItemName = (string?)e.Item!.Name,
+                    e.Rank,
+                    e.Won,
+                    e.LootList.Phase
+                })
+                .AsAsyncEnumerable())
+            {
+                if (dtos.TryGetValue(entry.Phase, out var dto))
+                {
+                    bool won = entry.Won;
+                    int? prio = null;
+
+                    if (entry.ItemId.HasValue)
+                    {
+                        if (!won)
+                        {
+                            won = winRecords.Contains(entry.ItemId.Value);
+                        }
+
+                        if (!won && dto.Locked)
+                        {
+                            int loss = 0, underPrio = 0;
+
+                            foreach (var passRecord in passRecords.Where(x => x.DropItemId == entry.ItemId))
+                            {
+                                if (passRecord.RelativePriority >= 0)
+                                {
+                                    loss++;
+                                }
+                                else
+                                {
+                                    underPrio++;
+                                }
+                            }
+
+                            prio = PrioCalculator.CalculatePrio(entry.Rank, attendances, dto.CharacterMemberStatus, loss, underPrio);
+                        }
+                    }
+
+                    bool showRanks = dto.Locked || dto.Owned;
+
+                    dto.Entries.Add(new LootListEntryDto
+                    {
+                        Id = entry.Id,
+                        ItemId = entry.ItemId,
+                        ItemName = entry.ItemName,
+                        Prio = showRanks ? prio : null,
+                        Rank = showRanks ? entry.Rank : 0,
+                        Won = won
+                    });
+                }
+            }
+
+            return dtos;
         }
     }
 }

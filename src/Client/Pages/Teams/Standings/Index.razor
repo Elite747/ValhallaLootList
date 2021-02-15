@@ -1,0 +1,22 @@
+﻿@page "/Teams/{team}/Standings"
+@inject ApiClient Api
+
+<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="RefreshAsync">
+    <span class="fas fa-sync" aria-hidden="true"></span>
+    <span class="sr-only">Refresh</span>
+</button>
+@if (_characters is null)
+{
+    <LoadingIndicator />
+}
+else
+{
+    <CascadingValue Value="_lootLists">
+        <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" />
+    </CascadingValue>
+}
+
+@code {
+    [Parameter] public string Team { get; set; } = string.Empty;
+    private string? _selectedInstanceId;
+}

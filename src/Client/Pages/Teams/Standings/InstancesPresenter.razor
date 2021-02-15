@@ -1,0 +1,48 @@
+﻿@inject ApiClient Api
+
+@if (_instances is null)
+{
+    <LoadingIndicator />
+}
+else
+{
+    InstanceDto? selectedInstance = null;
+    foreach (var phaseInstances in _instances.Where(i => i.Phase >= Constants.MinimumPhase && i.Phase <= Constants.MaximumPhase).GroupBy(i => i.Phase))
+    {
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link disabled" tabindex="-1">Phase @phaseInstances.Key</a>
+            </li>
+            @foreach (var instance in phaseInstances)
+            {
+                var id = instance.Id;
+                bool active = false;
+
+                if (instance.Id == SelectedInstanceId)
+                {
+                    active = true;
+                    selectedInstance = instance;
+                }
+
+                <li class="nav-item">
+                    <a class="@(active ? "nav-link active" : "nav-link")" type="button" @onclick="() => ChangeSelectedInstanceId(id)">@instance.Name</a>
+                </li>
+            }
+        </ul>
+    }
+    @if (selectedInstance is not null)
+    {
+        <InstanceView Instance="selectedInstance" />
+    }
+}
+
+@code {
+    [Parameter] public string? SelectedInstanceId { get; set; }
+    [Parameter] public EventCallback<string?> SelectedInstanceIdChanged { get; set; }
+
+    private Task ChangeSelectedInstanceId(string? id)
+    {
+        SelectedInstanceId = id;
+        return SelectedInstanceIdChanged.InvokeAsync(id);
+    }
+} 

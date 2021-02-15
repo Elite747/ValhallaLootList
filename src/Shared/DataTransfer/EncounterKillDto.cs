@@ -1,0 +1,32 @@
+﻿// Copyright (C) 2021 Donovan Sullivan
+// GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+using System;
+using System.Collections.Generic;
+
+namespace ValhallaLootList.DataTransfer
+{
+    public class EncounterKillDto
+    {
+        private List<EncounterDropDto>? _drops;
+        private List<string>? _characters;
+
+        public string? EncounterId { get; set; }
+
+        public string? EncounterName { get; set; }
+
+        public DateTimeOffset KilledAt { get; set; }
+
+        public List<EncounterDropDto> Drops
+        {
+            get => _drops ??= new();
+            set => _drops = value;
+        }
+
+        public List<string> Characters
+        {
+            get => _characters ??= new();
+            set => _characters = value;
+        }
+    }
+}

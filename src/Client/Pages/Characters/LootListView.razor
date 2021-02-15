@@ -2,36 +2,59 @@
 @if (_lootList is not null)
 {
     <div class="card">
-        @if (!_lootList.Locked && Character?.Editable == true)
+        @if (!_lootList.Locked && _lootList.Owned)
         {
             <div class="card-body">
                 <button class="btn btn-primary btn-sm" type="button">Edit</button>
             </div>
         }
         <ul class="list-group list-group-flush">
-            @foreach (var row in _lootList.Entries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
+            @if (_lootList.Owned || _lootList.Locked)
             {
-                <li class="list-group-item p-1">
-                    <div class="row mx-0">
-                        <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
-                        @foreach (var entry in row)
+                @foreach (var row in _lootList.Entries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
+                {
+                    <li class="list-group-item p-1">
+                        <div class="row mx-0">
+                            <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
+                            @foreach (var entry in row)
+                            {
+                                <div class="col-md">
+                                    @if (entry.ItemId > 0)
+                                    {
+                                        <ItemLink Id="entry.ItemId" LinkEnabled="true">
+                                            <span class="text-epic">[@(entry.ItemName ?? $"Unknown Item #{entry.ItemId}")]</span>
+                                        </ItemLink> 
+                                    }
+                                    @if (entry.Prio.HasValue)
+                                    {
+                                        @:Prio: @entry.Prio 
+                                    }
+                                    else if (entry.Won)
+                                    {
+                                        <span class="fas fa-check text-success" aria-hidden="true"></span>
+                                        <span class="sr-only">Won</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </li>
+                }
+            }
+            else
+            {
+                @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
+                {
+                    <li class="list-group-item p-1">
+                        <ItemLink Id="entry.ItemId" LinkEnabled="true">
+                            <span class="text-epic">[@(entry.ItemName ?? $"Unknown Item #{entry.ItemId}")]</span>
+                        </ItemLink> 
+                        @if (entry.Won)
                         {
-                            <div class="col-md">
-                                @if (entry.ItemId > 0)
-                                {
-                                    <ItemLink Id="entry.ItemId" LinkEnabled="true">
-                                        <span class="text-epic">[@(entry.ItemName ?? $"Unknown Item #{entry.ItemId}")]</span>
-                                    </ItemLink>
-                                }
-                                @if (entry.Won)
-                                {
-                                    <span class="fas fa-check text-success" aria-hidden="true"></span>
-                                    <span class="sr-only">Won</span>
-                                }
-                            </div>
+                            <span class="fas fa-check text-success" aria-hidden="true"></span>
+                            <span class="sr-only">Won</span>
                         }
-                    </div>
-                </li>
+                    </li>
+                }
             }
         </ul>
     </div>

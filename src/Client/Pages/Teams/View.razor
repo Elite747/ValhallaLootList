@@ -23,6 +23,10 @@ else
         <h4>@(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))</h4>
     }
 
+    <p>
+        <a href="Teams/@Team/Standings">View Loot Standings</a>
+    </p>
+
     <AuthorizeView>@*TODO: check for raid leader policy*@
         <button type="button" class="btn btn-primary my-2">Start Raid</button>
     </AuthorizeView>

@@ -1,0 +1,50 @@
+﻿<div class="table-responsive">
+    <table class="table table-bordered">
+        <tbody>
+            @foreach (var encounter in Instance.Encounters)
+            {
+                <tr>
+                    <th colspan="2">@encounter.Name</th>
+                </tr>
+                @foreach (var itemId in encounter.Items)
+                {
+                    var entries = new List<(string name, int prio, bool won)>();
+                    foreach (var list in LootLists)
+                    {
+                        foreach (var entry in list.Entries)
+                        {
+                            if (entry.ItemId == itemId)
+                            {
+                                entries.Add((list.CharacterName!, entry.Prio.GetValueOrDefault(), entry.Won));
+                            }
+                        }
+                    }
+                    <tr>
+                        <td>
+                            <ItemLink Id="itemId" LinkEnabled="true" />
+                        </td>
+                        <td>
+                            @foreach (var entry in entries.OrderByDescending(e => e.prio).ThenBy(e => e.name))
+                            {
+                                <span class="@(entry.won ? "text-success" : null)">
+                                    @(entry.prio != 0 ? $"{entry.name} ({entry.prio})" : entry.name)
+                                </span> 
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public InstanceDto Instance { get; set; } = null!;
+    [CascadingParameter] public List<LootListDto> LootLists { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Instance is null) throw new ArgumentNullException(nameof(Instance));
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+    }
+}

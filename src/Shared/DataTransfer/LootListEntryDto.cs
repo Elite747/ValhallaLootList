@@ -7,14 +7,14 @@ namespace ValhallaLootList.DataTransfer
     {
         public string? Id { get; set; }
 
-        public byte Rank { get; set; }
+        public int Rank { get; set; }
+
+        public int? Prio { get; set; }
 
         public uint? ItemId { get; set; }
 
         public string? ItemName { get; set; }
 
         public bool Won { get; set; }
-
-        public short PassCount { get; set; }
     }
 }

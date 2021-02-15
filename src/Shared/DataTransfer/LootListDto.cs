@@ -13,6 +13,14 @@ namespace ValhallaLootList.DataTransfer
 
         public string? CharacterName { get; set; }
 
+        public bool Owned { get; set; }
+
+        public RaidMemberStatus CharacterMemberStatus { get; set; }
+
+        public string? TeamId { get; set; }
+
+        public string? TeamName { get; set; }
+
         public Specializations MainSpec { get; set; }
 
         public Specializations OffSpec { get; set; }

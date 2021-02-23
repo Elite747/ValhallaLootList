@@ -38,9 +38,10 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(r => new RaidDto
                 {
                     Id = r.Id,
+                    Phase = r.Phase,
                     StartedAt = new DateTimeOffset(r.StartedAtUtc, TimeSpan.Zero),
-                    InstanceId = r.InstanceId,
-                    InstanceName = r.Instance.Name
+                    TeamId = r.RaidTeamId,
+                    TeamName = r.RaidTeam.Name
                 })
                 .AsAsyncEnumerable();
         }
@@ -48,38 +49,19 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<RaidDto>> Get(string id)
         {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            const bool isAdmin = false; // TODO: role checking which should override editability.
+
             var dto = await _context.Raids
                 .AsNoTracking()
                 .Where(raid => raid.Id == id)
                 .Select(raid => new RaidDto
                 {
-                    Attendees = raid.Attendees.Select(a => new RaidAttendeeDto
-                    {
-                        IgnoreAttendance = a.IgnoreAttendance,
-                        CharacterId = a.CharacterId,
-                        CharacterName = a.Character.Name,
-                        IgnoreReason = a.IgnoreReason,
-                        UsingOffspec = a.UsingOffspec
-                    }).ToList(),
-                    Kills = raid.Kills.Select(k => new EncounterKillDto
-                    {
-                        KilledAt = new DateTimeOffset(k.KilledAtUtc, TimeSpan.Zero),
-                        EncounterId = k.EncounterId,
-                        EncounterName = k.Encounter.Name,
-                        Characters = k.Characters.Select(c => c.CharacterId).ToList(),
-                        Drops = k.Drops.Select(d => new EncounterDropDto
-                        {
-                            AwardedAt = new DateTimeOffset(d.AwardedAtUtc, TimeSpan.Zero),
-                            AwardedBy = d.AwardedBy,
-                            WinnerId = d.Winner!.Id,
-                            WinnerName = d.Winner.Name,
-                            ItemId = d.ItemId
-                        }).ToList()
-                    }).ToList(),
                     StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
                     Id = raid.Id,
-                    InstanceId = raid.InstanceId,
-                    InstanceName = raid.Instance.Name
+                    Phase = raid.Phase,
+                    TeamId = raid.RaidTeamId,
+                    TeamName = raid.RaidTeam.Name
                 })
                 .FirstOrDefaultAsync();
 
@@ -88,17 +70,88 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            dto.Attendees = await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(a => a.RaidId == id)
+                .Select(a => new CharacterDto
+                {
+                    Id = a.CharacterId,
+                    Class = a.Character.Class,
+                    Editable = isAdmin || a.Character.OwnerId == currentUserId,
+                    Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                    Name = a.Character.Name,
+                    Race = a.Character.Race,
+                    TeamId = a.Character.TeamId,
+                    TeamName = a.Character.Team!.Name
+                })
+                .ToListAsync();
+
+            dto.Kills = await _context.EncounterKills
+                .AsNoTracking()
+                .Where(k => k.RaidId == id)
+                .OrderByDescending(k => k.KilledAtUtc)
+                .Select(k => new EncounterKillDto
+                {
+                    KilledAt = new DateTimeOffset(k.KilledAtUtc, TimeSpan.Zero),
+                    EncounterId = k.EncounterId,
+                    EncounterName = k.Encounter.Name,
+                })
+                .ToListAsync();
+
+            var killDictionary = dto.Kills.ToDictionary(k => k.EncounterId);
+
+            await foreach (var kek in _context.CharacterEncounterKills
+                .AsNoTracking()
+                .Where(kek => kek.EncounterKillRaidId == id)
+                .Select(kek => new
+                {
+                    kek.EncounterKillEncounterId,
+                    kek.CharacterId
+                })
+                .AsAsyncEnumerable())
+            {
+                killDictionary[kek.EncounterKillEncounterId].Characters.Add(kek.CharacterId);
+            }
+
+            await foreach (var drop in _context.Drops
+                .AsNoTracking()
+                .Where(d => d.EncounterKillRaidId == id)
+                .Select(d => new
+                {
+                    d.EncounterKillEncounterId,
+                    d.AwardedAtUtc,
+                    d.AwardedBy,
+                    d.WinnerId,
+                    WinnerName = (string?)d.Winner!.Name,
+                    d.ItemId,
+                    ItemName = d.Item.Name
+                })
+                .OrderBy(d => d.ItemName)
+                .AsAsyncEnumerable())
+            {
+                killDictionary[drop.EncounterKillEncounterId].Drops.Add(new EncounterDropDto
+                {
+                    AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
+                    AwardedBy = drop.AwardedBy,
+                    ItemId = drop.ItemId,
+                    ItemName = drop.ItemName,
+                    WinnerId = drop.WinnerId,
+                    WinnerName = drop.WinnerName
+                });
+            }
+
             return dto;
         }
 
         [HttpPost, Authorize]
         public async Task<ActionResult<RaidDto>> Post([FromBody] RaidSubmissionDto dto)
         {
-            var instance = await _context.Instances.FindAsync(dto.InstanceId);
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            const bool isAdmin = false; // TODO: role checking which should override editability.
 
-            if (instance is null)
+            if (dto.Phase < Constants.MinimumPhase || dto.Phase > Constants.MaximumPhase)
             {
-                ModelState.AddModelError(nameof(dto.InstanceId), "Instance does not exist.");
+                ModelState.AddModelError(nameof(dto.Phase), "Phase is not a valid value.");
                 return ValidationProblem();
             }
 
@@ -112,36 +165,35 @@ namespace ValhallaLootList.Server.Controllers
 
             var raid = new Raid
             {
-                Instance = instance,
-                InstanceId = instance.Id,
+                Phase = (byte)dto.Phase,
                 RaidTeam = team,
                 RaidTeamId = team.Id,
                 StartedAtUtc = DateTime.UtcNow
             };
 
-            var charIds = dto.Attendees.Select(a => a.CharacterId).ToHashSet();
-            var characters = await _context.Characters.Where(c => charIds.Contains(c.Id)).ToListAsync();
+            var characters = await _context.Characters.Where(c => dto.Attendees.Contains(c.Id)).ToListAsync();
 
             for (int i = 0; i < dto.Attendees.Count; i++)
             {
-                var attendee = dto.Attendees[i];
-                var character = characters.Find(c => c.Id == attendee.CharacterId);
+                var charId = dto.Attendees[i];
+                var character = characters.Find(c => c.Id == charId);
 
                 if (character is null)
                 {
-                    ModelState.AddModelError($"{nameof(dto.Attendees)}[{i}].{nameof(attendee.CharacterId)}", "Character does not exist.");
+                    ModelState.AddModelError($"{nameof(dto.Attendees)}[{i}]", "Character does not exist.");
+                }
+                else if (character.TeamId != team.Id)
+                {
+                    ModelState.AddModelError($"{nameof(dto.Attendees)}[{i}]", "Character is not part of this raid team.");
                 }
                 else
                 {
                     raid.Attendees.Add(new RaidAttendee
                     {
-                        IgnoreAttendance = attendee.IgnoreAttendance,
                         Character = character,
                         CharacterId = character.Id,
-                        IgnoreReason = attendee.IgnoreReason,
                         Raid = raid,
                         RaidId = raid.Id,
-                        UsingOffspec = attendee.UsingOffspec
                     });
                 }
             }
@@ -157,18 +209,83 @@ namespace ValhallaLootList.Server.Controllers
 
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
             {
-                Attendees = raid.Attendees.Select(a => new RaidAttendeeDto
+                Attendees = raid.Attendees.Select(a => new CharacterDto
                 {
-                    CharacterId = a.CharacterId,
-                    IgnoreAttendance = a.IgnoreAttendance,
-                    IgnoreReason = a.IgnoreReason,
-                    UsingOffspec = a.UsingOffspec
+                    Id = a.CharacterId,
+                    Class = a.Character.Class,
+                    Editable = isAdmin || a.Character.OwnerId == currentUserId,
+                    Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                    Name = a.Character.Name,
+                    Race = a.Character.Race,
+                    TeamId = a.Character.TeamId,
+                    TeamName = a.Character.Team!.Name
                 }).ToList(),
                 StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
                 Id = raid.Id,
-                InstanceId = raid.InstanceId,
-                InstanceName = instance.Name
+                Phase = raid.Phase,
+                TeamId = team.Id,
+                TeamName = team.Name
             });
+        }
+
+        [HttpPost("{id}/Attendees")]
+        public async Task<ActionResult> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
+        {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            var character = await _context.Characters.FindAsync(dto.CharacterId);
+
+            if (character is null)
+            {
+                ModelState.AddModelError(nameof(dto.CharacterId), "Character does not exist.");
+                return ValidationProblem();
+            }
+            if (character.TeamId != raid.RaidTeamId)
+            {
+                ModelState.AddModelError(nameof(dto.CharacterId), "Character is not part of this raid team.");
+                return ValidationProblem();
+            }
+            if (await _context.RaidAttendees.CountAsync(a => a.CharacterId == character.Id && a.RaidId == raid.Id) != 0)
+            {
+                ModelState.AddModelError(nameof(dto.CharacterId), "Character is already on this raid's attendance.");
+                return ValidationProblem();
+            }
+
+            _context.RaidAttendees.Add(new RaidAttendee
+            {
+                Character = character,
+                CharacterId = character.Id,
+                IgnoreAttendance = false,
+                IgnoreReason = null,
+                Raid = raid,
+                RaidId = raid.Id
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}/Attendees/{characterId}"), Authorize]
+        public async Task<ActionResult> DeleteAttendee(string id, string characterId)
+        {
+            var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
+
+            if (attendee is null)
+            {
+                return NotFound();
+            }
+
+            _context.RaidAttendees.Remove(attendee);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
         [HttpPost("{id}/Kills"), Authorize]
@@ -193,7 +310,10 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var encounter = await _context.Encounters.FindAsync(dto.EncounterId);
+            var encounter = await _context.Encounters
+                .Where(e => e.Id == dto.EncounterId)
+                .Select(e => new { e.Id, e.Name, e.Instance.Phase })
+                .FirstOrDefaultAsync();
 
             if (encounter is null)
             {
@@ -201,16 +321,15 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (encounter.InstanceId != raid.InstanceId)
+            if (encounter.Phase != raid.Phase)
             {
-                ModelState.AddModelError(nameof(dto.EncounterId), "Encounter is not part of the same instance as the raid.");
+                ModelState.AddModelError(nameof(dto.EncounterId), "Encounter is not part of the same phase as the raid.");
                 return ValidationProblem();
             }
 
             var kill = new EncounterKill
             {
                 KilledAtUtc = DateTime.UtcNow,
-                Encounter = encounter,
                 EncounterId = encounter.Id,
                 Raid = raid,
                 RaidId = raid.Id
@@ -256,6 +375,10 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not exist.");
                 }
+                else if (item.EncounterId != encounter.Id)
+                {
+                    ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not belong to the specified encounter.");
+                }
                 else
                 {
                     kill.Drops.Add(new Drop
@@ -295,11 +418,36 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
+        [HttpDelete("{id}/Kills/{encounterId}"), Authorize]
+        public async Task<ActionResult> DeleteKill(string id, string encounterId)
+        {
+            var kill = await _context.EncounterKills.FindAsync(encounterId, id);
+
+            if (kill is null)
+            {
+                return NotFound();
+            }
+
+            var drops = await _context.Drops.Where(drop => drop.EncounterKillEncounterId == encounterId && drop.EncounterKillRaidId == id).ToListAsync();
+
+            if (drops.Any(d => d.WinnerId is not null))
+            {
+                return Problem("Can't delete a kill that has items already awarded.", statusCode: 400);
+            }
+
+            _context.Drops.RemoveRange(drops);
+            _context.EncounterKills.Remove(kill);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPut("{id}/Kills/{encounterId}/Drops/{itemId:int}"), Authorize]
         public async Task<ActionResult<EncounterDropDto>> PutDrop(string id, string encounterId, uint itemId, [FromBody] AwardDropSubmissionDto dto, [FromServices] PrioCalculator prioCalculator)
         {
             var now = DateTime.UtcNow;
-            var drop = await _context.Drops.FindAsync(encounterId, id, itemId);
+            var drop = await _context.Drops.FindAsync(id, encounterId, itemId);
 
             if (drop is null)
             {
@@ -315,7 +463,7 @@ namespace ValhallaLootList.Server.Controllers
             drop.AwardedAtUtc = now;
             drop.AwardedBy = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
-            var killers = await _context.Set<CharacterEncounterKill>()
+            var killers = await _context.CharacterEncounterKills
                 .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
                 .Select(c => c.Character)
                 .ToListAsync();
@@ -340,11 +488,21 @@ namespace ValhallaLootList.Server.Controllers
                 drop.Winner = winner;
                 drop.WinnerId = winner.Id;
 
+                var lootListEntry = _context.LootListEntries
+                    .Where(lle => (lle.ItemId == drop.ItemId || lle.Item!.RewardFromId == drop.ItemId) && lle.LootList.CharacterId == winner.Id && !lle.Won)
+                    .OrderByDescending(lle => lle.Rank)
+                    .FirstOrDefault();
+
+                if (lootListEntry is not null)
+                {
+                    lootListEntry.Won = true;
+                }
+
                 foreach (var killer in killers)
                 {
-                    var (prio, usable, _) = await prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
+                    var (prio, locked, _) = await prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
 
-                    if (usable && prio.HasValue)
+                    if (locked && prio.HasValue)
                     {
                         drop.Passes.Add(new DropPass
                         {
@@ -372,6 +530,38 @@ namespace ValhallaLootList.Server.Controllers
                 WinnerId = drop.WinnerId,
                 WinnerName = drop.Winner?.Name
             };
+        }
+
+        [HttpGet("{id}/Kills/{encounterId}/Drops/{itemId:int}/Ranks"), Authorize]
+        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(string id, string encounterId, uint itemId, [FromServices] PrioCalculator prioCalculator)
+        {
+            var drop = await _context.Drops.FindAsync(id, encounterId, itemId);
+
+            if (drop is null)
+            {
+                return NotFound();
+            }
+
+            var killerIds = await _context.CharacterEncounterKills
+                .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
+                .Select(c => c.CharacterId)
+                .ToListAsync();
+
+            var dto = new List<ItemPrioDto>();
+
+            foreach (var characterId in killerIds)
+            {
+                var (prio, _, details) = await prioCalculator.CalculatePrioAsync(characterId, drop.ItemId);
+
+                dto.Add(new ItemPrioDto
+                {
+                    CharacterId = characterId,
+                    Priority = prio,
+                    Details = details
+                });
+            }
+
+            return dto;
         }
     }
 }

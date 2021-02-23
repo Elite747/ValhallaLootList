@@ -52,6 +52,7 @@ namespace ValhallaLootList.Server.Controllers
                         Duration = s.Duration
                     }).ToList()
                 })
+                .AsSingleQuery()
                 .FirstOrDefaultAsync();
 
             if (team is null)
@@ -187,6 +188,12 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             character.TeamId = null;
+
+            await foreach (var attendance in _context.RaidAttendees.Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance).AsAsyncEnumerable())
+            {
+                attendance.IgnoreAttendance = true;
+                attendance.IgnoreReason = "Character was removed from the raid team.";
+            }
 
             await _context.SaveChangesAsync();
 

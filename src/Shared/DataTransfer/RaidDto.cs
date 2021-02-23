@@ -3,24 +3,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.DataTransfer
 {
     public class RaidDto
     {
-        private List<RaidAttendeeDto>? _attendees;
+        private List<CharacterDto>? _attendees;
         private List<EncounterKillDto>? _kills;
 
         public string? Id { get; set; }
 
-        public string? InstanceId { get; set; }
+        public string? TeamId { get; set; }
 
-        public string? InstanceName { get; set; }
+        public string? TeamName { get; set; }
+
+        public int Phase { get; set; }
 
         public DateTimeOffset StartedAt { get; set; }
 
-        public List<RaidAttendeeDto> Attendees
+        public List<CharacterDto> Attendees
         {
             get => _attendees ??= new();
             set => _attendees = value;

@@ -1,0 +1,67 @@
+﻿@inject ApiClient Api
+
+<button type="button" class="btn btn-primary" @onclick="() => _modal?.Show()">Start Raid</button>
+
+<Modal @ref="_modal">
+    <ModalBackdrop />
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <EditForm OnValidSubmit="SubmitAsync" Model="_model" class="modal-content">
+            <DataAnnotationsValidator />
+            <CustomValidator @ref="_serverValidator" />
+
+            <ModalHeader>
+                <ModalTitle>Start Raid</ModalTitle>
+                <CloseButton Clicked="() => _modal?.Hide()" />
+            </ModalHeader>
+            <ModalBody>
+                <DataAnnotationsValidator />
+                <CustomValidator @ref="_serverValidator" />
+
+                <div class="form-group">
+                    <label for="inputPhase">Phase</label>
+                    <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
+                        @for (int phase = Constants.MinimumPhase; phase <= Constants.MaximumPhase; phase++)
+                        {
+                            <option value="@phase">Phase @phase</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                @foreach (var character in Team.Roster)
+                {
+                    <div class="form-check">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="@character.Id"
+                               checked="@_model.Attendees.Contains(character.Id!)"
+                               @onchange="() => ToggleAttendee(character.Id!)" />
+                        <label class="form-check-label" for="@character.Id">
+                            @if (character.CurrentPhaseMainspec.HasValue)
+                            {
+                                <SpecIcon Size="IconSize.Tiny" Spec="character.CurrentPhaseMainspec.Value" />
+                            }
+                            else
+                            {
+                                <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" />
+                            }
+                            <span class="ml-2">@character.Name</span>
+                        </label>
+                    </div>
+                }
+                <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+            </ModalBody>
+            <ModalFooter>
+                <button type="submit" class="btn btn-success">Start</button>
+                <button class="btn btn-secondary" @onclick="() => _modal?.Hide()" type="button">Cancel</button>
+            </ModalFooter>
+        </EditForm>
+    </div>
+</Modal>
+
+@code {
+    private Modal? _modal;
+    private CustomValidator? _serverValidator;
+
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public EventCallback<RaidDto> RaidStarted { get; set; }
+}

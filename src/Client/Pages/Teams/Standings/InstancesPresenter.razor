@@ -1,13 +1,13 @@
-﻿@inject ApiClient Api
+﻿@inject InstanceProvider Instances
 
-@if (_instances is null)
+@if (Instances.RequiresLoading)
 {
     <LoadingIndicator />
 }
 else
 {
     InstanceDto? selectedInstance = null;
-    foreach (var phaseInstances in _instances.Where(i => i.Phase >= Constants.MinimumPhase && i.Phase <= Constants.MaximumPhase).GroupBy(i => i.Phase))
+    foreach (var phaseInstances in Instances.GetCached().Where(i => i.Phase >= Constants.MinimumPhase && i.Phase <= Constants.MaximumPhase).GroupBy(i => i.Phase))
     {
         <ul class="nav nav-pills">
             <li class="nav-item">

@@ -11,14 +11,10 @@ namespace ValhallaLootList.Server.Data
     {
         public DateTime StartedAtUtc { get; set; }
 
-        [Required]
-        public string InstanceId { get; set; } = string.Empty;
+        public byte Phase { get; set; }
 
         [Required]
         public string RaidTeamId { get; set; } = string.Empty;
-
-        [Required]
-        public virtual Instance Instance { get; set; } = null!;
 
         [Required]
         public virtual RaidTeam RaidTeam { get; set; } = null!;

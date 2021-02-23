@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.Server.Data
 {
@@ -18,19 +19,21 @@ namespace ValhallaLootList.Server.Data
             TrialWeek2Penalty = -9;
 
         private readonly ApplicationDbContext _context;
+        private readonly TimeZoneInfo _serverTimeZoneInfo;
 
-        public PrioCalculator(ApplicationDbContext context)
+        public PrioCalculator(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo)
         {
             _context = context;
+            _serverTimeZoneInfo = serverTimeZoneInfo;
         }
 
-        public record PrioCalculationResult(int? Priority, bool IsUsable, string? UnusableReason);
+        public record PrioCalculationResult(int? Priority, bool Locked, string? Details);
 
         public async Task<PrioCalculationResult> CalculatePrioAsync(string characterId, uint itemId)
         {
-            var entry = await _context.LootListEntries
+            var entries = await _context.LootListEntries
                 .AsNoTracking()
-                .Where(e => e.ItemId == itemId && e.LootList.CharacterId == characterId)
+                .Where(e => (e.ItemId == itemId || e.Item!.RewardFromId == itemId) && e.LootList.CharacterId == characterId)
                 .Select(e => new
                 {
                     e.Rank,
@@ -38,22 +41,27 @@ namespace ValhallaLootList.Server.Data
                     e.LootList.Character.MemberStatus,
                     TeamId = (string?)e.LootList.Character.Team!.Id
                 })
-                .FirstOrDefaultAsync();
+                .OrderByDescending(e => e.Rank)
+                .ToListAsync();
 
-            if (entry is null)
+            if (entries.Count == 0)
             {
                 return new(null, false, "Character does not have the item on their list");
             }
 
-            if (string.IsNullOrEmpty(entry.TeamId))
+            if (string.IsNullOrEmpty(entries[0].TeamId))
             {
-                return new(null, false, "Character is not on a raid team.");
+                return new(null, entries[0].Locked, "Character is not on a raid team.");
             }
 
-            if (await _context.Drops.AnyAsync(drop => drop.ItemId == itemId && drop.Winner!.Id == characterId))
+            var winCount = await _context.Drops.CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
+
+            if (winCount >= entries.Count)
             {
-                return new(null, false, "Character already won the item.");
+                return new(null, entries[0].Locked, "Character already won the item.");
             }
+
+            var entry = entries[winCount];
 
             var lossRecords = await _context.DropPasses
                 .AsNoTracking()
@@ -61,13 +69,14 @@ namespace ValhallaLootList.Server.Data
                 .Select(dp => dp.RelativePriority)
                 .ToListAsync();
 
-            var attendances = await _context.Raids
+            var offset = TimeSpanHelpers.GetTimeZoneOffsetString(_serverTimeZoneInfo.BaseUtcOffset);
+            var attendances = await _context.RaidAttendees
                 .AsNoTracking()
-                .Where(r => r.RaidTeam.Id == entry.TeamId)
-                .OrderByDescending(r => r.StartedAtUtc)
-                .Select(r => r.Attendees.Any(a => a.CharacterId == characterId))
+                .Where(x => !x.IgnoreAttendance && x.CharacterId == characterId && x.Raid.RaidTeamId == entry.TeamId)
+                .Select(x => MySqlTranslations.ConvertTz(x.Raid.StartedAtUtc, "+00:00", offset).Date)
+                .Distinct()
+                .OrderByDescending(x => x)
                 .Take(ObservedRaidsForAttendance)
-                .Where(x => x)
                 .CountAsync();
 
             var lostCount = lossRecords.Count(x => x >= 0);

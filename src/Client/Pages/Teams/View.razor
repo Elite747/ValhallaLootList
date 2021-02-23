@@ -28,84 +28,70 @@ else
     </p>
 
     <AuthorizeView>@*TODO: check for raid leader policy*@
-        <button type="button" class="btn btn-primary my-2">Start Raid</button>
+        <RaidStarter Team="_team" RaidStarted="OnRaidStarted" />
     </AuthorizeView>
 
-    <div class="col-lg-6 col-xl-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Roster</h4>
-                <AuthorizeView>
-                    @*TODO: check for raid leader policy*@
-                    <MemberAdder Team="_team" MemberAdded="RefreshAsync" />
-                </AuthorizeView>
-            </div>
-            <div class="list-group list-group-flush">
-                <Modal @ref="_removeModal">
-                    <ModalBackdrop />
-                    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-                        <div class="modal-content">
-                            <p class="modal-body">
-                                Are you sure you want to remove @_removingCharacter?.Name from the roster?
-                            </p>
-                            <ModalFooter>
-                                <button type="button" class="btn btn-danger" @onclick="RemoveMemberConfirmedAsync">Remove</button>
-                                <button type="button" class="btn btn-secondary" @onclick="() => _removeModal?.Hide()">Cancel</button>
-                            </ModalFooter>
+    <div class="row my-5">
+        <div class="col-lg-6 col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Roster</h4>
+                    <AuthorizeView>
+                        @*TODO: check for raid leader policy*@
+                        <MemberAdder Team="_team" MemberAdded="RefreshAsync" />
+                    </AuthorizeView>
+                </div>
+                <div class="list-group list-group-flush">
+                    <Modal @ref="_removeModal">
+                        <ModalBackdrop />
+                        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <p class="text-danger">Removing a character will invalidate all of their attendance records for this team!</p>
+                                    <p>Are you sure you want to remove @_removingCharacter?.Name from the roster?</p>
+                                </div>
+                                <ModalFooter>
+                                    <button type="button" class="btn btn-danger" @onclick="RemoveMemberConfirmedAsync">Remove</button>
+                                    <button type="button" class="btn btn-secondary" @onclick="() => _removeModal?.Hide()">Cancel</button>
+                                </ModalFooter>
+                            </div>
                         </div>
-                    </div>
-                </Modal>
-                @foreach (var character in _team.Roster.OrderBy(c => GetRoleSortedIndex(c.CurrentPhaseMainspec)).ThenBy(c => c.CurrentPhaseMainspec?.ToString()).ThenBy(c => c.Name))
-                {
-                    var localCharacter = character;
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-pc-@character.Class.GetLowercaseName()">
-                        <a href="characters/@character.Name">@character.Name</a>
-                        <span>
-                            <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
-                            @if (character.CurrentPhaseMainspec.HasValue)
-                            {
-                                <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
-                            }
-                            else
-                            {
-                                <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
-                            }
-                            <AuthorizeView>
-                                @*TODO: check for raid leader policy*@
-                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => RequestRemoveMember(localCharacter)">
-                                    <span class="fas fa-minus" aria-hidden="true"></span>
-                                    <span class="sr-only">Remove Member</span>
-                                </button>
-                            </AuthorizeView>
-                        </span>
-                    </div>
-                }
+                    </Modal>
+                    @foreach (var character in _team.Roster.OrderByRoleThenClassThenName())
+                    {
+                        var localCharacter = character;
+                        <div class="list-group-item d-flex justify-content-between align-items-center bg-pc-@character.Class.GetLowercaseName()">
+                            <a href="characters/@character.Name">@character.Name</a>
+                            <span>
+                                <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
+                                @if (character.CurrentPhaseMainspec.HasValue)
+                                {
+                                    <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
+                                }
+                                else
+                                {
+                                    <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
+                                }
+                                <AuthorizeView>
+                                    @*TODO: check for raid leader policy*@
+                                    <button type="button" class="btn btn-sm btn-danger" @onclick="() => RequestRemoveMember(localCharacter)">
+                                        <span class="fas fa-minus" aria-hidden="true"></span>
+                                        <span class="sr-only">Remove Member</span>
+                                    </button>
+                                </AuthorizeView>
+                            </span>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
+
+    <RaidCalendar Team="_team" />
 }
 
 @code {
     private Modal? _removeModal;
 
     [Parameter] public string Team { get; set; } = string.Empty;
-
-    private int GetRoleSortedIndex(Specializations? spec)
-    {
-        if (spec.HasValue)
-        {
-            if ((spec.Value & Specializations.Tank) != 0)
-            {
-                return 1;
-            }
-
-            if ((spec.Value & Specializations.Healer) != 0)
-            {
-                return 2;
-            }
-
-            return 3;
-        }
-        return int.MaxValue;
-    }
 }

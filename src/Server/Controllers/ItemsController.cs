@@ -79,6 +79,7 @@ namespace ValhallaLootList.Server.Controllers
                                        })
                                        .ToList()
                 })
+                .AsSingleQuery()
                 .AsAsyncEnumerable();
         }
     }

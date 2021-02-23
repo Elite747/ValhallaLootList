@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
@@ -21,10 +22,12 @@ namespace ValhallaLootList.Server.Controllers
     public class CharactersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly TimeZoneInfo _serverTimeZoneInfo;
 
-        public CharactersController(ApplicationDbContext context)
+        public CharactersController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo)
         {
             _context = context;
+            _serverTimeZoneInfo = serverTimeZoneInfo;
         }
 
         [HttpGet]
@@ -53,6 +56,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return query
+                .OrderBy(c => c.Name)
                 .Select(c => new CharacterDto
                 {
                     Class = c.Class,
@@ -480,7 +484,7 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(dp => new { dp.DropItemId, dp.RelativePriority })
                 .ToListAsync();
 
-            var winRecords = new HashSet<uint>();
+            var winRecords = new Dictionary<uint, int>();
 
             await foreach (var drop in _context.Drops
                 .AsNoTracking()
@@ -488,13 +492,18 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(d => d.ItemId)
                 .AsAsyncEnumerable())
             {
-                winRecords.Add(drop);
+                winRecords.TryGetValue(drop, out int i);
+                winRecords[drop] = i + 1;
             }
 
+            var offset = TimeSpanHelpers.GetTimeZoneOffsetString(_serverTimeZoneInfo.BaseUtcOffset);
             var attendances = teamId?.Length > 0 ? await _context.RaidAttendees
                 .AsNoTracking()
+                .AsSingleQuery()
                 .Where(x => !x.IgnoreAttendance && x.CharacterId == characterId && x.Raid.RaidTeamId == teamId)
-                .OrderByDescending(x => x.Raid.StartedAtUtc)
+                .Select(x => MySqlTranslations.ConvertTz(x.Raid.StartedAtUtc, "+00:00", offset).Date)
+                .Distinct()
+                .OrderByDescending(x => x)
                 .Take(PrioCalculator.ObservedRaidsForAttendance)
                 .CountAsync() : 0;
 
@@ -511,6 +520,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     e.Id,
                     e.ItemId,
+                    e.Item!.RewardFromId,
                     ItemName = (string?)e.Item!.Name,
                     e.Rank,
                     e.Won,
@@ -520,21 +530,24 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (dtos.TryGetValue(entry.Phase, out var dto))
                 {
-                    bool won = entry.Won;
+                    bool won = false;
                     int? prio = null;
 
                     if (entry.ItemId.HasValue)
                     {
-                        if (!won)
+                        var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
+
+                        if (!won && winRecords.TryGetValue(rewardFromId, out int winCount) && winCount > 0)
                         {
-                            won = winRecords.Contains(entry.ItemId.Value);
+                            won = true;
+                            winRecords[rewardFromId] = winCount - 1;
                         }
 
                         if (!won && dto.Locked)
                         {
                             int loss = 0, underPrio = 0;
 
-                            foreach (var passRecord in passRecords.Where(x => x.DropItemId == entry.ItemId))
+                            foreach (var passRecord in passRecords.Where(x => x.DropItemId == rewardFromId))
                             {
                                 if (passRecord.RelativePriority >= 0)
                                 {
@@ -559,7 +572,7 @@ namespace ValhallaLootList.Server.Controllers
                         ItemName = entry.ItemName,
                         Prio = showRanks ? prio : null,
                         Rank = showRanks ? entry.Rank : 0,
-                        Won = won
+                        Won = won || entry.Won
                     });
                 }
             }

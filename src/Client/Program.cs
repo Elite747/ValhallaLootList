@@ -23,7 +23,10 @@ namespace ValhallaLootList.Client
             builder.Services.AddHttpClient(ApiClient.HttpClientKey, client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
-            builder.Services.AddScoped<ApiClient>();
+            builder.Services
+                .AddScoped<ApiClient>()
+                .AddScoped<InstanceProvider>()
+                .AddSingleton<InstanceCache>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 

@@ -6,20 +6,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class RaidSubmissionDto
+    public class RaidSubmissionDto : IValidatableObject
     {
-        private List<RaidSubmissionAttendeeDto>? _attendees;
+        private List<string>? _attendees;
 
         [Required]
         public string? TeamId { get; set; }
 
         [Required]
-        public string? InstanceId { get; set; }
+        public int Phase { get; set; }
 
-        public List<RaidSubmissionAttendeeDto> Attendees
+        public List<string> Attendees
         {
             get => _attendees ??= new();
             set => _attendees = value;
+        }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Attendees.Count == 0)
+            {
+                yield return new ValidationResult("At least one attendee must be present.", new[] { nameof(Attendees) });
+            }
         }
     }
 }

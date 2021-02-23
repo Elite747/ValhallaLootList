@@ -1,6 +1,8 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Extensions;
@@ -8,6 +10,7 @@ using IdentityServer4.EntityFramework.Interfaces;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Options;
 
 namespace ValhallaLootList.Server.Data
@@ -31,6 +34,7 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; } = null!;
         public virtual DbSet<Encounter> Encounters { get; set; } = null!;
         public virtual DbSet<EncounterKill> EncounterKills { get; set; } = null!;
+        public virtual DbSet<CharacterEncounterKill> CharacterEncounterKills { get; set; } = null!;
         public virtual DbSet<Character> Characters { get; set; } = null!;
         public virtual DbSet<CharacterLootList> CharacterLootLists { get; set; } = null!;
         public virtual DbSet<LootListEntry> LootListEntries { get; set; } = null!;
@@ -52,7 +56,9 @@ namespace ValhallaLootList.Server.Data
 
             builder.Entity<Character>().HasIndex(e => e.Name).IsUnique();
 
-            builder.Entity<CharacterEncounterKill>().HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.CharacterId });
+            builder.Entity<CharacterEncounterKill>()
+                .ToTable("characterencounterkill")
+                .HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.CharacterId });
 
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
 
@@ -69,6 +75,9 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<RaidAttendee>().HasKey(e => new { e.CharacterId, e.RaidId });
 
             builder.Entity<RaidTeam>().HasIndex(e => e.Name).IsUnique();
+
+            builder.HasDbFunction(typeof(MySqlTranslations).GetMethod(nameof(MySqlTranslations.ConvertTz)))
+                .HasTranslation(args => new SqlFunctionExpression("CONVERT_TZ", args, nullable: true, args.Select(_ => false), typeof(DateTime), null));
         }
 
         Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();

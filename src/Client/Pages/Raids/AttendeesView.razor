@@ -1,0 +1,54 @@
+﻿@inject ApiClient Api
+
+<div class="card shadow">
+    <div class="card-header">
+        <span>Rostered Attendees</span>
+    </div>
+    <div class="card-body">
+        <ul>
+            @foreach (var attendee in Raid.Attendees)
+            {
+                var character = attendee;
+                <li>
+                    <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span> 
+                    <AuthorizeView>
+                        <button class="btn btn-danger btn-sm" type="button" @onclick="() => OnRemoveClickedAsync(character)">
+                            <span class="fas fa-minus" aria-hidden="true"></span>
+                            <span class="sr-only">Remove</span>
+                        </button>
+                    </AuthorizeView>
+                </li>
+            }
+            <AuthorizeView>
+                <li>
+                    <Dropdown Toggled="OnToggledAsync">
+                        <DropdownToggle Color="Color.Primary">
+                            Add Attendee
+                        </DropdownToggle>
+                        <DropdownMenu>
+                            @if (_allCharacters is null)
+                            {
+                                <LoadingIndicator />
+                            }
+                            else
+                            {
+                                foreach (var character in _allCharacters.Where(x => !Raid.Attendees.Any(y => x.Name == y.Name)))
+                                {
+                                    var localCharacter = character;
+                                    <DropdownItem Clicked="() => OnAddClickedAsync(localCharacter)">
+                                        <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+                                    </DropdownItem>
+                                }
+                            }
+                        </DropdownMenu>
+                    </Dropdown>
+                </li>
+            </AuthorizeView>
+        </ul>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+}

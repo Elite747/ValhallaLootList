@@ -21,7 +21,7 @@ namespace ValhallaLootList.Server.Controllers
             _context = context;
         }
 
-        public IAsyncEnumerable<InstanceDto> Get(byte? phase)
+        public IAsyncEnumerable<InstanceDto> Get(byte? phase, byte? minPhase, byte? maxPhase, bool includeEncounters = true)
         {
             var query = _context.Instances.AsNoTracking();
 
@@ -31,7 +31,28 @@ namespace ValhallaLootList.Server.Controllers
             }
             else
             {
+                if (minPhase.HasValue)
+                {
+                    query = query.Where(i => i.Phase >= minPhase.Value);
+                }
+                if (maxPhase.HasValue)
+                {
+                    query = query.Where(i => i.Phase <= maxPhase.Value);
+                }
+
                 query = query.OrderBy(i => i.Phase).ThenBy(i => i.Name);
+            }
+
+            if (!includeEncounters)
+            {
+                return query
+                    .Select(i => new InstanceDto
+                    {
+                        Id = i.Id,
+                        Name = i.Name,
+                        Phase = i.Phase,
+                    })
+                    .AsAsyncEnumerable();
             }
 
             return query
@@ -47,6 +68,7 @@ namespace ValhallaLootList.Server.Controllers
                         Name = e.Name
                     }).ToList()
                 })
+                .AsSingleQuery()
                 .AsAsyncEnumerable();
         }
     }

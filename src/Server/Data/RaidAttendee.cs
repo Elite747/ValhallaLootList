@@ -22,7 +22,5 @@ namespace ValhallaLootList.Server.Data
         public bool IgnoreAttendance { get; set; }
 
         public string? IgnoreReason { get; set; }
-
-        public bool UsingOffspec { get; set; }
     }
 }

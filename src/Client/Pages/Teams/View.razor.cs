@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -29,6 +30,11 @@ namespace ValhallaLootList.Client.Pages.Teams
                 try
                 {
                     _team = await Api.GetAsync<TeamDto>("api/v1/teams/" + Team);
+
+                    if (_team is not null)
+                    {
+                        _team.Roster = _team.Roster.OrderByRoleThenClassThenName().ToList();
+                    }
                 }
                 catch (AccessTokenNotAvailableException exception)
                 {
@@ -66,6 +72,11 @@ namespace ValhallaLootList.Client.Pages.Teams
             {
                 ex.Redirect();
             }
+        }
+
+        private void OnRaidStarted(RaidDto response)
+        {
+            Nav.NavigateTo("/raids/" + response.Id);
         }
     }
 }

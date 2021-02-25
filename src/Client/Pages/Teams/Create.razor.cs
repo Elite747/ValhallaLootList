@@ -1,12 +1,11 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
-using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Teams

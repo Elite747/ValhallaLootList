@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ValhallaLootList.DataTransfer;
 
-namespace ValhallaLootList.Client
+namespace ValhallaLootList.Client.Data.Instances
 {
     public class InstanceProvider
     {
@@ -46,7 +46,7 @@ namespace ValhallaLootList.Client
             return null;
         }
 
-        public InstanceDto? FindCached(string id) => _instanceCache.GetById(id);
+        public InstanceDto? FindCached(string id) => _instanceCache.GetByKey(id);
 
         private async Task DownloadAsync(CancellationToken cancellationToken)
         {

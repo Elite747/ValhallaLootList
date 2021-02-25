@@ -1,5 +1,5 @@
 ﻿@inject ApiClient Api
-@inject InstanceProvider Instances
+@inject Data.Instances.InstanceProvider Instances
 
 @foreach (var kill in Raid.Kills)
 {
@@ -87,7 +87,7 @@
                             <div class="custom-control custom-checkbox">
                                 <InputCheckbox class="custom-control-input" id="@itemId" @bind-Value="_addKillInputModel.Drops[localItemId].Checked" />
                                 <label class="custom-control-label" for="@itemId">
-                                    <ItemLink Id="localItemId" />
+                                    <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
                                 </label>
                             </div>
                         }

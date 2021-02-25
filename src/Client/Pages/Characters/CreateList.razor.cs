@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Characters

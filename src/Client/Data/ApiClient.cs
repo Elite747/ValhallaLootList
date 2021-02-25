@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
-namespace ValhallaLootList.Client
+namespace ValhallaLootList.Client.Data
 {
     public sealed class ApiClient : IDisposable
     {

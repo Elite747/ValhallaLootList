@@ -10,6 +10,8 @@ using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using ValhallaLootList.Client.Data;
+using ValhallaLootList.Client.Data.Instances;
 
 namespace ValhallaLootList.Client
 {

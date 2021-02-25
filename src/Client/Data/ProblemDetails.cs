@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace ValhallaLootList.Client
+namespace ValhallaLootList.Client.Data
 {
     public class ProblemDetails
     {

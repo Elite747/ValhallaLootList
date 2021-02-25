@@ -34,14 +34,15 @@
                         var item = id == 0 ? null : Items.FirstOrDefault(x => x.Id == id);
 
                         <div class="col-md">
-                            <ItemLink Id="row.Value[col]" @onclick="async () => await SelectionRequested.InvokeAsync(new() { Bracket = Bracket, Column = column, Rank = row.Key })">
+                            <ItemLink Id="id" @onclick="async () => await SelectionRequested.InvokeAsync(new() { Bracket = Bracket, Column = column, Rank = row.Key })">
                                 @if (id == 0)
                                 {
                                     <span class="text-primary">Select Item</span>
                                 }
                                 else
                                 {
-                                    <span class="text-epic">[@(item?.Name ?? $"Unknown Item #{id}")]</span>
+                                    <ItemLinkIcon Size="IconSize.Tiny" />
+                                    <ItemLinkText OverrideText="@item?.Name" Colorize="true" Bracketize="true" />
                                 }
                             </ItemLink>
                             @if (item is not null)

@@ -23,9 +23,7 @@
                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(drop.WinnerId is null ? "text-danger" : "text-success")">
                     <div>
                         <div>
-                            <ItemLink LinkEnabled="true" Id="drop.ItemId" class="text-epic">
-                                [@drop.ItemName]
-                            </ItemLink>
+                            <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true" OverrideText="@drop.ItemName" />
                         </div>
                         <div>Awarded to @(drop.WinnerName ?? "nobody").</div>
                     </div>

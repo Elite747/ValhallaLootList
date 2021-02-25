@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Data.Instances;
+using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client
 {
@@ -25,10 +26,16 @@ namespace ValhallaLootList.Client
             builder.Services.AddHttpClient(ApiClient.HttpClientKey, client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
+            builder.Services.AddHttpClient(WowheadClient.HttpClientKey, client => client.BaseAddress = new Uri("https://www.wowhead.com/"));
+
             builder.Services
                 .AddScoped<ApiClient>()
+                .AddScoped<WowheadClient>()
+                .AddScoped<WowheadInterop>()
                 .AddScoped<InstanceProvider>()
-                .AddSingleton<InstanceCache>();
+                .AddSingleton<InstanceCache>()
+                .AddScoped<ItemProvider>()
+                .AddSingleton<ItemCache>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 

@@ -1,0 +1,16 @@
+﻿<a data-wowhead="@(Id > 0 ? $"item={Id}" : null)"
+   href="@(LinkEnabled ? $"https://www.wowhead.com/item={Id}" : null)"
+   style="@(LinkEnabled ? null : "cursor: pointer")"
+   @attributes="AdditionalAttributes">
+    <CascadingValue Value="_context">
+        @if (ChildContent is null)
+        {
+            <ItemLinkIcon />
+            <ItemLinkText />
+        }
+        else
+        {
+            @ChildContent
+        }
+    </CascadingValue>
+</a>

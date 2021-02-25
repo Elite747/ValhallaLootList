@@ -21,7 +21,7 @@
                     }
                     <tr>
                         <td>
-                            <ItemLink Id="itemId" LinkEnabled="true" />
+                            <ItemLink Id="itemId" LinkEnabled="true" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
                         </td>
                         <td>
                             @foreach (var entry in entries.OrderByDescending(e => e.prio).ThenBy(e => e.name))

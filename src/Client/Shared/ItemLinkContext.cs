@@ -1,0 +1,18 @@
+﻿// Copyright (C) 2021 Donovan Sullivan
+// GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+using ValhallaLootList.Client.Data.Items;
+
+namespace ValhallaLootList.Client.Shared
+{
+    public class ItemLinkContext
+    {
+        public uint? Id { get; set; }
+        public Item? Item { get; set; }
+        public IconSize? IconSize { get; set; }
+        public bool Bracketize { get; set; }
+        public bool Colorize { get; set; }
+        public bool Failed { get; set; }
+        public string? OverrideText { get; set; }
+    }
+}

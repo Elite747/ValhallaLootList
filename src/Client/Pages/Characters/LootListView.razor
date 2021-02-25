@@ -21,13 +21,11 @@
                                 <div class="col-md">
                                     @if (entry.ItemId > 0)
                                     {
-                                        <ItemLink Id="entry.ItemId" LinkEnabled="true">
-                                            <span class="text-epic">[@(entry.ItemName ?? $"Unknown Item #{entry.ItemId}")]</span>
-                                        </ItemLink> 
+                                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" /> 
                                     }
                                     @if (entry.Prio.HasValue)
                                     {
-                                        @:Prio: @entry.Prio 
+                                        @: Prio: @entry.Prio 
                                     }
                                     else if (entry.Won)
                                     {
@@ -45,9 +43,7 @@
                 @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
                 {
                     <li class="list-group-item p-1">
-                        <ItemLink Id="entry.ItemId" LinkEnabled="true">
-                            <span class="text-epic">[@(entry.ItemName ?? $"Unknown Item #{entry.ItemId}")]</span>
-                        </ItemLink> 
+                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" /> 
                         @if (entry.Won)
                         {
                             <span class="fas fa-check text-success" aria-hidden="true"></span>

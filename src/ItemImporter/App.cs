@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ValhallaLootList.ItemImporter.WarcraftDatabase;
-using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Data.Seeding;
 
 namespace ValhallaLootList.ItemImporter
 {
@@ -22,37 +22,46 @@ namespace ValhallaLootList.ItemImporter
         private readonly ILogger<App> _logger;
         private readonly WowDataContext _wowContext;
         private readonly Config _config;
-        private readonly ApplicationDbContext _appContext;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
-        private List<ItemTemplate> _itemTemplatesCache;
+        private List<ItemTemplate> _itemTemplates;
+        private List<SpellTemplate> _spellTemplates;
 
-        public App(ILogger<App> logger, IOptions<Config> config, WowDataContext wowContext, ApplicationDbContext appContext, IHostApplicationLifetime hostApplicationLifetime)
+        public App(ILogger<App> logger, IOptions<Config> config, WowDataContext wowContext, IHostApplicationLifetime hostApplicationLifetime)
         {
             _logger = logger;
             _wowContext = wowContext;
             _config = config.Value;
-            _appContext = appContext;
             _hostApplicationLifetime = hostApplicationLifetime;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("App started");
+            _logger.LogDebug("App started");
 
-            await _appContext.Database.MigrateAsync(cancellationToken);
+            await LoadTablesIntoMemoryAsync(cancellationToken);
 
-            foreach (var key in _config.Instances.Keys)
+            var items = new List<SeedItem>();
+
+            foreach (var itemId in await LoadItemsFromSeedInstancesAsync(cancellationToken))
             {
-                await foreach (var item in ParseZoneLootAsync(key, cancellationToken).WithCancellation(cancellationToken))
+                _logger.LogDebug($"Discovered Item #{itemId}");
+                items.Add(ParseItem(itemId, null));
+
+                if (_config.Tokens.TryGetValue(itemId, out var tokenRewards))
                 {
-                    _logger.LogInformation($"Added {item.Name} ({item.Id}) to the application context.");
+                    foreach (var tokenRewardId in tokenRewards)
+                    {
+                        _logger.LogDebug($"Discovered Item #{tokenRewardId} as a reward from token #{itemId}.");
+                        items.Add(ParseItem(tokenRewardId, itemId));
+                    }
                 }
             }
 
-            var changes = await _appContext.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation($"Application context saved with {changes} changes.");
+            _logger.LogInformation($"Parsed {items.Count} items. Saving to seed file.");
 
-            _logger.LogInformation("App finished");
+            await SaveItemsSeedAsync(items, cancellationToken);
+
+            _logger.LogDebug("App finished");
             _hostApplicationLifetime.StopApplication();
         }
 
@@ -63,63 +72,28 @@ namespace ValhallaLootList.ItemImporter
             return Task.CompletedTask;
         }
 
-        private static ValueTask<T> FindAsync<T>(DbSet<T> items, Expression<Func<T, bool>> expression, CancellationToken cancellationToken = default) where T : class
+        private async Task LoadTablesIntoMemoryAsync(CancellationToken cancellationToken)
         {
-            var item = items.Local.FirstOrDefault(expression.Compile());
-
-            if (item is null)
-            {
-                return new ValueTask<T>(items.FirstOrDefaultAsync(expression, cancellationToken));
-            }
-
-            return new ValueTask<T>(item);
+            _itemTemplates ??= await _wowContext.ItemTemplates.AsNoTracking().ToListAsync(cancellationToken);
+            _spellTemplates ??= await _wowContext.SpellTemplates.AsNoTracking().ToListAsync(cancellationToken);
         }
 
-        private async IAsyncEnumerable<Item> ParseZoneLootAsync(string zone, [EnumeratorCancellation] CancellationToken cancellationToken)
+        private async Task<IEnumerable<uint>> LoadItemsFromSeedInstancesAsync(CancellationToken cancellationToken)
         {
-            var instanceConfig = _config.Instances[zone];
-            foreach (var id in instanceConfig.Items)
-            {
-                _logger.LogInformation($"Discovered item:{id} in zone {zone}");
-
-                var instance = await FindAsync(_appContext.Instances, i => i.Name == zone, cancellationToken);
-
-                if (instance is null)
-                {
-                    instance = new Instance { Name = zone, Phase = instanceConfig.Phase };
-                    _appContext.Instances.Add(instance);
-                }
-                else
-                {
-                    instance.Phase = instanceConfig.Phase;
-                }
-
-                var item = await ParseItemAsync(id, instance, null, cancellationToken);
-
-                if (item is not null)
-                {
-                    yield return item;
-
-                    if (_config.Tokens.TryGetValue(item.Id, out var tokenRewards))
-                    {
-                        foreach (var rewardId in tokenRewards)
-                        {
-                            var subitem = await ParseItemAsync(rewardId, instance, item.Encounter, cancellationToken);
-                            if (item is not null)
-                            {
-                                _logger.LogInformation($"'{item.Name}' ({item.Id}) is a token for acquiring '{subitem.Name}' ({subitem.Id}). RewardFrom was set for this item.");
-                                subitem.RewardFrom = item;
-                                yield return subitem;
-                            }
-                        }
-                    }
-                }
-            }
+            using var fs = File.OpenRead(_config.SeedInstancesPath);
+            var instances = await JsonSerializer.DeserializeAsync<List<SeedInstance>>(fs, cancellationToken: cancellationToken);
+            return instances.SelectMany(i => i.Encounters).SelectMany(e => e.Items).Distinct().OrderBy(id => id);
         }
 
-        private async Task<Item> ParseItemAsync(uint id, Instance instance, Encounter encounter, CancellationToken cancellationToken)
+        private async Task SaveItemsSeedAsync(List<SeedItem> items, CancellationToken cancellationToken)
         {
-            var itemTemplate = (_itemTemplatesCache ??= (await _wowContext.ItemTemplates.AsNoTracking().ToListAsync(cancellationToken))).Find(x => x.Entry == id);
+            using var fs = File.Create(_config.SeedItemsPath);
+            await JsonSerializer.SerializeAsync(fs, items, new() { WriteIndented = true }, cancellationToken);
+        }
+
+        private SeedItem ParseItem(uint id, uint? tokenId)
+        {
+            var itemTemplate = _itemTemplates.Find(x => x.Entry == id);
 
             if (itemTemplate is null)
             {
@@ -127,30 +101,15 @@ namespace ValhallaLootList.ItemImporter
                 return null;
             }
 
-            _logger.LogInformation($"Parsing Item #{id}...");
-
             if (itemTemplate.Quality != 4)
             {
                 _logger.LogWarning($"'{itemTemplate.Name}' ({id}) is not epic quality. Item will not be parsed.");
                 return null;
             }
 
-            var item = await _appContext.Items.FindAsync(new object[] { id }, cancellationToken);
-
-            if (item is null)
-            {
-                item = new Item { Id = id };
-                _appContext.Items.Add(item);
-            }
-            else
-            {
-                // block value can be listed more than once, so make it cumulative. Are other stats like this?
-                item.BlockValue = 0;
-            }
+            var item = new SeedItem { Id = id, RewardFromId = tokenId };
 
             item.Name = itemTemplate.Name;
-            item.Encounter = encounter ?? await GetOrCreateEncounterAsync(id, instance, cancellationToken);
-            item.EncounterId = item.Encounter.Id;
 
             switch (itemTemplate.InventoryType)
             {
@@ -298,11 +257,11 @@ namespace ValhallaLootList.ItemImporter
             ParsePrimaryStat(item, itemTemplate.StatType9, itemTemplate.StatValue9);
             ParsePrimaryStat(item, itemTemplate.StatType10, itemTemplate.StatValue10);
 
-            await ParseSpellAsync(item, itemTemplate.Spellid1, itemTemplate.Spelltrigger1, cancellationToken);
-            await ParseSpellAsync(item, itemTemplate.Spellid2, itemTemplate.Spelltrigger2, cancellationToken);
-            await ParseSpellAsync(item, itemTemplate.Spellid3, itemTemplate.Spelltrigger3, cancellationToken);
-            await ParseSpellAsync(item, itemTemplate.Spellid4, itemTemplate.Spelltrigger4, cancellationToken);
-            await ParseSpellAsync(item, itemTemplate.Spellid5, itemTemplate.Spelltrigger5, cancellationToken);
+            ParseSpell(item, itemTemplate.Spellid1, itemTemplate.Spelltrigger1);
+            ParseSpell(item, itemTemplate.Spellid2, itemTemplate.Spelltrigger2);
+            ParseSpell(item, itemTemplate.Spellid3, itemTemplate.Spelltrigger3);
+            ParseSpell(item, itemTemplate.Spellid4, itemTemplate.Spelltrigger4);
+            ParseSpell(item, itemTemplate.Spellid5, itemTemplate.Spelltrigger5);
 
             if (itemTemplate.SocketColor1 != 0) item.Sockets++;
             if (itemTemplate.SocketColor2 != 0) item.Sockets++;
@@ -327,7 +286,7 @@ namespace ValhallaLootList.ItemImporter
 
                 if ((classes & ~allClasses) != 0)
                 {
-                    _logger.LogInformation($"'{itemTemplate.Name}' ({itemTemplate.Entry}) has an unexpected AllowableClass value of {itemTemplate.AllowableClass}!");
+                    _logger.LogWarning($"'{itemTemplate.Name}' ({itemTemplate.Entry}) has an unexpected AllowableClass value of {itemTemplate.AllowableClass}!");
                 }
             }
 
@@ -335,95 +294,7 @@ namespace ValhallaLootList.ItemImporter
             return item;
         }
 
-        private async Task<Encounter> GetOrCreateEncounterAsync(uint itemId, Instance instance, CancellationToken cancellationToken)
-        {
-            var name = await GetEncounterNameAsync(itemId, cancellationToken);
-
-            if (name?.Length > 0)
-            {
-                var encounter = await FindAsync(_appContext.Encounters, e => e.Name == name, cancellationToken);
-
-                if (encounter is null)
-                {
-                    encounter = new Encounter { Name = name };
-                    _appContext.Encounters.Add(encounter);
-                }
-
-                encounter.Instance = instance;
-
-                return encounter;
-            }
-
-            return null;
-        }
-
-        private async Task<string> GetEncounterNameAsync(uint itemId, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation($"Looking up encounter for Item #{itemId}...");
-            if (_config.BossOverrides.TryGetValue(itemId, out string bossName))
-            {
-                _logger.LogInformation($"Item #{itemId} was hard-coded with the boss '{bossName}'.");
-                return bossName;
-            }
-
-            uint lootId = itemId;
-
-            var rlt = await _wowContext.ReferenceLootTemplates
-                .AsNoTracking()
-                .Where(x => x.Item == itemId)
-                .Select(x => new { x.Entry })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (rlt is not null)
-            {
-                _logger.LogInformation($"Found reference loot template #{rlt.Entry} for Item #{itemId}.");
-                lootId = rlt.Entry;
-            }
-
-            var bosses = new HashSet<string>();
-
-            await foreach (var boss in (from creature in _wowContext.CreatureTemplates
-                                        join creatureLoot in _wowContext.CreatureLootTemplates
-                                        on creature.Entry equals creatureLoot.Entry
-                                        where creatureLoot.Item == lootId
-                                        select creature.Name)
-                                        .Concat(
-                                        from obj in _wowContext.GameobjectTemplates
-                                        join objLoot in _wowContext.GameobjectLootTemplates
-                                        on (uint)obj.Data1 equals objLoot.Entry
-                                        where objLoot.Item == lootId
-                                        select obj.Name)
-                                        .AsAsyncEnumerable()
-                                        .WithCancellation(cancellationToken))
-            {
-                _logger.LogInformation($"Item #{itemId} was found to drop from '{boss}'.");
-                if (_config.BossNameOverrides.TryGetValue(boss, out bossName))
-                {
-                    _logger.LogInformation($"Overriding boss name '{boss}' to '{bossName}'.");
-                    bosses.Add(bossName);
-                }
-                else
-                {
-                    bosses.Add(boss);
-                }
-            }
-
-            if (bosses.Count > 1)
-            {
-                _logger.LogWarning($"Item #{itemId} was found on more than one boss!");
-                return string.Join(", ", bosses);
-            }
-
-            if (bosses.Count == 0)
-            {
-                _logger.LogError($"Could not find the boss for item #{itemId}!");
-                return string.Empty;
-            }
-
-            return bosses.First();
-        }
-
-        private void ParsePrimaryStat(Item item, byte id, int value)
+        private void ParsePrimaryStat(SeedItem item, byte id, int value)
         {
             switch (id)
             {
@@ -453,7 +324,7 @@ namespace ValhallaLootList.ItemImporter
             }
         }
 
-        private async Task ParseSpellAsync(Item item, uint spellId, int trigger, CancellationToken cancellationToken)
+        private void ParseSpell(SeedItem item, uint spellId, int trigger)
         {
             if (spellId == 0)
             {
@@ -462,7 +333,7 @@ namespace ValhallaLootList.ItemImporter
 
             _logger.LogInformation($"Looking up spell for Item #{item.Id}...");
 
-            var spell = await _wowContext.SpellTemplates.FindAsync(new object[] { spellId }, cancellationToken);
+            var spell = _spellTemplates.Find(spell => spell.Id == spellId);
 
             if (spell is null)
             {
@@ -492,7 +363,7 @@ namespace ValhallaLootList.ItemImporter
             _logger.LogInformation($"Finished parsing spell '{spell.SpellName}' for item '{item.Name}'.");
         }
 
-        private void ParseSpellEffect(Item item, int basePoints, uint auraName, uint triggerSpell, int miscValue)
+        private void ParseSpellEffect(SeedItem item, int basePoints, uint auraName, uint triggerSpell, int miscValue)
         {
             if (triggerSpell > 0)
             {

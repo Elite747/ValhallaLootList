@@ -2,15 +2,13 @@
 
 ### Prerequisites
 
-1. ASP.Net Core 5.x SDK
+1. ASP.Net Core 5.x SDK (Included with Visual Studio 2019)
 2. MySQL server
-3. "World of Warcraft: The Burning Crusade" world database (not provided)
-
-4. Discord Application credentials
+3. Discord Application credentials
 
 ### Database Setup
 
-For local development, a MySQL database server needs to be used. Initializing and upgrading the database is done using the `ItemImporter` tool. Using this tool requires a connection to your development database and a WoW: TBC world database. This database is not provided. Once you have a local MySQL server running (or access to an existing MySQL server), you need to store the connection strings using the .net Secret Manager tool.
+For local development, a MySQL database server needs to be used. Initializing and upgrading the database is done using the `SeedAndMigrate` tool. Using this tool requires a connection to your development database. Once you have a local MySQL server running (or access to an existing MySQL server), you need to store the connection strings using the .net Secret Manager tool.
 
 In the root directory, run the following commands:
 
@@ -18,19 +16,27 @@ In the root directory, run the following commands:
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your application connection string>" -p src/server
 ```
 
-``` 
-dotnet user-secrets set "ConnectionStrings:WowConnection" "<WoW world DB connection string>" -p src/server
-```
-
 Note: The Secret Manager is configured to be shared across all projects. You only need to set secrets in one project for them to be available in all of them.
 
 Once the world DB is set up, and your development MySQL server is running, run the following command to either initialize and populate the development database or update your existing database:
 
 ```
-dotnet run -p src/ItemImporter
+dotnet run -p src/SeedAndMigrate
 ```
 
-This application may take several minutes to complete.
+### Generating Items
+
+The repo contains a pre-generated collection of items that are inserted into the database when seeded. The items are in `/src/seed.items.json`. This can be re-created using a World of Warcraft world database. (Not provided) If you have this database running on MySql, you can set the connection string to it using the following command:
+
+``` 
+dotnet user-secrets set "ConnectionStrings:WowConnection" "<WoW world DB connection string>" -p src/server
+```
+
+Once set, you can generate the `seed.items.json` using the following command:
+
+``` 
+dotnet run -p src/ItemImporter
+```
 
 ### Item Restriction Determinations
 

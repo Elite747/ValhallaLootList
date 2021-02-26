@@ -2,12 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <Nullable>disable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Server\ValhallaLootList.Server.csproj" />

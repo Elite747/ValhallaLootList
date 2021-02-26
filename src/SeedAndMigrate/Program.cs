@@ -4,9 +4,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-namespace ValhallaLootList.ItemImporter
+namespace ValhallaLootList.SeedAndMigrate
 {
     public static class Program
     {
@@ -19,7 +18,6 @@ namespace ValhallaLootList.ItemImporter
             Host.CreateDefaultBuilder(args)
                 .UseConsoleLifetime()
                 .ConfigureHostConfiguration(config => config.AddUserSecrets(typeof(Program).Assembly))
-                .ConfigureLogging(log => log.AddFile("Logs/ItemImporter-{Date}.txt", LogLevel.Warning))
                 .ConfigureServices((hostContext, services) => new Startup(hostContext.Configuration).ConfigureServices(services));
     }
 }

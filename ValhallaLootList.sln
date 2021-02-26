@@ -16,9 +16,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFD128CE-9F14-4408-A4B1-78EC2AA3AFC7}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		src\seed.instances.json = src\seed.instances.json
+		src\seed.items.json = src\seed.items.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.SeedAndMigrate", "src\SeedAndMigrate\ValhallaLootList.SeedAndMigrate.csproj", "{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +50,10 @@ Global
 		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3257FFBA-C6C4-4B86-8242-BAD107F956A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +61,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{890B71D0-9D14-44A3-A001-B7EC13C9C0A9} = {4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}
 		{3257FFBA-C6C4-4B86-8242-BAD107F956A7} = {4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}
+		{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49} = {4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B16C1DAE-97D1-4062-9B69-39A60B065E07}

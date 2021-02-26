@@ -57,7 +57,7 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<Character>().HasIndex(e => e.Name).IsUnique();
 
             builder.Entity<CharacterEncounterKill>()
-                .ToTable("characterencounterkill")
+                .ToTable("CharacterEncounterKill")
                 .HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.CharacterId });
 
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
@@ -66,11 +66,7 @@ namespace ValhallaLootList.Server.Data
 
             builder.Entity<DropPass>().HasKey(e => new { e.DropEncounterKillRaidId, e.DropEncounterKillEncounterId, e.DropItemId, e.CharacterId });
 
-            builder.Entity<Encounter>().HasIndex(e => e.Name).IsUnique();
-
             builder.Entity<EncounterKill>().HasKey(e => new { e.EncounterId, e.RaidId });
-
-            builder.Entity<Instance>().HasIndex(e => e.Name).IsUnique();
 
             builder.Entity<RaidAttendee>().HasKey(e => new { e.CharacterId, e.RaidId });
 

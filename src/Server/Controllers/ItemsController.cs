@@ -29,7 +29,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (phase.HasValue)
             {
-                results = results.Where(item => item.Encounter.Instance.Phase == phase.Value);
+                results = results.Where(item => (item.RewardFromId != null ? item.RewardFrom!.Encounter!.Instance.Phase : item.Encounter!.Instance!.Phase) == phase.Value); // TODO: Simplify phase query
             }
 
             if (!includeTokens)

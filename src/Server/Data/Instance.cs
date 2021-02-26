@@ -8,7 +8,7 @@ namespace ValhallaLootList.Server.Data
 {
     public class Instance : KeyedRow
     {
-        [Required]
+        [Required, StringLength(255)]
         public string Name { get; set; } = string.Empty;
 
         public byte Phase { get; set; }

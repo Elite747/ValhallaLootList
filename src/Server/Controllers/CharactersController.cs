@@ -310,7 +310,7 @@ namespace ValhallaLootList.Server.Controllers
             var items = await _context.Items
                 .AsNoTracking()
                 .Where(item => allItemIds.Contains(item.Id))
-                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, item.Encounter.Instance.Phase })
+                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, Phase = (item.RewardFromId != null ? item.RewardFrom!.Encounter!.Instance.Phase : item.Encounter!.Instance!.Phase) }) // TODO: simplify phase query
                 .ToDictionaryAsync(item => item.Id);
 
             var bothSpecs = dto.OffSpec.HasValue ? (dto.MainSpec.Value | dto.OffSpec.Value) : dto.MainSpec.Value;

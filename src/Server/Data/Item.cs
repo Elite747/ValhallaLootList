@@ -96,9 +96,9 @@ namespace ValhallaLootList.Server.Data
 
 		public Classes? UsableClasses { get; set; }
 
-		public virtual Encounter Encounter { get; set; } = null!;
+		public virtual Encounter? Encounter { get; set; }
 
-		public string EncounterId { get; set; } = null!;
+		public string? EncounterId { get; set; }
 
         public virtual ICollection<Drop> Drops { get; set; } = new HashSet<Drop>();
 

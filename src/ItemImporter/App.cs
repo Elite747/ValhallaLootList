@@ -269,10 +269,9 @@ namespace ValhallaLootList.ItemImporter
 
             var classes = (Classes)itemTemplate.AllowableClass;
 
-            if (classes > 0)
+            // 1535 and 32767 are used on items that have no class restrictions. (They equal all class flags plus extra unknown flags)
+            if (classes > 0 && classes != (Classes)1535 && classes != (Classes)32767)
             {
-                item.UsableClasses = classes;
-
                 const Classes allClasses =
                     Classes.Druid |
                     Classes.Hunter |
@@ -284,10 +283,7 @@ namespace ValhallaLootList.ItemImporter
                     Classes.Warlock |
                     Classes.Warrior;
 
-                if ((classes & ~allClasses) != 0)
-                {
-                    _logger.LogWarning($"'{itemTemplate.Name}' ({itemTemplate.Entry}) has an unexpected AllowableClass value of {itemTemplate.AllowableClass}!");
-                }
+                item.UsableClasses = (classes & allClasses);
             }
 
             _logger.LogInformation($"Finished parsing Item #{id}. '{item.Name}' will be added.");

@@ -44,6 +44,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return Ok(query
+                .OrderBy(e => e.Index)
                 .Select(e => new EncounterDto
                 {
                     Id = e.Id,

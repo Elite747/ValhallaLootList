@@ -61,7 +61,7 @@ namespace ValhallaLootList.Server.Controllers
                     Id = i.Id,
                     Name = i.Name,
                     Phase = i.Phase,
-                    Encounters = i.Encounters.Select(e => new EncounterDto
+                    Encounters = i.Encounters.OrderBy(e => e.Index).Select(e => new EncounterDto
                     {
                         Id = e.Id,
                         Items = e.Items.Where(item => item.RewardFromId == null).Select(item => item.Id).ToList(),

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -23,8 +24,8 @@ namespace ValhallaLootList.ItemImporter
         private readonly WowDataContext _wowContext;
         private readonly Config _config;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
-        private List<ItemTemplate> _itemTemplates;
-        private List<SpellTemplate> _spellTemplates;
+        private readonly List<ItemTemplate> _itemTemplates;
+        private readonly List<SpellTemplate> _spellTemplates;
 
         public App(ILogger<App> logger, IOptions<Config> config, WowDataContext wowContext, IHostApplicationLifetime hostApplicationLifetime)
         {
@@ -32,6 +33,8 @@ namespace ValhallaLootList.ItemImporter
             _wowContext = wowContext;
             _config = config.Value;
             _hostApplicationLifetime = hostApplicationLifetime;
+            _itemTemplates = new();
+            _spellTemplates = new();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -45,14 +48,22 @@ namespace ValhallaLootList.ItemImporter
             foreach (var itemId in await LoadItemsFromSeedInstancesAsync(cancellationToken))
             {
                 _logger.LogDebug($"Discovered Item #{itemId}");
-                items.Add(ParseItem(itemId, null));
-
-                if (_config.Tokens.TryGetValue(itemId, out var tokenRewards))
+                var item = ParseItem(itemId, null);
+                if (item is not null)
                 {
-                    foreach (var tokenRewardId in tokenRewards)
+                    items.Add(item);
+
+                    if (_config.Tokens.TryGetValue(itemId, out var tokenRewards))
                     {
-                        _logger.LogDebug($"Discovered Item #{tokenRewardId} as a reward from token #{itemId}.");
-                        items.Add(ParseItem(tokenRewardId, itemId));
+                        foreach (var tokenRewardId in tokenRewards)
+                        {
+                            _logger.LogDebug($"Discovered Item #{tokenRewardId} as a reward from token #{itemId}.");
+                            var tokenReward = ParseItem(tokenRewardId, itemId);
+                            if (tokenReward is not null)
+                            {
+                                items.Add(tokenReward);
+                            }
+                        }
                     }
                 }
             }
@@ -74,14 +85,18 @@ namespace ValhallaLootList.ItemImporter
 
         private async Task LoadTablesIntoMemoryAsync(CancellationToken cancellationToken)
         {
-            _itemTemplates ??= await _wowContext.ItemTemplates.AsNoTracking().ToListAsync(cancellationToken);
-            _spellTemplates ??= await _wowContext.SpellTemplates.AsNoTracking().ToListAsync(cancellationToken);
+            _itemTemplates.Clear();
+            _itemTemplates.AddRange(await _wowContext.ItemTemplates.AsNoTracking().ToListAsync(cancellationToken));
+
+            _spellTemplates.Clear();
+            _spellTemplates.AddRange(await _wowContext.SpellTemplates.AsNoTracking().ToListAsync(cancellationToken));
         }
 
         private async Task<IEnumerable<uint>> LoadItemsFromSeedInstancesAsync(CancellationToken cancellationToken)
         {
             using var fs = File.OpenRead(_config.SeedInstancesPath);
             var instances = await JsonSerializer.DeserializeAsync<List<SeedInstance>>(fs, cancellationToken: cancellationToken);
+            Debug.Assert(instances?.Count > 0);
             return instances.SelectMany(i => i.Encounters).SelectMany(e => e.Items).Distinct().OrderBy(id => id);
         }
 
@@ -91,7 +106,7 @@ namespace ValhallaLootList.ItemImporter
             await JsonSerializer.SerializeAsync(fs, items, new() { WriteIndented = true }, cancellationToken);
         }
 
-        private SeedItem ParseItem(uint id, uint? tokenId)
+        private SeedItem? ParseItem(uint id, uint? tokenId)
         {
             var itemTemplate = _itemTemplates.Find(x => x.Entry == id);
 

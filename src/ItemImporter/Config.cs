@@ -7,9 +7,9 @@ namespace ValhallaLootList.ItemImporter
 {
     internal class Config
     {
-        public string SeedInstancesPath { get; set; }
+        public string SeedInstancesPath { get; set; } = string.Empty;
 
-        public string SeedItemsPath { get; set; }
+        public string SeedItemsPath { get; set; } = string.Empty;
 
         public Dictionary<uint, uint[]> Tokens { get; } = new();
     }

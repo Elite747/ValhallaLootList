@@ -1,4 +1,5 @@
 ﻿@inject Data.Instances.InstanceProvider Instances
+@inject PhaseConfigProvider PhaseConfig
 
 @if (Instances.RequiresLoading)
 {
@@ -7,13 +8,13 @@
 else
 {
     InstanceDto? selectedInstance = null;
-    foreach (var phaseInstances in Instances.GetCached().Where(i => i.Phase >= Constants.MinimumPhase && i.Phase <= Constants.MaximumPhase).GroupBy(i => i.Phase))
+    foreach (var phaseInstances in _instances)
     {
         <ul class="nav nav-pills">
             <li class="nav-item">
-                <a class="nav-link disabled" tabindex="-1">Phase @phaseInstances.Key</a>
+                <a class="nav-link disabled" tabindex="-1">Phase @phaseInstances.Phase</a>
             </li>
-            @foreach (var instance in phaseInstances)
+            @foreach (var instance in phaseInstances.Instances)
             {
                 var id = instance.Id;
                 bool active = false;

@@ -3,13 +3,13 @@
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class BracketTemplate
+    public class BracketDto
     {
-        public int HighestRank { get; set; }
+        public int MaxRank { get; set; }
 
-        public int LowestRank { get; set; }
+        public int MinRank { get; set; }
 
-        public int ItemsPerRow { get; set; }
+        public int MaxItems { get; set; }
 
         public bool AllowOffSpec { get; set; }
 

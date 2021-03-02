@@ -149,9 +149,17 @@ namespace ValhallaLootList.Server.Controllers
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             const bool isAdmin = false; // TODO: role checking which should override editability.
 
-            if (dto.Phase < Constants.MinimumPhase || dto.Phase > Constants.MaximumPhase)
+            var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
+
+            if (phaseDetails is null)
             {
                 ModelState.AddModelError(nameof(dto.Phase), "Phase is not a valid value.");
+                return ValidationProblem();
+            }
+
+            if (phaseDetails.StartsAtUtc > DateTime.UtcNow)
+            {
+                ModelState.AddModelError(nameof(dto.Phase), "Phase is not yet active.");
                 return ValidationProblem();
             }
 

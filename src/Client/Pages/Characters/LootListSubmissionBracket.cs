@@ -8,18 +8,18 @@ namespace ValhallaLootList.Client.Pages.Characters
 {
     public class LootListSubmissionBracket
     {
-        public LootListSubmissionBracket(BracketTemplate template)
+        public LootListSubmissionBracket(BracketDto template)
         {
             Template = template;
             Items = new();
 
-            for (int i = template.HighestRank; i >= template.LowestRank; i--)
+            for (int i = template.MaxRank; i >= template.MinRank; i--)
             {
-                Items[i] = new uint[template.ItemsPerRow];
+                Items[i] = new uint[template.MaxItems];
             }
         }
 
-        public BracketTemplate Template { get; }
+        public BracketDto Template { get; }
 
         public Dictionary<int, uint[]> Items { get; }
     }

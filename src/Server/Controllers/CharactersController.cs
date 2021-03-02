@@ -198,25 +198,12 @@ namespace ValhallaLootList.Server.Controllers
             return NotFound();
         }
 
-        [HttpGet("LootListTemplate")]
-        public ActionResult<IEnumerable<BracketTemplate>> GetLootListTemplate(byte phase = 1)
-        {
-            var template = GetBracketTemplates(phase);
-
-            if (template is null)
-            {
-                return NotFound();
-            }
-
-            return template;
-        }
-
         [HttpPost("{id}/LootLists/{phase:int}"), Authorize]
         public async Task<ActionResult<LootListDto>> PostLootList(string id, byte phase, [FromBody] LootListSubmissionDto dto)
         {
-            var template = GetBracketTemplates(phase);
+            var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
 
-            if (template is null)
+            if (bracketTemplates.Count == 0)
             {
                 return NotFound();
             }
@@ -276,7 +263,7 @@ namespace ValhallaLootList.Server.Controllers
 
             foreach (var (rank, itemIds) in dto.Items)
             {
-                var bracketTemplate = Array.Find(template, bt => rank >= bt.LowestRank && rank <= bt.HighestRank);
+                var bracketTemplate = bracketTemplates.Find(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
 
                 if (bracketTemplate is null)
                 {
@@ -284,9 +271,9 @@ namespace ValhallaLootList.Server.Controllers
                 }
                 else if (itemIds?.Length > 0)
                 {
-                    if (itemIds.Length > bracketTemplate.ItemsPerRow)
+                    if (itemIds.Length > bracketTemplate.MaxItems)
                     {
-                        ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} can only have up to {bracketTemplate.ItemsPerRow} items.");
+                        ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} can only have up to {bracketTemplate.MaxItems} items.");
                     }
                     else
                     {
@@ -327,8 +314,8 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (itemIds?.Length > 0)
                 {
-                    var bracketTemplate = template.First(bt => rank >= bt.LowestRank && rank <= bt.HighestRank);
-                    var bracketSpec = bracketTemplate.AllowOffSpec ? bothSpecs : dto.MainSpec.Value;
+                    var bracketTemplate = bracketTemplates.First(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
+                    var bracketSpec = bracketTemplate.AllowOffspec ? bothSpecs : dto.MainSpec.Value;
 
                     for (int col = 0; col < itemIds.Length; col++)
                     {
@@ -344,7 +331,7 @@ namespace ValhallaLootList.Server.Controllers
 
                                 if (!bracketTemplate.AllowTypeDuplicates && !bracketItemGroups.Add(new ItemGroup(item.Type, item.Slot)))
                                 {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot have multiple items of the same type in Bracket {Array.IndexOf(template, bracketTemplate) + 1}.");
+                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot have multiple items of the same type in Bracket {bracketTemplates.IndexOf(bracketTemplate) + 1}.");
                                 }
 
                                 foreach (var restriction in restrictions[itemId].Where(r => (r.Specializations & bracketSpec) != 0))
@@ -402,49 +389,6 @@ namespace ValhallaLootList.Server.Controllers
                     span[i] = char.ToLowerInvariant(name[i]);
                 }
             });
-        }
-
-        private static BracketTemplate[]? GetBracketTemplates(byte phase)
-        {
-            if (phase == 1)
-            {
-                return new[] {
-                    new BracketTemplate
-                    {
-                        HighestRank = 18,
-                        LowestRank = 15,
-                        ItemsPerRow = 1,
-                        AllowOffSpec = false,
-                        AllowTypeDuplicates = false
-                    },
-                    new BracketTemplate
-                    {
-                        HighestRank = 14,
-                        LowestRank = 11,
-                        ItemsPerRow = 1,
-                        AllowOffSpec = false,
-                        AllowTypeDuplicates = false
-                    },
-                    new BracketTemplate
-                    {
-                        HighestRank = 10,
-                        LowestRank = 7,
-                        ItemsPerRow = 2,
-                        AllowOffSpec = false,
-                        AllowTypeDuplicates = false
-                    },
-                    new BracketTemplate
-                    {
-                        HighestRank = 6,
-                        LowestRank = 1,
-                        ItemsPerRow = 2,
-                        AllowOffSpec = true,
-                        AllowTypeDuplicates = true
-                    },
-                };
-            }
-
-            return null;
         }
 
         private async Task<Dictionary<byte, LootListDto>> CreateDtosAsync(string characterId, string? teamId, byte? phase)

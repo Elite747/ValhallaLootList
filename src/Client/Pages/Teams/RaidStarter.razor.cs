@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -13,7 +14,8 @@ namespace ValhallaLootList.Client.Pages.Teams
 {
     public partial class RaidStarter
     {
-        private readonly RaidSubmissionDto _model = new() { Phase = Constants.CurrentPhase };
+        private readonly RaidSubmissionDto _model = new();
+        private readonly List<byte> _phases = new();
 
         protected override void OnParametersSet()
         {
@@ -25,6 +27,13 @@ namespace ValhallaLootList.Client.Pages.Teams
                 Debug.Assert(character.Id?.Length > 0);
                 _model.Attendees.Add(character.Id);
             }
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            _model.Phase = await PhaseConfig.GetCurrentPhaseAsync();
+            _phases.Clear();
+            _phases.AddRange(await PhaseConfig.GetPhasesAsync());
         }
 
         private void ToggleAttendee(string id)

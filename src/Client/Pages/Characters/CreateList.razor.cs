@@ -69,11 +69,11 @@ namespace ValhallaLootList.Client.Pages.Characters
             {
                 _lootList.Brackets.Clear();
 
-                var template = await Api.GetAsync<BracketTemplate[]>($"api/v1/characters/lootlisttemplate?phase={Phase}");
+                var brackets = await PhaseConfig.GetBracketsAsync(Phase);
 
-                if (template is not null)
+                if (brackets is not null)
                 {
-                    foreach (var bracketTemplate in template)
+                    foreach (var bracketTemplate in brackets)
                     {
                         _lootList.Brackets.Add(new(bracketTemplate));
                     }

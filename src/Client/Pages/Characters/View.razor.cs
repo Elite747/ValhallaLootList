@@ -2,7 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Collections.Generic;
-using System.Net.Http.Json;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using ValhallaLootList.DataTransfer;
@@ -13,11 +13,14 @@ namespace ValhallaLootList.Client.Pages.Characters
     {
         private CharacterDto? _character;
         private List<LootListDto>? _lootLists;
+        private IEnumerable<byte>? _phases;
 
         protected override async Task OnParametersSetAsync()
         {
             _character = null;
             _lootLists = null;
+            _phases = await PhaseConfig.GetPhasesAsync();
+            _selectedPhase = _phases.First().ToString();
             if (!string.IsNullOrWhiteSpace(Character))
             {
                 try

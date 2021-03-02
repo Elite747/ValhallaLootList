@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Extensions;
@@ -47,6 +48,14 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<RaidAttendee> RaidAttendees { get; set; } = null!;
         public virtual DbSet<RaidTeam> RaidTeams { get; set; } = null!;
         public virtual DbSet<RaidTeamSchedule> RaidTeamSchedules { get; set; } = null!;
+        public virtual DbSet<Bracket> Brackets { get; set; } = null!;
+        public virtual DbSet<PhaseDetails> PhaseDetails { get; set; } = null!;
+
+        public Task<byte> GetCurrentPhaseAsync(CancellationToken cancellationToken = default)
+        {
+            var now = DateTime.UtcNow;
+            return PhaseDetails.Where(pd => pd.StartsAtUtc <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -71,6 +80,19 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<RaidAttendee>().HasKey(e => new { e.CharacterId, e.RaidId });
 
             builder.Entity<RaidTeam>().HasIndex(e => e.Name).IsUnique();
+
+            builder.Entity<Bracket>().HasKey(e => new { e.Phase, e.Index });
+            builder.Entity<Bracket>().HasData(
+                // Phase 1 brackets
+                new(phase: 1, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                new(phase: 1, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                new(phase: 1, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
+                new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
+                );
+
+            builder.Entity<PhaseDetails>().HasData(
+                new PhaseDetails(id: 1, startsAtUtc: default)
+                );
 
             builder.HasDbFunction(typeof(MySqlTranslations).GetMethod(nameof(MySqlTranslations.ConvertTz)))
                 .HasTranslation(args => new SqlFunctionExpression("CONVERT_TZ", args, nullable: true, args.Select(_ => false), typeof(DateTime), null));

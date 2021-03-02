@@ -30,6 +30,7 @@ namespace ValhallaLootList.Client
 
             builder.Services
                 .AddScoped<ApiClient>()
+                .AddScoped<PhaseConfigProvider>()
                 .AddScoped<WowheadClient>()
                 .AddScoped<WowheadInterop>()
                 .AddScoped<InstanceProvider>()

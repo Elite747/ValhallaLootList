@@ -60,6 +60,8 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            var currentPhase = await _context.GetCurrentPhaseAsync();
+
             await foreach (var character in _context.Characters
                 .AsNoTracking()
                 .Where(c => c.TeamId == team.Id)
@@ -70,7 +72,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.Name,
                     c.Race,
                     c.IsMale,
-                    CurrentLootList = c.CharacterLootLists.Where(l => l.Phase == Constants.CurrentPhase).Select(l => new { l.MainSpec, l.OffSpec, l.Phase }).FirstOrDefault()
+                    CurrentLootList = c.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec, l.Phase }).FirstOrDefault()
                 })
                 .AsAsyncEnumerable())
             {

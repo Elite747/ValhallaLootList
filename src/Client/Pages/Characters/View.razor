@@ -1,5 +1,6 @@
 ﻿@page "/Characters/{character}"
 @inject ApiClient Api
+@inject PhaseConfigProvider PhaseConfig
 @inject NavigationManager Nav
 
 @if (_character is null)
@@ -19,30 +20,31 @@ else
         <h2><a href="teams/@_character.TeamName">&lt;@_character.TeamName&gt;</a></h2>
     }
 
-    <Tabs SelectedTab="@_selectedPhase" SelectedTabChanged="phase => _selectedPhase = phase">
-        <Items>
-            @for (byte b = Constants.MinimumPhase; b <= Constants.MaximumPhase; b++)
-            {
-                var phase = b;
-                <Tab Name="@phase.ToString()">
-                    Phase @phase.ToString()
-                </Tab>
-            }
-        </Items>
-        <Content>
-            @for (byte b = Constants.MinimumPhase; b <= Constants.MaximumPhase; b++)
-            {
-                var phase = b;
-                <TabPanel Name="@phase.ToString()">
-                    <LootListView Character="@_character" Phase="@phase" LootLists="_lootLists" />
-                </TabPanel>
-            }
-        </Content>
-    </Tabs>
+    @if (_phases is not null)
+    {
+        <Tabs SelectedTab="@_selectedPhase" SelectedTabChanged="phase => _selectedPhase = phase">
+            <Items>
+                @foreach (byte phase in _phases)
+                {
+                    <Tab Name="@phase.ToString()">
+                        Phase @phase.ToString()
+                    </Tab>
+                }
+            </Items>
+            <Content>
+                @foreach (byte phase in _phases)
+                {
+                    <TabPanel Name="@phase.ToString()">
+                        <LootListView Character="@_character" Phase="@phase" LootLists="_lootLists" />
+                    </TabPanel>
+                }
+            </Content>
+        </Tabs>
+    }
 }
 
 @code {
     [Parameter] public string Character { get; set; } = string.Empty;
 
-    private string _selectedPhase = Constants.MinimumPhase.ToString();
+    private string? _selectedPhase;
 }

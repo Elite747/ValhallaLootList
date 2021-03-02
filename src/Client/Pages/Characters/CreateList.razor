@@ -1,5 +1,6 @@
 ﻿@attribute [Authorize]
 @inject ApiClient Api
+@inject PhaseConfigProvider PhaseConfig
 @inject NavigationManager Nav
 
 <EditForm OnValidSubmit="OnSubmit" Model="_lootList">
@@ -104,8 +105,8 @@
                                Model="_lootList"
                                SelectionRequested="OnSelectionRequested" />
         }
+        <button type="submit" class="btn btn-primary mb-4">Submit</button>
     }
-    <button type="submit" class="btn btn-primary">Submit</button>
 </EditForm>
 
 @code {

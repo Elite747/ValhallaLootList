@@ -4,7 +4,7 @@
         <div class="card-text">
             <ul>
                 <li>
-                    Up to @(Bracket.Template.ItemsPerRow == 1 ? "1 item" : $"{Bracket.Template.ItemsPerRow} items") per rank allowed
+                    Up to @(Bracket.Template.MaxItems == 1 ? "1 item" : $"{Bracket.Template.MaxItems} items") per rank allowed
                 </li>
                 @if (Bracket.Template.AllowOffSpec)
                 {

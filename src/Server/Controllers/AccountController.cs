@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -18,11 +20,15 @@ namespace ValhallaLootList.Server.Controllers
     public class AccountController : ControllerBase
     {
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly DiscordService _discordService;
+        private readonly DiscordRoleMap _roles;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(SignInManager<AppUser> signInManager, ILogger<AccountController> logger)
+        public AccountController(SignInManager<AppUser> signInManager, DiscordService discordService, DiscordRoleMap roles, ILogger<AccountController> logger)
         {
             _signInManager = signInManager;
+            _discordService = discordService;
+            _roles = roles;
             _logger = logger;
         }
 
@@ -44,18 +50,38 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Callback(string? returnUrl = null, string? remoteError = null)
         {
+            IdentityResult? identityResult;
+
             returnUrl ??= Url.Content("~/");
             if (remoteError != null)
             {
                 return LocalRedirect("~/loginerror?reason=1&remoteError=" + remoteError);
             }
+
             var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
+            if (info == null || !long.TryParse(info.ProviderKey, out var discordId))
             {
                 return LocalRedirect("~/loginerror?reason=2");
             }
 
-            // TODO: Check with bot if user is on-server and has roles.
+            HashSet<string>? memberRoles;
+            try
+            {
+                memberRoles = await _discordService.GetMemberRolesAsync(discordId);
+                if (memberRoles is null)
+                {
+                    return LocalRedirect("~/loginerror?reason=5");
+                }
+            }
+            catch
+            {
+                return LocalRedirect("~/loginerror?reason=2");
+            }
+
+            if (!memberRoles.Contains(_roles.Member))
+            {
+                return LocalRedirect("~/loginerror?reason=6");
+            }
 
             // Sign in the user with this external login provider if the user already has a login.
             //var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
@@ -65,11 +91,12 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (await _signInManager.UserManager.IsLockedOutAsync(user))
                 {
-                    return LocalRedirect("/loginerror?reason=3");
+                    return LocalRedirect("~/loginerror?reason=3");
                 }
 
                 var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
                 var newClaims = new List<Claim>();
+                var removedClaims = new List<Claim>();
 
                 foreach (var claim in info.Principal.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)))
                 {
@@ -79,7 +106,12 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         if (existing.Value != claim.Value)
                         {
-                            await _signInManager.UserManager.ReplaceClaimAsync(user, existing, claim);
+                            identityResult = await _signInManager.UserManager.ReplaceClaimAsync(user, existing, claim);
+
+                            if (!identityResult.Succeeded)
+                            {
+                                return LocalRedirect("~/loginerror?reason=0");
+                            }
                         }
                     }
                     else
@@ -88,9 +120,54 @@ namespace ValhallaLootList.Server.Controllers
                     }
                 }
 
+                foreach (var (appRole, discordRole) in _roles.AllRoles)
+                {
+                    var currentClaim = existingClaims.FirstOrDefault(claim => string.Equals(claim.Type, AppRoles.ClaimType) && string.Equals(claim.Value, appRole));
+
+                    if (memberRoles.Contains(discordRole))
+                    {
+                        if (currentClaim is null)
+                        {
+                            newClaims.Add(new Claim(AppRoles.ClaimType, appRole));
+                        }
+                    }
+                    else if (currentClaim is not null)
+                    {
+                        removedClaims.Add(currentClaim);
+                    }
+                }
+
+                foreach (var savedRoleClaim in existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role))
+                {
+                    if (!memberRoles.Remove(savedRoleClaim.Value))
+                    {
+                        removedClaims.Add(savedRoleClaim);
+                    }
+                }
+
+                foreach (var newRole in memberRoles)
+                {
+                    newClaims.Add(new Claim(DiscordClaimTypes.Role, newRole));
+                }
+
                 if (newClaims.Count != 0)
                 {
-                    await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
+                    identityResult = await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
+
+                    if (!identityResult.Succeeded)
+                    {
+                        return LocalRedirect("~/loginerror?reason=0");
+                    }
+                }
+
+                if (removedClaims.Count != 0)
+                {
+                    identityResult = await _signInManager.UserManager.RemoveClaimsAsync(user, removedClaims);
+
+                    if (!identityResult.Succeeded)
+                    {
+                        return LocalRedirect("~/loginerror?reason=0");
+                    }
                 }
 
                 await _signInManager.SignInAsync(user, isPersistent: true, authenticationMethod: info.LoginProvider);
@@ -101,8 +178,6 @@ namespace ValhallaLootList.Server.Controllers
             }
             else
             {
-                // todo: redirect if user is not in the guild.
-
                 /*
                 Not actually utilizing the UserName property since that is read by Discord, which is far less restrictive with their naming scheme than
                 the default asp.net identity username policy. Rather than trying to match Discord's policy, set the username to the unique discord user
@@ -110,7 +185,7 @@ namespace ValhallaLootList.Server.Controllers
                 */
                 user = new AppUser { UserName = info.ProviderKey };
 
-                var identityResult = await _signInManager.UserManager.CreateAsync(user);
+                identityResult = await _signInManager.UserManager.CreateAsync(user);
 
                 if (identityResult.Succeeded)
                 {
@@ -120,7 +195,22 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
-                        identityResult = await _signInManager.UserManager.AddClaimsAsync(user, info.Principal.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
+                        var claims = info.Principal.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)).ToList();
+
+                        foreach (var role in memberRoles)
+                        {
+                            claims.Add(new Claim(DiscordClaimTypes.Role, role));
+
+                            foreach (var (appRole, discordRole) in _roles.AllRoles)
+                            {
+                                if (string.Equals(role, discordRole, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    claims.Add(new Claim(AppRoles.ClaimType, appRole));
+                                }
+                            }
+                        }
+
+                        identityResult = await _signInManager.UserManager.AddClaimsAsync(user, claims);
 
                         if (identityResult.Succeeded)
                         {
@@ -130,7 +220,6 @@ namespace ValhallaLootList.Server.Controllers
                         }
                     }
                 }
-
                 return LocalRedirect("~/loginerror?reason=4");
             }
         }

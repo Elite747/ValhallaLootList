@@ -14,5 +14,7 @@ namespace ValhallaLootList
         public const string Discriminator = ClaimPrefix + "user:discriminator";
 
         public const string Username = ClaimPrefix + "user:name";
+
+        public const string Role = ClaimPrefix + "role";
     }
 }

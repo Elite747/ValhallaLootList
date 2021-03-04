@@ -9,6 +9,8 @@
         Reasons.FromLoginProvider => "Error loading external login information.",
         Reasons.LockedOut => "Your account has been locked out.",
         Reasons.FromAccountCreation => "An error has occurred while trying to create your user profile.",
+        Reasons.NotInGuild => "You are not in the guild discord.",
+        Reasons.NotAMember => "You have not been given member access in the guild discord.",
         _ => "An unknown error has occurred while trying to log in."
     })
 </div>
@@ -24,6 +26,8 @@
         FromDiscord = 1,
         FromLoginProvider = 2,
         LockedOut = 3,
-        FromAccountCreation = 4
+        FromAccountCreation = 4,
+        NotInGuild = 5,
+        NotAMember = 6
     }
 }

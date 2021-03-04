@@ -40,7 +40,15 @@ namespace ValhallaLootList.Client
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 
-            builder.Services.AddApiAuthorization(options => options.UserOptions.NameClaim = DiscordClaimTypes.Username);
+            builder.Services
+                .AddApiAuthorization(options =>
+                {
+                    options.UserOptions.NameClaim = DiscordClaimTypes.Username;
+                    options.UserOptions.RoleClaim = AppRoles.ClaimType;
+                })
+                .AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
+
+            builder.Services.AddAuthorizationCore(AppRoles.ConfigureAuthorization);
 
             builder.Services.AddBlazorise(options => options.ChangeTextOnKeyPress = true).AddBootstrapProviders().AddFontAwesomeIcons();
 

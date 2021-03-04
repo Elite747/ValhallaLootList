@@ -2,6 +2,9 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server
 {
@@ -28,17 +32,29 @@ namespace ValhallaLootList.Server
         {
             services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(Configuration.GetValue<string>("RealmTimeZone")));
             services.AddScoped<PrioCalculator>();
+            services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
+            services.AddScoped<DiscordRoleMap>();
+
+            services.AddHttpClient<DiscordService>()
+                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+                {
+                    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+                });
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection"), MySqlServerVersion.LatestSupportedServerVersion, sql => sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddDefaultIdentity<AppUser>()
+            services.AddDefaultIdentity<AppUser>(options => options.ClaimsIdentity.RoleClaimType = AppRoles.ClaimType)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer()
-                .AddApiAuthorization<AppUser, ApplicationDbContext>()
+                .AddApiAuthorization<AppUser, ApplicationDbContext>(options =>
+                {
+                    options.IdentityResources["openid"].UserClaims.Add(AppRoles.ClaimType);
+                    options.ApiResources.Single().UserClaims.Add(AppRoles.ClaimType);
+                })
                 .AddProfileService<IdentityProfileService>();
 
             services.AddAuthentication()
@@ -49,6 +65,10 @@ namespace ValhallaLootList.Server
                     options.ClaimActions.MapJsonKey(DiscordClaimTypes.Username, "username");
                 })
                 .AddIdentityServerJwt();
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove(AppRoles.ClaimType);
+
+            services.AddAuthorization(AppRoles.ConfigureAuthorization);
 
             services.AddControllersWithViews();
             services.AddRazorPages().AddJsonOptions(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options.JsonSerializerOptions));

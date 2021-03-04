@@ -14,9 +14,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class TeamsController : ControllerBase
+    public class TeamsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
 
@@ -91,7 +89,7 @@ namespace ValhallaLootList.Server.Controllers
             return team;
         }
 
-        [HttpPost, Authorize]
+        [HttpPost, Authorize(AppRoles.Administrator)]
         public async Task<ActionResult<CharacterDto>> Post([FromBody] TeamSubmissionDto dto)
         {
             if (!ModelState.IsValid)
@@ -143,11 +141,9 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id}/members/{characterId}"), Authorize]
+        [HttpPost("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
         public async Task<IActionResult> PostMember(string id, string characterId)
         {
-            // TODO: Check for raid leader role
-
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
                 return NotFound();
@@ -167,11 +163,9 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpDelete("{id}/members/{characterId}"), Authorize]
+        [HttpDelete("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
         public async Task<IActionResult> DeleteMember(string id, string characterId)
         {
-            // TODO: Check for raid leader role
-
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
                 return NotFound();

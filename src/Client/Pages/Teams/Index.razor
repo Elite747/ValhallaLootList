@@ -16,8 +16,7 @@
 }
 else
 {
-    <AuthorizeView>
-        @*TODO: check for admin policy*@
+    <AuthorizeView Roles="@AppRoles.Administrator">
         <Modal @ref="_createModal">
             @if (_createRequested)
             {

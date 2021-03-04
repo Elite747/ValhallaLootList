@@ -8,7 +8,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
@@ -17,9 +16,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class CharactersController : ControllerBase
+    public class CharactersController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZoneInfo;
@@ -34,7 +31,7 @@ namespace ValhallaLootList.Server.Controllers
         public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             var query = _context.Characters.AsNoTracking();
 
@@ -75,7 +72,7 @@ namespace ValhallaLootList.Server.Controllers
         public async Task<ActionResult<CharacterDto>> Get(string id)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             var character = await _context.Characters
                 .AsNoTracking()
@@ -101,7 +98,7 @@ namespace ValhallaLootList.Server.Controllers
             return character;
         }
 
-        [HttpPost, Authorize]
+        [HttpPost]
         public async Task<ActionResult<CharacterDto>> Post([FromBody] CharacterSubmissionDto dto)
         {
             if (!ModelState.IsValid)
@@ -198,7 +195,7 @@ namespace ValhallaLootList.Server.Controllers
             return NotFound();
         }
 
-        [HttpPost("{id}/LootLists/{phase:int}"), Authorize]
+        [HttpPost("{id}/LootLists/{phase:int}")]
         public async Task<ActionResult<LootListDto>> PostLootList(string id, byte phase, [FromBody] LootListSubmissionDto dto)
         {
             var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
@@ -224,7 +221,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             if (!isAdmin && character.OwnerId != currentUserId)
             {
@@ -394,7 +391,7 @@ namespace ValhallaLootList.Server.Controllers
         private async Task<Dictionary<byte, LootListDto>> CreateDtosAsync(string characterId, string? teamId, byte? phase)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             var lootListQuery = _context.CharacterLootLists.AsNoTracking().Where(ll => ll.CharacterId == characterId);
 
@@ -419,8 +416,6 @@ namespace ValhallaLootList.Server.Controllers
                     Phase = ll.Phase
                 })
                 .ToDictionaryAsync(ll => ll.Phase);
-
-            // TODO: role check to make sure user is allowed to view prios & ranks while the loot list is unlocked.
 
             var passRecords = await _context.DropPasses
                 .AsNoTracking()

@@ -14,9 +14,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class RaidsController : ControllerBase
+    public class RaidsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
 
@@ -50,7 +48,7 @@ namespace ValhallaLootList.Server.Controllers
         public async Task<ActionResult<RaidDto>> Get(string id)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             var dto = await _context.Raids
                 .AsNoTracking()
@@ -143,11 +141,11 @@ namespace ValhallaLootList.Server.Controllers
             return dto;
         }
 
-        [HttpPost, Authorize]
+        [HttpPost, Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<RaidDto>> Post([FromBody] RaidSubmissionDto dto)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            const bool isAdmin = false; // TODO: role checking which should override editability.
+            bool isAdmin = User.IsAdmin();
 
             var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
 
@@ -236,7 +234,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id}/Attendees")]
+        [HttpPost("{id}/Attendees"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -279,7 +277,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpDelete("{id}/Attendees/{characterId}"), Authorize]
+        [HttpDelete("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> DeleteAttendee(string id, string characterId)
         {
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
@@ -296,7 +294,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("{id}/Kills"), Authorize]
+        [HttpPost("{id}/Kills"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<EncounterKillDto>> PostKill(string id, [FromBody] KillSubmissionDto dto)
         {
             if (dto.Drops.Count == 0)
@@ -427,7 +425,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpDelete("{id}/Kills/{encounterId}"), Authorize]
+        [HttpDelete("{id}/Kills/{encounterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> DeleteKill(string id, string encounterId)
         {
             var kill = await _context.EncounterKills.FindAsync(encounterId, id);
@@ -452,7 +450,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/Kills/{encounterId}/Drops/{itemId:int}"), Authorize]
+        [HttpPut("{id}/Kills/{encounterId}/Drops/{itemId:int}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<EncounterDropDto>> PutDrop(string id, string encounterId, uint itemId, [FromBody] AwardDropSubmissionDto dto, [FromServices] PrioCalculator prioCalculator)
         {
             var now = DateTime.UtcNow;
@@ -543,7 +541,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id}/Kills/{encounterId}/Drops/{itemId:int}/Ranks"), Authorize]
+        [HttpGet("{id}/Kills/{encounterId}/Drops/{itemId:int}/Ranks")]
         public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(string id, string encounterId, uint itemId, [FromServices] PrioCalculator prioCalculator)
         {
             var drop = await _context.Drops.FindAsync(id, encounterId, itemId);

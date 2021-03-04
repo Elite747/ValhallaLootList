@@ -27,7 +27,7 @@ else
         <a href="Teams/@Team/Standings">View Loot Standings</a>
     </p>
 
-    <AuthorizeView>@*TODO: check for raid leader policy*@
+    <AuthorizeView Roles="@AppRoles.RaidLeader">
         <RaidStarter Team="_team" RaidStarted="OnRaidStarted" />
     </AuthorizeView>
 
@@ -36,8 +36,7 @@ else
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Roster</h4>
-                    <AuthorizeView>
-                        @*TODO: check for raid leader policy*@
+                    <AuthorizeView Roles="@AppRoles.RaidLeader">
                         <MemberAdder Team="_team" MemberAdded="RefreshAsync" />
                     </AuthorizeView>
                 </div>
@@ -72,8 +71,7 @@ else
                                 {
                                     <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
                                 }
-                                <AuthorizeView>
-                                    @*TODO: check for raid leader policy*@
+                                <AuthorizeView Roles="@AppRoles.RaidLeader">
                                     <button type="button" class="btn btn-sm btn-danger" @onclick="() => RequestRemoveMember(localCharacter)">
                                         <span class="fas fa-minus" aria-hidden="true"></span>
                                         <span class="sr-only">Remove Member</span>

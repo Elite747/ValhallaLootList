@@ -12,9 +12,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class ItemsController : ControllerBase
+    public class ItemsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
 

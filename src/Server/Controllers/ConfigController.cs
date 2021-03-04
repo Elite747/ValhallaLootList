@@ -3,7 +3,6 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
@@ -11,10 +10,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    [Authorize]
-    public class ConfigController : ControllerBase
+    public class ConfigController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
 

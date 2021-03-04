@@ -3,16 +3,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class InstancesController : ControllerBase
+    public class InstancesController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
 

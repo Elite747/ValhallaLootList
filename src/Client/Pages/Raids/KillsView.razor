@@ -27,131 +27,135 @@
                         </div>
                         <div>Awarded to @(drop.WinnerName ?? "nobody").</div>
                     </div>
-                    @if (drop.WinnerId is null)
-                    {
-                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => BeginAssignAsync(localDrop, localKill.EncounterId)">
-                            Assign
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => AssignAsync(localDrop, localKill.EncounterId, null)">Unassign</button>
-                    }
+                    <AuthorizeView Roles="@AppRoles.LootMaster">
+                        @if (drop.WinnerId is null)
+                        {
+                            <button type="button" class="btn btn-sm btn-primary" @onclick="() => BeginAssignAsync(localDrop, localKill.EncounterId)">
+                                Assign
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => AssignAsync(localDrop, localKill.EncounterId, null)">Unassign</button>
+                        }
+                    </AuthorizeView>
                 </div>
             }
         </div>
     </div>
 }
 
-<button class="btn btn-success btn-lg shadow my-4" type="button" @onclick="AddClickedAsync">
-    <span class="fas fa-plus" aria-hidden="true"></span>
-    <span>Add Kill</span>
-</button>
+<AuthorizeView Roles="@AppRoles.LootMaster" Context="authContext">
+    <button class="btn btn-success btn-lg shadow my-4" type="button" @onclick="AddClickedAsync">
+        <span class="fas fa-plus" aria-hidden="true"></span>
+        <span>Add Kill</span>
+    </button>
 
-<Modal @ref="_addKillModal">
-    <ModalBackdrop />
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        @if (_addKillInputModel is not null)
-        {
-            <EditForm OnValidSubmit="OnSubmitAddKillAsync" Model="_addKillInputModel" class="modal-content">
-                <DataAnnotationsValidator />
+    <Modal @ref="_addKillModal">
+        <ModalBackdrop />
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            @if (_addKillInputModel is not null)
+            {
+                <EditForm OnValidSubmit="OnSubmitAddKillAsync" Model="_addKillInputModel" class="modal-content">
+                    <DataAnnotationsValidator />
 
-                <ModalHeader>
-                    <ModalTitle>Add Kill</ModalTitle>
-                    <CloseButton Clicked="() => _addKillModal?.Hide()" />
-                </ModalHeader>
-                <ModalBody>
-                    <div class="form-group">
-                        <label for="encounterId">Encounter</label>
-                        <InputSelect @bind-Value="_addKillInputModel!.EncounterId" class="form-control" id="encounterId">
-                            <option>-- Select Encounter --</option>
-                            @foreach (var instance in Instances.GetCached().Where(i => i.Phase == Raid.Phase).OrderBy(i => i.Name))
-                                {
-                                <optgroup label="@instance.Name">
-                                    @foreach (var encounter in instance.Encounters)
+                    <ModalHeader>
+                        <ModalTitle>Add Kill</ModalTitle>
+                        <CloseButton Clicked="() => _addKillModal?.Hide()" />
+                    </ModalHeader>
+                    <ModalBody>
+                        <div class="form-group">
+                            <label for="encounterId">Encounter</label>
+                            <InputSelect @bind-Value="_addKillInputModel!.EncounterId" class="form-control" id="encounterId">
+                                <option>-- Select Encounter --</option>
+                                @foreach (var instance in Instances.GetCached().Where(i => i.Phase == Raid.Phase).OrderBy(i => i.Name))
                                     {
-                                        <option value="@encounter.Id">@encounter.Name</option>
+                                    <optgroup label="@instance.Name">
+                                        @foreach (var encounter in instance.Encounters)
+                                        {
+                                            <option value="@encounter.Id">@encounter.Name</option>
+                                        }
+                                    </optgroup>
                                     }
-                                </optgroup>
-                                }
-                        </InputSelect>
-                    </div>
+                            </InputSelect>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Drops</label>
-                        @foreach (var itemId in _addKillInputModel.Drops.Keys)
-                        {
-                            var localItemId = itemId;
-                            <div class="custom-control custom-checkbox">
-                                <InputCheckbox class="custom-control-input" id="@itemId" @bind-Value="_addKillInputModel.Drops[localItemId].Checked" />
-                                <label class="custom-control-label" for="@itemId">
-                                    <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
-                                </label>
-                            </div>
-                        }
-                    </div>
-
-                    <div class="form-group">
-                        <label>Present Raiders</label>
-                        @foreach (var character in _addKillInputModel.Attendees.Keys)
-                        {
-                            var localCharacter = character;
-                            <div class="custom-control custom-checkbox">
-                                <InputCheckbox class="custom-control-input" id="@character.Id" @bind-Value="_addKillInputModel.Attendees[localCharacter].Checked" />
-                                <label class="custom-control-label" for="@character.Id">@character.Name</label>
-                            </div>
-                        }
-                    </div>
-
-                    <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
-                </ModalBody>
-                <ModalFooter>
-                    <button type="submit" class="btn btn-primary">Add</button>
-                    <button class="btn btn-secondary" @onclick="() => _addKillModal?.Hide()" type="button">Cancel</button>
-                </ModalFooter>
-            </EditForm>
-        }
-    </div>
-</Modal>
-
-<Modal @ref="_assignModal">
-    <ModalBackdrop />
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <ModalHeader>
-                <ModalTitle>Assigning @_assignDrop?.ItemName</ModalTitle>
-                <CloseButton Clicked="() => _assignModal?.Hide()" />
-            </ModalHeader>
-            @if (_assignPrios is null)
-            {
-                <ModalBody>
-                    <LoadingIndicator />
-                </ModalBody>
-            }
-            else
-            {
-                <div class="list-group list-group-flush">
-                    @foreach (var entry in _assignPrios.OrderByDescending(e => e.Priority ?? int.MinValue))
-                    {
-                        var characterId = entry.CharacterId;
-                        var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
-
-                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => AssignAsync(_assignDrop!, _assignEncounterId!, characterId)">
-                            <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
-                            @if (entry.Details?.Length > 0)
+                        <div class="form-group">
+                            <label>Drops</label>
+                            @foreach (var itemId in _addKillInputModel.Drops.Keys)
                             {
-                                <div>@entry.Details</div>
+                                var localItemId = itemId;
+                                <div class="custom-control custom-checkbox">
+                                    <InputCheckbox class="custom-control-input" id="@itemId" @bind-Value="_addKillInputModel.Drops[localItemId].Checked" />
+                                    <label class="custom-control-label" for="@itemId">
+                                        <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
+                                    </label>
+                                </div>
                             }
-                        </button>
-                    }
-                </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Present Raiders</label>
+                            @foreach (var character in _addKillInputModel.Attendees.Keys)
+                            {
+                                var localCharacter = character;
+                                <div class="custom-control custom-checkbox">
+                                    <InputCheckbox class="custom-control-input" id="@character.Id" @bind-Value="_addKillInputModel.Attendees[localCharacter].Checked" />
+                                    <label class="custom-control-label" for="@character.Id">@character.Name</label>
+                                </div>
+                            }
+                        </div>
+
+                        <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+                    </ModalBody>
+                    <ModalFooter>
+                        <button type="submit" class="btn btn-primary">Add</button>
+                        <button class="btn btn-secondary" @onclick="() => _addKillModal?.Hide()" type="button">Cancel</button>
+                    </ModalFooter>
+                </EditForm>
             }
-            <ModalFooter>
-                <button class="btn btn-secondary" @onclick="() => _assignModal?.Hide()" type="button">Cancel</button>
-            </ModalFooter>
         </div>
-    </div>
-</Modal>
+    </Modal>
+
+    <Modal @ref="_assignModal">
+        <ModalBackdrop />
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <ModalHeader>
+                    <ModalTitle>Assigning @_assignDrop?.ItemName</ModalTitle>
+                    <CloseButton Clicked="() => _assignModal?.Hide()" />
+                </ModalHeader>
+                @if (_assignPrios is null)
+                {
+                    <ModalBody>
+                        <LoadingIndicator />
+                    </ModalBody>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var entry in _assignPrios.OrderByDescending(e => e.Priority ?? int.MinValue))
+                        {
+                            var characterId = entry.CharacterId;
+                            var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
+
+                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => AssignAsync(_assignDrop!, _assignEncounterId!, characterId)">
+                                <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
+                                @if (entry.Details?.Length > 0)
+                                {
+                                    <div>@entry.Details</div>
+                                }
+                            </button>
+                        }
+                    </div>
+                }
+                <ModalFooter>
+                    <button class="btn btn-secondary" @onclick="() => _assignModal?.Hide()" type="button">Cancel</button>
+                </ModalFooter>
+            </div>
+        </div>
+    </Modal>
+</AuthorizeView>
 
 @code {
     private Modal? _addKillModal, _assignModal;

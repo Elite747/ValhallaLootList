@@ -11,7 +11,7 @@
                 var character = attendee;
                 <li>
                     <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span> 
-                    <AuthorizeView>
+                    <AuthorizeView Roles="@AppRoles.RaidLeader">
                         <button class="btn btn-danger btn-sm" type="button" @onclick="() => OnRemoveClickedAsync(character)">
                             <span class="fas fa-minus" aria-hidden="true"></span>
                             <span class="sr-only">Remove</span>
@@ -19,7 +19,7 @@
                     </AuthorizeView>
                 </li>
             }
-            <AuthorizeView>
+            <AuthorizeView Roles="@AppRoles.RaidLeader">
                 <li>
                     <Dropdown Toggled="OnToggledAsync">
                         <DropdownToggle Color="Color.Primary">

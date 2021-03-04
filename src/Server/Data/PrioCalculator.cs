@@ -54,7 +54,7 @@ namespace ValhallaLootList.Server.Data
                 return new(null, entries[0].Locked, "Character is not on a raid team.");
             }
 
-            var winCount = await _context.Drops.CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
+            var winCount = await _context.Drops.AsNoTracking().CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
 
             if (winCount >= entries.Count)
             {

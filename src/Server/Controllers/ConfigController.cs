@@ -31,7 +31,7 @@ namespace ValhallaLootList.Server.Controllers
                 CurrentPhase = await _context.GetCurrentPhaseAsync()
             };
 
-            await foreach (var bracket in _context.Brackets.OrderBy(b => b.Phase).ThenByDescending(b => b.MaxRank).AsAsyncEnumerable())
+            await foreach (var bracket in _context.Brackets.AsNoTracking().OrderBy(b => b.Phase).ThenByDescending(b => b.MaxRank).AsAsyncEnumerable())
             {
                 if (!dto.Brackets.TryGetValue(bracket.Phase, out var brackets))
                 {

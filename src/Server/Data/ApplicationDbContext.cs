@@ -54,7 +54,7 @@ namespace ValhallaLootList.Server.Data
         public Task<byte> GetCurrentPhaseAsync(CancellationToken cancellationToken = default)
         {
             var now = DateTime.UtcNow;
-            return PhaseDetails.Where(pd => pd.StartsAtUtc <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
+            return PhaseDetails.AsNoTracking().Where(pd => pd.StartsAtUtc <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

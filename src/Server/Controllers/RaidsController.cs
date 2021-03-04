@@ -179,7 +179,7 @@ namespace ValhallaLootList.Server.Controllers
                 StartedAtUtc = DateTime.UtcNow
             };
 
-            var characters = await _context.Characters.Where(c => dto.Attendees.Contains(c.Id)).ToListAsync();
+            var characters = await _context.Characters.AsTracking().Where(c => dto.Attendees.Contains(c.Id)).ToListAsync();
 
             for (int i = 0; i < dto.Attendees.Count; i++)
             {
@@ -258,7 +258,7 @@ namespace ValhallaLootList.Server.Controllers
                 ModelState.AddModelError(nameof(dto.CharacterId), "Character is not part of this raid team.");
                 return ValidationProblem();
             }
-            if (await _context.RaidAttendees.CountAsync(a => a.CharacterId == character.Id && a.RaidId == raid.Id) != 0)
+            if (await _context.RaidAttendees.AsNoTracking().CountAsync(a => a.CharacterId == character.Id && a.RaidId == raid.Id) != 0)
             {
                 ModelState.AddModelError(nameof(dto.CharacterId), "Character is already on this raid's attendance.");
                 return ValidationProblem();
@@ -319,6 +319,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var encounter = await _context.Encounters
+                .AsTracking()
                 .Where(e => e.Id == dto.EncounterId)
                 .Select(e => new { e.Id, e.Name, e.Instance.Phase })
                 .FirstOrDefaultAsync();
@@ -343,7 +344,7 @@ namespace ValhallaLootList.Server.Controllers
                 RaidId = raid.Id
             };
 
-            var characters = await _context.Characters.Where(c => dto.Characters.Contains(c.Id)).ToListAsync();
+            var characters = await _context.Characters.AsTracking().Where(c => dto.Characters.Contains(c.Id)).ToListAsync();
 
             for (int i = 0; i < dto.Characters.Count; i++)
             {
@@ -372,7 +373,7 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            var items = await _context.Items.Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
+            var items = await _context.Items.AsTracking().Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
 
             for (int i = 0; i < dto.Drops.Count; i++)
             {
@@ -436,7 +437,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var drops = await _context.Drops.Where(drop => drop.EncounterKillEncounterId == encounterId && drop.EncounterKillRaidId == id).ToListAsync();
+            var drops = await _context.Drops.AsTracking().Where(drop => drop.EncounterKillEncounterId == encounterId && drop.EncounterKillRaidId == id).ToListAsync();
 
             if (drops.Any(d => d.WinnerId is not null))
             {
@@ -472,6 +473,7 @@ namespace ValhallaLootList.Server.Controllers
             drop.AwardedBy = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
             var killers = await _context.CharacterEncounterKills
+                .AsTracking()
                 .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
                 .Select(c => c.Character)
                 .ToListAsync();
@@ -497,6 +499,7 @@ namespace ValhallaLootList.Server.Controllers
                 drop.WinnerId = winner.Id;
 
                 var lootListEntry = _context.LootListEntries
+                    .AsTracking()
                     .Where(lle => (lle.ItemId == drop.ItemId || lle.Item!.RewardFromId == drop.ItemId) && lle.LootList.CharacterId == winner.Id && !lle.Won)
                     .OrderByDescending(lle => lle.Rank)
                     .FirstOrDefault();
@@ -551,6 +554,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var killerIds = await _context.CharacterEncounterKills
+                .AsNoTracking()
                 .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
                 .Select(c => c.CharacterId)
                 .ToListAsync();

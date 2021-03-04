@@ -115,7 +115,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var normalizedName = NormalizeName(dto.Name);
 
-            if (await _context.Characters.AnyAsync(c => c.Name.Equals(normalizedName)))
+            if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
             {
                 ModelState.AddModelError(nameof(dto.Name), "A character with that name already exists.");
                 return ValidationProblem();
@@ -231,7 +231,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (await _context.CharacterLootLists.AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
+            if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
             {
                 return Problem(statusCode: 400, title: "Bad Request", detail: "A loot list for that character and phase already exists.");
             }
@@ -375,7 +375,7 @@ namespace ValhallaLootList.Server.Controllers
 
         private async Task<Character?> FindCharacterByIdOrNameAsync(string idOrName, CancellationToken cancellationToken = default)
         {
-            return await _context.Characters.FirstOrDefaultAsync<Character>(c => c.Id == idOrName || c.Name.Equals(idOrName, StringComparison.OrdinalIgnoreCase), cancellationToken);
+            return await _context.Characters.AsTracking().FirstOrDefaultAsync<Character>(c => c.Id == idOrName || c.Name.Equals(idOrName, StringComparison.OrdinalIgnoreCase), cancellationToken);
         }
 
         private static string NormalizeName(string name)

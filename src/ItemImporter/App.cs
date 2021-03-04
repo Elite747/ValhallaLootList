@@ -354,7 +354,6 @@ namespace ValhallaLootList.ItemImporter
 
             if (trigger == 0) // on-use
             {
-                // TODO
                 _logger.LogWarning($"'{item.Name}' ({item.Id}) has an on-use effect that will prevent auto-determination!");
                 item.HasOnUse = true;
             }
@@ -366,7 +365,6 @@ namespace ValhallaLootList.ItemImporter
             }
             else if (trigger == 2) // on-hit
             {
-                // TODO
                 _logger.LogWarning($"'{item.Name}' ({item.Id}) has a proc effect that will prevent auto-determination!");
                 item.HasProc = true;
             }
@@ -378,7 +376,6 @@ namespace ValhallaLootList.ItemImporter
         {
             if (triggerSpell > 0)
             {
-                //todo: procs
                 _logger.LogWarning($"'{item.Name}' ({item.Id}) has a spell proc effect that will prevent auto-determination!");
                 item.HasProc = true;
                 return;

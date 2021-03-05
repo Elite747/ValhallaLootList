@@ -43,8 +43,8 @@ namespace ValhallaLootList.Client
             builder.Services
                 .AddApiAuthorization(options =>
                 {
-                    options.UserOptions.NameClaim = DiscordClaimTypes.Username;
-                    options.UserOptions.RoleClaim = AppRoles.ClaimType;
+                    options.UserOptions.NameClaim = AppClaimTypes.Name;
+                    options.UserOptions.RoleClaim = AppClaimTypes.Role;
                 })
                 .AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
 

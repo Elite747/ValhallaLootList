@@ -8,55 +8,62 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server
 {
-    public class IdentityProfileService : IProfileService
+    public class IdentityProfileService : DefaultProfileService
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly DiscordService _discordService;
         private readonly DiscordRoleMap _roles;
 
-        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles)
+        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles, ILogger<DefaultProfileService> logger) : base(logger)
         {
             _userManager = userManager;
             _discordService = discordService;
             _roles = roles;
         }
 
-        public Task GetProfileDataAsync(ProfileDataRequestContext context)
+        public override Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
-            context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type == AppRoles.ClaimType || claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
-            return Task.CompletedTask;
+            context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
+            return base.GetProfileDataAsync(context);
         }
 
-        public async Task IsActiveAsync(IsActiveContext context)
+        public override async Task IsActiveAsync(IsActiveContext context)
         {
             context.IsActive = false;
-            var user = await _userManager.FindByIdAsync(context.Subject.GetSubjectId());
 
-            if (long.TryParse(user.NormalizedUserName, out var discordMemberId) && user is not null)
+            string idString = context.Subject.GetSubjectId();
+
+            if (long.TryParse(idString, out var id))
             {
-                var oldClaims = await _userManager.GetClaimsAsync(user);
+                var user = await _userManager.FindByIdAsync(idString);
 
-                var memberRoles = await _discordService.GetMemberRolesAsync(discordMemberId);
-
-                if (memberRoles is not null)
+                if (user is not null)
                 {
-                    var oldAppRoles = oldClaims.Where(claim => claim.Type == AppRoles.ClaimType).Select(claim => claim.Value).ToHashSet();
-                    var newAppRoles = new HashSet<string>();
+                    var oldClaims = await _userManager.GetClaimsAsync(user);
 
-                    foreach (var (appRole, discordRole) in _roles.AllRoles)
+                    var guildMember = await _discordService.GetMemberInfoAsync(id);
+
+                    if (guildMember is not null)
                     {
-                        if (memberRoles.Contains(discordRole))
-                        {
-                            newAppRoles.Add(appRole);
-                        }
-                    }
+                        var oldAppRoles = oldClaims.Where(claim => claim.Type == AppClaimTypes.Role).Select(claim => claim.Value).ToHashSet();
+                        var newAppRoles = new HashSet<string>();
 
-                    context.IsActive = newAppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(newAppRoles);
+                        foreach (var (appRole, discordRole) in _roles.AllRoles)
+                        {
+                            if (guildMember.RoleNames?.Contains(discordRole) == true)
+                            {
+                                newAppRoles.Add(appRole);
+                            }
+                        }
+
+                        context.IsActive = newAppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(newAppRoles);
+                    }
                 }
             }
         }

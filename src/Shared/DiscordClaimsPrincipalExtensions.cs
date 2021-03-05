@@ -36,24 +36,38 @@ namespace ValhallaLootList
             return principal.FindFirst(DiscordClaimTypes.Username)?.Value;
         }
 
+        public static string? GetAppUserId(this ClaimsPrincipal principal)
+        {
+            return principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        public static long? GetDiscordId(this ClaimsPrincipal principal)
+        {
+            if (long.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var result))
+            {
+                return result;
+            }
+            return null;
+        }
+
         public static bool IsAdmin(this ClaimsPrincipal principal)
         {
-            return principal.HasClaim(AppRoles.ClaimType, AppRoles.Administrator);
+            return principal.HasClaim(AppClaimTypes.Role, AppRoles.Administrator);
         }
 
         public static bool IsMember(this ClaimsPrincipal principal)
         {
-            return principal.HasClaim(AppRoles.ClaimType, AppRoles.Member);
+            return principal.HasClaim(AppClaimTypes.Role, AppRoles.Member);
         }
 
         public static bool IsRaidLeader(this ClaimsPrincipal principal)
         {
-            return principal.HasClaim(AppRoles.ClaimType, AppRoles.RaidLeader);
+            return principal.HasClaim(AppClaimTypes.Role, AppRoles.RaidLeader);
         }
 
         public static bool IsLootMaster(this ClaimsPrincipal principal)
         {
-            return principal.HasClaim(AppRoles.ClaimType, AppRoles.LootMaster);
+            return principal.HasClaim(AppClaimTypes.Role, AppRoles.LootMaster);
         }
     }
 }

@@ -47,9 +47,6 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<RaidDto>> Get(string id)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            bool isAdmin = User.IsAdmin();
-
             var dto = await _context.Raids
                 .AsNoTracking()
                 .Where(raid => raid.Id == id)
@@ -67,6 +64,9 @@ namespace ValhallaLootList.Server.Controllers
             {
                 return NotFound();
             }
+
+            var currentUserId = User.GetAppUserId();
+            bool isAdmin = User.IsAdmin();
 
             dto.Attendees = await _context.RaidAttendees
                 .AsNoTracking()
@@ -144,9 +144,6 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost, Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<RaidDto>> Post([FromBody] RaidSubmissionDto dto)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            bool isAdmin = User.IsAdmin();
-
             var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
 
             if (phaseDetails is null)
@@ -212,6 +209,9 @@ namespace ValhallaLootList.Server.Controllers
             _context.Raids.Add(raid);
 
             await _context.SaveChangesAsync();
+
+            var currentUserId = User.GetAppUserId();
+            bool isAdmin = User.IsAdmin();
 
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
             {
@@ -468,7 +468,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             drop.AwardedAtUtc = now;
-            drop.AwardedBy = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            drop.AwardedBy = User.GetAppUserId();
 
             var killers = await _context.CharacterEncounterKills
                 .AsTracking()

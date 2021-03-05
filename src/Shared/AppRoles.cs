@@ -7,8 +7,6 @@ namespace ValhallaLootList
 {
     public static class AppRoles
     {
-        public const string ClaimType = "role";
-
         public const string Member = nameof(Member);
 
         public const string Administrator = nameof(Administrator);
@@ -21,7 +19,7 @@ namespace ValhallaLootList
         {
             var memberPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(ClaimType, Member)
+                .RequireClaim(AppClaimTypes.Role, Member)
                 .Build();
 
             options.DefaultPolicy = memberPolicy;
@@ -30,17 +28,17 @@ namespace ValhallaLootList
 
             options.AddPolicy(Administrator, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(ClaimType, Administrator)
+                .RequireClaim(AppClaimTypes.Role, Administrator)
                 .Build());
 
             options.AddPolicy(RaidLeader, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(ClaimType, RaidLeader)
+                .RequireClaim(AppClaimTypes.Role, RaidLeader)
                 .Build());
 
             options.AddPolicy(LootMaster, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(ClaimType, LootMaster)
+                .RequireClaim(AppClaimTypes.Role, LootMaster)
                 .Build());
         }
     }

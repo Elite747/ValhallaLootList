@@ -46,26 +46,7 @@ namespace ValhallaLootList.Server.Discord
             _memoryCache = memoryCache;
         }
 
-        public ValueTask<GuildMember?> GetMemberAsync(long memberId, CancellationToken cancellationToken = default)
-        {
-            return GetAsync<GuildMember>(
-                path: $"guilds/{_options.GuildId}/members/{memberId}",
-                cacheKey: string.Format(_memberCacheKeyFormat, memberId),
-                expiration: TimeSpan.FromMinutes(5),
-                cancellationToken: cancellationToken);
-        }
-
-        public ValueTask<Dictionary<long, GuildRole>?> GetRolesAsync(CancellationToken cancellationToken = default)
-        {
-            return GetAsync<Dictionary<long, GuildRole>, List<GuildRole>>(
-                path: $"guilds/{_options.GuildId}/roles",
-                cacheKey: _rolesCacheKey,
-                expiration: TimeSpan.FromDays(1),
-                convert: list => list.ToDictionary(role => role.Id),
-                cancellationToken: cancellationToken);
-        }
-
-        public async Task<HashSet<string>?> GetMemberRolesAsync(long memberId, CancellationToken cancellationToken = default)
+        public async Task<GuildMemberInfo?> GetMemberInfoAsync(long memberId, CancellationToken cancellationToken = default)
         {
             var member = await GetMemberAsync(memberId, cancellationToken);
             if (member is null) return null;
@@ -85,7 +66,7 @@ namespace ValhallaLootList.Server.Discord
                 {
                     _memoryCache.Remove(_rolesCacheKey);
                     guildRoles = await GetRolesAsync(cancellationToken);
-                    if (guildRoles is null) return null;
+                    if (guildRoles is null) throw new Exception("Couldn't load guild roles.");
                     if (guildRoles.TryGetValue(roleId, out role))
                     {
                         memberRoles.Add(role.Name);
@@ -93,7 +74,26 @@ namespace ValhallaLootList.Server.Discord
                 }
             }
 
-            return memberRoles;
+            return new GuildMemberInfo(member, memberRoles);
+        }
+
+        public ValueTask<GuildMember?> GetMemberAsync(long memberId, CancellationToken cancellationToken = default)
+        {
+            return GetAsync<GuildMember>(
+                path: $"guilds/{_options.GuildId}/members/{memberId}",
+                cacheKey: string.Format(_memberCacheKeyFormat, memberId),
+                expiration: TimeSpan.FromMinutes(5),
+                cancellationToken: cancellationToken);
+        }
+
+        public ValueTask<Dictionary<long, GuildRole>?> GetRolesAsync(CancellationToken cancellationToken = default)
+        {
+            return GetAsync<Dictionary<long, GuildRole>, List<GuildRole>>(
+                path: $"guilds/{_options.GuildId}/roles",
+                cacheKey: _rolesCacheKey,
+                expiration: TimeSpan.FromDays(1),
+                convert: list => list.ToDictionary(role => role.Id),
+                cancellationToken: cancellationToken);
         }
 
         private ValueTask<TValue?> GetAsync<TValue>(string path, string cacheKey, TimeSpan expiration, CancellationToken cancellationToken) where TValue : class

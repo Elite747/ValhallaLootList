@@ -8,9 +8,11 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
@@ -46,14 +48,25 @@ namespace ValhallaLootList.Server
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddDefaultIdentity<AppUser>(options => options.ClaimsIdentity.RoleClaimType = AppRoles.ClaimType)
+            services
+                .AddDefaultIdentity<AppUser>(options =>
+                {
+                    options.ClaimsIdentity.RoleClaimType = AppClaimTypes.Role;
+                    options.ClaimsIdentity.UserNameClaimType = AppClaimTypes.Name;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.RemoveAll<IUserValidator<AppUser>>(); // Don't validate usernames or emails. All of this info comes from Discord and doesn't need validation.
 
             services.AddIdentityServer()
                 .AddApiAuthorization<AppUser, ApplicationDbContext>(options =>
                 {
-                    options.IdentityResources["openid"].UserClaims.Add(AppRoles.ClaimType);
-                    options.ApiResources.Single().UserClaims.Add(AppRoles.ClaimType);
+                    var claims = options.IdentityResources["openid"].UserClaims;
+                    claims.Add(AppClaimTypes.Role);
+                    claims.Add(AppClaimTypes.Name);
+                    claims = options.ApiResources.Single().UserClaims;
+                    claims.Add(AppClaimTypes.Role);
+                    claims.Add(AppClaimTypes.Name);
                 })
                 .AddProfileService<IdentityProfileService>();
 
@@ -66,7 +79,7 @@ namespace ValhallaLootList.Server
                 })
                 .AddIdentityServerJwt();
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove(AppRoles.ClaimType);
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove(AppClaimTypes.Role);
 
             services.AddAuthorization(AppRoles.ConfigureAuthorization);
 

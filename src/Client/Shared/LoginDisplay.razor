@@ -7,10 +7,21 @@
 <AuthorizeView>
     <Authorized>
         <div class="align-text-bottom">
-            @context.User.Identity!.Name<small class="font-weight-light text-muted">#@context.User.GetDiscordDiscriminator()</small>
+            @{
+                var username = context.User.Identity?.Name;
+                var discordName = context.User.GetDiscordUsername();
+            }
+            @if (username != discordName)
+            {
+                @username
+            }
+            else
+            {
+                @discordName<span class="font-weight-light text-muted">#@context.User.GetDiscordDiscriminator()</span>
+            }
+            &nbsp;
+            <img src="@context.User.GetDiscordAvatarUrl()" class="rounded-circle img-thumbnail img-fluid" width="48" height="48" />
         </div>
-        &nbsp;
-        <img src="@context.User.GetDiscordAvatarUrl()" class="rounded-circle img-thumbnail img-fluid" width="48" height="48" />
         <button class="nav-link btn btn-link" @onclick="BeginSignOut">Log out</button>
     </Authorized>
     <NotAuthorized>

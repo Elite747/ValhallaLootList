@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
@@ -30,7 +30,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet]
         public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.GetAppUserId();
             bool isAdmin = User.IsAdmin();
 
             var query = _context.Characters.AsNoTracking();
@@ -71,7 +71,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CharacterDto>> Get(string id)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.GetAppUserId();
             bool isAdmin = User.IsAdmin();
 
             var character = await _context.Characters
@@ -135,15 +135,17 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
+            var currentUserId = User.GetAppUserId();
+
             var character = new Character
             {
                 Class = dto.Class.Value,
                 MemberStatus = RaidMemberStatus.FullTrial,
-                IsLeader = false,
+                //VerifiedById = User.IsAdmin() ? currentUserId : null,
                 Name = normalizedName,
                 Race = dto.Race.Value,
                 IsMale = dto.Gender == Gender.Male,
-                OwnerId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value
+                OwnerId = currentUserId
             };
 
             _context.Characters.Add(character);
@@ -220,10 +222,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            bool isAdmin = User.IsAdmin();
-
-            if (!isAdmin && character.OwnerId != currentUserId)
+            if (!User.IsAdmin() && character.OwnerId != User.GetAppUserId())
             {
                 return Unauthorized();
             }
@@ -370,6 +369,70 @@ namespace ValhallaLootList.Server.Controllers
             return CreatedAtAction(nameof(GetLootList), new { id, phase }, dtos[phase]);
         }
 
+        //[HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]
+        //public async Task<ActionResult> PostVerify(string id)
+        //{
+        //    var character = await FindCharacterByIdOrNameAsync(id);
+
+        //    if (character is null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    if (character.VerifiedById?.Length > 0)
+        //    {
+        //        return Problem("Character is already verified.", statusCode: 400);
+        //    }
+
+        //    character.VerifiedById = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok();
+        //}
+
+        //[HttpPut("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
+        //public async Task<ActionResult> SetOwner(string id, [FromBody] string ownerId)
+        //{
+        //    var character = await FindCharacterByIdOrNameAsync(id);
+
+        //    if (character is null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    var user = await _context.Users.FindAsync(ownerId);
+
+        //    if (user is null)
+        //    {
+        //        return Problem("No user with that id exists.", statusCode: 400);
+        //    }
+
+        //    character.OwnerId = user.Id;
+        //    character.VerifiedById = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok();
+        //}
+
+        [HttpDelete("{id}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> Delete(string id)
+        {
+            var character = await FindCharacterByIdOrNameAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            _context.Characters.Remove(character);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         private async Task<Character?> FindCharacterByIdOrNameAsync(string idOrName, CancellationToken cancellationToken = default)
         {
             return await _context.Characters.AsTracking().FirstOrDefaultAsync<Character>(c => c.Id == idOrName || c.Name.Equals(idOrName, StringComparison.OrdinalIgnoreCase), cancellationToken);
@@ -390,15 +453,15 @@ namespace ValhallaLootList.Server.Controllers
 
         private async Task<Dictionary<byte, LootListDto>> CreateDtosAsync(string characterId, string? teamId, byte? phase)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            bool isAdmin = User.IsAdmin();
-
             var lootListQuery = _context.CharacterLootLists.AsNoTracking().Where(ll => ll.CharacterId == characterId);
 
             if (phase.HasValue)
             {
                 lootListQuery = lootListQuery.Where(ll => ll.Phase == phase.Value);
             }
+
+            var currentUserId = User.GetAppUserId();
+            bool isAdmin = User.IsAdmin();
 
             var dtos = await lootListQuery
                 .Select(ll => new LootListDto

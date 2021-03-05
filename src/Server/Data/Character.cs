@@ -19,7 +19,7 @@ namespace ValhallaLootList.Server.Data
 
         public bool IsLeader { get; set; }
 
-        public string OwnerId { get; set; } = string.Empty;
+        public string? OwnerId { get; set; }
 
         public RaidMemberStatus MemberStatus { get; set; }
 

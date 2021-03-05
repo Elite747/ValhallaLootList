@@ -64,11 +64,11 @@ namespace ValhallaLootList.Server.Controllers
                 return LocalRedirect("~/loginerror?reason=2");
             }
 
-            HashSet<string>? memberRoles;
+            GuildMemberInfo? guildMember;
             try
             {
-                memberRoles = await _discordService.GetMemberRolesAsync(discordId);
-                if (memberRoles is null)
+                guildMember = await _discordService.GetMemberInfoAsync(discordId);
+                if (guildMember?.RoleNames is null)
                 {
                     return LocalRedirect("~/loginerror?reason=5");
                 }
@@ -78,7 +78,7 @@ namespace ValhallaLootList.Server.Controllers
                 return LocalRedirect("~/loginerror?reason=2");
             }
 
-            if (!memberRoles.Contains(_roles.Member))
+            if (!guildMember.RoleNames.Contains(_roles.Member))
             {
                 return LocalRedirect("~/loginerror?reason=6");
             }
@@ -92,6 +92,12 @@ namespace ValhallaLootList.Server.Controllers
                 if (await _signInManager.UserManager.IsLockedOutAsync(user))
                 {
                     return LocalRedirect("~/loginerror?reason=3");
+                }
+
+                if (user.UserName != guildMember.DisplayName)
+                {
+                    user.UserName = guildMember.DisplayName;
+                    await _signInManager.UserManager.UpdateAsync(user);
                 }
 
                 var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
@@ -122,13 +128,13 @@ namespace ValhallaLootList.Server.Controllers
 
                 foreach (var (appRole, discordRole) in _roles.AllRoles)
                 {
-                    var currentClaim = existingClaims.FirstOrDefault(claim => string.Equals(claim.Type, AppRoles.ClaimType) && string.Equals(claim.Value, appRole));
+                    var currentClaim = existingClaims.FirstOrDefault(claim => string.Equals(claim.Type, AppClaimTypes.Role) && string.Equals(claim.Value, appRole));
 
-                    if (memberRoles.Contains(discordRole))
+                    if (guildMember.RoleNames.Contains(discordRole))
                     {
                         if (currentClaim is null)
                         {
-                            newClaims.Add(new Claim(AppRoles.ClaimType, appRole));
+                            newClaims.Add(new Claim(AppClaimTypes.Role, appRole));
                         }
                     }
                     else if (currentClaim is not null)
@@ -137,17 +143,31 @@ namespace ValhallaLootList.Server.Controllers
                     }
                 }
 
-                foreach (var savedRoleClaim in existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role))
+                var existingRoleClaims = existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role).ToDictionary(claim => claim.Value);
+
+                foreach (var updatedRole in guildMember.RoleNames)
                 {
-                    if (!memberRoles.Remove(savedRoleClaim.Value))
+                    if (existingRoleClaims.TryGetValue(updatedRole, out var existingRoleClaim))
                     {
-                        removedClaims.Add(savedRoleClaim);
+                        existingRoleClaims.Remove(updatedRole);
+                    }
+                    else
+                    {
+                        newClaims.Add(new Claim(DiscordClaimTypes.Role, updatedRole));
                     }
                 }
 
-                foreach (var newRole in memberRoles)
+                foreach (var existingRoleClaim in existingRoleClaims.Values)
                 {
-                    newClaims.Add(new Claim(DiscordClaimTypes.Role, newRole));
+                    removedClaims.Add(existingRoleClaim);
+                }
+
+                foreach (var newRole in guildMember.RoleNames)
+                {
+                    if (!existingClaims.Any(claim => claim.Type == DiscordClaimTypes.Role && claim.Value == newRole))
+                    {
+                        newClaims.Add(new Claim(DiscordClaimTypes.Role, newRole));
+                    }
                 }
 
                 if (newClaims.Count != 0)
@@ -178,12 +198,11 @@ namespace ValhallaLootList.Server.Controllers
             }
             else
             {
-                /*
-                Not actually utilizing the UserName property since that is read by Discord, which is far less restrictive with their naming scheme than
-                the default asp.net identity username policy. Rather than trying to match Discord's policy, set the username to the unique discord user
-                key to satisfy asp.net identity requirements for user creation and do not use AppUser.UserName.
-                */
-                user = new AppUser { UserName = info.ProviderKey };
+                user = new AppUser
+                {
+                    Id = info.ProviderKey,
+                    UserName = guildMember.DisplayName
+                };
 
                 identityResult = await _signInManager.UserManager.CreateAsync(user);
 
@@ -197,7 +216,7 @@ namespace ValhallaLootList.Server.Controllers
 
                         var claims = info.Principal.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)).ToList();
 
-                        foreach (var role in memberRoles)
+                        foreach (var role in guildMember.RoleNames)
                         {
                             claims.Add(new Claim(DiscordClaimTypes.Role, role));
 
@@ -205,7 +224,7 @@ namespace ValhallaLootList.Server.Controllers
                             {
                                 if (string.Equals(role, discordRole, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    claims.Add(new Claim(AppRoles.ClaimType, appRole));
+                                    claims.Add(new Claim(AppClaimTypes.Role, appRole));
                                 }
                             }
                         }

@@ -23,27 +23,16 @@ namespace ValhallaLootList.Client
             if (user.Identity?.IsAuthenticated == true)
             {
                 var identity = (ClaimsIdentity)user.Identity;
-                var roleClaims = identity.FindAll(options.RoleClaim).ToList();
-                if (roleClaims?.Count > 0)
-                {
-                    foreach (var existingClaim in roleClaims)
-                    {
-                        identity.RemoveClaim(existingClaim);
-                    }
 
-                    var rolesElem = account.AdditionalProperties[options.RoleClaim];
-                    if (rolesElem is JsonElement roles)
+                foreach (var claim in identity.Claims.ToList())
+                {
+                    if (account.AdditionalProperties.TryGetValue(claim.Type, out var claimObj) && claimObj is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Array)
                     {
-                        if (roles.ValueKind == JsonValueKind.Array)
+                        identity.RemoveClaim(claim);
+
+                        foreach (var arrayElement in jsonElement.EnumerateArray())
                         {
-                            foreach (var role in roles.EnumerateArray())
-                            {
-                                identity.AddClaim(new Claim(options.RoleClaim, role.GetString() ?? string.Empty));
-                            }
-                        }
-                        else
-                        {
-                            identity.AddClaim(new Claim(options.RoleClaim, roles.GetString() ?? string.Empty));
+                            identity.AddClaim(new Claim(claim.Type, arrayElement.GetString() ?? string.Empty));
                         }
                     }
                 }

@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class Drop
+    public class Drop : KeyedRow
     {
         public string? AwardedBy { get; set; }
 
@@ -30,7 +30,9 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public virtual Item Item { get; set; } = null!;
 
-        public virtual Character? Winner { get; set; } = null!;
+        public virtual Character? Winner { get; set; }
+
+        public virtual LootListEntry? WinningEntry { get; set; }
 
         public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
     }

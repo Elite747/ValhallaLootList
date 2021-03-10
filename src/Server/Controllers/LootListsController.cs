@@ -189,9 +189,7 @@ namespace ValhallaLootList.Server.Controllers
                                 {
                                     ItemId = itemId,
                                     LootList = list,
-                                    PassCount = 0,
-                                    Rank = (byte)rank,
-                                    Won = false
+                                    Rank = (byte)rank
                                 });
                             }
                             else
@@ -223,7 +221,6 @@ namespace ValhallaLootList.Server.Controllers
         private async Task<IList<LootListDto>?> CreateDtosAsync(string? characterId, string? teamId, byte? phase)
         {
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
-            var winQuery = _context.Drops.AsNoTracking();
             var passQuery = _context.DropPasses.AsNoTracking();
             var entryQuery = _context.LootListEntries.AsNoTracking();
             var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance);
@@ -243,8 +240,7 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 lootListQuery = lootListQuery.Where(ll => ll.CharacterId == characterId);
-                winQuery = winQuery.Where(d => d.WinnerId == characterId);
-                passQuery = passQuery.Where(dp => dp.CharacterId == characterId);
+                passQuery = passQuery.Where(p => p.CharacterId == characterId);
                 entryQuery = entryQuery.Where(e => e.LootList.CharacterId == characterId);
                 attendanceQuery = attendanceQuery.Where(a => a.CharacterId == characterId);
                 teamId = character.TeamId;
@@ -257,8 +253,7 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId);
-                winQuery = winQuery.Where(d => d.Winner!.TeamId == teamId);
-                passQuery = passQuery.Where(dp => dp.Character.TeamId == teamId);
+                passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
                 entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
             }
@@ -293,15 +288,9 @@ namespace ValhallaLootList.Server.Controllers
                 })
                 .ToListAsync();
 
-            var passRecords = await passQuery.Select(dp => new { dp.CharacterId, dp.DropItemId, dp.RelativePriority }).ToListAsync();
-
-            var winRecords = new Dictionary<(string, uint), int>();
-
-            await foreach (var drop in winQuery.Select(d => new { WinnerId = d.WinnerId!, d.ItemId }).AsAsyncEnumerable())
-            {
-                winRecords.TryGetValue((drop.WinnerId, drop.ItemId), out int i);
-                winRecords[(drop.WinnerId, drop.ItemId)] = i + 1;
-            }
+            var passes = await passQuery
+                .Select(pass => new { pass.CharacterId, pass.Drop.ItemId, pass.RelativePriority })
+                .ToListAsync();
 
             var offset = TimeSpanHelpers.GetTimeZoneOffsetString(_serverTimeZoneInfo.BaseUtcOffset);
             var attendances = await attendanceQuery
@@ -318,8 +307,8 @@ namespace ValhallaLootList.Server.Controllers
                     e.ItemId,
                     e.Item!.RewardFromId,
                     ItemName = (string?)e.Item!.Name,
+                    Won = e.DropId != null,
                     e.Rank,
-                    e.Won,
                     e.LootList.Phase,
                     e.LootList.CharacterId
                 })
@@ -328,26 +317,19 @@ namespace ValhallaLootList.Server.Controllers
                 var dto = dtos.Find(x => x.CharacterId == entry.CharacterId && x.Phase == entry.Phase);
                 if (dto is not null)
                 {
-                    bool won = false;
                     int? prio = null;
 
                     if (entry.ItemId.HasValue)
                     {
                         var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
 
-                        if (!won && winRecords.TryGetValue((entry.CharacterId, rewardFromId), out int winCount) && winCount > 0)
-                        {
-                            won = true;
-                            winRecords[(entry.CharacterId, rewardFromId)] = winCount - 1;
-                        }
-
-                        if (!won && dto.Locked)
+                        if (!entry.Won && dto.Locked)
                         {
                             int loss = 0, underPrio = 0;
 
-                            foreach (var passRecord in passRecords.Where(x => x.DropItemId == rewardFromId && x.CharacterId == entry.CharacterId))
+                            foreach (var pass in passes.Where(p => p.ItemId == entry.ItemId && p.CharacterId == entry.CharacterId))
                             {
-                                if (passRecord.RelativePriority >= 0)
+                                if (pass.RelativePriority >= 0)
                                 {
                                     loss++;
                                 }
@@ -372,7 +354,7 @@ namespace ValhallaLootList.Server.Controllers
                         ItemName = entry.ItemName,
                         Prio = showRanks ? prio : null,
                         Rank = showRanks ? entry.Rank : 0,
-                        Won = won || entry.Won
+                        Won = entry.Won
                     });
                 }
             }

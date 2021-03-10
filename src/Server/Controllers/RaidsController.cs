@@ -116,6 +116,7 @@ namespace ValhallaLootList.Server.Controllers
                 .Where(d => d.EncounterKillRaidId == id)
                 .Select(d => new
                 {
+                    d.Id,
                     d.EncounterKillEncounterId,
                     d.AwardedAtUtc,
                     d.AwardedBy,
@@ -129,6 +130,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 killDictionary[drop.EncounterKillEncounterId].Drops.Add(new EncounterDropDto
                 {
+                    Id = drop.Id,
                     AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
                     AwardedBy = drop.AwardedBy,
                     ItemId = drop.ItemId,
@@ -414,6 +416,7 @@ namespace ValhallaLootList.Server.Controllers
                 Characters = kill.Characters.Select(c => c.CharacterId).ToList(),
                 Drops = kill.Drops.Select(d => new EncounterDropDto
                 {
+                    Id = d.Id,
                     AwardedAt = new DateTimeOffset(d.AwardedAtUtc, TimeSpan.Zero),
                     AwardedBy = d.AwardedBy,
                     ItemId = d.ItemId,
@@ -448,130 +451,6 @@ namespace ValhallaLootList.Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
-        }
-
-        [HttpPut("{id}/Kills/{encounterId}/Drops/{itemId:int}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<EncounterDropDto>> PutDrop(string id, string encounterId, uint itemId, [FromBody] AwardDropSubmissionDto dto, [FromServices] PrioCalculator prioCalculator)
-        {
-            var now = DateTime.UtcNow;
-            var drop = await _context.Drops.FindAsync(id, encounterId, itemId);
-
-            if (drop is null)
-            {
-                return NotFound();
-            }
-
-            if (dto.WinnerId?.Length > 0 && drop.WinnerId?.Length > 0)
-            {
-                ModelState.AddModelError(nameof(dto.WinnerId), "Existing winner must be cleared before setting a new winner.");
-                return ValidationProblem();
-            }
-
-            drop.AwardedAtUtc = now;
-            drop.AwardedBy = User.GetAppUserId();
-
-            var killers = await _context.CharacterEncounterKills
-                .AsTracking()
-                .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
-                .Select(c => c.Character)
-                .ToListAsync();
-
-            await _context.Entry(drop).Collection(drop => drop.Passes).LoadAsync();
-            drop.Passes.Clear();
-
-            if (dto.WinnerId?.Length > 0)
-            {
-                var winner = killers.Find(k => k.Id == dto.WinnerId);
-
-                if (winner is null)
-                {
-                    ModelState.AddModelError(nameof(dto.WinnerId), "Character was not present for the kill.");
-                    return ValidationProblem();
-                }
-
-                var (winnerPrio, _, _) = await prioCalculator.CalculatePrioAsync(winner.Id, drop.ItemId);
-
-                killers.Remove(winner);
-
-                drop.Winner = winner;
-                drop.WinnerId = winner.Id;
-
-                var lootListEntry = _context.LootListEntries
-                    .AsTracking()
-                    .Where(lle => (lle.ItemId == drop.ItemId || lle.Item!.RewardFromId == drop.ItemId) && lle.LootList.CharacterId == winner.Id && !lle.Won)
-                    .OrderByDescending(lle => lle.Rank)
-                    .FirstOrDefault();
-
-                if (lootListEntry is not null)
-                {
-                    lootListEntry.Won = true;
-                }
-
-                foreach (var killer in killers)
-                {
-                    var (prio, locked, _) = await prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
-
-                    if (locked && prio.HasValue)
-                    {
-                        drop.Passes.Add(new DropPass
-                        {
-                            Character = killer,
-                            CharacterId = killer.Id,
-                            Drop = drop,
-                            RelativePriority = prio.Value - (winnerPrio ?? 0)
-                        });
-                    }
-                }
-            }
-            else
-            {
-                drop.Winner = null;
-                drop.WinnerId = null;
-            }
-
-            await _context.SaveChangesAsync();
-
-            return new EncounterDropDto
-            {
-                AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
-                AwardedBy = drop.AwardedBy,
-                ItemId = drop.ItemId,
-                WinnerId = drop.WinnerId,
-                WinnerName = drop.Winner?.Name
-            };
-        }
-
-        [HttpGet("{id}/Kills/{encounterId}/Drops/{itemId:int}/Ranks")]
-        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(string id, string encounterId, uint itemId, [FromServices] PrioCalculator prioCalculator)
-        {
-            var drop = await _context.Drops.FindAsync(id, encounterId, itemId);
-
-            if (drop is null)
-            {
-                return NotFound();
-            }
-
-            var killerIds = await _context.CharacterEncounterKills
-                .AsNoTracking()
-                .Where(c => c.EncounterKillEncounterId == encounterId && c.EncounterKillRaidId == id)
-                .Select(c => c.CharacterId)
-                .ToListAsync();
-
-            var dto = new List<ItemPrioDto>();
-
-            foreach (var characterId in killerIds)
-            {
-                var (prio, _, details) = await prioCalculator.CalculatePrioAsync(characterId, drop.ItemId);
-
-                dto.Add(new ItemPrioDto
-                {
-                    CharacterId = characterId,
-                    Priority = prio,
-                    Details = details
-                });
-            }
-
-            return dto;
         }
     }
 }

@@ -16,8 +16,8 @@ namespace ValhallaLootList.Server.Data
 
         public virtual Item? Item { get; set; }
 
-        public bool Won { get; set; }
+        public string? DropId { get; set; }
 
-        public short PassCount { get; set; }
+        public Drop? Drop { get; set; }
     }
 }

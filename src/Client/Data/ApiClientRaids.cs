@@ -47,18 +47,5 @@ namespace ValhallaLootList.Client.Data
         {
             return Client.CreateRequest<KillSubmissionDto, EncounterKillDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/kills", killSubmission);
         }
-
-        public IApiClientOperation<List<ItemPrioDto>> GetPriorityRankings(string raidId, string encounterId, uint itemId)
-        {
-            return Client.CreateRequest<List<ItemPrioDto>>(HttpMethod.Get, $"api/v1/raids/{raidId}/kills/{encounterId}/drops/{itemId}/ranks");
-        }
-
-        public IApiClientOperation<EncounterDropDto> AssignDrop(string raidId, string encounterId, uint itemId, string? characterId)
-        {
-            return Client.CreateRequest<AwardDropSubmissionDto, EncounterDropDto>(
-                HttpMethod.Put,
-                $"api/v1/raids/{raidId}/kills/{encounterId}/drops/{itemId}",
-                new AwardDropSubmissionDto { WinnerId = characterId });
-        }
     }
 }

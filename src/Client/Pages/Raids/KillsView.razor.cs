@@ -15,9 +15,8 @@ namespace ValhallaLootList.Client.Pages.Raids
     public partial class KillsView
     {
         private AddKillInputModel? _addKillInputModel;
-        private List<ItemPrioDto>? _assignPrios;
+        private IList<ItemPrioDto>? _assignPrios;
         private EncounterDropDto? _assignDrop;
-        private string? _assignEncounterId;
 
         protected override void OnParametersSet()
         {
@@ -68,25 +67,24 @@ namespace ValhallaLootList.Client.Pages.Raids
                 .ExecuteAsync();
         }
 
-        private Task BeginAssignAsync(EncounterDropDto drop, string encounterId)
+        private Task BeginAssignAsync(EncounterDropDto drop)
         {
             Debug.Assert(Raid.Id?.Length > 0);
             _assignPrios = null;
             _assignDrop = drop;
-            _assignEncounterId = encounterId;
             _assignModal?.Show();
 
-            return Api.Raids.GetPriorityRankings(Raid.Id, encounterId, drop.ItemId)
+            return Api.Drops.GetPriorityRankings(drop.Id)
                 .OnSuccess(prios => _assignPrios = prios)
                 .ExecuteAsync();
         }
 
-        private Task AssignAsync(EncounterDropDto drop, string encounterId, string? characterId)
+        private Task AssignAsync(EncounterDropDto drop, string? characterId)
         {
             Debug.Assert(Raid.Id?.Length > 0);
             _assignModal?.Hide();
 
-            return Api.Raids.AssignDrop(Raid.Id, encounterId, drop.ItemId, characterId)
+            return Api.Drops.Assign(drop.Id, characterId)
                 .OnSuccess(response =>
                 {
                     drop.AwardedAt = response.AwardedAt;

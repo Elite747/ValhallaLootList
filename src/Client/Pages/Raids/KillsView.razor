@@ -32,13 +32,13 @@
                     <AuthorizeView Roles="@AppRoles.LootMaster">
                         @if (drop.WinnerId is null)
                         {
-                            <button type="button" class="btn btn-sm btn-primary" @onclick="() => BeginAssignAsync(localDrop, localKill.EncounterId)">
+                            <button type="button" class="btn btn-sm btn-primary" @onclick="() => BeginAssignAsync(localDrop)">
                                 Assign
                             </button>
                         }
                         else
                         {
-                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => AssignAsync(localDrop, localKill.EncounterId, null)">Unassign</button>
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => AssignAsync(localDrop, null)">Unassign</button>
                         }
                     </AuthorizeView>
                 </div>
@@ -141,7 +141,7 @@
                             var characterId = entry.CharacterId;
                             var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
 
-                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => AssignAsync(_assignDrop!, _assignEncounterId!, characterId)">
+                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => AssignAsync(_assignDrop!, characterId)">
                                 <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
                                 @if (entry.Details?.Length > 0)
                                 {

@@ -71,9 +71,7 @@ namespace ValhallaLootList.Server.Data
 
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
 
-            builder.Entity<Drop>().HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.ItemId });
-
-            builder.Entity<DropPass>().HasKey(e => new { e.DropEncounterKillRaidId, e.DropEncounterKillEncounterId, e.DropItemId, e.CharacterId });
+            builder.Entity<DropPass>().HasKey(e => new { e.DropId, e.CharacterId });
 
             builder.Entity<EncounterKill>().HasKey(e => new { e.EncounterId, e.RaidId });
 

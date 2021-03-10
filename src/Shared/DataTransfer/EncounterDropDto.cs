@@ -7,6 +7,8 @@ namespace ValhallaLootList.DataTransfer
 {
     public class EncounterDropDto
     {
+        public string Id { get; set; } = string.Empty;
+
         public uint ItemId { get; set; }
 
         public string? ItemName { get; set; }

@@ -29,8 +29,6 @@ namespace ValhallaLootList.Server.Data
 
         public virtual ICollection<RaidAttendee> Attendances { get; set; } = new HashSet<RaidAttendee>();
 
-        public virtual ICollection<Drop> WonDrops { get; set; } = new HashSet<Drop>();
-
         public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
 
         public virtual ICollection<CharacterLootList> CharacterLootLists { get; set; } = new HashSet<CharacterLootList>();

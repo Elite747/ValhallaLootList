@@ -11,19 +11,13 @@ namespace ValhallaLootList.Server.Data
         public string CharacterId { get; set; } = null!;
 
         [Required]
-        public string DropEncounterKillRaidId { get; set; } = null!;
+        public virtual Character Character { get; set; } = null!;
 
         [Required]
-        public string DropEncounterKillEncounterId { get; set; } = null!;
-
-        [Required]
-        public uint DropItemId { get; set; }
+        public string DropId { get; set; } = null!;
 
         [Required]
         public virtual Drop Drop { get; set; } = null!;
-
-        [Required]
-        public virtual Character Character { get; set; } = null!;
 
         public int RelativePriority { get; set; }
     }

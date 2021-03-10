@@ -1,22 +1,18 @@
 ﻿@page "/Teams/{team}/Standings"
 @inject ApiClient Api
 
-<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="RefreshAsync">
+<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
     <span class="fas fa-sync" aria-hidden="true"></span>
     <span class="sr-only">Refresh</span>
 </button>
-@if (_characters is null)
-{
-    <LoadingIndicator />
-}
-else
-{
-    <CascadingValue Value="_lootLists">
+<ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team)" Context="lootLists" @ref="_executor">
+    <CascadingValue Value="lootLists">
         <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" />
     </CascadingValue>
-}
+</ApiExecutor>
 
 @code {
     [Parameter] public string Team { get; set; } = string.Empty;
     private string? _selectedInstanceId;
+    private IApiExecutor? _executor;
 }

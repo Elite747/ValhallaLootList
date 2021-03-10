@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
@@ -38,30 +36,10 @@ namespace ValhallaLootList.Client.Pages.Characters
         {
             if (_editContext.Validate())
             {
-                try
-                {
-                    var response = await Api.PostAsync("api/v1/characters", _character);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseDto = await response.Content.ReadFromJsonAsync<CharacterDto>();
-
-                        Nav.NavigateTo("/characters/" + responseDto?.Name);
-                    }
-                    else
-                    {
-                        var problemDto = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-
-                        if (problemDto?.Errors != null)
-                        {
-                            _customValidator?.DisplayErrors(problemDto.Errors);
-                        }
-                    }
-                }
-                catch (AccessTokenNotAvailableException exception)
-                {
-                    exception.Redirect();
-                }
+                await Api.Characters.Create(_character)
+                    .OnSuccess(character => Nav.NavigateTo("/characters/" + character.Name))
+                    .ValidateWith(_customValidator)
+                    .ExecuteAsync();
             }
         }
 

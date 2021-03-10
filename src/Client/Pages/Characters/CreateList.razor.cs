@@ -5,9 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
@@ -57,7 +55,7 @@ namespace ValhallaLootList.Client.Pages.Characters
         private (Specializations Spec, string DisplayName)[]? _classSpecializations;
         private IList<ItemDto>? _items = Array.Empty<ItemDto>();
 
-        protected override async Task OnInitializedAsync()
+        protected override Task OnInitializedAsync()
         {
             if (Character is null)
             {
@@ -65,24 +63,20 @@ namespace ValhallaLootList.Client.Pages.Characters
             }
             _classSpecializations = _specLookup[Character.Class];
 
-            try
-            {
-                _lootList.Brackets.Clear();
+            _lootList.Brackets.Clear();
 
-                var brackets = await PhaseConfig.GetBracketsAsync(Phase);
-
-                if (brackets is not null)
+            return Api.GetPhaseConfiguration()
+                .OnSuccess(config =>
                 {
-                    foreach (var bracketTemplate in brackets)
+                    if (config.Brackets.TryGetValue(Phase, out var bracketTemplates))
                     {
-                        _lootList.Brackets.Add(new(bracketTemplate));
+                        foreach (var bracketTemplate in bracketTemplates)
+                        {
+                            _lootList.Brackets.Add(new(bracketTemplate));
+                        }
                     }
-                }
-            }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+                })
+                .ExecuteAsync();
         }
 
         private Task MainSpecChanged(Specializations? spec)
@@ -99,28 +93,25 @@ namespace ValhallaLootList.Client.Pages.Characters
 
         private async Task UpdateItemListAsync()
         {
-            try
-            {
-                _items = null;
-                StateHasChanged();
-
-                if (_lootList.MainSpec.HasValue)
-                {
-                    var spec = _lootList.MainSpec.Value;
-
-                    if (_lootList.OffSpec.HasValue)
-                    {
-                        spec |= _lootList.OffSpec.Value;
-                    }
-
-                    _items = (await Api.GetAsync<ItemDto[]>($"api/v1/items?phase={Phase}&spec={spec}")) ?? Array.Empty<ItemDto>();
-                }
-            }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+            _items = null;
             StateHasChanged();
+
+            if (_lootList.MainSpec.HasValue)
+            {
+                var spec = _lootList.MainSpec.Value;
+
+                if (_lootList.OffSpec.HasValue)
+                {
+                    spec |= _lootList.OffSpec.Value;
+                }
+
+                await Api.Items.Get(Phase, spec)
+                    .OnSuccess(items => _items = items)
+                    .OnFailure(_ => _items = Array.Empty<ItemDto>())
+                    .ExecuteAsync();
+
+                StateHasChanged();
+            }
         }
 
         private void OnSelectionRequested(ItemSelectionContext context)
@@ -255,47 +246,29 @@ namespace ValhallaLootList.Client.Pages.Characters
             rankErrors.Add(error);
         }
 
-        private async Task OnSubmit()
+        private Task OnSubmit()
         {
-            try
+            var dto = new LootListSubmissionDto
             {
-                var dto = new LootListSubmissionDto
+                Items = new(),
+                MainSpec = _lootList.MainSpec,
+                OffSpec = _lootList.OffSpec,
+                CharacterId = Character.Id,
+                Phase = Phase
+            };
+
+            foreach (var bracket in _lootList.Brackets)
+            {
+                foreach (var (rank, items) in bracket.Items)
                 {
-                    Items = new(),
-                    MainSpec = _lootList.MainSpec,
-                    OffSpec = _lootList.OffSpec
-                };
-
-                foreach (var bracket in _lootList.Brackets)
-                {
-                    foreach (var (rank, items) in bracket.Items)
-                    {
-                        dto.Items.Add(rank, items);
-                    }
-                }
-
-                var response = await Api.PostAsync($"api/v1/characters/{Character.Id}/lootlists/{Phase}", dto);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseDto = await response.Content.ReadFromJsonAsync<LootListDto>();
-
-                    await OnLootListCreated.InvokeAsync(responseDto);
-                }
-                else
-                {
-                    var problemDto = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-
-                    if (problemDto?.Errors != null)
-                    {
-                        _serverValidator?.DisplayErrors(problemDto.Errors);
-                    }
+                    dto.Items.Add(rank, items);
                 }
             }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+
+            return Api.LootLists.Create(dto)
+                .OnSuccess((character, _) => OnLootListCreated.InvokeAsync(character))
+                .ValidateWith(_serverValidator)
+                .ExecuteAsync();
         }
     }
 }

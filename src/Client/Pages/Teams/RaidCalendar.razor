@@ -6,65 +6,82 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SetDateAsync(_date.AddMonths(-1))">&lt;</button>
+        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ChangeMonth(-1)">&lt;</button>
         <h5>@_date.ToString("MMMM", CultureInfo.CurrentCulture)</h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SetDateAsync(_date.AddMonths(1))">&gt;</button>
+        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ChangeMonth(1)">&gt;</button>
     </div>
-    <table class="table table-bordered table-sm m-0" style="table-layout: fixed">
-        <thead>
-            <tr>
-                @for (int i = firstDayOfWeek; i < 7; i++)
-                {
-                    <th>@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName((DayOfWeek)i)</th>
-                }
-                @for (int i = 0; i < firstDayOfWeek; i++)
-                {
-                    <th>@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName((DayOfWeek)i)</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @for (int week = 0; week < 6; week++)
-            {
-                DateTime firstDayThisWeek = firstCalendarDay.AddDays(week * 7);
-
-                if (firstDayThisWeek.Month > _date.Month || firstDayThisWeek.Year > _date.Year)
-                {
-                    break;
-                }
-
+    <ApiExecutor Operation="() => Api.Raids.Get(Team.Id, _date.Year, _date.Month)" Context="raids" @ref="_executor">
+        <table class="table table-bordered table-sm m-0" style="table-layout: fixed">
+            <thead>
                 <tr>
-                    @for (int day = 0; day < 7; day++)
+                    @for (int i = firstDayOfWeek; i < 7; i++)
                     {
-                        DateTime current = firstDayThisWeek.AddDays(day);
-
-                        @if (current.Month == _date.Month)
-                        {
-                            <td class="p-0 m-0">
-                                <div class="float-right">
-                                    @current.Day
-                                </div>
-                                <div style="min-height: 5rem">
-                                    @foreach (var raid in _raids.Where(r => r.StartedAt.ToLocalTime().Date == current))
-                                    {
-                                        <div>
-                                            <a href="raids/@raid.Id">Ph.@raid.Phase @@ @raid.StartedAt.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)</a>
-                                        </div>
-                                    }
-                                </div>
-                            </td>
-                        }
-                        else
-                        {
-                            <td class="p-0 m-0 bg-secondary"></td>
-                        }
+                        <th>@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName((DayOfWeek)i)</th>
+                    }
+                    @for (int i = 0; i < firstDayOfWeek; i++)
+                    {
+                        <th>@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName((DayOfWeek)i)</th>
                     }
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @for (int week = 0; week < 6; week++)
+                {
+                    DateTime firstDayThisWeek = firstCalendarDay.AddDays(week * 7);
+
+                    if (firstDayThisWeek.Month > _date.Month || firstDayThisWeek.Year > _date.Year)
+                    {
+                        break;
+                    }
+
+                    <tr>
+                        @for (int day = 0; day < 7; day++)
+                        {
+                            DateTime current = firstDayThisWeek.AddDays(day);
+
+                            @if (current.Month == _date.Month)
+                            {
+                                <td class="p-0 m-0">
+                                    <div class="float-right">
+                                        @current.Day
+                                    </div>
+                                    <div style="min-height: 5rem">
+                                        @foreach (var raid in raids.Where(r => r.StartedAt.ToLocalTime().Date == current))
+                                        {
+                                            <div>
+                                                <a href="raids/@raid.Id">Ph.@raid.Phase @@ @raid.StartedAt.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)</a>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="p-0 m-0 bg-secondary"></td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </ApiExecutor>
 </div>
 
 @code {
+    private DateTime _date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private IApiExecutor? _executor;
+
     [Parameter] public TeamDto Team { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+
+    private Task ChangeMonth(int months)
+    {
+        _date = _date.AddMonths(months);
+        StateHasChanged();
+        return _executor?.RestartAsync().AsTask() ?? Task.CompletedTask;
+    }
 }

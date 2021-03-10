@@ -1,47 +1,54 @@
 ﻿@page "/Characters/{character}"
 @inject ApiClient Api
-@inject PhaseConfigProvider PhaseConfig
-@inject NavigationManager Nav
 
-@if (_character is null)
-{
-    <LoadingIndicator />
-}
-else
-{
+<ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
     <h1>
-        @_character.Name
-        <RaceIcon Gender="_character.Gender" Race="_character.Race" Size="IconSize.Large" />
-        <ClassIcon PlayerClass="_character.Class" Size="IconSize.Large" />
+        @character.Name
+        <RaceIcon Gender="character.Gender" Race="character.Race" Size="IconSize.Large" />
+        <ClassIcon PlayerClass="character.Class" Size="IconSize.Large" />
     </h1>
 
-    @if (_character.TeamName?.Length > 0)
+    @if (character.TeamName?.Length > 0)
     {
-        <h2><a href="teams/@_character.TeamName">&lt;@_character.TeamName&gt;</a></h2>
+        <h2><a href="teams/@character.TeamName">&lt;@character.TeamName&gt;</a></h2>
     }
 
-    @if (_phases is not null)
-    {
-        <Tabs SelectedTab="@_selectedPhase" SelectedTabChanged="phase => _selectedPhase = phase">
-            <Items>
-                @foreach (byte phase in _phases)
+    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
+        <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
+            @{
+                var phases = config.Brackets.Keys.Select(phase => (phase, phaseName: phase.ToString())).OrderBy(tuple => tuple.phase).ToList();
+
+                if (string.IsNullOrEmpty(_selectedPhase) || !phases.Any(tuple => tuple.phaseName == _selectedPhase))
                 {
-                    <Tab Name="@phase.ToString()">
-                        Phase @phase.ToString()
-                    </Tab>
+                    (_, _selectedPhase) = phases.Find(tuple => tuple.phase == config.CurrentPhase);
+
+                    if (string.IsNullOrEmpty(_selectedPhase))
+                    {
+                        (_, _selectedPhase) = phases.FirstOrDefault();
+                    }
                 }
-            </Items>
-            <Content>
-                @foreach (byte phase in _phases)
-                {
-                    <TabPanel Name="@phase.ToString()">
-                        <LootListView Character="@_character" Phase="@phase" LootLists="_lootLists" />
-                    </TabPanel>
-                }
-            </Content>
-        </Tabs>
-    }
-}
+            }
+            <Tabs SelectedTab="@_selectedPhase" SelectedTabChanged="phase => _selectedPhase = phase">
+                <Items>
+                    @foreach (var (_, phaseName) in phases)
+                    {
+                        <Tab Name="@phaseName">
+                            Phase @phaseName
+                        </Tab>
+                    }
+                </Items>
+                <Content>
+                    @foreach (var (phase, phaseName) in phases)
+                    {
+                        <TabPanel Name="@phaseName">
+                            <LootListView Character="@character" Phase="@phase" LootLists="lootLists" />
+                        </TabPanel>
+                    }
+                </Content>
+            </Tabs>
+        </ApiExecutor>
+    </ApiExecutor>
+</ApiExecutor>
 
 @code {
     [Parameter] public string Character { get; set; } = string.Empty;

@@ -1,26 +1,14 @@
 ﻿@page "/raids/{RaidId}"
 @inject ApiClient Api
 
-@if (_raid is null)
-{
-    if (_notFound)
-    {
-        <NotFound />
-    }
-    else
-    {
-        <LoadingIndicator />
-    }
-}
-else
-{
-    <h1>Team @_raid.TeamName Raid</h1>
-    <h3>Phase @_raid.Phase</h3>
-    <h3>@_raid.StartedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)</h3>
+<ApiExecutor Operation="() => Api.Raids.Get(RaidId)" Context="raid">
+    <h1>Team @raid.TeamName Raid</h1>
+    <h3>Phase @raid.Phase</h3>
+    <h3>@raid.StartedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)</h3>
 
-    <AttendeesView Raid="_raid" />
-    <KillsView Raid="_raid" />
-}
+    <AttendeesView Raid="raid" />
+    <KillsView Raid="raid" />
+</ApiExecutor>
 
 @code {
     [Parameter] public string RaidId { get; set; } = string.Empty;

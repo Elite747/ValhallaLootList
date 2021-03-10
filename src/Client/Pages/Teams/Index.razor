@@ -1,21 +1,13 @@
 ﻿@page "/teams"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject ApiClient Api
 
 <h1>Raid Teams</h1>
 
-<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="RefreshAsync">
+<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
     <span class="fas fa-sync" aria-hidden="true"></span>
     <span class="sr-only">Refresh</span>
 </button>
-
-
-@if (_teams is null)
-{
-    <LoadingIndicator />
-}
-else
-{
+<ApiExecutor Operation="Api.Teams.GetAllTeamNames" Context="teamNames" @ref="_executor">
     <AuthorizeView Roles="@AppRoles.Administrator">
         <Modal @ref="_createModal">
             @if (_createRequested)
@@ -26,38 +18,18 @@ else
         </Modal>
         <button type="button" class="btn btn-primary mb-2" @onclick="CreateClicked">Create Team</button>
     </AuthorizeView>
-
     <div class="list-group">
-        @foreach (var team in _teams)
+        @foreach (var team in teamNames)
         {
             <a class="list-group-item" href="teams/@team">@team</a>
         }
     </div>
-}
+</ApiExecutor>
 
 @code {
     private Modal? _createModal;
     private bool _createRequested;
-    private string[]? _teams;
-    private string _searchText = string.Empty;
-
-    protected override Task OnInitializedAsync()
-    {
-        return RefreshAsync();
-    }
-
-    private async Task RefreshAsync()
-    {
-        try
-        {
-            _teams = null;
-            _teams = await Api.GetAsync<string[]>("api/v1/teams");
-        }
-        catch (AccessTokenNotAvailableException exception)
-        {
-            exception.Redirect();
-        }
-    }
+    private IApiExecutor? _executor;
 
     private void CreateClicked()
     {

@@ -2,33 +2,21 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 
-@if (_team is null)
-{
-    if (_notFound)
-    {
-        <NotFound />
-    }
-    else
-    {
-        <LoadingIndicator />
-    }
-}
-else
-{
-    <h1>@_team.Name</h1>
+<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team" @ref="_executor">
+    <h1>@team.Name</h1>
 
-    @foreach (var schedule in _team.Schedules)
+    @foreach (var schedule in team.Schedules)
     {
         var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
         <h4>@(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))</h4>
     }
 
     <p>
-        <a href="Teams/@Team/Standings">View Loot Standings</a>
+        <a href="Teams/@team.Name/Standings">View Loot Standings</a>
     </p>
 
     <AuthorizeView Roles="@AppRoles.RaidLeader">
-        <RaidStarter Team="_team" RaidStarted="OnRaidStarted" />
+        <RaidStarter Team="team" RaidStarted="OnRaidStarted" />
     </AuthorizeView>
 
     <div class="row my-5">
@@ -37,7 +25,7 @@ else
                 <div class="card-header">
                     <h4 class="card-title">Roster</h4>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <MemberAdder Team="_team" MemberAdded="RefreshAsync" />
+                        <MemberAdder Team="team" MemberAdded="() => _executor?.RestartAsync()" />
                     </AuthorizeView>
                 </div>
                 <div class="list-group list-group-flush">
@@ -50,13 +38,13 @@ else
                                     <p>Are you sure you want to remove @_removingCharacter?.Name from the roster?</p>
                                 </div>
                                 <ModalFooter>
-                                    <button type="button" class="btn btn-danger" @onclick="RemoveMemberConfirmedAsync">Remove</button>
+                                    <button type="button" class="btn btn-danger" @onclick="() => RemoveMemberConfirmedAsync(team)">Remove</button>
                                     <button type="button" class="btn btn-secondary" @onclick="() => _removeModal?.Hide()">Cancel</button>
                                 </ModalFooter>
                             </div>
                         </div>
                     </Modal>
-                    @foreach (var character in _team.Roster.OrderByRoleThenClassThenName())
+                    @foreach (var character in team.Roster.OrderByRoleThenClassThenName())
                     {
                         var localCharacter = character;
                         <div class="list-group-item d-flex justify-content-between align-items-center bg-pc-@character.Class.GetLowercaseName()">
@@ -85,11 +73,12 @@ else
         </div>
     </div>
 
-    <RaidCalendar Team="_team" />
-}
+    <RaidCalendar Team="team" />
+</ApiExecutor>
 
 @code {
     private Modal? _removeModal;
+    private IApiExecutor? _executor;
 
     [Parameter] public string Team { get; set; } = string.Empty;
 }

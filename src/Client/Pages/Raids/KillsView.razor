@@ -1,5 +1,4 @@
 ﻿@inject ApiClient Api
-@inject Data.Instances.InstanceProvider Instances
 
 @foreach (var kill in Raid.Kills)
 {
@@ -7,7 +6,10 @@
     <div class="card my-4 shadow">
         <div class="card-body">
             <div class="card-title">@kill.EncounterName</div>
-            <div class="card-subtitle text-muted mb-2">Killed recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</div>
+            <div class="card-subtitle text-muted">
+                Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Id == id)?.Name).Where(str => str?.Length > 0).OrderBy(str => str))
+            </div>
+            <div class="card-subtitle text-muted mb-2">Recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</div>
             @if (kill.Drops.All(drop => drop.WinnerId is null))
             {
                 var encounterId = kill.EncounterId;
@@ -68,15 +70,15 @@
                             <label for="encounterId">Encounter</label>
                             <InputSelect @bind-Value="_addKillInputModel!.EncounterId" class="form-control" id="encounterId">
                                 <option>-- Select Encounter --</option>
-                                @foreach (var instance in Instances.GetCached().Where(i => i.Phase == Raid.Phase).OrderBy(i => i.Name))
-                                    {
+                                @foreach (var instance in _addKillInputModel.Instances)
+                                {
                                     <optgroup label="@instance.Name">
                                         @foreach (var encounter in instance.Encounters)
                                         {
                                             <option value="@encounter.Id">@encounter.Name</option>
                                         }
                                     </optgroup>
-                                    }
+                                }
                             </InputSelect>
                         </div>
 

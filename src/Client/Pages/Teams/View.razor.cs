@@ -2,50 +2,15 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Teams
 {
     public partial class View
     {
-        private TeamDto? _team;
-        private bool _notFound;
         private TeamCharacterDto? _removingCharacter;
-
-        protected override Task OnParametersSetAsync()
-        {
-            return RefreshAsync();
-        }
-
-        private async Task RefreshAsync()
-        {
-            _team = null;
-            if (!string.IsNullOrWhiteSpace(Team))
-            {
-                try
-                {
-                    _team = await Api.GetAsync<TeamDto>("api/v1/teams/" + Team);
-
-                    if (_team is not null)
-                    {
-                        _team.Roster = _team.Roster.OrderByRoleThenClassThenName().ToList();
-                    }
-                }
-                catch (AccessTokenNotAvailableException exception)
-                {
-                    exception.Redirect();
-                }
-                catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
-                {
-                    _notFound = true;
-                }
-            }
-        }
 
         private void RequestRemoveMember(TeamCharacterDto character)
         {
@@ -53,25 +18,18 @@ namespace ValhallaLootList.Client.Pages.Teams
             _removeModal?.Show();
         }
 
-        private async Task RemoveMemberConfirmedAsync()
+        private Task RemoveMemberConfirmedAsync(TeamDto team)
         {
-            Debug.Assert(_team is not null);
-            Debug.Assert(_removingCharacter is not null);
-            try
-            {
-                var response = await Api.DeleteAsync($"api/v1/teams/{_team.Id}/members/{_removingCharacter.Id}");
+            Debug.Assert(_removingCharacter?.Id?.Length > 0);
 
-                if (response.IsSuccessStatusCode)
+            return Api.Teams.RemoveMember(team.Id, _removingCharacter.Id)
+                .OnSuccess(_ =>
                 {
-                    _team.Roster.Remove(_removingCharacter);
+                    team.Roster.Remove(_removingCharacter);
                     _removeModal?.Hide();
                     StateHasChanged();
-                }
-            }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-            }
+                })
+                .ExecuteAsync();
         }
 
         private void OnRaidStarted(RaidDto response)

@@ -1,41 +1,29 @@
-﻿@inject Data.Instances.InstanceProvider Instances
-@inject PhaseConfigProvider PhaseConfig
+﻿@inject ApiClient Api
 
-@if (Instances.RequiresLoading)
-{
-    <LoadingIndicator />
-}
-else
-{
-    InstanceDto? selectedInstance = null;
-    foreach (var phaseInstances in _instances)
-    {
-        <ul class="nav nav-pills">
-            <li class="nav-item">
-                <a class="nav-link disabled" tabindex="-1">Phase @phaseInstances.Phase</a>
-            </li>
-            @foreach (var instance in phaseInstances.Instances)
-            {
-                var id = instance.Id;
-                bool active = false;
-
-                if (instance.Id == SelectedInstanceId)
-                {
-                    active = true;
-                    selectedInstance = instance;
-                }
-
+<ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+        @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
+        {
+            <ul class="nav nav-pills">
                 <li class="nav-item">
-                    <a class="@(active ? "nav-link active" : "nav-link")" type="button" @onclick="() => ChangeSelectedInstanceId(id)">@instance.Name</a>
+                    <a class="nav-link disabled" tabindex="-1">Phase @phase</a>
                 </li>
-            }
-        </ul>
-    }
-    @if (selectedInstance is not null)
-    {
-        <InstanceView Instance="selectedInstance" />
-    }
-}
+                @foreach (var instance in instances.Where(i => i.Phase == phase).OrderBy(i => i.Name))
+                {
+                    var id = instance.Id;
+
+                    <li class="nav-item">
+                        <a class="@(id == SelectedInstanceId ? "nav-link active" : "nav-link")" type="button" @onclick="() => ChangeSelectedInstanceId(id)">@instance.Name</a>
+                    </li>
+                }
+            </ul>
+        }
+        @if (instances.FirstOrDefault(i => i.Id == SelectedInstanceId) is InstanceDto selectedInstance)
+        {
+            <InstanceView Instance="selectedInstance" />
+        }
+    </ApiExecutor>
+</ApiExecutor>
 
 @code {
     [Parameter] public string? SelectedInstanceId { get; set; }

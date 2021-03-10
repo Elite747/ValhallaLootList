@@ -14,21 +14,16 @@
                 <CloseButton Clicked="() => _modal?.Hide()" />
             </ModalHeader>
             <ModalBody Class="form-group">
-                @if (_characters is null)
-                {
-                    <LoadingIndicator />
-                }
-                else
-                {
+                <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters">
                     <label for="charId">Character</label>
                     <InputSelect @bind-Value="_input.Id" class="form-control" id="charId">
                         <option></option>
-                        @foreach (var character in _characters)
+                        @foreach (var character in characters)
                         {
                             <option class="bg-pc-@character.Class.GetLowercaseName()" value="@character.Id">@character.Name</option>
                         }
                     </InputSelect>
-                }
+                </ApiExecutor>
                 <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
             </ModalBody>
             <ModalFooter>

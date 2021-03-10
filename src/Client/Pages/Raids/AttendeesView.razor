@@ -21,25 +21,20 @@
             }
             <AuthorizeView Roles="@AppRoles.RaidLeader">
                 <li>
-                    <Dropdown Toggled="OnToggledAsync">
+                    <Dropdown Toggled="OnToggled">
                         <DropdownToggle Color="Color.Primary">
                             Add Attendee
                         </DropdownToggle>
                         <DropdownMenu>
-                            @if (_allCharacters is null)
-                            {
-                                <LoadingIndicator />
-                            }
-                            else
-                            {
-                                foreach (var character in _allCharacters.Where(x => !Raid.Attendees.Any(y => x.Name == y.Name)))
+                            <ApiExecutor Operation="() => Api.Characters.GetByTeam(Raid.TeamId)" Context="characters" ExecuteOnInitialized="false" @ref="_charactersDropdownExecutor">
+                                @foreach (var character in characters.Where(x => !Raid.Attendees.Any(y => x.Name == y.Name)))
                                 {
                                     var localCharacter = character;
                                     <DropdownItem Clicked="() => OnAddClickedAsync(localCharacter)">
                                         <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
                                     </DropdownItem>
                                 }
-                            }
+                            </ApiExecutor>
                         </DropdownMenu>
                     </Dropdown>
                 </li>
@@ -50,5 +45,7 @@
 
 
 @code {
+    private IApiExecutor? _charactersDropdownExecutor;
+
     [Parameter] public RaidDto Raid { get; set; } = null!;
 }

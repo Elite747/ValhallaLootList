@@ -1,5 +1,4 @@
 ﻿@inject ApiClient Api
-@inject PhaseConfigProvider PhaseConfig 
 
 <button type="button" class="btn btn-primary" @onclick="() => _modal?.Show()">Start Raid</button>
 
@@ -20,12 +19,18 @@
 
                 <div class="form-group">
                     <label for="inputPhase">Phase</label>
-                    <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
-                        @foreach (var phase in _phases)
+                    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
+                        @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
                         {
-                            <option value="@phase">Phase @phase</option>
+                            _model.Phase = config.CurrentPhase;
                         }
-                    </InputSelect>
+                        <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
+                            @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
+                            {
+                                <option value="@phase">Phase @phase</option>
+                            }
+                        </InputSelect>
+                    </ApiExecutor>
                 </div>
 
                 @foreach (var character in Team.Roster)

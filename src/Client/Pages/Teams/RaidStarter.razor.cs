@@ -2,11 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
@@ -15,7 +11,6 @@ namespace ValhallaLootList.Client.Pages.Teams
     public partial class RaidStarter
     {
         private readonly RaidSubmissionDto _model = new();
-        private readonly List<byte> _phases = new();
 
         protected override void OnParametersSet()
         {
@@ -24,16 +19,8 @@ namespace ValhallaLootList.Client.Pages.Teams
             _model.TeamId = Team.Id;
             foreach (var character in Team.Roster)
             {
-                Debug.Assert(character.Id?.Length > 0);
                 _model.Attendees.Add(character.Id);
             }
-        }
-
-        protected override async Task OnInitializedAsync()
-        {
-            _model.Phase = await PhaseConfig.GetCurrentPhaseAsync();
-            _phases.Clear();
-            _phases.AddRange(await PhaseConfig.GetPhasesAsync());
         }
 
         private void ToggleAttendee(string id)
@@ -48,36 +35,12 @@ namespace ValhallaLootList.Client.Pages.Teams
             }
         }
 
-        private async Task SubmitAsync()
+        private Task SubmitAsync()
         {
-            try
-            {
-                var response = await Api.PostAsync("api/v1/raids", _model);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _modal?.Hide();
-                    var responseDto = await response.Content.ReadFromJsonAsync<RaidDto>(Api.JsonSerializerOptions);
-
-                    if (responseDto is not null)
-                    {
-                        await RaidStarted.InvokeAsync(responseDto);
-                    }
-                }
-                else
-                {
-                    var problemDto = await response.Content.ReadFromJsonAsync<ProblemDetails>(Api.JsonSerializerOptions);
-
-                    if (problemDto?.Errors != null)
-                    {
-                        _serverValidator?.DisplayErrors(problemDto.Errors);
-                    }
-                }
-            }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+            return Api.Raids.Create(_model)
+                .OnSuccess((raid, _) => RaidStarted.InvokeAsync(raid))
+                .ValidateWith(_serverValidator)
+                .ExecuteAsync();
         }
     }
 }

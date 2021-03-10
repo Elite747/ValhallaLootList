@@ -5,66 +5,81 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace ValhallaLootList.Client.Data
 {
-    public sealed class ApiClient : IDisposable
+    public sealed partial class ApiClient : IDisposable
     {
         public const string HttpClientKey = "ValhallaLootList.ServerAPI";
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _memoryCache;
+
         private bool _disposedValue;
 
-        public ApiClient(IHttpClientFactory httpClientFactory, IOptions<JsonSerializerOptions> jsonOptions)
+        public ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IOptions<JsonSerializerOptions> jsonOptions)
         {
             _httpClient = httpClientFactory.CreateClient(HttpClientKey);
             JsonSerializerOptions = jsonOptions.Value;
+            _memoryCache = memoryCache;
+
+            Characters = new(this);
+            Instances = new(this);
+            Items = new(this);
+            LootLists = new(this);
+            Raids = new(this);
+            Teams = new(this);
         }
 
         public JsonSerializerOptions JsonSerializerOptions { get; }
 
-        public async Task<TValue?> GetAsync<TValue>(string requestUri, CancellationToken cancellationToken = default)
+        public ApiClientCharacters Characters { get; }
+
+        public ApiClientInstances Instances { get; }
+
+        public ApiClientItems Items { get; }
+
+        public ApiClientLootLists LootLists { get; }
+
+        public ApiClientRaids Raids { get; }
+
+        public ApiClientTeams Teams { get; }
+
+        public IApiClientOperation CreateRequest(HttpMethod method, string requestUri)
         {
-            using var response = await SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), cancellationToken);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<TValue>(JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+            return CreateRequest(new HttpRequestMessage(method, requestUri));
         }
 
-        public Task<HttpResponseMessage> PostAsync(string requestUri, CancellationToken cancellationToken = default)
+        public IApiClientOperation CreateRequest<TContent>(HttpMethod method, string requestUri, TContent content)
         {
-            return SendAsync(new HttpRequestMessage(HttpMethod.Post, requestUri), cancellationToken);
-        }
-
-        public Task<HttpResponseMessage> PostAsync<TValue>(string requestUri, TValue value, CancellationToken cancellationToken = default)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+            return CreateRequest(new HttpRequestMessage(method, requestUri)
             {
-                Content = JsonContent.Create(value, mediaType: null, JsonSerializerOptions)
-            };
-
-            return SendAsync(request, cancellationToken);
+                Content = JsonContent.Create(content, mediaType: null, options: JsonSerializerOptions)
+            });
         }
 
-        public Task<HttpResponseMessage> PutAsync<TValue>(string requestUri, TValue value, CancellationToken cancellationToken = default)
+        public IApiClientOperation<TResult> CreateRequest<TResult>(HttpMethod method, string requestUri)
         {
-            var request = new HttpRequestMessage(HttpMethod.Put, requestUri)
+            return CreateRequest<TResult>(new HttpRequestMessage(method, requestUri));
+        }
+
+        public IApiClientOperation<TResult> CreateRequest<TContent, TResult>(HttpMethod method, string requestUri, TContent content)
+        {
+            return CreateRequest<TResult>(new HttpRequestMessage(method, requestUri)
             {
-                Content = JsonContent.Create(value, mediaType: null, JsonSerializerOptions)
-            };
-
-            return SendAsync(request, cancellationToken);
+                Content = JsonContent.Create(content, mediaType: null, options: JsonSerializerOptions)
+            });
         }
 
-        public Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
+        public IApiClientOperation CreateRequest(HttpRequestMessage request)
         {
-            return SendAsync(new HttpRequestMessage(HttpMethod.Delete, requestUri), cancellationToken);
+            return new Operation<object>(_httpClient, _memoryCache, JsonSerializerOptions, request);
         }
 
-        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+        public IApiClientOperation<TResult> CreateRequest<TResult>(HttpRequestMessage request)
         {
-            return _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            return new Operation<TResult>(_httpClient, _memoryCache, JsonSerializerOptions, request);
         }
 
         private void Dispose(bool disposing)

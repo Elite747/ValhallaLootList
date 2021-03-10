@@ -1,0 +1,22 @@
+﻿<div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">
+        @if (Problem.Status.HasValue)
+        {
+            <span class="text-light text-muted">(@Problem.Status)</span> 
+        }
+        @Problem.Title
+    </h4>
+    <p>@Problem.Detail</p>
+</div>
+
+@code {
+    [Parameter] public ProblemDetails Problem { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Problem is null)
+        {
+            throw new ArgumentNullException(nameof(Problem));
+        }
+    }
+}

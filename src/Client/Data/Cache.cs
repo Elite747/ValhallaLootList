@@ -1,34 +1,89 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ValhallaLootList.Client.Data
 {
     public abstract class Cache<TItem, TKey> where TItem : class where TKey : notnull
     {
-        protected abstract TKey GetKey(TItem item);
+        private readonly IMemoryCache _memoryCache;
 
-        private readonly ConcurrentDictionary<TKey, TItem> _cache = new();
-
-        public bool IsEmpty => _cache.IsEmpty;
-
-        public IEnumerable<TItem> EnumerateCached() => _cache.Values;
-
-        public TItem? GetByKey(TKey key) => _cache.TryGetValue(key, out var item) ? item : null;
-
-        public void UpdateCache(IEnumerable<TItem> items)
+        protected Cache(IMemoryCache memoryCache)
         {
-            foreach (var item in items)
-            {
-                UpdateCache(item);
-            }
+            _memoryCache = memoryCache;
         }
 
-        public void UpdateCache(TItem item)
+        protected abstract TKey GetKey(TItem item);
+
+        protected virtual MemoryCacheEntryOptions CreateCacheEntryOptions(TItem item)
         {
-            _cache.AddOrUpdate(GetKey(item), item, (_, _) => item);
+            return new MemoryCacheEntryOptions().RegisterPostEvictionCallback(OnEvictedInternal);
+        }
+
+        protected virtual void OnEvicted(TKey key, TItem value, EvictionReason reason, object state)
+        {
+        }
+
+        private void OnEvictedInternal(object key, object value, EvictionReason reason, object state)
+        {
+            OnEvicted((TKey)key, (TItem)value, reason, state);
+        }
+
+        public void Update(TItem item)
+        {
+            _memoryCache.Set(GetKey(item), item, CreateCacheEntryOptions(item));
+        }
+
+        public bool TryGet(TKey key, out TItem item)
+        {
+            return _memoryCache.TryGetValue(key, out item);
+        }
+
+        public TItem GetOrAdd(TKey key, Func<TKey, TItem> getter)
+        {
+            if (_memoryCache.TryGetValue(key, out TItem item))
+            {
+                return item;
+            }
+
+            item = getter(key);
+
+            _memoryCache.Set(key, item, CreateCacheEntryOptions(item));
+
+            return item;
+        }
+
+        public ValueTask<TItem> GetOrAddAsync(TKey key, Func<TKey, Task<TItem>> getter)
+        {
+            if (_memoryCache.TryGetValue(key, out TItem item))
+            {
+                return new(item);
+            }
+
+            return new(AddAndReturnAsync(getter(key)));
+        }
+
+        public ValueTask<TItem> GetOrAddAsync(TKey key, Func<TKey, CancellationToken, Task<TItem>> getter, CancellationToken cancellationToken)
+        {
+            if (_memoryCache.TryGetValue(key, out TItem item))
+            {
+                return new(item);
+            }
+
+            return new(AddAndReturnAsync(getter(key, cancellationToken)));
+        }
+
+        private async Task<TItem> AddAndReturnAsync(Task<TItem> getter)
+        {
+            var item = await getter;
+
+            _memoryCache.Set(GetKey(item), item, CreateCacheEntryOptions(item));
+
+            return item;
         }
     }
 }

@@ -2,64 +2,48 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Raids
 {
     public partial class AttendeesView
     {
-        private List<CharacterDto>? _allCharacters;
-
         protected override void OnParametersSet()
         {
             if (Raid is null) throw new ArgumentNullException(nameof(Raid));
         }
 
-        private async Task OnToggledAsync(bool open)
+        private Task OnToggled(bool open)
         {
-            if (open && _allCharacters is null)
+            if (open && _charactersDropdownExecutor is not null)
             {
-                _allCharacters = await Api.GetAsync<List<CharacterDto>>($"api/v1/characters?team={Raid.TeamId}");
+                return _charactersDropdownExecutor.StartAsync().AsTask();
             }
+            return Task.CompletedTask;
         }
 
-        private async Task OnAddClickedAsync(CharacterDto character)
+        private Task OnAddClickedAsync(CharacterDto character)
         {
-            try
-            {
-                var response = await Api.PostAsync($"api/v1/raids/{Raid.Id}/Attendees", new AttendeeSubmissionDto { CharacterId = character.Id });
-
-                if (response.IsSuccessStatusCode)
+            return Api.Raids.AddAttendee(Raid.Id, character.Id)
+                .OnSuccess(_ =>
                 {
                     Raid.Attendees.Add(character);
                     StateHasChanged();
-                }
-            }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+                })
+                .ExecuteAsync();
         }
 
-        private async Task OnRemoveClickedAsync(CharacterDto character)
+        private Task OnRemoveClickedAsync(CharacterDto character)
         {
-            try
-            {
-                var response = await Api.DeleteAsync($"api/v1/raids/{Raid.Id}/Attendees/{character.Id}");
-
-                if (response.IsSuccessStatusCode)
+            return Api.Raids.RemoveAttendee(Raid.Id, character.Id)
+                .OnSuccess(_ =>
                 {
                     Raid.Attendees.RemoveAll(c => c.Id == character.Id);
                     StateHasChanged();
-                }
-            }
-            catch (AccessTokenNotAvailableException exception)
-            {
-                exception.Redirect();
-            }
+                })
+                .ExecuteAsync();
         }
     }
 }

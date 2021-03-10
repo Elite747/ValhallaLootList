@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using ValhallaLootList.Client.Data;
-using ValhallaLootList.Client.Data.Instances;
 using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client
@@ -28,13 +27,10 @@ namespace ValhallaLootList.Client
 
             builder.Services.AddHttpClient(WowheadClient.HttpClientKey, client => client.BaseAddress = new Uri("https://www.wowhead.com/"));
 
-            builder.Services
+            builder.Services.AddMemoryCache()
                 .AddScoped<ApiClient>()
-                .AddScoped<PhaseConfigProvider>()
                 .AddScoped<WowheadClient>()
                 .AddScoped<WowheadInterop>()
-                .AddScoped<InstanceProvider>()
-                .AddSingleton<InstanceCache>()
                 .AddScoped<ItemProvider>()
                 .AddSingleton<ItemCache>();
 

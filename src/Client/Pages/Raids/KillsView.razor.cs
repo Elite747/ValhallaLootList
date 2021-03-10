@@ -6,10 +6,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using ValhallaLootList.Client.Data.Instances;
+using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Raids
@@ -28,120 +26,85 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         private async Task DeleteAsync(string encounterId)
         {
-            try
-            {
-                var response = await Api.DeleteAsync($"api/v1/raids/{Raid.Id}/Kills/{encounterId}");
-
-                if (response.IsSuccessStatusCode)
+            Debug.Assert(Raid.Id?.Length > 0);
+            await Api.Raids.Delete(Raid.Id, encounterId)
+                .OnSuccess(_ =>
                 {
                     Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId);
                     StateHasChanged();
-                }
-            }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-            }
+                })
+                .ExecuteAsync();
         }
 
         private async Task AddClickedAsync()
         {
-            await Instances.EnsureLoadedAsync();
-            _addKillInputModel = new(Instances, Raid);
-            _addKillModal?.Show();
+            await Api.Instances.GetAll()
+                .OnSuccess(instances =>
+                {
+                    _addKillInputModel = new(instances, Raid);
+                    _addKillModal?.Show();
+                })
+                .ExecuteAsync();
         }
 
         private async Task OnSubmitAddKillAsync()
         {
             _addKillModal?.Hide();
             Debug.Assert(_addKillInputModel is not null);
-            var dto = new KillSubmissionDto
-            {
-                Characters = _addKillInputModel.Attendees.Where(pair => pair.Value.Checked).Select(pair => pair.Key.Id!).ToList(),
-                Drops = _addKillInputModel.Drops.Where(pair => pair.Value.Checked).Select(pair => pair.Key).ToList(),
-                EncounterId = _addKillInputModel.EncounterId
-            };
+            Debug.Assert(Raid.Id?.Length > 0);
 
-            try
-            {
-                var response = await Api.PostAsync($"api/v1/raids/{Raid.Id}/kills", dto);
-
-                if (response.IsSuccessStatusCode)
+            await Api.Raids
+                .AddKill(Raid.Id, new()
                 {
-                    var killDto = await response.Content.ReadFromJsonAsync<EncounterKillDto>(Api.JsonSerializerOptions);
-
-                    if (killDto is not null)
-                    {
-                        Raid.Kills.Add(killDto);
-                        StateHasChanged();
-                    }
-                }
-                else
+                    Characters = _addKillInputModel.Attendees.Where(pair => pair.Value.Checked).Select(pair => pair.Key.Id!).ToList(),
+                    Drops = _addKillInputModel.Drops.Where(pair => pair.Value.Checked).Select(pair => pair.Key).ToList(),
+                    EncounterId = _addKillInputModel.EncounterId
+                })
+                .OnSuccess(kill =>
                 {
-                    // TODO: need some way to handle a failed request.
-                }
-            }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-            }
+                    Raid.Kills.Add(kill);
+                    StateHasChanged();
+                })
+                .ExecuteAsync();
         }
 
-        private async Task BeginAssignAsync(EncounterDropDto drop, string encounterId)
+        private Task BeginAssignAsync(EncounterDropDto drop, string encounterId)
         {
+            Debug.Assert(Raid.Id?.Length > 0);
             _assignPrios = null;
             _assignDrop = drop;
             _assignEncounterId = encounterId;
             _assignModal?.Show();
-            try
-            {
-                _assignPrios = await Api.GetAsync<List<ItemPrioDto>>($"api/v1/raids/{Raid.Id}/kills/{encounterId}/drops/{drop.ItemId}/ranks");
-            }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-            }
+
+            return Api.Raids.GetPriorityRankings(Raid.Id, encounterId, drop.ItemId)
+                .OnSuccess(prios => _assignPrios = prios)
+                .ExecuteAsync();
         }
 
-        private async Task AssignAsync(EncounterDropDto drop, string encounterId, string? characterId)
+        private Task AssignAsync(EncounterDropDto drop, string encounterId, string? characterId)
         {
+            Debug.Assert(Raid.Id?.Length > 0);
             _assignModal?.Hide();
-            try
-            {
-                var response = await Api.PutAsync($"api/v1/raids/{Raid.Id}/kills/{encounterId}/drops/{drop.ItemId}", new AwardDropSubmissionDto { WinnerId = characterId });
 
-                if (response.IsSuccessStatusCode)
+            return Api.Raids.AssignDrop(Raid.Id, encounterId, drop.ItemId, characterId)
+                .OnSuccess(response =>
                 {
-                    var responseDto = await response.Content.ReadFromJsonAsync<EncounterDropDto>(Api.JsonSerializerOptions);
-
-                    if (responseDto is not null)
-                    {
-                        drop.AwardedAt = responseDto.AwardedAt;
-                        drop.AwardedBy = responseDto.AwardedBy;
-                        drop.WinnerId = responseDto.WinnerId;
-                        drop.WinnerName = responseDto.WinnerName;
-                        StateHasChanged();
-                    }
-                }
-                else
-                {
-                    // TODO: need some way to handle a failed request.
-                }
-            }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-            }
+                    drop.AwardedAt = response.AwardedAt;
+                    drop.AwardedBy = response.AwardedBy;
+                    drop.WinnerId = response.WinnerId;
+                    drop.WinnerName = response.WinnerName;
+                    StateHasChanged();
+                })
+                .ExecuteAsync();
         }
 
         public class AddKillInputModel
         {
-            private readonly InstanceProvider _instances;
             private string? _encounterId;
 
-            public AddKillInputModel(InstanceProvider instances, RaidDto raid)
+            public AddKillInputModel(IEnumerable<InstanceDto> instances, RaidDto raid)
             {
-                _instances = instances;
+                Instances = instances.Where(i => i.Phase == raid.Phase).OrderBy(i => i.Name);
 
                 var lastKill = raid.Kills.Count == 0 ? null : raid.Kills[^1];
                 foreach (var character in raid.Attendees)
@@ -150,6 +113,8 @@ namespace ValhallaLootList.Client.Pages.Raids
                     Attendees[character] = new(lastKill?.Characters.Contains(character.Id) != false);
                 }
             }
+
+            public IEnumerable<InstanceDto> Instances { get; }
 
             [Required]
             public string? EncounterId
@@ -162,7 +127,7 @@ namespace ValhallaLootList.Client.Pages.Raids
 
                     if (value is not null)
                     {
-                        var encounter = _instances.GetCached().SelectMany(i => i.Encounters).FirstOrDefault(e => e.Id == value);
+                        var encounter = Instances.SelectMany(i => i.Encounters).FirstOrDefault(e => e.Id == value);
 
                         if (encounter is not null)
                         {

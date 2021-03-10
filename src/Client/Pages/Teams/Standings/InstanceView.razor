@@ -40,7 +40,7 @@
 
 @code {
     [Parameter] public InstanceDto Instance { get; set; } = null!;
-    [CascadingParameter] public List<LootListDto> LootLists { get; set; } = null!;
+    [CascadingParameter] public IList<LootListDto> LootLists { get; set; } = null!;
 
     protected override void OnParametersSet()
     {

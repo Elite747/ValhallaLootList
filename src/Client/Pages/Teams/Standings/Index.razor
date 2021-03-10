@@ -1,14 +1,16 @@
 ﻿@page "/Teams/{team}/Standings"
 @inject ApiClient Api
 
-<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
-    <span class="fas fa-sync" aria-hidden="true"></span>
-    <span class="sr-only">Refresh</span>
-</button>
-<ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team)" Context="lootLists" @ref="_executor">
-    <CascadingValue Value="lootLists">
-        <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" />
-    </CascadingValue>
+<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
+    <button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
+        <span class="fas fa-sync" aria-hidden="true"></span>
+        <span class="sr-only">Refresh</span>
+    </button>
+    <ApiExecutor Operation="() => Api.LootLists.GetForTeam(team.Id)" Context="lootLists" @ref="_executor">
+        <CascadingValue Value="lootLists">
+            <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" />
+        </CascadingValue>
+    </ApiExecutor>
 </ApiExecutor>
 
 @code {

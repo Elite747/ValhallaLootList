@@ -11,11 +11,11 @@ namespace ValhallaLootList.DataTransfer
         private List<CharacterDto>? _attendees;
         private List<EncounterKillDto>? _kills;
 
-        public string? Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
-        public string? TeamId { get; set; }
+        public string TeamId { get; set; } = string.Empty;
 
-        public string? TeamName { get; set; }
+        public string TeamName { get; set; } = string.Empty;
 
         public int Phase { get; set; }
 

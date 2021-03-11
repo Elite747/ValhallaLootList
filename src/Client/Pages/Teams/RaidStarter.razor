@@ -20,16 +20,18 @@
                 <div class="form-group">
                     <label for="inputPhase">Phase</label>
                     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
-                        @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
-                        {
-                            _model.Phase = config.CurrentPhase;
-                        }
-                        <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
-                            @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
+                        <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                            @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
                             {
-                                <option value="@phase">Phase @phase</option>
+                                _model.Phase = config.CurrentPhase;
                             }
-                        </InputSelect>
+                            <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
+                                @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
+                                {
+                                    <option value="@phase">Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))</option>
+                                }
+                            </InputSelect>
+                        </ApiExecutor>
                     </ApiExecutor>
                 </div>
 

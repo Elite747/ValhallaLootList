@@ -52,13 +52,22 @@ namespace ValhallaLootList.Client.Pages.Raids
             Debug.Assert(_addKillInputModel is not null);
             Debug.Assert(Raid.Id?.Length > 0);
 
-            await Api.Raids
-                .AddKill(Raid.Id, new()
+            var kill = new KillSubmissionDto
+            {
+                Characters = _addKillInputModel.Attendees.Where(pair => pair.Value.Checked).Select(pair => pair.Key.Id!).ToList(),
+                EncounterId = _addKillInputModel.EncounterId
+            };
+
+            foreach (var (id, count) in _addKillInputModel.Drops)
+            {
+                for (int i = 0; i < count.Value; i++)
                 {
-                    Characters = _addKillInputModel.Attendees.Where(pair => pair.Value.Checked).Select(pair => pair.Key.Id!).ToList(),
-                    Drops = _addKillInputModel.Drops.Where(pair => pair.Value.Checked).Select(pair => pair.Key).ToList(),
-                    EncounterId = _addKillInputModel.EncounterId
-                })
+                    kill.Drops.Add(id);
+                }
+            }
+
+            await Api.Raids
+                .AddKill(Raid.Id, kill)
                 .OnSuccess(kill =>
                 {
                     Raid.Kills.Add(kill);
@@ -131,14 +140,14 @@ namespace ValhallaLootList.Client.Pages.Raids
                         {
                             foreach (var drop in encounter.Items)
                             {
-                                Drops.Add(drop, new(false));
+                                Drops.Add(drop, new(0));
                             }
                         }
                     }
                 }
             }
 
-            public Dictionary<uint, BooleanInput> Drops { get; } = new();
+            public Dictionary<uint, NumberInput> Drops { get; } = new();
 
             public Dictionary<CharacterDto, BooleanInput> Attendees { get; } = new();
         }
@@ -148,6 +157,14 @@ namespace ValhallaLootList.Client.Pages.Raids
             public BooleanInput(bool @checked) => Checked = @checked;
 
             public bool Checked { get; set; }
+        }
+
+        public class NumberInput
+        {
+            public NumberInput(int value) => Value = value;
+
+            [Range(0, 5)]
+            public int Value { get; set; }
         }
     }
 }

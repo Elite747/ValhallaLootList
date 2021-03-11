@@ -102,6 +102,17 @@ namespace ValhallaLootList.Server.Controllers
             {
                 drop.Winner = null;
                 drop.WinnerId = null;
+
+                var lootListEntry = _context.LootListEntries
+                    .AsTracking()
+                    .Where(lle => lle.DropId == drop.Id)
+                    .FirstOrDefault();
+
+                if (lootListEntry is not null)
+                {
+                    lootListEntry.Drop = null;
+                    lootListEntry.DropId = null;
+                }
             }
 
             await _context.SaveChangesAsync();

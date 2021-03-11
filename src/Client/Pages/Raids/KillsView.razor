@@ -87,11 +87,27 @@
                             @foreach (var itemId in _addKillInputModel.Drops.Keys)
                             {
                                 var localItemId = itemId;
-                                <div class="custom-control custom-checkbox">
-                                    <InputCheckbox class="custom-control-input" id="@itemId" @bind-Value="_addKillInputModel.Drops[localItemId].Checked" />
-                                    <label class="custom-control-label" for="@itemId">
-                                        <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
-                                    </label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
+                                        </span>
+                                        <button class="btn btn-outline-success"
+                                                type="button"
+                                                disabled="@(_addKillInputModel.Drops[localItemId].Value == 5)"
+                                                @onclick="() => _addKillInputModel.Drops[localItemId].Value++">
+                                            <span class="fas fa-plus"></span>
+                                            <span class="sr-only" aria-hidden="true">Add Drop</span>
+                                        </button>
+                                        <button class="btn btn-outline-danger"
+                                                type="button"
+                                                disabled="@(_addKillInputModel.Drops[localItemId].Value == 0)"
+                                                @onclick="() => _addKillInputModel.Drops[localItemId].Value--">
+                                            <span class="fas fa-minus"></span>
+                                            <span class="sr-only" aria-hidden="true">Remove Drop</span>
+                                        </button>
+                                    </div>
+                                    <InputNumber class="form-control" id="@itemId" min="0" max="5" @bind-Value="_addKillInputModel.Drops[localItemId].Value" />
                                 </div>
                             }
                         </div>

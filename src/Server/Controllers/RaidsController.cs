@@ -87,7 +87,7 @@ namespace ValhallaLootList.Server.Controllers
             dto.Kills = await _context.EncounterKills
                 .AsNoTracking()
                 .Where(k => k.RaidId == id)
-                .OrderByDescending(k => k.KilledAtUtc)
+                .OrderBy(k => k.KilledAtUtc)
                 .Select(k => new EncounterKillDto
                 {
                     KilledAt = new DateTimeOffset(k.KilledAtUtc, TimeSpan.Zero),

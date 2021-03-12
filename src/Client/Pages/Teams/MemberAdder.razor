@@ -1,43 +1,74 @@
-﻿@inject ApiClient Api 
+﻿@inject ApiClient Api
 
-<button type="button" class="btn btn-primary" @onclick="() => _modal?.Show()">Add Member</button>
-
-<Modal @ref="_modal">
-    <ModalBackdrop />
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <EditForm OnValidSubmit="OnSubmit" Model="_input" class="modal-content">
-            <DataAnnotationsValidator />
-            <CustomValidator @ref="_serverValidator" />
-
-            <ModalHeader>
-                <ModalTitle>Add to Roster</ModalTitle>
-                <CloseButton Clicked="() => _modal?.Hide()" />
-            </ModalHeader>
-            <ModalBody Class="form-group">
-                <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters">
-                    <label for="charId">Character</label>
-                    <InputSelect @bind-Value="_input.Id" class="form-control" id="charId">
-                        <option></option>
-                        @foreach (var character in characters)
-                        {
-                            <option class="bg-pc-@character.Class.GetLowercaseName()" value="@character.Id">@character.Name</option>
-                        }
-                    </InputSelect>
-                </ApiExecutor>
-                <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
-            </ModalBody>
-            <ModalFooter>
-                <button type="submit" class="btn btn-primary">Add</button>
-                <button class="btn btn-secondary" @onclick="() => _modal?.Hide()" type="button">Cancel</button>
-            </ModalFooter>
-        </EditForm>
-    </div>
-</Modal>
+<Dropdown Toggled="OnToggledAsync" @ref="_dropdown">
+    <DropdownToggle Color="Color.Primary">Add Member</DropdownToggle>
+    <DropdownMenu>
+        <div class="input-group input-group-sm p-2">
+            <input type="text" class="form-control" @bind-value="_searchText" @bind-value:event="oninput" @ref="_searchInput" />
+            <div class="input-group-append">
+                <button type="button" class="btn btn-outline-primary" @onclick="() => _executor?.RestartAsync()">
+                    <span class="fas fa-sync"></span>
+                    <span class="sr-only" aria-hidden="true">Refresh</span>
+                </button>
+            </div>
+        </div>
+        <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters" @ref="_executor">
+            @foreach (var character in EnumerateCharacters(characters))
+            {
+                <DropdownItem Clicked="() => SubmitAsync(character)" Style="cursor: pointer">
+                    <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+                </DropdownItem>
+            }
+        </ApiExecutor>
+    </DropdownMenu>
+</Dropdown>
 
 @code {
-    private Modal? _modal;
-    private CustomValidator? _serverValidator;
+    private IApiExecutor? _executor;
+    private ElementReference _searchInput;
+    private Dropdown? _dropdown;
+    private string? _searchText;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public EventCallback MemberAdded { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+
+    private async Task OnToggledAsync(bool open)
+    {
+        if (open)
+        {
+            if (_executor is not null)
+            {
+                await _executor.StartAsync();
+            }
+            await _searchInput.FocusAsync();
+        }
+    }
+
+    private Task SubmitAsync(CharacterDto character)
+    {
+        return Api.Teams.AddMember(Team.Id, character.Id)
+            .OnSuccess(_ =>
+            {
+                _dropdown?.Hide();
+                _executor?.Reset();
+                MemberAdded.InvokeAsync();
+            })
+            .ExecuteAsync();
+    }
+
+    private IEnumerable<CharacterDto> EnumerateCharacters(IEnumerable<CharacterDto> characters)
+    {
+        var results = characters;
+        if (_searchText?.Length > 0)
+        {
+            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+        }
+        return results;
+    }
 }

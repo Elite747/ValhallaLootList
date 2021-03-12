@@ -13,6 +13,10 @@
         <h2><a href="teams/@character.TeamName">&lt;@character.TeamName&gt;</a></h2>
     }
 
+    <AuthorizeView Roles="@AppRoles.Administrator">
+        <AdminView Character="character" />
+    </AuthorizeView>
+
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
         <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
             @{

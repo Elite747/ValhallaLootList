@@ -72,7 +72,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!User.IsAdmin() && character.OwnerId != User.GetAppUserId())
+            if (!User.IsAdmin() && character.OwnerId != User.GetDiscordId())
             {
                 return Unauthorized();
             }
@@ -268,7 +268,7 @@ namespace ValhallaLootList.Server.Controllers
                 entryQuery = entryQuery.Where(e => e.LootList.Phase == phase.Value);
             }
 
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             var dtos = await lootListQuery

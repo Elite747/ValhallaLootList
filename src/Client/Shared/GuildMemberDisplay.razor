@@ -1,0 +1,12 @@
+﻿@if (Member?.Nickname?.Length > 0)
+{
+    <span>@Member.Nickname <span class="text-muted">(@Member.Username#@Member.Discriminator)</span></span>
+}
+else if (Member is not null)
+{
+    <span>@Member.Username<span class="text-muted">#@Member.Discriminator</span></span>
+}
+
+@code {
+    [Parameter] public GuildMemberDto? Member { get; set; }
+}

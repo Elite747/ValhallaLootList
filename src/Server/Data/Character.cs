@@ -17,9 +17,9 @@ namespace ValhallaLootList.Server.Data
 
         public bool IsMale { get; set; }
 
-        public bool IsLeader { get; set; }
+        public long? OwnerId { get; set; }
 
-        public string? OwnerId { get; set; }
+        public long? VerifiedById { get; set; }
 
         public RaidMemberStatus MemberStatus { get; set; }
 

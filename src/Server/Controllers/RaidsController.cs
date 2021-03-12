@@ -65,7 +65,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             dto.Attendees = await _context.RaidAttendees
@@ -212,7 +212,7 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto

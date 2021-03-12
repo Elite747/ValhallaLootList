@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -29,7 +30,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet]
         public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
         {
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             var query = _context.Characters.AsNoTracking();
@@ -70,7 +71,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CharacterDto>> Get(string id)
         {
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             var character = await _context.Characters
@@ -134,13 +135,13 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            var currentUserId = User.GetAppUserId();
+            var currentUserId = User.GetDiscordId();
 
             var character = new Character
             {
                 Class = dto.Class.Value,
                 MemberStatus = RaidMemberStatus.FullTrial,
-                //VerifiedById = User.IsAdmin() ? currentUserId : null,
+                VerifiedById = User.IsAdmin() ? currentUserId : null,
                 Name = normalizedName,
                 Race = dto.Race.Value,
                 IsMale = dto.Gender == Gender.Male,
@@ -161,52 +162,108 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        //[HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]
-        //public async Task<ActionResult> PostVerify(string id)
-        //{
-        //    var character = await FindCharacterByIdOrNameAsync(id);
+        [HttpGet("{id}/Owner"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<CharacterOwnerDto>> GetOwner(string id, [FromServices] DiscordService discordService)
+        {
+            var character = await _context.Characters.Where(c => c.Id == id).Select(c => new { c.OwnerId, c.VerifiedById }).FirstOrDefaultAsync();
 
-        //    if (character is null)
-        //    {
-        //        return NotFound();
-        //    }
+            if (character is null)
+            {
+                return NotFound();
+            }
 
-        //    if (character.VerifiedById?.Length > 0)
-        //    {
-        //        return Problem("Character is already verified.", statusCode: 400);
-        //    }
+            return new CharacterOwnerDto
+            {
+                Owner = await GetGuildMemberDtoAsync(character.OwnerId, discordService),
+                VerifiedBy = await GetGuildMemberDtoAsync(character.VerifiedById, discordService)
+            };
+        }
 
-        //    character.VerifiedById = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        private static async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id, DiscordService discordService)
+        {
+            if (id.HasValue)
+            {
+                var guildMember = await discordService.GetMemberAsync(id.Value);
 
-        //    await _context.SaveChangesAsync();
+                if (guildMember?.User is not null)
+                {
+                    return new GuildMemberDto
+                    {
+                        Discriminator = guildMember.User.Discriminator,
+                        Id = guildMember.User.Id,
+                        Nickname = guildMember.Nickname,
+                        Username = guildMember.User.Username
+                    };
+                }
+            }
 
-        //    return Ok();
-        //}
+            return null;
+        }
 
-        //[HttpPut("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
-        //public async Task<ActionResult> SetOwner(string id, [FromBody] string ownerId)
-        //{
-        //    var character = await FindCharacterByIdOrNameAsync(id);
+        [HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> PostVerify(string id)
+        {
+            var character = await FindCharacterByIdOrNameAsync(id);
 
-        //    if (character is null)
-        //    {
-        //        return NotFound();
-        //    }
+            if (character is null)
+            {
+                return NotFound();
+            }
 
-        //    var user = await _context.Users.FindAsync(ownerId);
+            if (character.VerifiedById.HasValue)
+            {
+                return Problem("Character is already verified.", statusCode: 400);
+            }
 
-        //    if (user is null)
-        //    {
-        //        return Problem("No user with that id exists.", statusCode: 400);
-        //    }
+            character.VerifiedById = User.GetDiscordId();
 
-        //    character.OwnerId = user.Id;
-        //    character.VerifiedById = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            await _context.SaveChangesAsync();
 
-        //    await _context.SaveChangesAsync();
+            return Ok();
+        }
 
-        //    return Ok();
-        //}
+        [HttpPut("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> SetOwner(string id, [FromBody] string ownerId)
+        {
+            var character = await FindCharacterByIdOrNameAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            var user = await _context.Users.FindAsync(ownerId);
+
+            if (user is null)
+            {
+                return Problem("No user with that id exists.", statusCode: 400);
+            }
+
+            character.OwnerId = long.Parse(user.Id);
+            character.VerifiedById = User.GetDiscordId();
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> DeleteOwner(string id)
+        {
+            var character = await FindCharacterByIdOrNameAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            character.OwnerId = null;
+            character.VerifiedById = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
 
         [HttpDelete("{id}"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> Delete(string id)

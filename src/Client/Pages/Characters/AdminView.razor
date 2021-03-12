@@ -1,0 +1,92 @@
+﻿@attribute [Authorize(AppRoles.Administrator)]
+@inject ApiClient Api 
+
+<ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
+    <div class="card my-3">
+        <div class="card-body">
+            @if (owner.Owner is null)
+            {
+                <div class="text-danger">Unclaimed!</div>
+            }
+            else
+            {
+                <div>Owner: <GuildMemberDisplay Member="owner.Owner" /></div>
+                @if (owner.VerifiedBy is null)
+                {
+                    <div class="text-danger">Unverified!</div>
+                }
+                else
+                {
+                    <div>Verified By: <GuildMemberDisplay Member="owner.VerifiedBy" /></div>
+                }
+            }
+        </div>
+        <div class="card-footer">
+            <button type="button" class="btn btn-sm btn-primary" @onclick="() => _setOwnerModal?.Show()">@(owner.Owner is null ? "Set" : "Change") Owner</button>
+
+            <Modal @ref="_setOwnerModal">
+                <ModalBackdrop />
+                <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            Not yet implemented
+                        </div>
+                        <ModalFooter>
+                            <button type="button" class="btn btn-success" @onclick="SetOwnerAsync">Set</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => _setOwnerModal?.Hide()">Cancel</button>
+                        </ModalFooter>
+                    </div>
+                </div>
+            </Modal>
+
+            @if (owner.VerifiedBy is null)
+            {
+                <button type="button" class="btn btn-sm btn-primary" @onclick="() => _verifyOwnerModal?.Show()">Verify Owner</button>
+
+                <Modal @ref="_verifyOwnerModal">
+                    <ModalBackdrop />
+                    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <p>You are verifying that @Character.Name belongs to the discord user <GuildMemberDisplay Member="owner.Owner" />. Confirm?</p>
+                            </div>
+                            <ModalFooter>
+                                <button type="button" class="btn btn-success" @onclick="VerifyOwnerAsync">Confirm</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => _verifyOwnerModal?.Hide()">Cancel</button>
+                            </ModalFooter>
+                        </div>
+                    </div>
+                </Modal>
+            }
+        </div>
+    </div>
+</ApiExecutor>
+
+@code {
+    private IApiExecutor? _executor;
+    private Modal? _setOwnerModal, _verifyOwnerModal;
+
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+    }
+
+    private async Task SetOwnerAsync()
+    {
+        _setOwnerModal?.Hide();
+        await Task.CompletedTask;
+    }
+
+    private async Task VerifyOwnerAsync()
+    {
+        _verifyOwnerModal?.Hide();
+        bool success = false;
+        await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).ExecuteAsync();
+        if (success && _executor is not null)
+        {
+            await _executor.RestartAsync();
+        }
+    }
+}

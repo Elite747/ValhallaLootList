@@ -9,7 +9,7 @@ namespace ValhallaLootList.DataTransfer
     {
         private List<LootListEntryDto>? _entries;
 
-        public string? CharacterId { get; set; }
+        public string CharacterId { get; set; } = string.Empty;
 
         public string? CharacterName { get; set; }
 

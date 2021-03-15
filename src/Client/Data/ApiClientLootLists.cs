@@ -37,9 +37,24 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
         }
 
-        public IApiClientOperation<LootListDto> Create(LootListSubmissionDto submission)
+        public IApiClientOperation<LootListDto> Create(string characterId, byte phase, LootListSubmissionDto submission)
         {
-            return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, "api/v1/lootlists", submission);
+            return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+        }
+
+        public IApiClientOperation<LootListDto> Recreate(string characterId, byte phase, LootListSubmissionDto submission)
+        {
+            return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+        }
+
+        public IApiClientOperation Lock(string characterId, byte phase)
+        {
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/lock");
+        }
+
+        public IApiClientOperation Unlock(string characterId, byte phase)
+        {
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/unlock");
         }
     }
 }

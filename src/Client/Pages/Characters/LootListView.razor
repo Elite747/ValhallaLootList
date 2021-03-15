@@ -1,13 +1,33 @@
-﻿
-@if (_lootList is not null)
+﻿@inject ApiClient Api
+
+<ErrorDisplay @ref="_errors" />
+
+@if (_createList)
 {
-    <div class="card">
-        @if (!_lootList.Locked && _lootList.Owned)
-        {
-            <div class="card-body">
-                <button class="btn btn-primary btn-sm" type="button">Edit</button>
-            </div>
-        }
+    <EditList Character="@Character" Phase="@Phase" OnLootListCreated="OnLootListCreated" ExistingList="_lootList" />
+    <button class="btn btn-secondary mb-4" @onclick="() => _createList = false">Cancel</button>
+}
+else if (_lootList is not null)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            @if (_lootList.Locked)
+            {
+                <AuthorizeView Roles="@AppRoles.Administrator">
+                    <button class="btn btn-danger btn-sm" type="button" @onclick="UnlockAsync">Unlock List</button>
+                </AuthorizeView>
+            }
+            else
+            {
+                if (_lootList.Owned)
+                {
+                    <button class="btn btn-primary btn-sm" type="button" @onclick="() => _createList = true">Edit</button>
+                }
+                <AuthorizeView Roles="@AppRoles.RaidLeader">
+                    <button class="btn btn-danger btn-sm" type="button" @onclick="LockAsync">Lock List</button>
+                </AuthorizeView>
+            }
+        </div>
         <ul class="list-group list-group-flush">
             @if (_lootList.Owned || _lootList.Locked)
             {
@@ -21,11 +41,11 @@
                                 <div class="col-md">
                                     @if (entry.ItemId > 0)
                                     {
-                                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" /> 
+                                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
                                     }
                                     @if (entry.Prio.HasValue)
                                     {
-                                        @: Prio: @entry.Prio 
+                                        @: Prio: @entry.Prio
                                     }
                                     else if (entry.Won)
                                     {
@@ -43,7 +63,7 @@
                 @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
                 {
                     <li class="list-group-item p-1">
-                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" /> 
+                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
                         @if (entry.Won)
                         {
                             <span class="fas fa-check text-success" aria-hidden="true"></span>
@@ -55,35 +75,56 @@
         </ul>
     </div>
 }
-else if (_createList)
-{
-    <CreateList Character="@Character" Phase="@Phase" OnLootListCreated="OnLootListCreated" />
-}
 else
 {
     <p>No Phase @Phase loot list was created.</p>
     @if (Character?.Editable == true)
     {
-        <button class="btn btn-primary" @onclick="() => _createList = true">Create List</button>
+        <button class="btn btn-primary mb-4" @onclick="() => _createList = true">Create List</button>
     }
 }
 
 @code {
     [Parameter] public byte Phase { get; set; }
     [Parameter] public CharacterDto? Character { get; set; }
-    [Parameter] public IList<LootListDto>? LootLists { get; set; }
+    [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
+    private IErrorHandler? _errors;
     private LootListDto? _lootList;
     private bool _createList;
 
     protected override void OnParametersSet()
     {
-        _lootList = LootLists?.FirstOrDefault(ll => ll.Phase == Phase);
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+        _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase);
     }
 
     private void OnLootListCreated(LootListDto lootList)
     {
-        LootLists?.Add(lootList);
+        if (_lootList is not null)
+        {
+            LootLists.Remove(_lootList);
+        }
+        LootLists.Add(lootList);
         _lootList = lootList;
+        _createList = false;
         StateHasChanged();
+    }
+
+    private Task LockAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootList is not null);
+        return Api.LootLists.Lock(_lootList.CharacterId, _lootList.Phase)
+            .OnSuccess(_ => _lootList.Locked = true)
+            .SendErrorTo(_errors)
+            .ExecuteAsync();
+    }
+
+    private Task UnlockAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootList is not null);
+        return Api.LootLists.Unlock(_lootList.CharacterId, _lootList.Phase)
+            .OnSuccess(_ => _lootList.Locked = false)
+            .SendErrorTo(_errors)
+            .ExecuteAsync();
     }
 }

@@ -25,6 +25,7 @@ namespace ValhallaLootList.Client.Data
             private Action<ProblemDetails>? _failureAction;
             private Action<HttpStatusCode>? _successAction;
             private Action<TResult>? _typedSuccessAction;
+            private Func<HttpStatusCode, CancellationToken, Task>? _successTask;
             private Func<TResult, CancellationToken, Task>? _typedSuccessTask;
             private Func<MemoryCacheEntryOptions>? _createCacheEntryOptions;
 
@@ -46,14 +47,63 @@ namespace ValhallaLootList.Client.Data
 
             public void ConfigureSuccess(Action<HttpStatusCode> action) => _successAction += action;
 
+            public void SetSuccessTask(Func<HttpStatusCode, CancellationToken, Task> task)
+            {
+                if (_successTask is not null)
+                {
+                    var last = _successTask;
+                    _successTask = async (code, ct) =>
+                    {
+                        await last(code, ct);
+                        await task(code, ct);
+                    };
+                }
+
+                _successTask = task;
+            }
+
             public void SetSuccessTask(Func<TResult, CancellationToken, Task> task)
             {
                 if (_typedSuccessTask is not null)
                 {
-                    throw new InvalidOperationException("Only one async success callback can be set per operation.");
+                    var last = _typedSuccessTask;
+                    _typedSuccessTask = async (result, ct) =>
+                    {
+                        await last(result, ct);
+                        await task(result, ct);
+                    };
                 }
 
                 _typedSuccessTask = task;
+            }
+
+            private ValueTask InvokeHeaderSuccessAsync(HttpStatusCode statusCode, CancellationToken cancellationToken)
+            {
+                _successAction?.Invoke(statusCode);
+
+                if (_successTask is not null)
+                {
+                    return new(_successTask.Invoke(statusCode, cancellationToken));
+                }
+
+                return default;
+            }
+
+            private bool HasSuccessAction()
+            {
+                return _typedSuccessAction is not null || _typedSuccessTask is not null;
+            }
+
+            private ValueTask InvokeSuccessAsync(TResult result, CancellationToken cancellationToken)
+            {
+                _typedSuccessAction?.Invoke(result);
+
+                if (_typedSuccessTask is not null)
+                {
+                    return new(_typedSuccessTask.Invoke(result, cancellationToken));
+                }
+
+                return default;
             }
 
             public async Task ExecuteAsync(CancellationToken cancellationToken = default)
@@ -67,8 +117,8 @@ namespace ValhallaLootList.Client.Data
 
                 if (_createCacheEntryOptions is not null && _memoryCache.TryGetValue(_request.RequestUri, out TResult? result) && result is not null)
                 {
-                    _successAction?.Invoke(HttpStatusCode.OK);
-                    _typedSuccessAction?.Invoke(result);
+                    await InvokeHeaderSuccessAsync(HttpStatusCode.OK, cancellationToken);
+                    await InvokeSuccessAsync(result, cancellationToken);
                     return;
                 }
 
@@ -79,15 +129,15 @@ namespace ValhallaLootList.Client.Data
 
                     if (response.IsSuccessStatusCode)
                     {
-                        _successAction?.Invoke(response.StatusCode);
+                        await InvokeHeaderSuccessAsync(response.StatusCode, cancellationToken);
 
-                        if (_typedSuccessAction is not null || _typedSuccessTask is not null)
+                        if (HasSuccessAction())
                         {
                             result = await response.Content.ReadFromJsonAsync<TResult>(_jsonSerializerOptions, cancellationToken);
 
                             if (result is null)
                             {
-                                throw new Exception("No valid result of type {typeof(TResult)} could be read from the response.");
+                                throw new Exception($"No valid result of type {typeof(TResult)} could be read from the response.");
                             }
 
                             if (_createCacheEntryOptions is not null)
@@ -95,12 +145,7 @@ namespace ValhallaLootList.Client.Data
                                 _memoryCache.Set(_request.RequestUri, result, _createCacheEntryOptions.Invoke());
                             }
 
-                            _typedSuccessAction?.Invoke(result);
-
-                            if (_typedSuccessTask is not null)
-                            {
-                                await _typedSuccessTask.Invoke(result, cancellationToken);
-                            }
+                            await InvokeSuccessAsync(result, cancellationToken);
                         }
                     }
                     else if (_failureAction is not null)

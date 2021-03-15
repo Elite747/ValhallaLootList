@@ -15,5 +15,7 @@ namespace ValhallaLootList.Client.Data
         void ConfigureFailure(Action<ProblemDetails> action);
 
         Task ExecuteAsync(CancellationToken cancellationToken = default);
+
+        void SetSuccessTask(Func<HttpStatusCode, CancellationToken, Task> task);
     }
 }

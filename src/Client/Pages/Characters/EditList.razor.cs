@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Characters
 {
-    public partial class CreateList
+    public partial class EditList
     {
         private static readonly Dictionary<Classes, (Specializations Spec, string DisplayName)[]> _specLookup = new()
         {
@@ -54,6 +55,7 @@ namespace ValhallaLootList.Client.Pages.Characters
         private readonly LootListSubmissionModel _lootList = new();
         private (Specializations Spec, string DisplayName)[]? _classSpecializations;
         private IList<ItemDto>? _items = Array.Empty<ItemDto>();
+        private readonly HashSet<uint> _disallowedItems = new();
 
         protected override Task OnInitializedAsync()
         {
@@ -66,17 +68,74 @@ namespace ValhallaLootList.Client.Pages.Characters
             _lootList.Brackets.Clear();
 
             return Api.GetPhaseConfiguration()
-                .OnSuccess(config =>
+                .OnSuccess(ConfigureSubmissionModelAsync)
+                .SendErrorTo(_errors)
+                .ExecuteAsync();
+        }
+
+        private Task ConfigureSubmissionModelAsync(PhaseConfigDto config, CancellationToken cancellationToken)
+        {
+            _disallowedItems.Clear();
+
+            if (config.Brackets.TryGetValue(Phase, out var bracketTemplates))
+            {
+                foreach (var bracketTemplate in bracketTemplates)
                 {
-                    if (config.Brackets.TryGetValue(Phase, out var bracketTemplates))
+                    _lootList.Brackets.Add(new(bracketTemplate));
+                }
+            }
+
+            if (ExistingList is not null)
+            {
+                Debug.Assert(!ExistingList.Locked);
+
+                _lootList.MainSpec = ExistingList.MainSpec;
+                _lootList.OffSpec = ExistingList.OffSpec == ExistingList.MainSpec ? null : ExistingList.OffSpec;
+
+                foreach (var entry in ExistingList.Entries)
+                {
+                    foreach (var bracket in _lootList.Brackets)
                     {
-                        foreach (var bracketTemplate in bracketTemplates)
+                        if (bracket.Items.TryGetValue(entry.Rank, out var items))
                         {
-                            _lootList.Brackets.Add(new(bracketTemplate));
+                            if (entry.Won)
+                            {
+                                if (entry.ItemId.HasValue)
+                                {
+                                    _disallowedItems.Add(entry.ItemId.Value);
+                                }
+
+                                if (items.Length == 1)
+                                {
+                                    bracket.Items.Remove(entry.Rank);
+                                }
+                                else
+                                {
+                                    Array.Resize(ref items, items.Length - 1);
+                                    bracket.Items[entry.Rank] = items;
+                                }
+                            }
+                            else if (entry.ItemId.HasValue)
+                            {
+                                for (int i = 0; i < items.Length; i++)
+                                {
+                                    if (items[i] == default)
+                                    {
+                                        items[i] = entry.ItemId.Value;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            break;
                         }
                     }
-                })
-                .ExecuteAsync();
+                }
+
+                return UpdateItemListAsync(cancellationToken);
+            }
+
+            return Task.CompletedTask;
         }
 
         private Task MainSpecChanged(Specializations? spec)
@@ -91,7 +150,7 @@ namespace ValhallaLootList.Client.Pages.Characters
             return UpdateItemListAsync();
         }
 
-        private async Task UpdateItemListAsync()
+        private async Task UpdateItemListAsync(CancellationToken cancellationToken = default)
         {
             _items = null;
             StateHasChanged();
@@ -108,7 +167,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                 await Api.Items.Get(Phase, spec)
                     .OnSuccess(items => _items = items)
                     .OnFailure(_ => _items = Array.Empty<ItemDto>())
-                    .ExecuteAsync();
+                    .ExecuteAsync(cancellationToken);
 
                 StateHasChanged();
             }
@@ -252,9 +311,7 @@ namespace ValhallaLootList.Client.Pages.Characters
             {
                 Items = new(),
                 MainSpec = _lootList.MainSpec,
-                OffSpec = _lootList.OffSpec,
-                CharacterId = Character.Id,
-                Phase = Phase
+                OffSpec = _lootList.OffSpec
             };
 
             foreach (var bracket in _lootList.Brackets)
@@ -265,9 +322,9 @@ namespace ValhallaLootList.Client.Pages.Characters
                 }
             }
 
-            return Api.LootLists.Create(dto)
-                .OnSuccess((character, _) => OnLootListCreated.InvokeAsync(character))
-                .ValidateWith(_serverValidator)
+            return (ExistingList is null ? Api.LootLists.Create(Character.Id, Phase, dto) : Api.LootLists.Recreate(Character.Id, Phase, dto))
+                .OnSuccess((lootList, _) => OnLootListCreated.InvokeAsync(lootList))
+                .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }
     }

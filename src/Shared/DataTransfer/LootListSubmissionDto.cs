@@ -9,12 +9,6 @@ namespace ValhallaLootList.DataTransfer
     public class LootListSubmissionDto
     {
         [Required]
-        public string? CharacterId { get; set; }
-
-        [Required]
-        public byte? Phase { get; set; }
-
-        [Required]
         public Specializations? MainSpec { get; set; }
 
         public Specializations? OffSpec { get; set; }

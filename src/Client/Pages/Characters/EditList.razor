@@ -2,10 +2,12 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 
+<ErrorDisplay @ref="_errors" />
+
 <EditForm OnValidSubmit="OnSubmit" Model="_lootList">
     <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
     <DataAnnotationsValidator />
-    <CustomValidator @ref="_serverValidator" />
+    <ProblemValidator @ref="_problemValidator" />
     <CustomValidator @ref="_bracketValidator" />
     <div class="form-group">
         <label for="inputMs">Main Spec</label>
@@ -16,9 +18,9 @@
                      Value="@_lootList.MainSpec">
             <option>-- Select --</option>
             @if (_classSpecializations is not null) foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
-            {
-                <option value="@spec.Spec">@spec.DisplayName</option>
-            }
+                {
+                    <option value="@spec.Spec">@spec.DisplayName</option>
+                }
         </InputSelect>
     </div>
     <div class="form-group">
@@ -30,9 +32,9 @@
                      Value="@_lootList.OffSpec">
             <option>None</option>
             @if (_classSpecializations is not null) foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
-            {
-                <option value="@spec.Spec">@spec.DisplayName</option>
-            }
+                {
+                    <option value="@spec.Spec">@spec.DisplayName</option>
+                }
         </InputSelect>
     </div>
     @if (_items is null)
@@ -56,7 +58,7 @@
                     @if (_modalContext?.Items is not null)
                     {
                         <ModalBody>
-                            @foreach (var itemTypeGroup in _modalContext.Items.GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+                            @foreach (var itemTypeGroup in _modalContext.Items.Where(item => !_disallowedItems.Contains(item.Id)).GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
                             {
                                 <div class="card mb-2 shadow">
                                     <div class="card-body font-weight-bold">@itemTypeGroup.Key.Name</div>
@@ -112,9 +114,11 @@
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
     [Parameter] public EventCallback<LootListDto> OnLootListCreated { get; set; }
+    [Parameter] public LootListDto? ExistingList { get; set; }
 
-    private CustomValidator? _serverValidator;
+    private ProblemValidator? _problemValidator;
     private CustomValidator? _bracketValidator;
+    private ErrorDisplay? _errors;
 
     private Modal? _modal;
     private ItemSelectionContext? _modalContext;

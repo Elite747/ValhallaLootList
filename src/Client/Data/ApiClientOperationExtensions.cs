@@ -51,6 +51,12 @@ namespace ValhallaLootList.Client.Data
             return operation;
         }
 
+        public static IApiClientOperation OnSuccess(this IApiClientOperation operation, Func<HttpStatusCode, CancellationToken, Task> task)
+        {
+            operation.SetSuccessTask(task);
+            return operation;
+        }
+
         public static IApiClientOperation<TResult> OnSuccess<TResult>(this IApiClientOperation<TResult> operation, Action<TResult> action)
         {
             operation.ConfigureSuccess(action);
@@ -165,6 +171,25 @@ namespace ValhallaLootList.Client.Data
                     }
                 });
             }
+            return operation;
+        }
+
+        public static IApiClientOperation ValidateWith(this IApiClientOperation operation, ProblemValidator? validator)
+        {
+            if (validator is not null)
+            {
+                operation.ConfigureFailure(validator.DisplayErrors);
+            }
+            return operation;
+        }
+
+        public static IApiClientOperation SendErrorTo(this IApiClientOperation operation, IErrorHandler? errorHandler)
+        {
+            if (errorHandler is not null)
+            {
+                operation.ConfigureFailure(errorHandler.Handle);
+            }
+
             return operation;
         }
     }

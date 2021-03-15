@@ -1,0 +1,35 @@
+﻿@implements IErrorHandler
+
+@for (int i = _problems.Count - 1; i >= 0; i--)
+{
+    var problem = _problems[i];
+    <div class="alert alert-danger alert-dismissible mb-2" role="alert">
+        <p>
+            @if (problem.Detail?.Length > 0)
+            {
+                @problem.Detail
+            }
+            else if (problem.Title?.Length > 0 || problem.Status.HasValue)
+            {
+                @:The server responded with status code @problem.Status @problem.Title
+            }
+            else
+            {
+                @:An unknown error has occurred.
+            }
+        </p>
+        <button class="close" type="button" aria-label="close" @onclick="() => _problems.Remove(problem)">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@code {
+    private readonly List<ProblemDetails> _problems = new();
+
+    public void Handle(ProblemDetails problem)
+    {
+        _problems.Add(problem);
+        StateHasChanged();
+    }
+}

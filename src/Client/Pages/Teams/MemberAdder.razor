@@ -31,7 +31,7 @@
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public EventCallback MemberAdded { get; set; }
-    [Parameter] public IErrorHandler? ErrorHandler { get; set; }
+    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {

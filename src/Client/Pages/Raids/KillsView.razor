@@ -1,7 +1,5 @@
 ﻿@inject ApiClient Api
 
-<ErrorDisplay @ref="_errors" />
-
 @foreach (var kill in Raid.Kills)
 {
     var localKill = kill;
@@ -179,7 +177,7 @@
 
 @code {
     private Modal? _addKillModal, _assignModal;
-    private ErrorDisplay? _errors;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
+    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 }

@@ -2,8 +2,6 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 
-<ErrorDisplay @ref="_errors" />
-
 <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team" @ref="_executor">
     <h1>@team.Name</h1>
 
@@ -27,7 +25,7 @@
                 <div class="card-header">
                     <h4 class="card-title">Roster</h4>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <MemberAdder Team="team" MemberAdded="() => _executor?.RestartAsync()" ErrorHandler="_errors" />
+                        <MemberAdder Team="team" MemberAdded="() => _executor?.RestartAsync()" />
                     </AuthorizeView>
                 </div>
                 <div class="list-group list-group-flush">
@@ -81,7 +79,7 @@
 @code {
     private Modal? _removeModal;
     private IApiExecutor? _executor;
-    private ErrorDisplay? _errors;
 
     [Parameter] public string Team { get; set; } = string.Empty;
+    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 }

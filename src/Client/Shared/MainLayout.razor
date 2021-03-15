@@ -11,7 +11,14 @@
         </div>
 
         <div class="content px-4">
-            @Body
+            <ErrorDisplay @ref="_errors" />
+            <CascadingValue Value="_errors" TValue="IErrorHandler">
+                @Body
+            </CascadingValue>
         </div>
     </div>
 </div>
+
+@code {
+    private ErrorDisplay? _errors;
+} 

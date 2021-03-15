@@ -4,8 +4,6 @@
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
     <div class="card my-3">
         <div class="card-body">
-            <ErrorDisplay @ref="_errors" />
-
             @if (owner.Owner is null)
             {
                 <div class="text-danger">Unclaimed!</div>
@@ -66,10 +64,10 @@
 
 @code {
     private IApiExecutor? _executor;
-    private IErrorHandler? _errors;
     private Modal? _setOwnerModal, _verifyOwnerModal;
 
     [Parameter] public CharacterDto Character { get; set; } = null!;
+    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -86,7 +84,7 @@
     {
         _verifyOwnerModal?.Hide();
         bool success = false;
-        await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(_errors).ExecuteAsync();
+        await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(ErrorHandler).ExecuteAsync();
         if (success && _executor is not null)
         {
             await _executor.RestartAsync();

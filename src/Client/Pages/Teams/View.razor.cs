@@ -21,15 +21,15 @@ namespace ValhallaLootList.Client.Pages.Teams
         private Task RemoveMemberConfirmedAsync(TeamDto team)
         {
             Debug.Assert(_removingCharacter?.Id?.Length > 0);
+            _removeModal?.Hide();
 
             return Api.Teams.RemoveMember(team.Id, _removingCharacter.Id)
                 .OnSuccess(_ =>
                 {
                     team.Roster.Remove(_removingCharacter);
-                    _removeModal?.Hide();
                     StateHasChanged();
                 })
-                .SendErrorTo(_errors)
+                .SendErrorTo(ErrorHandler)
                 .ExecuteAsync();
         }
 

@@ -1,7 +1,5 @@
 ﻿@inject ApiClient Api
 
-<ErrorDisplay @ref="_errors" />
-
 @if (_createList)
 {
     <EditList Character="@Character" Phase="@Phase" OnLootListCreated="OnLootListCreated" ExistingList="_lootList" />
@@ -88,7 +86,7 @@ else
     [Parameter] public byte Phase { get; set; }
     [Parameter] public CharacterDto? Character { get; set; }
     [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
-    private IErrorHandler? _errors;
+    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
     private LootListDto? _lootList;
     private bool _createList;
 
@@ -115,7 +113,7 @@ else
         System.Diagnostics.Debug.Assert(_lootList is not null);
         return Api.LootLists.Lock(_lootList.CharacterId, _lootList.Phase)
             .OnSuccess(_ => _lootList.Locked = true)
-            .SendErrorTo(_errors)
+            .SendErrorTo(ErrorHandler)
             .ExecuteAsync();
     }
 
@@ -124,7 +122,7 @@ else
         System.Diagnostics.Debug.Assert(_lootList is not null);
         return Api.LootLists.Unlock(_lootList.CharacterId, _lootList.Phase)
             .OnSuccess(_ => _lootList.Locked = false)
-            .SendErrorTo(_errors)
+            .SendErrorTo(ErrorHandler)
             .ExecuteAsync();
     }
 }

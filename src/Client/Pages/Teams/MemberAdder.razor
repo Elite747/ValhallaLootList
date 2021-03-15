@@ -31,6 +31,7 @@
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public EventCallback MemberAdded { get; set; }
+    [Parameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -58,6 +59,7 @@
                 _executor?.Reset();
                 MemberAdded.InvokeAsync();
             })
+            .SendErrorTo(ErrorHandler)
             .ExecuteAsync();
     }
 

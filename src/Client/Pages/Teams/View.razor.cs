@@ -29,6 +29,7 @@ namespace ValhallaLootList.Client.Pages.Teams
                     _removeModal?.Hide();
                     StateHasChanged();
                 })
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 

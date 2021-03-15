@@ -167,6 +167,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                 await Api.Items.Get(Phase, spec)
                     .OnSuccess(items => _items = items)
                     .OnFailure(_ => _items = Array.Empty<ItemDto>())
+                    .SendErrorTo(_errors)
                     .ExecuteAsync(cancellationToken);
 
                 StateHasChanged();

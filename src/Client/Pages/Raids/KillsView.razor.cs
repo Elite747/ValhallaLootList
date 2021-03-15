@@ -32,6 +32,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId);
                     StateHasChanged();
                 })
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 
@@ -43,6 +44,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     _addKillInputModel = new(instances, Raid);
                     _addKillModal?.Show();
                 })
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 
@@ -73,6 +75,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     Raid.Kills.Add(kill);
                     StateHasChanged();
                 })
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 
@@ -85,6 +88,7 @@ namespace ValhallaLootList.Client.Pages.Raids
 
             return Api.Drops.GetPriorityRankings(drop.Id)
                 .OnSuccess(prios => _assignPrios = prios)
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 
@@ -102,6 +106,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     drop.WinnerName = response.WinnerName;
                     StateHasChanged();
                 })
+                .SendErrorTo(_errors)
                 .ExecuteAsync();
         }
 

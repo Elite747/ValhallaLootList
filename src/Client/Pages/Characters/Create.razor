@@ -5,7 +5,7 @@
 <div class="modal-dialog modal-dialog-centered" role="document">
     <EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
         <DataAnnotationsValidator />
-        <CustomValidator @ref="_customValidator" />
+        <ProblemValidator @ref="_problemValidator" />
 
         <ModalHeader>
             <ModalTitle>Create Character</ModalTitle>
@@ -59,7 +59,7 @@
 </div>
 
 @code {
-    private CustomValidator? _customValidator;
+    private ProblemValidator? _problemValidator;
 
     [Parameter] public Modal? ParentModal { get; set; }
 }

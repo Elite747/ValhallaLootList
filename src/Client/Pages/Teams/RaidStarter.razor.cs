@@ -39,7 +39,7 @@ namespace ValhallaLootList.Client.Pages.Teams
         {
             return Api.Raids.Create(_model)
                 .OnSuccess((raid, _) => RaidStarted.InvokeAsync(raid))
-                .ValidateWith(_serverValidator)
+                .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }
     }

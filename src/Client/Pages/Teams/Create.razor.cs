@@ -35,7 +35,7 @@ namespace ValhallaLootList.Client.Pages.Teams
             {
                 return Api.Teams.Create(_team)
                     .OnSuccess(team => Nav.NavigateTo("/teams/" + team.Name))
-                    .ValidateWith(_serverValidator)
+                    .ValidateWith(_problemValidator)
                     .ExecuteAsync();
             }
 

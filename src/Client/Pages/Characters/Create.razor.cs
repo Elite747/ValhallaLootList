@@ -38,7 +38,7 @@ namespace ValhallaLootList.Client.Pages.Characters
             {
                 await Api.Characters.Create(_character)
                     .OnSuccess(character => Nav.NavigateTo("/characters/" + character.Name))
-                    .ValidateWith(_customValidator)
+                    .ValidateWith(_problemValidator)
                     .ExecuteAsync();
             }
         }

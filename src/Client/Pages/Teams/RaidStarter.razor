@@ -7,16 +7,13 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <EditForm OnValidSubmit="SubmitAsync" Model="_model" class="modal-content">
             <DataAnnotationsValidator />
-            <CustomValidator @ref="_serverValidator" />
+            <ProblemValidator @ref="_problemValidator" />
 
             <ModalHeader>
                 <ModalTitle>Start Raid</ModalTitle>
                 <CloseButton Clicked="() => _modal?.Hide()" />
             </ModalHeader>
             <ModalBody>
-                <DataAnnotationsValidator />
-                <CustomValidator @ref="_serverValidator" />
-
                 <div class="form-group">
                     <label for="inputPhase">Phase</label>
                     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
@@ -68,7 +65,7 @@
 
 @code {
     private Modal? _modal;
-    private CustomValidator? _serverValidator;
+    private ProblemValidator? _problemValidator;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public EventCallback<RaidDto> RaidStarted { get; set; }

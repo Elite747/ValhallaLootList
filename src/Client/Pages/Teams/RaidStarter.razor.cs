@@ -14,6 +14,7 @@ namespace ValhallaLootList.Client.Pages.Teams
 
         protected override void OnParametersSet()
         {
+            if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
             if (Team is null) throw new ArgumentNullException(nameof(Team));
 
             _model.TeamId = Team.Id;
@@ -38,7 +39,7 @@ namespace ValhallaLootList.Client.Pages.Teams
         private Task SubmitAsync()
         {
             return Api.Raids.Create(_model)
-                .OnSuccess((raid, _) => RaidStarted.InvokeAsync(raid))
+                .OnSuccess(raid => Nav.NavigateTo("/raids/" + raid.Id))
                 .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }

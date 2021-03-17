@@ -4,12 +4,11 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Blazorise;
-using Blazorise.Bootstrap;
-using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor;
+using MudBlazor.Services;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Data.Items;
 
@@ -46,11 +45,13 @@ namespace ValhallaLootList.Client
 
             builder.Services.AddAuthorizationCore(AppRoles.ConfigureAuthorization);
 
-            builder.Services.AddBlazorise(options => options.ChangeTextOnKeyPress = true).AddBootstrapProviders().AddFontAwesomeIcons();
+            builder.Services.AddMudServices(options =>
+            {
+                options.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
+                options.SnackbarConfiguration.ShowCloseIcon = true;
+            });
 
             var host = builder.Build();
-
-            host.Services.UseBootstrapProviders().UseFontAwesomeIcons();
 
             await host.RunAsync();
         }

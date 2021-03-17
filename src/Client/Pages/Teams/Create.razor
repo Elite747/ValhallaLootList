@@ -2,16 +2,12 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 
-<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
-        <DataAnnotationsValidator />
-        <ProblemValidator @ref="_problemValidator" />
+<EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
+    <DataAnnotationsValidator />
+    <ProblemValidator @ref="_problemValidator" />
 
-        <ModalHeader>
-            <ModalTitle>Create Team</ModalTitle>
-            <CloseButton Clicked="() => ParentModal?.Hide()" />
-        </ModalHeader>
-        <ModalBody>
+    <MudDialog>
+        <DialogContent>
             <div class="form-group">
                 <label for="inputName">Name</label>
                 <InputText @bind-Value="_team.Name" class="form-control" id="inputName" aria-describedby="emailHelp" />
@@ -58,16 +54,21 @@
                 </button>
             </div>
             <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
-        </ModalBody>
-        <ModalFooter>
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <button class="btn btn-secondary" @onclick="@(() => ParentModal?.Hide())" type="button">Cancel</button>
-        </ModalFooter>
-    </EditForm>
-</div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
 
 @code {
     private ProblemValidator? _problemValidator;
 
-    [Parameter] public Modal? ParentModal { get; set; }
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
 }

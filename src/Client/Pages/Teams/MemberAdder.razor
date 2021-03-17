@@ -1,36 +1,27 @@
 ﻿@inject ApiClient Api
 
-<Dropdown Toggled="OnToggledAsync" @ref="_dropdown">
-    <DropdownToggle Color="Color.Primary">Add Member</DropdownToggle>
-    <DropdownMenu>
-        <div class="input-group input-group-sm p-2">
-            <input type="text" class="form-control" @bind-value="_searchText" @bind-value:event="oninput" @ref="_searchInput" />
-            <div class="input-group-append">
-                <button type="button" class="btn btn-outline-primary" @onclick="() => _executor?.RestartAsync()">
-                    <span class="fas fa-sync"></span>
-                    <span class="sr-only" aria-hidden="true">Refresh</span>
-                </button>
-            </div>
-        </div>
-        <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters" @ref="_executor">
-            @foreach (var character in EnumerateCharacters(characters))
-            {
-                <DropdownItem Clicked="() => SubmitAsync(character)" Style="cursor: pointer">
-                    <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
-                </DropdownItem>
-            }
-        </ApiExecutor>
-    </DropdownMenu>
-</Dropdown>
+<ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters" @ref="_executor">
+    <div class="d-flex align-baseline">
+        <MudAutocomplete Label="Add Member"
+                         T="CharacterDto"
+                         SearchFunc="text => Search(text, characters)"
+                         Value="_selectedCharacter"
+                         ValueChanged="OnCharacterChangedAsync"
+                         ResetValueOnEmptyText="true"
+                         CoerceText="true">
+            <ItemTemplate Context="character">
+                <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+            </ItemTemplate>
+        </MudAutocomplete>
+        <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+    </div>
+</ApiExecutor>
 
 @code {
     private IApiExecutor? _executor;
-    private ElementReference _searchInput;
-    private Dropdown? _dropdown;
-    private string? _searchText;
+    private CharacterDto? _selectedCharacter;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
-    [Parameter] public EventCallback MemberAdded { get; set; }
     [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
@@ -38,39 +29,30 @@
         if (Team is null) throw new ArgumentNullException(nameof(Team));
     }
 
-    private async Task OnToggledAsync(bool open)
+    private Task OnCharacterChangedAsync(CharacterDto character)
     {
-        if (open)
-        {
-            if (_executor is not null)
-            {
-                await _executor.StartAsync();
-            }
-            await _searchInput.FocusAsync();
-        }
-    }
+        _selectedCharacter = character;
+        StateHasChanged();
 
-    private Task SubmitAsync(CharacterDto character)
-    {
         return Api.Teams.AddMember(Team.Id, character.Id)
-            .OnSuccess(_ =>
+            .OnSuccess((_, _) =>
             {
-                _dropdown?.Hide();
-                _executor?.Reset();
-                MemberAdded.InvokeAsync();
+                _selectedCharacter = null;
+                StateHasChanged();
+                return _executor?.RestartAsync().AsTask() ?? Task.CompletedTask;
             })
             .SendErrorTo(ErrorHandler)
             .ExecuteAsync();
     }
 
-    private IEnumerable<CharacterDto> EnumerateCharacters(IEnumerable<CharacterDto> characters)
+    private Task<IEnumerable<CharacterDto>> Search(string? text, IEnumerable<CharacterDto> characters)
     {
         var results = characters;
-        if (_searchText?.Length > 0)
+        if (text?.Length > 0)
         {
             const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
-            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, text, compareOptions) >= 0);
         }
-        return results;
+        return Task.FromResult(results);
     }
 }

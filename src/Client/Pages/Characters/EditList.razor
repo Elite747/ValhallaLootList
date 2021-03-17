@@ -1,8 +1,9 @@
 ﻿@attribute [Authorize]
 @inject ApiClient Api
 @inject NavigationManager Nav
+@inject IDialogService DialogService 
 
-<EditForm OnValidSubmit="OnSubmit" Model="_lootList">
+<EditForm OnValidSubmit="OnSubmit" Model="_lootList" class="m-4">
     <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />
@@ -37,7 +38,7 @@
     </div>
     @if (_items is null)
     {
-        <LoadingIndicator />
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
     }
     else if (_items.Count == 0)
     {
@@ -45,66 +46,18 @@
     }
     else
     {
-        <Modal @ref="_modal">
-            <ModalBackdrop />
-            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
-                <div class="modal-content modal-lg">
-                    <ModalHeader>
-                        <ModalTitle>Select Item</ModalTitle>
-                        <CloseButton Clicked="() => _modal?.Hide()" />
-                    </ModalHeader>
-                    @if (_modalContext?.Items is not null)
-                    {
-                        <ModalBody>
-                            @foreach (var itemTypeGroup in _modalContext.Items.Where(item => !_disallowedItems.Contains(item.Id)).GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
-                            {
-                                <div class="card mb-2 shadow">
-                                    <div class="card-body font-weight-bold">@itemTypeGroup.Key.Name</div>
-                                    <div class="list-group list-group-flush">
-                                        @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
-                                        {
-                                            <ItemLink Id="item.Id"
-                                                      @onclick="() => OnItemSelected(item.Id)"
-                                                      class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-1 pl-4">
-                                                <span>
-                                                    <ItemLinkIcon Size="IconSize.Small" />
-                                                    <ItemLinkText OverrideText="@item.Name" Colorize="true" />
-                                                </span>
-                                                <span>
-                                                    @if (_lootList.MainSpec.HasValue)
-                                                    {
-                                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & _lootList.MainSpec.Value) != 0)"
-                                                                           SpecPrefix="@(_lootList.OffSpec.HasValue ? "mainspec" : null)" />
-                                                    }
-
-                                                    @if (_lootList.OffSpec.HasValue)
-                                                    {
-                                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & _lootList.OffSpec.Value) != 0)"
-                                                                           SpecPrefix="offspec" />
-                                                    }
-                                                </span>
-                                            </ItemLink>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </ModalBody>
-                    }
-                    <ModalFooter>
-                        <button class="btn btn-secondary" @onclick="@(() => OnItemSelected(0))" type="button">Clear Selection</button>
-                        <button class="btn btn-secondary" @onclick="@(() => _modal?.Hide())" type="button">Cancel</button>
-                    </ModalFooter>
-                </div>
-            </div>
-        </Modal>
         foreach (var bracket in _lootList.Brackets)
         {
             <CreateListBracket Bracket="bracket"
                                Items="_items"
                                Model="_lootList"
-                               SelectionRequested="OnSelectionRequested" />
+                               SelectionRequested="OnSelectionRequestedAsync" />
         }
-        <button type="submit" class="btn btn-primary mb-4">Submit</button>
+
+        <div>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Submit</MudButton>
+            <MudButton OnClick="OnCancel" Variant="Variant.Text">Cancel</MudButton>
+        </div>
     }
 </EditForm>
 
@@ -113,11 +66,9 @@
     [Parameter] public byte Phase { get; set; }
     [Parameter] public EventCallback<LootListDto> OnLootListCreated { get; set; }
     [Parameter] public LootListDto? ExistingList { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
     [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     private ProblemValidator? _problemValidator;
     private CustomValidator? _bracketValidator;
-
-    private Modal? _modal;
-    private ItemSelectionContext? _modalContext;
 }

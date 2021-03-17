@@ -2,84 +2,84 @@
 
 @if (_createList)
 {
-    <EditList Character="@Character" Phase="@Phase" OnLootListCreated="OnLootListCreated" ExistingList="_lootList" />
-    <button class="btn btn-secondary mb-4" @onclick="() => _createList = false">Cancel</button>
+    <EditList Character="@Character" Phase="@Phase" OnLootListCreated="OnLootListCreated" ExistingList="_lootList" OnCancel="() => _createList = false" />
 }
 else if (_lootList is not null)
 {
-    <div class="card mb-4">
-        <div class="card-body">
-            @if (_lootList.Locked)
+    <div class="mt-4 ml-3">
+        @if (_lootList.Locked)
+        {
+            <AuthorizeView Roles="@AppRoles.Administrator">
+                <button class="btn btn-danger btn-sm" type="button" @onclick="UnlockAsync">Unlock List</button>
+            </AuthorizeView>
+        }
+        else
+        {
+            if (_lootList.Owned)
             {
-                <AuthorizeView Roles="@AppRoles.Administrator">
-                    <button class="btn btn-danger btn-sm" type="button" @onclick="UnlockAsync">Unlock List</button>
-                </AuthorizeView>
+                <button class="btn btn-primary btn-sm" type="button" @onclick="() => _createList = true">Edit</button>
             }
-            else
-            {
-                if (_lootList.Owned)
-                {
-                    <button class="btn btn-primary btn-sm" type="button" @onclick="() => _createList = true">Edit</button>
-                }
-                <AuthorizeView Roles="@AppRoles.RaidLeader">
-                    <button class="btn btn-danger btn-sm" type="button" @onclick="LockAsync">Lock List</button>
-                </AuthorizeView>
-            }
-        </div>
-        <ul class="list-group list-group-flush">
-            @if (_lootList.Owned || _lootList.Locked)
-            {
-                @foreach (var row in _lootList.Entries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
-                {
-                    <li class="list-group-item p-1">
-                        <div class="row mx-0">
-                            <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
-                            @foreach (var entry in row)
-                            {
-                                <div class="col-md">
-                                    @if (entry.ItemId > 0)
-                                    {
-                                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
-                                    }
-                                    @if (entry.Prio.HasValue)
-                                    {
-                                        @: Prio: @entry.Prio
-                                    }
-                                    else if (entry.Won)
-                                    {
-                                        <span class="fas fa-check text-success" aria-hidden="true"></span>
-                                        <span class="sr-only">Won</span>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </li>
-                }
-            }
-            else
-            {
-                @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
-                {
-                    <li class="list-group-item p-1">
-                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
-                        @if (entry.Won)
-                        {
-                            <span class="fas fa-check text-success" aria-hidden="true"></span>
-                            <span class="sr-only">Won</span>
-                        }
-                    </li>
-                }
-            }
-        </ul>
+            <AuthorizeView Roles="@AppRoles.RaidLeader">
+                <button class="btn btn-danger btn-sm" type="button" @onclick="LockAsync">Lock List</button>
+            </AuthorizeView>
+        }
     </div>
+    <MudDivider DividerType="DividerType.Middle" Class="my-6"/>
+    <ul class="list-group list-group-flush">
+        @if (_lootList.Owned || _lootList.Locked)
+        {
+            @foreach (var row in _lootList.Entries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
+            {
+                <li class="list-group-item p-1">
+                    <div class="row mx-0">
+                        <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
+                        @foreach (var entry in row)
+                        {
+                            <div class="col-md">
+                                @if (entry.ItemId > 0)
+                                {
+                                    <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
+                                }
+                                @if (entry.Prio.HasValue)
+                                {
+                                    @: Prio: @entry.Prio
+                                }
+                                else if (entry.Won)
+                                {
+                                    <span class="fas fa-check text-success" aria-hidden="true"></span>
+                                    <span class="sr-only">Won</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </li>
+            }
+        }
+        else
+        {
+            @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
+            {
+                <li class="list-group-item p-1">
+                    <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
+                    @if (entry.Won)
+                    {
+                        <span class="fas fa-check text-success" aria-hidden="true"></span>
+                        <span class="sr-only">Won</span>
+                    }
+                </li>
+            }
+        }
+    </ul>
 }
 else
 {
-    <p>No Phase @Phase loot list was created.</p>
-    @if (Character?.Editable == true)
-    {
-        <button class="btn btn-primary mb-4" @onclick="() => _createList = true">Create List</button>
-    }
+    <div class="m-4">
+        <p>No Phase @Phase loot list was created.</p>
+        @if (Character?.Editable == true)
+        {
+            <MudButton OnClick="() => _createList = true" Color="Color.Primary">Create List</MudButton>
+        }
+    </div>
 }
 
 @code {

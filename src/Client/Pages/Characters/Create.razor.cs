@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.Forms;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
@@ -22,25 +21,20 @@ namespace ValhallaLootList.Client.Pages.Characters
         };
 
         private readonly CharacterSubmissionDto _character;
-        private readonly EditContext _editContext;
         private Classes[] _raceClasses;
 
         public Create()
         {
             _character = new();
-            _editContext = new(_character);
             _raceClasses = Array.Empty<Classes>();
         }
 
-        private async Task OnSubmit()
+        private Task OnSubmit()
         {
-            if (_editContext.Validate())
-            {
-                await Api.Characters.Create(_character)
-                    .OnSuccess(character => Nav.NavigateTo("/characters/" + character.Name))
-                    .ValidateWith(_problemValidator)
-                    .ExecuteAsync();
-            }
+            return Api.Characters.Create(_character)
+                .OnSuccess(character => Nav.NavigateTo("/characters/" + character.Name))
+                .ValidateWith(_problemValidator)
+                .ExecuteAsync();
         }
 
         private void RaceChanged(PlayerRace? newValue)

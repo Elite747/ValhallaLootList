@@ -1,5 +1,6 @@
 ﻿@attribute [Authorize(AppRoles.Administrator)]
-@inject ApiClient Api 
+@inject ApiClient Api
+@inject IDialogService DialogService 
 
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
     <div class="card my-3">
@@ -22,41 +23,11 @@
             }
         </div>
         <div class="card-footer">
-            <button type="button" class="btn btn-sm btn-primary" @onclick="() => _setOwnerModal?.Show()">@(owner.Owner is null ? "Set" : "Change") Owner</button>
+            <MudButton OnClick="SetOwnerAsync" Color="Color.Primary">@(owner.Owner is null ? "Set" : "Change") Owner</MudButton>
 
-            <Modal @ref="_setOwnerModal">
-                <ModalBackdrop />
-                <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-                    <div class="modal-content">
-                        <div class="modal-body">
-                            Not yet implemented
-                        </div>
-                        <ModalFooter>
-                            <button type="button" class="btn btn-success" @onclick="SetOwnerAsync">Set</button>
-                            <button type="button" class="btn btn-secondary" @onclick="() => _setOwnerModal?.Hide()">Cancel</button>
-                        </ModalFooter>
-                    </div>
-                </div>
-            </Modal>
-
-            @if (owner.VerifiedBy is null)
+            @if (owner.VerifiedBy is null && owner.Owner is not null)
             {
-                <button type="button" class="btn btn-sm btn-primary" @onclick="() => _verifyOwnerModal?.Show()">Verify Owner</button>
-
-                <Modal @ref="_verifyOwnerModal">
-                    <ModalBackdrop />
-                    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <p>You are verifying that @Character.Name belongs to the discord user <GuildMemberDisplay Member="owner.Owner" />. Confirm?</p>
-                            </div>
-                            <ModalFooter>
-                                <button type="button" class="btn btn-success" @onclick="VerifyOwnerAsync">Confirm</button>
-                                <button type="button" class="btn btn-secondary" @onclick="() => _verifyOwnerModal?.Hide()">Cancel</button>
-                            </ModalFooter>
-                        </div>
-                    </div>
-                </Modal>
+                <MudButton OnClick="() => VerifyOwnerAsync(owner.Owner)" Color="Color.Primary">Verify Owner</MudButton>
             }
         </div>
     </div>
@@ -64,7 +35,6 @@
 
 @code {
     private IApiExecutor? _executor;
-    private Modal? _setOwnerModal, _verifyOwnerModal;
 
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
@@ -76,18 +46,33 @@
 
     private async Task SetOwnerAsync()
     {
-        _setOwnerModal?.Hide();
-        await Task.CompletedTask;
+        if (await DialogService.ShowAsync<SetOwnerDialog, bool>(
+            "Verify Owner",
+            parameters: new()
+            {
+                [nameof(SetOwnerDialog.Character)] = Character
+            }))
+        {
+            // TODO
+        }
     }
 
-    private async Task VerifyOwnerAsync()
+    private async Task VerifyOwnerAsync(GuildMemberDto owner)
     {
-        _verifyOwnerModal?.Hide();
-        bool success = false;
-        await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(ErrorHandler).ExecuteAsync();
-        if (success && _executor is not null)
+        if (await DialogService.ShowAsync<VerifyOwnerDialog, bool>(
+            "Verify Owner",
+            parameters: new()
+            {
+                [nameof(VerifyOwnerDialog.Character)] = Character,
+                [nameof(VerifyOwnerDialog.Owner)] = owner
+            }))
         {
-            await _executor.RestartAsync();
+            bool success = false;
+            await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(ErrorHandler).ExecuteAsync();
+            if (success && _executor is not null)
+            {
+                await _executor.RestartAsync();
+            }
         }
     }
 }

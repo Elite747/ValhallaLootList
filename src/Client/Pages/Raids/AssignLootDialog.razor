@@ -1,0 +1,41 @@
+﻿@inject ApiClient Api
+ 
+<MudDialog>
+    <DialogContent>
+        <ApiExecutor Operation="() => Api.Drops.GetPriorityRankings(Drop.Id)" Context="prios">
+            <div class="list-group list-group-flush">
+                @foreach (var entry in prios.OrderByDescending(e => e.Priority ?? int.MinValue))
+                {
+                    var characterId = entry.CharacterId;
+                    var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
+
+                    <button type="button" class="list-group-item list-group-item-action" @onclick="() => Dialog.Close(DialogResult.Ok(characterId))">
+                        <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
+                        @if (entry.Details?.Length > 0)
+                        {
+                            <div>@entry.Details</div>
+                        }
+                    </button>
+                }
+            </div>
+        </ApiExecutor>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter] public EncounterDropDto Drop { get; set; } = null!;
+
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Drop is null) throw new ArgumentNullException(nameof(Drop));
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+    }
+}

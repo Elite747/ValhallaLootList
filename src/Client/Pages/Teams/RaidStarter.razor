@@ -1,72 +1,63 @@
 ﻿@inject ApiClient Api
+@inject NavigationManager Nav 
 
-<button type="button" class="btn btn-primary" @onclick="() => _modal?.Show()">Start Raid</button>
-
-<Modal @ref="_modal">
-    <ModalBackdrop />
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <EditForm OnValidSubmit="SubmitAsync" Model="_model" class="modal-content">
-            <DataAnnotationsValidator />
-            <ProblemValidator @ref="_problemValidator" />
-
-            <ModalHeader>
-                <ModalTitle>Start Raid</ModalTitle>
-                <CloseButton Clicked="() => _modal?.Hide()" />
-            </ModalHeader>
-            <ModalBody>
-                <div class="form-group">
-                    <label for="inputPhase">Phase</label>
-                    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
-                        <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
-                            @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
+<EditForm OnValidSubmit="SubmitAsync" Model="_model" class="modal-content">
+    <DataAnnotationsValidator />
+    <ProblemValidator @ref="_problemValidator" />
+    <MudDialog>
+        <DialogContent>
+            <div class="form-group">
+                <label for="inputPhase">Phase</label>
+                <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
+                    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                        @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
+                        {
+                            _model.Phase = config.CurrentPhase;
+                        }
+                        <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
+                            @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
                             {
-                                _model.Phase = config.CurrentPhase;
+                                <option value="@phase">Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))</option>
                             }
-                            <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
-                                @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
-                                {
-                                    <option value="@phase">Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))</option>
-                                }
-                            </InputSelect>
-                        </ApiExecutor>
+                        </InputSelect>
                     </ApiExecutor>
-                </div>
+                </ApiExecutor>
+            </div>
 
-                @foreach (var character in Team.Roster)
-                {
-                    <div class="form-check">
-                        <input type="checkbox"
-                               class="form-check-input"
-                               id="@character.Id"
-                               checked="@_model.Attendees.Contains(character.Id!)"
-                               @onchange="() => ToggleAttendee(character.Id!)" />
-                        <label class="form-check-label" for="@character.Id">
-                            @if (character.CurrentPhaseMainspec.HasValue)
-                            {
-                                <SpecIcon Size="IconSize.Tiny" Spec="character.CurrentPhaseMainspec.Value" />
-                            }
-                            else
-                            {
-                                <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" />
-                            }
-                            <span class="ml-2">@character.Name</span>
-                        </label>
-                    </div>
-                }
-                <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
-            </ModalBody>
-            <ModalFooter>
-                <button type="submit" class="btn btn-success">Start</button>
-                <button class="btn btn-secondary" @onclick="() => _modal?.Hide()" type="button">Cancel</button>
-            </ModalFooter>
-        </EditForm>
-    </div>
-</Modal>
+            @foreach (var character in Team.Roster)
+            {
+                <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="@character.Id"
+                           checked="@_model.Attendees.Contains(character.Id!)"
+                           @onchange="() => ToggleAttendee(character.Id!)" />
+                    <label class="form-check-label" for="@character.Id">
+                        @if (character.CurrentPhaseMainspec.HasValue)
+                        {
+                            <SpecIcon Size="IconSize.Tiny" Spec="character.CurrentPhaseMainspec.Value" />
+                        }
+                        else
+                        {
+                            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" />
+                        }
+                        <span class="ml-2">@character.Name</span>
+                    </label>
+                </div>
+            }
+            <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Start</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
 
 @code {
-    private Modal? _modal;
     private ProblemValidator? _problemValidator;
 
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
     [Parameter] public TeamDto Team { get; set; } = null!;
-    [Parameter] public EventCallback<RaidDto> RaidStarted { get; set; }
 }

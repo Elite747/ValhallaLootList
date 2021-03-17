@@ -19,43 +19,18 @@
 
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
         <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-            @{
-                var phases = config.Brackets.Keys.Select(phase => (phase, phaseName: phase.ToString())).OrderBy(tuple => tuple.phase).ToList();
-
-                if (string.IsNullOrEmpty(_selectedPhase) || !phases.Any(tuple => tuple.phaseName == _selectedPhase))
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4">
+                @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
                 {
-                    (_, _selectedPhase) = phases.Find(tuple => tuple.phase == config.CurrentPhase);
-
-                    if (string.IsNullOrEmpty(_selectedPhase))
-                    {
-                        (_, _selectedPhase) = phases.FirstOrDefault();
-                    }
+                    <MudTabPanel Text="@($"Phase {phase}")">
+                        <LootListView Character="character" Phase="phase" LootLists="lootLists" />
+                    </MudTabPanel>
                 }
-            }
-            <Tabs SelectedTab="@_selectedPhase" SelectedTabChanged="phase => _selectedPhase = phase">
-                <Items>
-                    @foreach (var (_, phaseName) in phases)
-                    {
-                        <Tab Name="@phaseName">
-                            Phase @phaseName
-                        </Tab>
-                    }
-                </Items>
-                <Content>
-                    @foreach (var (phase, phaseName) in phases)
-                    {
-                        <TabPanel Name="@phaseName">
-                            <LootListView Character="@character" Phase="@phase" LootLists="lootLists" />
-                        </TabPanel>
-                    }
-                </Content>
-            </Tabs>
+            </MudTabs>
         </ApiExecutor>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
     [Parameter] public string Character { get; set; } = string.Empty;
-
-    private string? _selectedPhase;
 }

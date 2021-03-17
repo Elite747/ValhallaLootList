@@ -1,0 +1,24 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudText>You are verifying that @Character.Name belongs to the discord user <GuildMemberDisplay Member="Owner" />. Confirm?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Dialog.Close(DialogResult.Ok(true))">Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+
+    [Parameter] public GuildMemberDto Owner { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+        if (Owner is null) throw new ArgumentNullException(nameof(Owner));
+    }
+}

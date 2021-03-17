@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
+using ValhallaLootList.Client.Shared;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Characters
@@ -174,10 +175,8 @@ namespace ValhallaLootList.Client.Pages.Characters
             }
         }
 
-        private void OnSelectionRequested(ItemSelectionContext context)
+        private async Task OnSelectionRequestedAsync(ItemSelectionContext context)
         {
-            Debug.Assert(_modal is not null);
-
             var alreadySelected = new HashSet<uint>();
 
             foreach (var bracket in _lootList.Brackets)
@@ -222,23 +221,33 @@ namespace ValhallaLootList.Client.Pages.Characters
             }
 
             context.Items = contextItems?.ToList();
-            _modalContext = context;
-            _modal.Show();
+
+            var selectedId = await DialogService.ShowAsync<SelectItemDialog, uint?>(
+                "Select Item",
+                new()
+                {
+                    [nameof(SelectItemDialog.Context)] = context,
+                    [nameof(SelectItemDialog.DisallowedItems)] = _disallowedItems,
+                    [nameof(SelectItemDialog.LootList)] = _lootList
+                });
+
+            if (selectedId.HasValue)
+            {
+                OnItemSelected(context, selectedId.Value);
+            }
         }
 
-        private void OnItemSelected(uint selectedId)
+        private void OnItemSelected(ItemSelectionContext context, uint selectedId)
         {
+            Debug.Assert(context.Bracket is not null);
             Debug.Assert(_bracketValidator is not null);
-            Debug.Assert(_modalContext?.Bracket is not null);
-
-            _modal?.Hide();
 
             if (!_lootList.MainSpec.HasValue)
             {
                 return;
             }
 
-            _modalContext.Bracket.Items[_modalContext.Rank][_modalContext.Column] = selectedId;
+            context.Bracket.Items[context.Rank][context.Column] = selectedId;
 
             _bracketValidator.ClearErrors();
             var errors = new Dictionary<string, List<string>>();

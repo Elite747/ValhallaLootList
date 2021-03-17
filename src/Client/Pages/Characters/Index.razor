@@ -1,6 +1,6 @@
 ﻿@page "/characters"
-@using System.Globalization
 @inject ApiClient Api
+@inject IDialogService DialogService 
 
 <h1>Characters</h1>
 
@@ -21,14 +21,6 @@
     <button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="CreateClicked">Create Character</button>
 </div>
 <ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
-    <Modal @ref="_createCharacterModal">
-        @if (_createRequested)
-        {
-            <ModalBackdrop />
-            <Create ParentModal="_createCharacterModal" />
-        }
-    </Modal>
-
     <div class="list-group">
         @foreach (var ch in EnumerateCharacters(characters))
         {
@@ -44,10 +36,8 @@
 </ApiExecutor>
 
 @code {
-    private Modal? _createCharacterModal;
     private ApiExecutor<IList<CharacterDto>>? _executor;
     private string _searchText = string.Empty;
-    private bool _createRequested;
 
     private IEnumerable<CharacterDto> EnumerateCharacters(IList<CharacterDto> characters)
     {
@@ -61,7 +51,6 @@
 
     private void CreateClicked()
     {
-        _createRequested = true;
-        _createCharacterModal?.Show();
+        DialogService.Show<Create>("Create Character");
     }
 }

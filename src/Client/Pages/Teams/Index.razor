@@ -1,5 +1,6 @@
 ﻿@page "/teams"
 @inject ApiClient Api
+@inject IDialogService DialogService 
 
 <h1>Raid Teams</h1>
 
@@ -9,13 +10,6 @@
 </button>
 <ApiExecutor Operation="Api.Teams.GetAllTeamNames" Context="teamNames" @ref="_executor">
     <AuthorizeView Roles="@AppRoles.Administrator">
-        <Modal @ref="_createModal">
-            @if (_createRequested)
-            {
-                <ModalBackdrop />
-                <Create ParentModal="_createModal" />
-            }
-        </Modal>
         <button type="button" class="btn btn-primary mb-2" @onclick="CreateClicked">Create Team</button>
     </AuthorizeView>
     <div class="list-group">
@@ -27,13 +21,10 @@
 </ApiExecutor>
 
 @code {
-    private Modal? _createModal;
-    private bool _createRequested;
     private IApiExecutor? _executor;
 
     private void CreateClicked()
     {
-        _createRequested = true;
-        _createModal?.Show();
+        DialogService.Show<Create>("Create Team");
     }
 }

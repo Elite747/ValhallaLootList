@@ -1,6 +1,6 @@
 ﻿@page "/Teams/{team}"
 @inject ApiClient Api
-@inject NavigationManager Nav
+@inject IDialogService DialogService 
 
 <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team" @ref="_executor">
     <h1>@team.Name</h1>
@@ -16,7 +16,7 @@
     </p>
 
     <AuthorizeView Roles="@AppRoles.RaidLeader">
-        <RaidStarter Team="team" RaidStarted="OnRaidStarted" />
+        <button type="button" class="btn btn-primary" @onclick="() => StartRaid(team)">Start Raid</button>
     </AuthorizeView>
 
     <div class="row my-5">
@@ -25,25 +25,10 @@
                 <div class="card-header">
                     <h4 class="card-title">Roster</h4>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <MemberAdder Team="team" MemberAdded="() => _executor?.RestartAsync()" />
+                        <MemberAdder Team="team" />
                     </AuthorizeView>
                 </div>
                 <div class="list-group list-group-flush">
-                    <Modal @ref="_removeModal">
-                        <ModalBackdrop />
-                        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <p class="text-danger">Removing a character will invalidate all of their attendance records for this team!</p>
-                                    <p>Are you sure you want to remove @_removingCharacter?.Name from the roster?</p>
-                                </div>
-                                <ModalFooter>
-                                    <button type="button" class="btn btn-danger" @onclick="() => RemoveMemberConfirmedAsync(team)">Remove</button>
-                                    <button type="button" class="btn btn-secondary" @onclick="() => _removeModal?.Hide()">Cancel</button>
-                                </ModalFooter>
-                            </div>
-                        </div>
-                    </Modal>
                     @foreach (var character in team.Roster.OrderByRoleThenClassThenName())
                     {
                         var localCharacter = character;
@@ -60,7 +45,7 @@
                                     <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
                                 }
                                 <AuthorizeView Roles="@AppRoles.RaidLeader">
-                                    <button type="button" class="btn btn-sm btn-danger" @onclick="() => RequestRemoveMember(localCharacter)">
+                                    <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveMemberAsync(team, localCharacter)">
                                         <span class="fas fa-minus" aria-hidden="true"></span>
                                         <span class="sr-only">Remove Member</span>
                                     </button>
@@ -77,9 +62,28 @@
 </ApiExecutor>
 
 @code {
-    private Modal? _removeModal;
     private IApiExecutor? _executor;
 
     [Parameter] public string Team { get; set; } = string.Empty;
     [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
+
+    private async Task RemoveMemberAsync(TeamDto team, TeamCharacterDto character)
+    {
+        if (await DialogService.ShowAsync<RemoveMemberDialog, bool>("Remove Member", new() { [nameof(RemoveMemberDialog.CharacterName)] = character.Name }))
+        {
+            await Api.Teams.RemoveMember(team.Id, character.Id)
+                .OnSuccess(_ =>
+                {
+                    team.Roster.Remove(character);
+                    StateHasChanged();
+                })
+                .SendErrorTo(ErrorHandler)
+                .ExecuteAsync();
+        }
+    }
+
+    private void StartRaid(TeamDto team)
+    {
+        DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = team });
+    }
 }

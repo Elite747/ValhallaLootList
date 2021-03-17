@@ -1,4 +1,4 @@
-﻿@inject ApiClient Api
+﻿@inject ApiClient Api 
 
 <div class="card shadow">
     <div class="card-header">
@@ -10,7 +10,7 @@
             {
                 var character = attendee;
                 <li>
-                    <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span> 
+                    <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
                         <button class="btn btn-danger btn-sm" type="button" @onclick="() => OnRemoveClickedAsync(character)">
                             <span class="fas fa-minus" aria-hidden="true"></span>
@@ -19,33 +19,79 @@
                     </AuthorizeView>
                 </li>
             }
-            <AuthorizeView Roles="@AppRoles.RaidLeader">
-                <li>
-                    <Dropdown Toggled="OnToggled">
-                        <DropdownToggle Color="Color.Primary">
-                            Add Attendee
-                        </DropdownToggle>
-                        <DropdownMenu>
-                            <ApiExecutor Operation="() => Api.Characters.GetByTeam(Raid.TeamId)" Context="characters" ExecuteOnInitialized="false" @ref="_charactersDropdownExecutor">
-                                @foreach (var character in characters.Where(x => !Raid.Attendees.Any(y => x.Name == y.Name)))
-                                {
-                                    var localCharacter = character;
-                                    <DropdownItem Clicked="() => OnAddClickedAsync(localCharacter)">
-                                        <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
-                                    </DropdownItem>
-                                }
-                            </ApiExecutor>
-                        </DropdownMenu>
-                    </Dropdown>
-                </li>
-            </AuthorizeView>
         </ul>
+        <AuthorizeView Roles="@AppRoles.RaidLeader">
+            <ApiExecutor Operation="() => Api.Characters.GetByTeam(Raid.TeamId)" Context="characters" @ref="_charactersDropdownExecutor">
+                <div class="d-flex align-baseline">
+                    <MudAutocomplete Label="Add Member"
+                                     T="CharacterDto"
+                                     SearchFunc="text => Search(text, characters)"
+                                     Value="_selectedCharacter"
+                                     ValueChanged="OnCharacterChangedAsync"
+                                     ResetValueOnEmptyText="true"
+                                     CoerceText="true">
+                        <ItemTemplate Context="character">
+                            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+                        </ItemTemplate>
+                    </MudAutocomplete>
+                    <MudIconButton OnClick="() => _charactersDropdownExecutor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                </div>
+            </ApiExecutor>
+        </AuthorizeView>
     </div>
 </div>
 
 
 @code {
     private IApiExecutor? _charactersDropdownExecutor;
+    private CharacterDto? _selectedCharacter;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
+
+    [CascadingParameter] IErrorHandler? ErrorHandler { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+    }
+
+    private Task OnRemoveClickedAsync(CharacterDto character)
+    {
+        return Api.Raids.RemoveAttendee(Raid.Id, character.Id)
+            .OnSuccess(_ =>
+            {
+                Raid.Attendees.RemoveAll(c => c.Id == character.Id);
+                StateHasChanged();
+            })
+            .SendErrorTo(ErrorHandler)
+            .ExecuteAsync();
+    }
+
+    private Task OnCharacterChangedAsync(CharacterDto character)
+    {
+        _selectedCharacter = character;
+        StateHasChanged();
+
+        return Api.Raids.AddAttendee(Raid.Id, character.Id)
+            .OnSuccess((_, _) =>
+            {
+                Raid.Attendees.Add(character);
+                _selectedCharacter = null;
+                StateHasChanged();
+                return _charactersDropdownExecutor?.RestartAsync().AsTask() ?? Task.CompletedTask;
+            })
+            .SendErrorTo(ErrorHandler)
+            .ExecuteAsync();
+    }
+
+    private Task<IEnumerable<CharacterDto>> Search(string? text, IEnumerable<CharacterDto> characters)
+    {
+        var results = characters.Where(c => Raid.Attendees.Find(c2 => c2.Id == c.Id) is null);
+        if (text?.Length > 0)
+        {
+            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, text, compareOptions) >= 0);
+        }
+        return Task.FromResult(results);
+    }
 }

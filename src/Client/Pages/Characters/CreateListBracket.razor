@@ -1,39 +1,42 @@
-﻿<div class="card shadow mb-4">
-    <div class="card-body">
-        <h5 class="card-title font-weight-bold">Bracket @(Model.Brackets.IndexOf(Bracket) + 1)</h5>
-        <div class="card-text">
-            <ul>
-                <li>
-                    Up to @(Bracket.Template.MaxItems == 1 ? "1 item" : $"{Bracket.Template.MaxItems} items") per rank allowed
-                </li>
-                @if (Bracket.Template.AllowOffSpec)
-                {
-                    <li>Offspec items allowed</li>
-                }
-                else
-                {
-                    <li>No offspec items</li>
-                }
-                @if (!Bracket.Template.AllowTypeDuplicates)
-                {
-                    <li>Only one item per category allowed</li>
-                }
-            </ul>
-        </div>
-    </div>
-    <ul class="list-group list-group-flush">
+﻿<MudCard Elevation="3" Class="my-4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Bracket @(Model.Brackets.IndexOf(Bracket) + 1)</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <ul>
+            <li>
+                Up to @(Bracket.Template.MaxItems == 1 ? "1 item" : $"{Bracket.Template.MaxItems} items") per rank allowed
+            </li>
+            @if (Bracket.Template.AllowOffSpec)
+            {
+                <li>Offspec items allowed</li>
+            }
+            else
+            {
+                <li>No offspec items</li>
+            }
+            @if (!Bracket.Template.AllowTypeDuplicates)
+            {
+                <li>Only one item per category allowed</li>
+            }
+        </ul>
+    </MudCardContent>
+    <MudList Dense="true">
         @foreach (var row in Bracket.Items.OrderByDescending(r => r.Key))
         {
-            <li class="list-group-item p-1">
-                <div class="row mx-0">
-                    <div class="col-md-3 col-lg-2 font-weight-bold">Rank @row.Key</div>
+            <MudDivider />
+            <MudListItem>
+                <MudGrid>
+                    <MudItem md="3" lg="2"><b>Rank @row.Key</b></MudItem>
                     @for (int col = 0; col < row.Value.Length; col++)
                     {
                         int column = col;
                         uint id = row.Value[col];
                         var item = id == 0 ? null : Items.FirstOrDefault(x => x.Id == id);
 
-                        <div class="col-md">
+                        <MudItem>
                             <ItemLink Id="id" @onclick="async () => await SelectionRequested.InvokeAsync(new() { Bracket = Bracket, Column = column, Rank = row.Key })">
                                 @if (id == 0)
                                 {
@@ -67,13 +70,13 @@
                                     }
                                 </ul>
                             }
-                        </div>
+                        </MudItem>
                     }
-                </div>
-            </li>
+                </MudGrid>
+            </MudListItem>
         }
-    </ul>
-</div>
+    </MudList>
+</MudCard>
 
 @code {
     [Parameter] public IList<ItemDto> Items { get; set; } = null!;

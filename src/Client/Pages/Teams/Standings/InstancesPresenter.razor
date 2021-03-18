@@ -1,37 +1,55 @@
 ﻿@inject ApiClient Api
 
-<ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
-    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
-        @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
-        {
-            <ul class="nav nav-pills">
-                <li class="nav-item">
-                    <a class="nav-link disabled" tabindex="-1">Phase @phase</a>
-                </li>
-                @foreach (var instance in instances.Where(i => i.Phase == phase).OrderBy(i => i.Name))
+<MudPaper Class="d-flex">
+    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+        <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+            @{
+                var selectedInstance = instances.FirstOrDefault(i => i.Id == SelectedInstanceId);
+            }
+            <MudList Clickable="true">
+                <MudListItem OnClick="OnRefresh" Icon="@Icons.Material.Filled.Refresh" Text="Refresh" />
+                <MudDivider />
+                @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
                 {
-                    var id = instance.Id;
-
-                    <li class="nav-item">
-                        <a class="@(id == SelectedInstanceId ? "nav-link active" : "nav-link")" type="button" @onclick="() => ChangeSelectedInstanceId(id)">@instance.Name</a>
-                    </li>
+                    <MudListItem InitiallyExpanded="phase == phaseConfig.CurrentPhase || phase == selectedInstance?.Phase">
+                        <ChildContent>
+                            Phase @phase
+                        </ChildContent>
+                        <NestedList>
+                            @foreach (var instance in instances.Where(i => i.Phase == phase).OrderBy(i => i.Name))
+                            {
+                                var id = instance.Id;
+                                <MudListItem Class="@(id == SelectedInstanceId ? "mud-selected-item" : null)"
+                                             OnClick="() => SelectAsync(id)">
+                                    @instance.Name
+                                </MudListItem>
+                            }
+                        </NestedList>
+                    </MudListItem>
                 }
-            </ul>
-        }
-        @if (instances.FirstOrDefault(i => i.Id == SelectedInstanceId) is InstanceDto selectedInstance)
-        {
-            <InstanceView Instance="selectedInstance" />
-        }
+            </MudList>
+            <MudDivider Vertical="true" FlexItem="true" />
+            @if (selectedInstance is not null)
+            {
+                <InstanceView Instance="selectedInstance" />
+            }
+        </ApiExecutor>
     </ApiExecutor>
-</ApiExecutor>
+</MudPaper>
 
 @code {
     [Parameter] public string? SelectedInstanceId { get; set; }
     [Parameter] public EventCallback<string?> SelectedInstanceIdChanged { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
 
-    private Task ChangeSelectedInstanceId(string? id)
+    private Task SelectAsync(string? id)
     {
-        SelectedInstanceId = id;
-        return SelectedInstanceIdChanged.InvokeAsync(id);
+        if (id != SelectedInstanceId)
+        {
+            SelectedInstanceId = id;
+            return SelectedInstanceIdChanged.InvokeAsync(id);
+        }
+
+        return Task.CompletedTask;
     }
 } 

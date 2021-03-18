@@ -1,39 +1,39 @@
 ﻿@page "/characters"
 @inject ApiClient Api
-@inject IDialogService DialogService 
+@inject IDialogService DialogService
 
 <h1>Characters</h1>
 
-<div class="form-inline">
-    <label class="sr-only" for="filter">Find Character</label>
-    <input type="text"
-           class="form-control mr-sm-2 mb-2"
-           id="filter"
-           placeholder="Find Character..."
-           @bind-value="_searchText"
-           @bind-value:event="oninput" />
+<MudPaper>
+    <ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
+        <MudList Clickable="true">
+            <MudListSubheader Class="d-flex align-baseline">
+                <MudTextField @bind-Value="_searchText"
+                              Immediate="true"
+                              Label="Find Character"
+                              Variant="Variant.Text"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Filled.Search" />
 
-    <button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
-        <span class="fas fa-sync" aria-hidden="true"></span>
-        <span class="sr-only">Refresh</span>
-    </button>
+                <MudTooltip Text="Refresh Characters">
+                    <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                </MudTooltip>
 
-    <button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="CreateClicked">Create Character</button>
-</div>
-<ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
-    <div class="list-group">
-        @foreach (var ch in EnumerateCharacters(characters))
-        {
-            <a href="/characters/@ch.Name" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <span>@ch.Name</span>
-                <span>
+                <MudTooltip Text="Add Character">
+                    <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+                </MudTooltip>
+            </MudListSubheader>
+            @foreach (var ch in EnumerateCharacters(characters))
+            {
+                <MudListItem Href="@("characters/" + ch.Name)">
                     <RaceIcon Race="ch.Race" Gender="ch.Gender" Size="IconSize.Small" />
                     <ClassIcon PlayerClass="ch.Class" Size="IconSize.Small" />
-                </span>
-            </a>
-        }
-    </div>
-</ApiExecutor>
+                    <span>@ch.Name</span>
+                </MudListItem>
+            }
+        </MudList>
+    </ApiExecutor>
+</MudPaper>
 
 @code {
     private ApiExecutor<IList<CharacterDto>>? _executor;

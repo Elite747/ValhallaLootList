@@ -1,38 +1,33 @@
 ﻿@inject ApiClient Api
 @inject NavigationManager Nav 
 
-<EditForm OnValidSubmit="SubmitAsync" Model="_model" class="modal-content">
+<EditForm OnValidSubmit="SubmitAsync" Model="_model">
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />
     <MudDialog>
         <DialogContent>
-            <div class="form-group">
-                <label for="inputPhase">Phase</label>
-                <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
-                    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
-                        @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
+            <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
+                <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                    @if (_model.Phase is < byte.MinValue or > byte.MaxValue || !config.Brackets.ContainsKey((byte)_model.Phase))
+                    {
+                        _model.Phase = config.CurrentPhase;
+                    }
+                    <MudSelect @bind-Value="_model.Phase" Label="Phase">
+                        @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
                         {
-                            _model.Phase = config.CurrentPhase;
+                            <MudSelectItem Value="(int)phase">
+                                Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
+                            </MudSelectItem>
                         }
-                        <InputSelect class="form-control" id="inputPhase" @bind-Value="_model.Phase">
-                            @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
-                            {
-                                <option value="@phase">Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))</option>
-                            }
-                        </InputSelect>
-                    </ApiExecutor>
+                    </MudSelect>
                 </ApiExecutor>
-            </div>
+            </ApiExecutor>
 
-            @foreach (var character in Team.Roster)
-            {
-                <div class="form-check">
-                    <input type="checkbox"
-                           class="form-check-input"
-                           id="@character.Id"
-                           checked="@_model.Attendees.Contains(character.Id!)"
-                           @onchange="() => ToggleAttendee(character.Id!)" />
-                    <label class="form-check-label" for="@character.Id">
+            <MudList Clickable="true" Dense="true">
+                @foreach (var character in Team.Roster)
+                {
+                    <MudListItem Icon="@(_model.Attendees.Contains(character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
+                                 OnClick="() => ToggleAttendee(character.Id)">
                         @if (character.CurrentPhaseMainspec.HasValue)
                         {
                             <SpecIcon Size="IconSize.Tiny" Spec="character.CurrentPhaseMainspec.Value" />
@@ -42,9 +37,9 @@
                             <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" />
                         }
                         <span class="ml-2">@character.Name</span>
-                    </label>
-                </div>
-            }
+                    </MudListItem>
+                }
+            </MudList>
             <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
         </DialogContent>
         <DialogActions>

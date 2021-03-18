@@ -2,7 +2,6 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
@@ -27,7 +26,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId);
                     StateHasChanged();
                 })
-                .SendErrorTo(ErrorHandler)
+                .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
 
@@ -35,7 +34,7 @@ namespace ValhallaLootList.Client.Pages.Raids
         {
             return Api.Instances.GetAll()
                 .OnSuccess(instances => DialogService.Show<AddKillDialog>("Add Kill", parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) }))
-                .SendErrorTo(ErrorHandler)
+                .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
 
@@ -66,7 +65,7 @@ namespace ValhallaLootList.Client.Pages.Raids
                     drop.WinnerName = response.WinnerName;
                     StateHasChanged();
                 })
-                .SendErrorTo(ErrorHandler)
+                .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
     }

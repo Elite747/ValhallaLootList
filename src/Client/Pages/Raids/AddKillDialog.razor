@@ -3,67 +3,53 @@
 <EditForm OnValidSubmit="OnSubmitAsync" Model="Input">
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />
-    <MudDialog>
+    <MudDialog DisableSidePadding="true">
         <DialogContent>
-            <div class="form-group">
-                <label for="encounterId">Encounter</label>
-                <InputSelect @bind-Value="Input.EncounterId" class="form-control" id="encounterId">
-                    <option>-- Select Encounter --</option>
+            <MudContainer Style="max-height: 70vh; overflow-y: scroll; min-width: 60vw;">
+                <MudSelect Label="Encounter"
+                           @bind-Value="Input.EncounterId"
+                           For="() => Input.EncounterId">
                     @foreach (var instance in Input.Instances)
                     {
-                        <optgroup label="@instance.Name">
-                            @foreach (var encounter in instance.Encounters)
-                            {
-                                <option value="@encounter.Id">@encounter.Name</option>
-                            }
-                        </optgroup>
+                        <MudText Typo="Typo.h6">@instance.Name</MudText>
+                        @foreach (var encounter in instance.Encounters)
+                        {
+                            <MudSelectItem Value="encounter.Id">@encounter.Name</MudSelectItem>
+                        }
                     }
-                </InputSelect>
-            </div>
+                </MudSelect>
 
-            <div class="form-group">
-                <label>Drops</label>
-                @foreach (var itemId in Input.Drops.Keys)
-                {
-                    var localItemId = itemId;
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">
-                                <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
-                            </span>
-                            <button class="btn btn-outline-success"
-                                    type="button"
-                                    disabled="@(Input.Drops[localItemId].Value == 5)"
-                                    @onclick="() => Input.Drops[localItemId].Value++">
-                                <span class="fas fa-plus"></span>
-                                <span class="sr-only" aria-hidden="true">Add Drop</span>
-                            </button>
-                            <button class="btn btn-outline-danger"
-                                    type="button"
-                                    disabled="@(Input.Drops[localItemId].Value == 0)"
-                                    @onclick="() => Input.Drops[localItemId].Value--">
-                                <span class="fas fa-minus"></span>
-                                <span class="sr-only" aria-hidden="true">Remove Drop</span>
-                            </button>
-                        </div>
-                        <InputNumber class="form-control" id="@itemId" min="0" max="5" @bind-Value="Input.Drops[localItemId].Value" />
-                    </div>
-                }
-            </div>
+                <MudGrid Class="mt-3">
+                    <MudItem xs="12" md="6">
+                        <label>Drops</label>
+                        @foreach (var itemId in Input.Drops.Keys)
+                        {
+                            var localItemId = itemId;
+                            <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
+                            <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId].Value = ((int?)chip?.Tag) ?? 0">
+                                <MudChip Tag="@(0)" Default="true">0</MudChip>
+                                <MudChip Tag="@(1)">1</MudChip>
+                                <MudChip Tag="@(2)">2</MudChip>
+                                <MudChip Tag="@(3)">3</MudChip>
+                            </MudChipSet>
+                        }
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <label>Present Raiders</label>
+                        <MudList Clickable="true" Dense="true">
+                            @foreach (var ch in Input.Attendees.Keys)
+                            {
+                                var character = ch;
+                                <MudListItem Icon="@(Input.Attendees[character].Checked ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
+                                             OnClick="() => Input.Attendees[character].Checked = !Input.Attendees[character].Checked"
+                                             Text="@character.Name" />
+                            }
+                        </MudList>
+                    </MudItem>
+                </MudGrid>
 
-            <div class="form-group">
-                <label>Present Raiders</label>
-                @foreach (var character in Input.Attendees.Keys)
-                {
-                    var localCharacter = character;
-                    <div class="custom-control custom-checkbox">
-                        <InputCheckbox class="custom-control-input" id="@character.Id" @bind-Value="Input.Attendees[localCharacter].Checked" />
-                        <label class="custom-control-label" for="@character.Id">@character.Name</label>
-                    </div>
-                }
-            </div>
-
-            <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+                <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+            </MudContainer>
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>

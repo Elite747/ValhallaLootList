@@ -1,43 +1,43 @@
 ﻿@attribute [Authorize(AppRoles.Administrator)]
 @inject ApiClient Api
-@inject IDialogService DialogService 
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
-    <div class="card my-3">
-        <div class="card-body">
+    <MudCard Class="my-3">
+        <MudCardContent>
             @if (owner.Owner is null)
             {
-                <div class="text-danger">Unclaimed!</div>
+                <MudText Color="Color.Error">Unclaimed!</MudText>
             }
             else
             {
                 <div>Owner: <GuildMemberDisplay Member="owner.Owner" /></div>
                 @if (owner.VerifiedBy is null)
                 {
-                    <div class="text-danger">Unverified!</div>
+                    <MudText Color="Color.Error">Unverified!</MudText>
                 }
                 else
                 {
                     <div>Verified By: <GuildMemberDisplay Member="owner.VerifiedBy" /></div>
                 }
             }
-        </div>
-        <div class="card-footer">
+        </MudCardContent>
+        <MudCardActions>
             <MudButton OnClick="SetOwnerAsync" Color="Color.Primary">@(owner.Owner is null ? "Set" : "Change") Owner</MudButton>
 
             @if (owner.VerifiedBy is null && owner.Owner is not null)
             {
                 <MudButton OnClick="() => VerifyOwnerAsync(owner.Owner)" Color="Color.Primary">Verify Owner</MudButton>
             }
-        </div>
-    </div>
+        </MudCardActions>
+    </MudCard>
 </ApiExecutor>
 
 @code {
     private IApiExecutor? _executor;
 
     [Parameter] public CharacterDto Character { get; set; } = null!;
-    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -68,7 +68,7 @@
             }))
         {
             bool success = false;
-            await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(ErrorHandler).ExecuteAsync();
+            await Api.Characters.VerifyOwner(Character.Id).OnSuccess(_ => success = true).SendErrorTo(Snackbar).ExecuteAsync();
             if (success && _executor is not null)
             {
                 await _executor.RestartAsync();

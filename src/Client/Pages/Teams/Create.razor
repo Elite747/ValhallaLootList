@@ -2,60 +2,46 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 
-<EditForm OnValidSubmit="OnSubmit" EditContext="_editContext" class="modal-content">
+<EditForm OnValidSubmit="OnSubmit" EditContext="_editContext">
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />
 
     <MudDialog>
         <DialogContent>
-            <div class="form-group">
-                <label for="inputName">Name</label>
-                <InputText @bind-Value="_team.Name" class="form-control" id="inputName" aria-describedby="emailHelp" />
-            </div>
+            <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" />
 
             @for (int i = 0; i < _team.Schedules.Count; i++)
             {
                 var dayIndex = i;
-                <div class="form-group">
-                    <label>Day @(dayIndex + 1)</label>
-                    <div class="input-group">
-                        <InputSelect @bind-Value="_team.Schedules[dayIndex].Day" class="form-control">
-                            <option>-- Day --</option>
-                            <option value="@DayOfWeek.Sunday">Sun</option>
-                            <option value="@DayOfWeek.Monday">Mon</option>
-                            <option value="@DayOfWeek.Tuesday">Tue</option>
-                            <option value="@DayOfWeek.Wednesday">Wed</option>
-                            <option value="@DayOfWeek.Thursday">Thu</option>
-                            <option value="@DayOfWeek.Friday">Fri</option>
-                            <option value="@DayOfWeek.Saturday">Sat</option>
-                        </InputSelect>
-                        <div class="input-group-prepend input-group-append">
-                            <span class="input-group-text">start time</span>
-                        </div>
-                        <InputTime @bind-Value="_team.Schedules[dayIndex].StartTime" class="form-control" />
-                        <div class="input-group-prepend input-group-append">
-                            <span class="input-group-text">duration</span>
-                        </div>
-                        <InputNumber @bind-Value="_team.Schedules[dayIndex].Duration" class="form-control" step="0.25" />
-                        <div class="input-group-append">
-                            <span class="input-group-text">hrs</span>
-                            <button class="btn btn-danger" type="button" @onclick="() => RemoveScheduleClicked(dayIndex)">
-                                <span class="fas fa-minus"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <MudGrid>
+                    <MudItem>
+                        <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day">
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Sunday">Sun</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Monday">Mon</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Tuesday">Tue</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Wednesday">Wed</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Thursday">Thu</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Friday">Fri</MudSelectItem>
+                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Saturday">Sat</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem>
+                        <MudTimePicker @bind-Time="_team.Schedules[dayIndex].StartTime" Label="Start Time" AmPm="true" />
+                    </MudItem>
+                    <MudItem>
+                        <MudTextField @bind-Value="_team.Schedules[dayIndex].Duration" Label="Duration" Variant="Variant.Text" Adornment="Adornment.End" AdornmentText="hrs" />
+                    </MudItem>
+                    <MudItem>
+                        <MudIconButton OnClick="() => RemoveScheduleClicked(dayIndex)" Icon="@Icons.Material.Filled.Remove" Color="Color.Error" />
+                    </MudItem>
+                </MudGrid>
             }
-
-            <div class="form-group">
-                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AddScheduleClicked">
-                    Add Schedule
-                    <span class="fas fa-plus"></span>
-                </button>
-            </div>
             <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
         </DialogContent>
         <DialogActions>
+            <MudButton OnClick="AddScheduleClicked" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success">
+                Add Schedule
+            </MudButton>
             <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
         </DialogActions>

@@ -6,7 +6,7 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="align-text-bottom">
+        <MudHidden Breakpoint="Breakpoint.Xs">
             @{
                 var username = context.User.Identity?.Name;
                 var discordName = context.User.GetDiscordUsername();
@@ -19,20 +19,24 @@
             {
                 @discordName<span class="font-weight-light text-muted">#@context.User.GetDiscordDiscriminator()</span>
             }
-            &nbsp;
-            <img src="@context.User.GetDiscordAvatarUrl()" class="rounded-circle img-thumbnail img-fluid" width="48" height="48" />
-        </div>
-        <button class="nav-link btn btn-link" @onclick="BeginSignOut">Log out</button>
+        </MudHidden>
+        <MudAvatar Image="@context.User.GetDiscordAvatarUrl()?.OriginalString" Class="mx-1" Color="Color.Transparent" />
+        <MudButton OnClick="BeginSignOut" Variant="Variant.Text" Color="Color.Inherit">Log out</MudButton>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login?returnUrl=@Navigation.Uri">Log in</a>
+        <MudButton OnClick="SignIn" Variant="Variant.Text" Color="Color.Inherit">Log in</MudButton>
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
-    private async Task BeginSignOut(MouseEventArgs args)
+    private async Task BeginSignOut()
     {
         await SignOutManager.SetSignOutState();
         Navigation.NavigateTo("authentication/logout");
+    }
+
+    private void SignIn()
+    {
+        Navigation.NavigateTo("authentication/login?returnUrl=" + Navigation.Uri);
     }
 }

@@ -3,21 +3,24 @@
 <MudDialog>
     <DialogContent>
         <ApiExecutor Operation="() => Api.Drops.GetPriorityRankings(Drop.Id)" Context="prios">
-            <div class="list-group list-group-flush">
-                @foreach (var entry in prios.OrderByDescending(e => e.Priority ?? int.MinValue))
+            <MudList Clickable="true">
+                @foreach (var prioGroup in prios.OrderByDescending(e => e.Priority ?? int.MinValue).GroupBy(e => e.Priority))
                 {
-                    var characterId = entry.CharacterId;
-                    var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
-
-                    <button type="button" class="list-group-item list-group-item-action" @onclick="() => Dialog.Close(DialogResult.Ok(characterId))">
-                        <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
-                        @if (entry.Details?.Length > 0)
-                        {
-                            <div>@entry.Details</div>
-                        }
-                    </button>
+                    var highlight = prioGroup.Key.HasValue && prioGroup.Count() > 1;
+                    foreach (var entry in prioGroup)
+                    {
+                        var characterId = entry.CharacterId;
+                        var characterName = Raid.Attendees.Find(c => c.Id == characterId)?.Name ?? characterId;
+                        <MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(characterId))" IconColor="Color.Error" Icon="@(highlight ? Icons.Material.Filled.Error : null)">
+                            <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
+                            @if (entry.Details?.Length > 0)
+                            {
+                                <div>@entry.Details</div>
+                            }
+                        </MudListItem>
+                    }
                 }
-            </div>
+            </MudList>
         </ApiExecutor>
     </DialogContent>
     <DialogActions>

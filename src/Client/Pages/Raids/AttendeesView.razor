@@ -1,10 +1,13 @@
-﻿@inject ApiClient Api 
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
 
-<div class="card shadow">
-    <div class="card-header">
-        <span>Rostered Attendees</span>
-    </div>
-    <div class="card-body">
+<MudCard Elevation="3">
+    <MudCardHeader>
+        <CardHeaderContent>
+            Rostered Attendees
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
         <ul>
             @foreach (var attendee in Raid.Attendees)
             {
@@ -12,10 +15,9 @@
                 <li>
                     <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <button class="btn btn-danger btn-sm" type="button" @onclick="() => OnRemoveClickedAsync(character)">
-                            <span class="fas fa-minus" aria-hidden="true"></span>
-                            <span class="sr-only">Remove</span>
-                        </button>
+                        <MudTooltip Text="Remove">
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
+                        </MudTooltip>
                     </AuthorizeView>
                 </li>
             }
@@ -38,8 +40,8 @@
                 </div>
             </ApiExecutor>
         </AuthorizeView>
-    </div>
-</div>
+    </MudCardContent>
+</MudCard>
 
 
 @code {
@@ -47,8 +49,6 @@
     private CharacterDto? _selectedCharacter;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
-
-    [CascadingParameter] IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -63,7 +63,7 @@
                 Raid.Attendees.RemoveAll(c => c.Id == character.Id);
                 StateHasChanged();
             })
-            .SendErrorTo(ErrorHandler)
+            .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
@@ -80,7 +80,7 @@
                 StateHasChanged();
                 return _charactersDropdownExecutor?.RestartAsync().AsTask() ?? Task.CompletedTask;
             })
-            .SendErrorTo(ErrorHandler)
+            .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 

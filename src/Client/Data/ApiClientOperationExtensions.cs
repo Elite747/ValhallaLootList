@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
+using MudBlazor;
 using ValhallaLootList.Client.Shared;
 
 namespace ValhallaLootList.Client.Data
@@ -183,13 +184,9 @@ namespace ValhallaLootList.Client.Data
             return operation;
         }
 
-        public static IApiClientOperation SendErrorTo(this IApiClientOperation operation, IErrorHandler? errorHandler)
+        public static IApiClientOperation SendErrorTo(this IApiClientOperation operation, ISnackbar snackbar)
         {
-            if (errorHandler is not null)
-            {
-                operation.ConfigureFailure(errorHandler.Handle);
-            }
-
+            operation.ConfigureFailure(problem => snackbar.Add(problem.GetDisplayString(), Severity.Error));
             return operation;
         }
     }

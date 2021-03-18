@@ -1,11 +1,1 @@
-﻿
-<div class="text-center">
-    <div class="spinner-border" role="status">
-        <span class="sr-only">@LoadingText</span>
-    </div>
-    <div>@LoadingText</div>
-</div>
-
-@code {
-    [Parameter] public string LoadingText { get; set; } = "Loading...";
-}
+﻿<MudProgressLinear Color="Color.Primary" Indeterminate="true" />

@@ -4,21 +4,27 @@
 
 <h1>Raid Teams</h1>
 
-<button class="btn btn-primary mr-sm-2 mb-2" type="button" @onclick="() => _executor?.RestartAsync()">
-    <span class="fas fa-sync" aria-hidden="true"></span>
-    <span class="sr-only">Refresh</span>
-</button>
-<ApiExecutor Operation="Api.Teams.GetAllTeamNames" Context="teamNames" @ref="_executor">
-    <AuthorizeView Roles="@AppRoles.Administrator">
-        <button type="button" class="btn btn-primary mb-2" @onclick="CreateClicked">Create Team</button>
-    </AuthorizeView>
-    <div class="list-group">
-        @foreach (var team in teamNames)
-        {
-            <a class="list-group-item" href="teams/@team">@team</a>
-        }
-    </div>
-</ApiExecutor>
+<MudPaper>
+    <ApiExecutor Operation="Api.Teams.GetAllTeamNames" Context="teamNames" @ref="_executor">
+        <MudList Clickable="true">
+            <MudListSubheader Class="d-flex align-baseline">
+                <MudTooltip Text="Refresh Teams">
+                    <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                </MudTooltip>
+
+                <AuthorizeView Roles="@AppRoles.Administrator">
+                    <MudTooltip Text="Add Team">
+                        <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+                    </MudTooltip>
+                </AuthorizeView>
+            </MudListSubheader>
+            @foreach (var team in teamNames)
+            {
+                <MudListItem Href="@("teams/" + team)">@team</MudListItem>
+            }
+        </MudList>
+    </ApiExecutor>
+</MudPaper>
 
 @code {
     private IApiExecutor? _executor;

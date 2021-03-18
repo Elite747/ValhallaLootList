@@ -1,4 +1,5 @@
 ﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
 
 <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters" @ref="_executor">
     <div class="d-flex align-baseline">
@@ -22,7 +23,6 @@
     private CharacterDto? _selectedCharacter;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
-    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -41,7 +41,7 @@
                 StateHasChanged();
                 return _executor?.RestartAsync().AsTask() ?? Task.CompletedTask;
             })
-            .SendErrorTo(ErrorHandler)
+            .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 

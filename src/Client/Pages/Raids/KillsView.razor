@@ -1,61 +1,55 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 @foreach (var kill in Raid.Kills)
 {
     var localKill = kill;
-    <div class="card my-4 shadow">
-        <div class="card-body">
-            <div class="card-title">@kill.EncounterName</div>
-            <div class="card-subtitle text-muted">
-                Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Id == id)?.Name).Where(str => str?.Length > 0).OrderBy(str => str))
-            </div>
-            <div class="card-subtitle text-muted mb-2">Recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</div>
+    <MudCard Class="my-4" Elevation="3">
+        <MudCardContent>
+            <MudText Typo="Typo.h6">@kill.EncounterName</MudText>
+            <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Id == id)?.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</MudText>
             @if (kill.Drops.All(drop => drop.WinnerId is null))
             {
                 var encounterId = kill.EncounterId;
-                <button type="button" class="btn btn-danger" @onclick="() => DeleteAsync(encounterId)">
-                    Delete
-                </button>
+                <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(encounterId)">Delete</MudButton>
             }
-        </div>
-        <div class="list-group list-group-flush">
-            @foreach (var drop in kill.Drops)
+        </MudCardContent>
+        <MudList>
+            @foreach (var d in kill.Drops)
             {
-                var localDrop = drop;
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(drop.WinnerId is null ? "text-danger" : "text-success")">
-                    <div>
-                        <div>
+                var drop = d;
+                <MudDivider />
+                <MudListItem Class="d-flex jusify-content-between align-items-center">
+                    <div class="d-flex">
+                        <div class="mr-5">
                             <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true" OverrideText="@drop.ItemName" />
+                            <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
                         </div>
-                        <div>Awarded to @(drop.WinnerName ?? "nobody").</div>
+                        <AuthorizeView Roles="@AppRoles.LootMaster">
+                            @if (drop.WinnerId is null)
+                            {
+                                <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
+                            }
+                        </AuthorizeView>
                     </div>
-                    <AuthorizeView Roles="@AppRoles.LootMaster">
-                        @if (drop.WinnerId is null)
-                        {
-                            <button type="button" class="btn btn-sm btn-primary" @onclick="() => BeginAssignAsync(localDrop)">
-                                Assign
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => AssignAsync(localDrop, null)">Unassign</button>
-                        }
-                    </AuthorizeView>
-                </div>
+                </MudListItem>
             }
-        </div>
-    </div>
+        </MudList>
+    </MudCard>
 }
 
-<AuthorizeView Roles="@AppRoles.LootMaster" Context="authContext">
-    <button class="btn btn-success btn-lg shadow my-4" type="button" @onclick="AddClickedAsync">
-        <span class="fas fa-plus" aria-hidden="true"></span>
-        <span>Add Kill</span>
-    </button>
+<AuthorizeView Roles="@AppRoles.LootMaster">
+    <MudButton OnClick="AddClickedAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">
+        Add Kill
+    </MudButton>
 </AuthorizeView>
 
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;
-    [CascadingParameter] public IErrorHandler? ErrorHandler { get; set; }
 }

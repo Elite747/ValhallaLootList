@@ -4,14 +4,14 @@
     var firstCalendarDay = _date.AddDays(firstDayOfWeek - (int)_date.DayOfWeek);
 }
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ChangeMonth(-1)">&lt;</button>
-        <h5>@_date.ToString("MMMM", CultureInfo.CurrentCulture)</h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ChangeMonth(1)">&gt;</button>
+<MudCard>
+    <div class="d-flex justify-content-between align-items-center">
+        <MudButton OnClick="() => ChangeMonth(-1)" Variant="Variant.Text" Size="Size.Small">&lt;</MudButton>
+        <h5 class="mt-2">@_date.ToString("MMMM", CultureInfo.CurrentCulture)</h5>
+        <MudButton OnClick="() => ChangeMonth(1)" Variant="Variant.Text" Size="Size.Small">&gt;</MudButton>
     </div>
     <ApiExecutor Operation="() => Api.Raids.Get(Team.Id, _date.Year, _date.Month)" Context="raids" @ref="_executor">
-        <table class="table table-bordered table-sm m-0" style="table-layout: fixed">
+        <SimpleTableEx Bordered="true" FixedLayout="true" Class="m-0">
             <thead>
                 <tr>
                     @for (int i = firstDayOfWeek; i < 7; i++)
@@ -57,15 +57,15 @@
                             }
                             else
                             {
-                                <td class="p-0 m-0 bg-secondary"></td>
+                                <td class="p-0 m-0 mud-theme-dark"></td>
                             }
                         }
                     </tr>
                 }
             </tbody>
-        </table>
+        </SimpleTableEx>
     </ApiExecutor>
-</div>
+</MudCard>
 
 @code {
     private DateTime _date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);

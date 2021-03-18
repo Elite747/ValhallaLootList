@@ -28,5 +28,25 @@ namespace ValhallaLootList.Client.Data
 
         [JsonPropertyName("errors")]
         public Dictionary<string, List<string>>? Errors { get; set; }
+
+        public string GetDisplayString()
+        {
+            if (Detail?.Length > 0)
+            {
+                return Detail;
+            }
+            else if (Title?.Length > 0)
+            {
+                return Title;
+            }
+            else if (Status.HasValue)
+            {
+                return "The server responded with Status Code " + Status.Value;
+            }
+            else
+            {
+                return "An unknown error has occurred.";
+            }
+        }
     }
 }

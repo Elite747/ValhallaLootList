@@ -70,6 +70,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.Name,
                     c.Race,
                     c.IsMale,
+                    c.MemberStatus,
                     CurrentLootList = c.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec, l.Phase }).FirstOrDefault()
                 })
                 .AsAsyncEnumerable())
@@ -81,6 +82,7 @@ namespace ValhallaLootList.Server.Controllers
                     CurrentPhaseOffspec = character.CurrentLootList?.OffSpec,
                     Gender = character.IsMale ? Gender.Male : Gender.Female,
                     Id = character.Id,
+                    MemberStatus = character.MemberStatus,
                     Name = character.Name,
                     Race = character.Race
                 });
@@ -141,8 +143,49 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
-        public async Task<IActionResult> PostMember(string id, string characterId)
+        [HttpPost("{id}/members"), Authorize(AppRoles.RaidLeader)]
+        public async Task<ActionResult<TeamCharacterDto>> PostMember(string id, [FromBody] AddTeamMemberDto dto)
+        {
+            if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
+            {
+                return NotFound();
+            }
+
+            var character = await _context.Characters.FindAsync(dto.CharacterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            if (character.TeamId?.Length > 0 && character.TeamId != id)
+            {
+                return Problem("Character is already a part of another team.");
+            }
+
+            character.TeamId = id;
+            character.MemberStatus = dto.MemberStatus;
+
+            await _context.SaveChangesAsync();
+
+            var currentPhase = await _context.GetCurrentPhaseAsync();
+            var characterLootList = await _context.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec }).FirstOrDefaultAsync();
+
+            return Ok(new TeamCharacterDto
+            {
+                Class = character.Class,
+                CurrentPhaseMainspec = characterLootList?.MainSpec,
+                CurrentPhaseOffspec = characterLootList?.OffSpec,
+                Gender = character.IsMale ? Gender.Male : Gender.Female,
+                Id = character.Id,
+                MemberStatus = character.MemberStatus,
+                Name = character.Name,
+                Race = character.Race
+            });
+        }
+
+        [HttpPut("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
+        public async Task<IActionResult> PutMember(string id, string characterId, [FromBody] UpdateTeamMemberDto dto)
         {
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
@@ -156,7 +199,12 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            character.TeamId = id;
+            if (character.TeamId != id)
+            {
+                return Problem("Character is not assigned to this team.");
+            }
+
+            character.MemberStatus = dto.MemberStatus;
 
             await _context.SaveChangesAsync();
 
@@ -180,7 +228,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (character.TeamId != id)
             {
-                return BadRequest();
+                return Problem("Character is not assigned to this team.");
             }
 
             character.TeamId = null;

@@ -18,5 +18,7 @@ namespace ValhallaLootList.DataTransfer
         public Specializations? CurrentPhaseMainspec { get; set; }
 
         public Specializations? CurrentPhaseOffspec { get; set; }
+
+        public RaidMemberStatus MemberStatus { get; set; }
     }
 }

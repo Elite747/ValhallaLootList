@@ -12,13 +12,12 @@
         <h4>@(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))</h4>
     }
 
-    <p>
-        <a href="Teams/@team.Name/Standings">View Loot Standings</a>
-    </p>
-
-    <AuthorizeView Roles="@AppRoles.RaidLeader">
-        <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
-    </AuthorizeView>
+    <div class="d-flex">
+        <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
+        <AuthorizeView Roles="@AppRoles.RaidLeader">
+            <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
+        </AuthorizeView>
+    </div>
 
     <MudGrid Class="my-5">
         <MudItem lg="6" xl="4">
@@ -26,33 +25,52 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6">Roster</MudText>
-                        <AuthorizeView Roles="@AppRoles.RaidLeader">
-                            <MemberAdder Team="team" />
-                        </AuthorizeView>
                     </CardHeaderContent>
+                    <CardHeaderActions>
+                        <AuthorizeView Roles="@AppRoles.RaidLeader">
+                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="() => AddMemberAsync(team)" />
+                        </AuthorizeView>
+                    </CardHeaderActions>
                 </MudCardHeader>
                 <MudList>
                     @foreach (var ch in team.Roster.OrderByRoleThenClassThenName())
                     {
                         var character = ch;
-                        <MudListItem Class="@("d-flex jusify-content-between align-items-center bg-pc" + ch.Class.GetLowercaseName())">
-                            <a href="characters/@character.Name">@character.Name</a>
-                            <span>
-                                <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
-                                @if (character.CurrentPhaseMainspec.HasValue)
-                                {
-                                    <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
-                                }
-                                else
-                                {
-                                    <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
-                                }
+                        <MudListItem>
+                            <div class="d-flex">
+                                <div>
+                                    <div>
+                                        <a href="characters/@character.Name">@character.Name</a>
+                                        <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
+                                        @if (character.CurrentPhaseMainspec.HasValue)
+                                        {
+                                            <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
+                                        }
+                                        else
+                                        {
+                                            <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
+                                        }
+                                    </div>
+                                    <div>
+                                        @if (character.MemberStatus == RaidMemberStatus.Member)
+                                        {
+                                            <MudText>Member</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText Color="Color.Warning">Trial (@(character.MemberStatus == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
+                                        }
+                                    </div>
+                                </div>
                                 <AuthorizeView Roles="@AppRoles.RaidLeader">
+                                    <MudTooltip Text="Update Member">
+                                        <MudIconButton OnClick="() => UpdateMemberAsync(team, character)" Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
+                                    </MudTooltip>
                                     <MudTooltip Text="Remove Member">
                                         <MudIconButton OnClick="() => RemoveMemberAsync(team, character)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
                                     </MudTooltip>
                                 </AuthorizeView>
-                            </span>
+                            </div>
                         </MudListItem>
                     }
                 </MudList>
@@ -86,5 +104,31 @@
     private void StartRaid(TeamDto team)
     {
         DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = team });
+    }
+
+    private async Task AddMemberAsync(TeamDto team)
+    {
+        var result = await DialogService.ShowAsync<MemberAdder, TeamCharacterDto>(
+            "Add Member",
+            new() { [nameof(MemberAdder.Team)] = team },
+            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        if (result is not null)
+        {
+            team.Roster.Add(result);
+        }
+    }
+
+    private async Task UpdateMemberAsync(TeamDto team, TeamCharacterDto character)
+    {
+        var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
+            "Update Member",
+            new() { [nameof(UpdateMemberDialog.Team)] = team, [nameof(UpdateMemberDialog.Character)] = character },
+            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        if (result.HasValue)
+        {
+            character.MemberStatus = result.Value;
+        }
     }
 }

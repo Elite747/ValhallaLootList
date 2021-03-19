@@ -16,17 +16,14 @@
                 <MudGrid>
                     <MudItem>
                         <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day">
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Sunday">Sun</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Monday">Mon</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Tuesday">Tue</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Wednesday">Wed</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Thursday">Thu</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Friday">Fri</MudSelectItem>
-                            <MudSelectItem T="DayOfWeek?" Value="DayOfWeek.Saturday">Sat</MudSelectItem>
+                            @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
+                            {
+                                <MudSelectItem T="DayOfWeek?" Value="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</MudSelectItem>
+                            }
                         </MudSelect>
                     </MudItem>
                     <MudItem>
-                        <MudTimePicker @bind-Time="_team.Schedules[dayIndex].StartTime" Label="Start Time" AmPm="true" />
+                        <MudTimePicker @bind-Time="_team.Schedules[dayIndex].StartTime" Label="Start Time" Culture="CultureInfo.CurrentCulture" />
                     </MudItem>
                     <MudItem>
                         <MudTextField @bind-Value="_team.Schedules[dayIndex].Duration" Label="Duration" Variant="Variant.Text" Adornment="Adornment.End" AdornmentText="hrs" />

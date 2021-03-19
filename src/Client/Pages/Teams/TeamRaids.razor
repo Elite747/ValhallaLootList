@@ -1,0 +1,35 @@
+﻿@inject ApiClient Api
+ 
+<MudCard Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Recent Raids</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <AuthorizeView Roles="@AppRoles.RaidLeader">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync()" />
+            </AuthorizeView>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <ApiExecutor Operation="() => Api.Raids.GetRecentForTeam(Team.Id)" Context="raids" @ref="_executor">
+        <MudList Clickable="true">
+            @foreach (var raid in raids.OrderByDescending(r => r.StartedAt))
+            {
+                <MudListItem Href="@("raids/" + raid.Id)">
+                    Phase @raid.Phase Raid (@raid.StartedAt.ToLocalTime().ToString("D", CultureInfo.CurrentCulture))
+                </MudListItem>
+            }
+        </MudList>
+    </ApiExecutor>
+</MudCard>
+
+@code {
+    private IApiExecutor? _executor;
+
+    [Parameter] public TeamDto Team { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+}

@@ -1,0 +1,108 @@
+﻿@inject ApiClient Api
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar  
+ 
+<MudCard Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Roster</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <AuthorizeView Roles="@AppRoles.RaidLeader">
+                <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="() => AddMemberAsync(Team)" />
+            </AuthorizeView>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudList>
+        @foreach (var ch in Team.Roster.OrderByRoleThenClassThenName())
+        {
+            var character = ch;
+            <MudListItem>
+                <div class="d-flex">
+                    <div>
+                        <div>
+                            <a href="characters/@character.Name">@character.Name</a>
+                            <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
+                            @if (character.CurrentPhaseMainspec.HasValue)
+                            {
+                                <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
+                            }
+                            else
+                            {
+                                <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
+                            }
+                        </div>
+                        <div>
+                            @if (character.MemberStatus == RaidMemberStatus.Member)
+                            {
+                                <MudText>Member</MudText>
+                            }
+                            else
+                            {
+                                <MudText Color="Color.Warning">Trial (@(character.MemberStatus == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
+                            }
+                        </div>
+                    </div>
+                    <AuthorizeView Roles="@AppRoles.RaidLeader">
+                        <MudTooltip Text="Update Member">
+                            <MudIconButton OnClick="() => UpdateMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
+                        </MudTooltip>
+                        <MudTooltip Text="Remove Member">
+                            <MudIconButton OnClick="() => RemoveMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                        </MudTooltip>
+                    </AuthorizeView>
+                </div>
+            </MudListItem>
+        }
+    </MudList>
+</MudCard>
+
+@code {
+    [Parameter] public TeamDto Team { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+
+    private async Task AddMemberAsync(TeamDto team)
+    {
+        var result = await DialogService.ShowAsync<MemberAdder, TeamCharacterDto>(
+            "Add Member",
+            new() { [nameof(MemberAdder.Team)] = team },
+            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        if (result is not null)
+        {
+            team.Roster.Add(result);
+        }
+    }
+
+    private async Task UpdateMemberAsync(TeamDto team, TeamCharacterDto character)
+    {
+        var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
+            "Update Member",
+            new() { [nameof(UpdateMemberDialog.Team)] = team, [nameof(UpdateMemberDialog.Character)] = character },
+            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        if (result.HasValue)
+        {
+            character.MemberStatus = result.Value;
+        }
+    }
+
+    private async Task RemoveMemberAsync(TeamDto team, TeamCharacterDto character)
+    {
+        if (await DialogService.ShowAsync<RemoveMemberDialog, bool>("Remove Member", new() { [nameof(RemoveMemberDialog.CharacterName)] = character.Name }))
+        {
+            await Api.Teams.RemoveMember(team.Id, character.Id)
+                .OnSuccess(_ =>
+                {
+                    team.Roster.Remove(character);
+                    StateHasChanged();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+}

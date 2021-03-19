@@ -23,16 +23,30 @@ namespace ValhallaLootList.Server.Controllers
             _context = context;
         }
 
-        public IAsyncEnumerable<RaidDto> Get(string team, int m, int y, [FromServices] TimeZoneInfo realmTimeZoneInfo)
+        public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, string? team = null)
         {
-            var startUnspecified = new DateTime(y, m, 1);
-            var startRealm = new DateTimeOffset(startUnspecified, realmTimeZoneInfo.GetUtcOffset(startUnspecified));
-            var startUtc = startRealm.UtcDateTime;
-            var endUtc = startRealm.AddMonths(1).UtcDateTime;
+            DateTime startUtc, endUtc;
+            if (m.HasValue || y.HasValue)
+            {
+                var startUnspecified = new DateTime(y ?? DateTime.Today.Year, m ?? DateTime.Today.Month, 1);
+                var startRealm = new DateTimeOffset(startUnspecified, realmTimeZoneInfo.GetUtcOffset(startUnspecified));
+                startUtc = startRealm.UtcDateTime;
+                endUtc = startRealm.AddMonths(1).UtcDateTime;
+            }
+            else
+            {
+                endUtc = DateTime.UtcNow;
+                startUtc = endUtc.AddMonths(-1);
+            }
 
-            return _context.Raids
-                .AsNoTracking()
-                .Where(r => r.RaidTeamId == team && r.StartedAtUtc >= startUtc && r.StartedAtUtc < endUtc)
+            var query = _context.Raids.AsNoTracking().Where(r => r.StartedAtUtc >= startUtc && r.StartedAtUtc < endUtc);
+
+            if (team?.Length > 0)
+            {
+                query = query.Where(r => r.RaidTeamId == team);
+            }
+
+            return query
                 .Select(r => new RaidDto
                 {
                     Id = r.Id,

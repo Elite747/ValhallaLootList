@@ -13,7 +13,17 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<RaidDto>> Get(string teamId, int year, int month)
+        public IApiClientOperation<IList<RaidDto>> GetRecent()
+        {
+            return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, "api/v1/raids");
+        }
+
+        public IApiClientOperation<IList<RaidDto>> GetRecentForTeam(string teamId)
+        {
+            return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, $"api/v1/raids?team={teamId}");
+        }
+
+        public IApiClientOperation<IList<RaidDto>> GetForMonth(int year, int month, string? teamId = null)
         {
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, $"api/v1/raids?team={teamId}&y={year}&m={month}");
         }

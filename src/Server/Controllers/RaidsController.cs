@@ -85,16 +85,22 @@ namespace ValhallaLootList.Server.Controllers
             dto.Attendees = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(a => a.RaidId == id)
-                .Select(a => new CharacterDto
+                .OrderBy(a => a.Character.Name)
+                .Select(a => new AttendanceDto
                 {
-                    Id = a.CharacterId,
-                    Class = a.Character.Class,
-                    Editable = isAdmin || a.Character.OwnerId == currentUserId,
-                    Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
-                    Name = a.Character.Name,
-                    Race = a.Character.Race,
-                    TeamId = a.Character.TeamId,
-                    TeamName = a.Character.Team!.Name
+                    IgnoreAttendance = a.IgnoreAttendance,
+                    IgnoreReason = a.IgnoreReason,
+                    Character = new CharacterDto
+                    {
+                        Class = a.Character.Class,
+                        Editable = isAdmin || a.Character.OwnerId == currentUserId,
+                        Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                        Id = a.CharacterId,
+                        Name = a.Character.Name,
+                        Race = a.Character.Race,
+                        TeamId = a.Character.TeamId,
+                        TeamName = a.Character.Team!.Name
+                    }
                 })
                 .ToListAsync();
 
@@ -133,8 +139,8 @@ namespace ValhallaLootList.Server.Controllers
                     d.Id,
                     d.EncounterKillEncounterId,
                     d.AwardedAtUtc,
-                    d.AwardedBy,
-                    d.WinnerId,
+                    AwardedBy = (string?)d.AwardedBy,
+                    WinnerId = (string?)d.WinnerId,
                     WinnerName = (string?)d.Winner!.Name,
                     d.ItemId,
                     ItemName = d.Item.Name
@@ -201,19 +207,23 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     ModelState.AddModelError($"{nameof(dto.Attendees)}[{i}]", "Character does not exist.");
                 }
-                else if (character.TeamId != team.Id)
-                {
-                    ModelState.AddModelError($"{nameof(dto.Attendees)}[{i}]", "Character is not part of this raid team.");
-                }
                 else
                 {
-                    raid.Attendees.Add(new RaidAttendee
+                    var attendee = new RaidAttendee
                     {
                         Character = character,
                         CharacterId = character.Id,
                         Raid = raid,
-                        RaidId = raid.Id,
-                    });
+                        RaidId = raid.Id
+                    };
+
+                    if (character.TeamId != team.Id)
+                    {
+                        attendee.IgnoreAttendance = true;
+                        attendee.IgnoreReason = "Character was not part of this raid's team at the time of creation.";
+                    }
+
+                    raid.Attendees.Add(attendee);
                 }
             }
 
@@ -231,16 +241,21 @@ namespace ValhallaLootList.Server.Controllers
 
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
             {
-                Attendees = raid.Attendees.Select(a => new CharacterDto
+                Attendees = raid.Attendees.Select(a => new AttendanceDto
                 {
-                    Id = a.CharacterId,
-                    Class = a.Character.Class,
-                    Editable = isAdmin || a.Character.OwnerId == currentUserId,
-                    Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
-                    Name = a.Character.Name,
-                    Race = a.Character.Race,
-                    TeamId = a.Character.TeamId,
-                    TeamName = a.Character.Team!.Name
+                    IgnoreAttendance = a.IgnoreAttendance,
+                    IgnoreReason = a.IgnoreReason,
+                    Character = new CharacterDto
+                    {
+                        Id = a.CharacterId,
+                        Class = a.Character.Class,
+                        Editable = isAdmin || a.Character.OwnerId == currentUserId,
+                        Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                        Name = a.Character.Name,
+                        Race = a.Character.Race,
+                        TeamId = a.Character.TeamId,
+                        TeamName = a.Character.Team!.Name
+                    }
                 }).ToList(),
                 StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
                 Id = raid.Id,
@@ -251,7 +266,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("{id}/Attendees"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
+        public async Task<ActionResult<AttendanceDto>> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -267,18 +282,13 @@ namespace ValhallaLootList.Server.Controllers
                 ModelState.AddModelError(nameof(dto.CharacterId), "Character does not exist.");
                 return ValidationProblem();
             }
-            if (character.TeamId != raid.RaidTeamId)
-            {
-                ModelState.AddModelError(nameof(dto.CharacterId), "Character is not part of this raid team.");
-                return ValidationProblem();
-            }
             if (await _context.RaidAttendees.AsNoTracking().CountAsync(a => a.CharacterId == character.Id && a.RaidId == raid.Id) != 0)
             {
                 ModelState.AddModelError(nameof(dto.CharacterId), "Character is already on this raid's attendance.");
                 return ValidationProblem();
             }
 
-            _context.RaidAttendees.Add(new RaidAttendee
+            var attendee = new RaidAttendee
             {
                 Character = character,
                 CharacterId = character.Id,
@@ -286,11 +296,33 @@ namespace ValhallaLootList.Server.Controllers
                 IgnoreReason = null,
                 Raid = raid,
                 RaidId = raid.Id
-            });
+            };
+
+            if (character.TeamId != raid.RaidTeamId)
+            {
+                attendee.IgnoreAttendance = true;
+                attendee.IgnoreReason = "Character was not part of this raid's team at the time of creation.";
+            }
+
+            _context.RaidAttendees.Add(attendee);
 
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return new AttendanceDto
+            {
+                IgnoreAttendance = attendee.IgnoreAttendance,
+                IgnoreReason = attendee.IgnoreReason,
+                Character = new CharacterDto
+                {
+                    Class = character.Class,
+                    Editable = User.IsAdmin() || User.GetDiscordId() == character.OwnerId,
+                    Gender = character.IsMale ? Gender.Male : Gender.Female,
+                    Id = character.Id,
+                    Name = character.Name,
+                    Race = character.Race,
+                    TeamId = character.TeamId
+                }
+            };
         }
 
         [HttpDelete("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]

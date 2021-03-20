@@ -8,7 +8,7 @@ namespace ValhallaLootList.DataTransfer
 {
     public class RaidDto
     {
-        private List<CharacterDto>? _attendees;
+        private List<AttendanceDto>? _attendees;
         private List<EncounterKillDto>? _kills;
 
         public string Id { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ namespace ValhallaLootList.DataTransfer
 
         public DateTimeOffset StartedAt { get; set; }
 
-        public List<CharacterDto> Attendees
+        public List<AttendanceDto> Attendees
         {
             get => _attendees ??= new();
             set => _attendees = value;

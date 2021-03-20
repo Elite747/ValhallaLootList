@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MudBlazor;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
@@ -32,7 +33,7 @@ namespace ValhallaLootList.Client.Pages.Characters
         private Task OnSubmit()
         {
             return Api.Characters.Create(_character)
-                .OnSuccess(character => Nav.NavigateTo("/characters/" + character.Name))
+                .OnSuccess(character => Dialog.Close(DialogResult.Ok(character)))
                 .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }

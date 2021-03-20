@@ -10,7 +10,7 @@
                     <MudAutocomplete Label="Character"
                                      T="CharacterDto"
                                      SearchFunc="text => Search(text, characters)"
-                                     Value="characters.Find(c => c.Id == _model.CharacterId)"
+                                     Value="characters.FirstOrDefault(c => c.Id == _model.CharacterId)"
                                      ValueChanged="c => _model.CharacterId = c?.Id"
                                      ResetValueOnEmptyText="true"
                                      ToStringFunc="c => c.Name"

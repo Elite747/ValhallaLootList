@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
 using ValhallaLootList.DataTransfer;
 
@@ -19,10 +18,12 @@ namespace ValhallaLootList.Client.Pages.Raids
             Raid = raid;
 
             var lastKill = raid.Kills.Count == 0 ? null : raid.Kills[^1];
-            foreach (var character in raid.Attendees)
+            foreach (var id in raid.Attendees.Select(a => a.Character?.Id))
             {
-                Debug.Assert(character.Id?.Length > 0);
-                Attendees[character] = new(lastKill?.Characters.Contains(character.Id) != false);
+                if (id?.Length > 0 && lastKill?.Characters.Contains(id) != false)
+                {
+                    Attendees.Add(id);
+                }
             }
         }
 
@@ -47,15 +48,23 @@ namespace ValhallaLootList.Client.Pages.Raids
                     {
                         foreach (var drop in encounter.Items)
                         {
-                            Drops.Add(drop, new(0));
+                            Drops.Add(drop, 0);
                         }
                     }
                 }
             }
         }
 
-        public Dictionary<uint, NumberInput> Drops { get; } = new();
+        public Dictionary<uint, int> Drops { get; } = new();
 
-        public Dictionary<CharacterDto, BooleanInput> Attendees { get; } = new();
+        public HashSet<string> Attendees { get; } = new();
+
+        public void ToggleAttendee(string id)
+        {
+            if (!Attendees.Add(id))
+            {
+                Attendees.Remove(id);
+            }
+        }
     }
 }

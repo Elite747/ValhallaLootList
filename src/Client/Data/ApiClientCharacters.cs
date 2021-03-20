@@ -18,14 +18,14 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters");
         }
 
-        public IApiClientOperation<List<CharacterDto>> GetByTeam(string team)
+        public IApiClientOperation<IList<CharacterDto>> GetByTeam(string team)
         {
-            return Client.CreateRequest<List<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=" + team);
+            return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=" + team);
         }
 
-        public IApiClientOperation<List<CharacterDto>> GetUnrostered()
+        public IApiClientOperation<IList<CharacterDto>> GetUnrostered()
         {
-            return Client.CreateRequest<List<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=none");
+            return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=none");
         }
 
         public IApiClientOperation<CharacterDto> Get(string id)

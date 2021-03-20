@@ -70,7 +70,7 @@
         var result = await DialogService.ShowAsync<MemberAdder, TeamCharacterDto>(
             "Add Member",
             new() { [nameof(MemberAdder.Team)] = team },
-            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (result is not null)
         {
@@ -83,7 +83,7 @@
         var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
             "Update Member",
             new() { [nameof(UpdateMemberDialog.Team)] = team, [nameof(UpdateMemberDialog.Character)] = character },
-            new() { MaxWidth = MaxWidth.Small, FullWidth = true });
+            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (result.HasValue)
         {

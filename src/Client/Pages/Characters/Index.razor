@@ -1,5 +1,6 @@
 ﻿@page "/characters"
 @inject ApiClient Api
+@inject NavigationManager Nav
 @inject IDialogService DialogService
 
 <h1>Characters</h1>
@@ -20,7 +21,7 @@
                 </MudTooltip>
 
                 <MudTooltip Text="Add Character">
-                    <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+                    <MudFab OnClick="CreateClickedAsync" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
                 </MudTooltip>
             </MudListSubheader>
             @foreach (var ch in EnumerateCharacters(characters))
@@ -49,8 +50,14 @@
         return characters;
     }
 
-    private void CreateClicked()
+    private async Task CreateClickedAsync()
     {
-        DialogService.Show<Create>("Create Character");
+        var character = await DialogService.ShowAsync<Create, CharacterDto>(
+            "Create Character",
+            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (character is not null)
+        {
+            Nav.NavigateTo("/characters/" + character.Name);
+        }
     }
 }

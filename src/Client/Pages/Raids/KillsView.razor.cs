@@ -33,7 +33,10 @@ namespace ValhallaLootList.Client.Pages.Raids
         private Task AddClickedAsync()
         {
             return Api.Instances.GetAll()
-                .OnSuccess(instances => DialogService.Show<AddKillDialog>("Add Kill", parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) }))
+                .OnSuccess(instances => DialogService.Show<AddKillDialog>(
+                    "Add Kill",
+                    parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) },
+                    options: new() { FullWidth = true, MaxWidth = MudBlazor.MaxWidth.Medium }))
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }

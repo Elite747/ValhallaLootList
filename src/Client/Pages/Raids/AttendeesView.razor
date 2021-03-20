@@ -1,52 +1,60 @@
 ﻿@inject ApiClient Api
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudCard Elevation="3">
     <MudCardHeader>
         <CardHeaderContent>
-            Rostered Attendees
+            <MudText Typo="Typo.h6">Attendees</MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudCardContent>
-        <ul>
-            @foreach (var attendee in Raid.Attendees)
-            {
-                var character = attendee;
-                <li>
-                    <ClassIcon PlayerClass="attendee.Class" Size="IconSize.Tiny" /> <span>@attendee.Name</span>
+    <MudList>
+        @foreach (var attendance in Raid.Attendees.OrderBy(a => a.Character?.Name))
+        {
+            var character = attendance.Character;
+            System.Diagnostics.Debug.Assert(character is not null);
+            <MudDivider />
+            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+                <div class="d-flex">
+                    <MudAvatar Class="mr-2">
+                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
+                    </MudAvatar>
+                    <MudAvatar Class="mr-5">
+                        <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
+                    </MudAvatar>
+                    <div class="mr-auto">
+                        <MudText Inline="false">@character.Name</MudText>
+                        @if (attendance.IgnoreAttendance)
+                        {
+                            <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
+                        }
+                    </div>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <MudTooltip Text="Remove">
-                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
+                        <MudTooltip Text="Edit">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
                         </MudTooltip>
+                        @if (!Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
+                        {
+                            <MudTooltip Text="Remove">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
+                            </MudTooltip>
+                        }
                     </AuthorizeView>
-                </li>
-            }
-        </ul>
-        <AuthorizeView Roles="@AppRoles.RaidLeader">
-            <ApiExecutor Operation="() => Api.Characters.GetByTeam(Raid.TeamId)" Context="characters" @ref="_charactersDropdownExecutor">
-                <div class="d-flex align-baseline">
-                    <MudAutocomplete Label="Add Member"
-                                     T="CharacterDto"
-                                     SearchFunc="text => Search(text, characters)"
-                                     Value="_selectedCharacter"
-                                     ValueChanged="OnCharacterChangedAsync"
-                                     ResetValueOnEmptyText="true"
-                                     CoerceText="true">
-                        <ItemTemplate Context="character">
-                            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
-                        </ItemTemplate>
-                    </MudAutocomplete>
-                    <MudIconButton OnClick="() => _charactersDropdownExecutor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
                 </div>
-            </ApiExecutor>
+            </MudListItem>
+        }
+        <MudDivider />
+    </MudList>
+    <MudCardActions>
+        <AuthorizeView Roles="@AppRoles.RaidLeader">
+            <MudButton OnClick="AddRosteredAsync" Variant="Variant.Text" Color="Color.Primary" Class="mr-2">Add Rostered Member</MudButton>
+            <MudButton OnClick="AddUnrosteredAsync" Variant="Variant.Text" Color="Color.Primary">Add Unrostered Member</MudButton>
         </AuthorizeView>
-    </MudCardContent>
+    </MudCardActions>
 </MudCard>
 
 
 @code {
-    private IApiExecutor? _charactersDropdownExecutor;
-    private CharacterDto? _selectedCharacter;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
 
@@ -60,38 +68,46 @@
         return Api.Raids.RemoveAttendee(Raid.Id, character.Id)
             .OnSuccess(_ =>
             {
-                Raid.Attendees.RemoveAll(c => c.Id == character.Id);
+                Raid.Attendees.RemoveAll(c => c.Character?.Id == character.Id);
                 StateHasChanged();
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
-    private Task OnCharacterChangedAsync(CharacterDto character)
+    private Task AddRosteredAsync()
     {
-        _selectedCharacter = character;
-        StateHasChanged();
-
-        return Api.Raids.AddAttendee(Raid.Id, character.Id)
-            .OnSuccess((_, _) =>
-            {
-                Raid.Attendees.Add(character);
-                _selectedCharacter = null;
-                StateHasChanged();
-                return _charactersDropdownExecutor?.RestartAsync().AsTask() ?? Task.CompletedTask;
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
+        return AddAttendeeAsync(() => Api.Characters.GetByTeam(Raid.TeamId), FilterCharacters, showAdd: false);
     }
 
-    private Task<IEnumerable<CharacterDto>> Search(string? text, IEnumerable<CharacterDto> characters)
+    private Task AddUnrosteredAsync()
     {
-        var results = characters.Where(c => Raid.Attendees.Find(c2 => c2.Id == c.Id) is null);
-        if (text?.Length > 0)
+        return AddAttendeeAsync(Api.Characters.GetAll, c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
+    }
+
+    private async Task AddAttendeeAsync(Func<IApiClientOperation<IList<CharacterDto>>> operation, Func<CharacterDto, bool> filter, bool showAdd)
+    {
+        var character = await DialogService.ShowAsync<PickCharacterDialog, CharacterDto>(
+            string.Empty,
+            new() { [nameof(PickCharacterDialog.Operation)] = operation, [nameof(PickCharacterDialog.Filter)] = filter, [nameof(PickCharacterDialog.ShowAdd)] = showAdd },
+            new() { NoHeader = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+
+        if (character is not null)
         {
-            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
-            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, text, compareOptions) >= 0);
+            await Api.Raids.AddAttendee(Raid.Id, character.Id)
+                .OnSuccess(attendance =>
+                {
+                    attendance.Character = character;
+                    Raid.Attendees.Add(attendance);
+                    StateHasChanged();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
         }
-        return Task.FromResult(results);
+    }
+
+    private bool FilterCharacters(CharacterDto character)
+    {
+        return Raid.Attendees.Find(a => a.Character?.Id == character.Id) is null;
     }
 }

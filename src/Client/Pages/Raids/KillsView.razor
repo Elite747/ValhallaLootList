@@ -1,6 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject NavigationManager Nav 
 
 @foreach (var kill in Raid.Kills)
 {
@@ -50,9 +51,24 @@
 }
 
 <AuthorizeView Roles="@AppRoles.LootMaster">
-    <MudButton OnClick="AddClickedAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButton OnClick="AddClickedAsync"
+               StartIcon="@Icons.Material.Filled.Add"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               Class="@(Raid.Kills.Count == 0 ? "mt-3" : null)">
         Add Kill
     </MudButton>
+
+    @if (Raid.Kills.Count == 0)
+    {
+        <MudButton OnClick="DeleteRaidAsync"
+                    StartIcon="@Icons.Material.Filled.Delete"
+                    Variant="Variant.Filled"
+                    Color="Color.Error"
+                    Class="mt-3 ml-3">
+            Delete Raid
+        </MudButton>
+    }
 </AuthorizeView>
 
 @code {

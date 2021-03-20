@@ -265,6 +265,28 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
+        [HttpDelete("{id}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult> Delete(string id)
+        {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id) > 0)
+            {
+                return Problem("Can't delete a raid with recorded kills.");
+            }
+
+            _context.Raids.Remove(raid);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPost("{id}/Attendees"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<AttendanceDto>> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
         {

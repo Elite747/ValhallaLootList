@@ -38,6 +38,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<RaidSubmissionDto, RaidDto>(HttpMethod.Post, "api/v1/raids", submission);
         }
 
+        public IApiClientOperation Delete(string raidId)
+        {
+            return Client.CreateRequest(HttpMethod.Delete, "api/v1/raids/" + raidId);
+        }
+
         public IApiClientOperation Delete(string raidId, string encounterId)
         {
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/raids/{raidId}/Kills/{encounterId}");

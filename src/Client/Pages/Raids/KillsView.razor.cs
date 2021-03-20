@@ -2,7 +2,9 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Shared;
@@ -33,12 +35,17 @@ namespace ValhallaLootList.Client.Pages.Raids
         private Task AddClickedAsync()
         {
             return Api.Instances.GetAll()
-                .OnSuccess(instances => DialogService.Show<AddKillDialog>(
-                    "Add Kill",
-                    parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) },
-                    options: new() { FullWidth = true, MaxWidth = MudBlazor.MaxWidth.Medium }))
+                .OnSuccess(AddKillAsync)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
+        }
+
+        private Task AddKillAsync(IEnumerable<InstanceDto> instances, CancellationToken cancellationToken)
+        {
+            return DialogService.ShowAsync<AddKillDialog, bool>(
+                    "Add Kill",
+                    parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) },
+                    options: new() { FullWidth = true, MaxWidth = MudBlazor.MaxWidth.Medium });
         }
 
         private async Task BeginAssignAsync(EncounterDropDto drop)
@@ -68,6 +75,14 @@ namespace ValhallaLootList.Client.Pages.Raids
                     drop.WinnerName = response.WinnerName;
                     StateHasChanged();
                 })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+
+        private Task DeleteRaidAsync()
+        {
+            return Api.Raids.Delete(Raid.Id)
+                .OnSuccess(_ => Nav.NavigateTo("teams/" + Raid.TeamName))
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }

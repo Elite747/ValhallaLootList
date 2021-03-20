@@ -91,7 +91,7 @@
             .OnSuccess(kill =>
             {
                 Input.Raid.Kills.Add(kill);
-                Dialog.Close();
+                Dialog.Close(DialogResult.Ok(true));
             })
             .ValidateWith(_problemValidator)
             .ExecuteAsync();

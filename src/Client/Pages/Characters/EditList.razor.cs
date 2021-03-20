@@ -229,6 +229,11 @@ namespace ValhallaLootList.Client.Pages.Characters
                     [nameof(SelectItemDialog.Context)] = context,
                     [nameof(SelectItemDialog.DisallowedItems)] = _disallowedItems,
                     [nameof(SelectItemDialog.LootList)] = _lootList
+                },
+                new()
+                {
+                    FullWidth = true,
+                    MaxWidth = MudBlazor.MaxWidth.Medium
                 });
 
             if (selectedId.HasValue)

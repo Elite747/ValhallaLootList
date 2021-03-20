@@ -12,6 +12,8 @@ namespace ValhallaLootList.Client.Shared
         [CascadingParameter] public ItemLinkContext Context { get; set; } = null!;
         [Parameter] public string? Class { get; set; }
         [Parameter] public IconSize? Size { get; set; }
+        [Parameter] public int? Width { get; set; }
+        [Parameter] public int? Height { get; set; }
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
@@ -29,8 +31,18 @@ namespace ValhallaLootList.Client.Shared
                     builder.AddAttribute(1, "class", Class);
                 }
 
-                builder.AddAttribute(2, nameof(WowheadIcon.Size), Size ?? Context.IconSize ?? IconSize.Tiny);
-                builder.AddAttribute(3, nameof(WowheadIcon.IconId), Context.Item.Icon);
+                if (Width.HasValue)
+                {
+                    builder.AddAttribute(2, "width", Width);
+                }
+
+                if (Height.HasValue)
+                {
+                    builder.AddAttribute(2, "height", Height);
+                }
+
+                builder.AddAttribute(3, nameof(WowheadIcon.Size), Size ?? Context.IconSize ?? IconSize.Tiny);
+                builder.AddAttribute(4, nameof(WowheadIcon.IconId), Context.Item.Icon);
 
                 builder.CloseComponent();
             }

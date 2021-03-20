@@ -1,40 +1,38 @@
 ﻿<MudDialogScrollFix />
-<MudDialog>
+<MudDialog DisableSidePadding="true">
     <DialogContent>
         @if (Context.Items is not null)
         {
-            @foreach (var itemTypeGroup in Context.Items.Where(item => !DisallowedItems.Contains(item.Id)).GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
-            {
-                <MudCard>
-                    <MudCardContent><b>@itemTypeGroup.Key.Name</b></MudCardContent>
-                    <MudList Clickable="true" Dense="true">
-                        @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
-                        {
-                            <ItemLink Id="item.Id"
-                                        @onclick="() => Dialog.Close(DialogResult.Ok(item.Id))"
-                                        class="mud-list-item mud-list-item-gutters mud-list-item-clickable mud-ripple d-flex justify-content-between align-items-center">
-                                <span>
-                                    <ItemLinkIcon Size="IconSize.Small" />
-                                    <ItemLinkText OverrideText="@item.Name" Colorize="true" />
-                                </span>
-                                <span>
-                                    @if (LootList.MainSpec.HasValue)
-                                    {
-                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"
-                                                            SpecPrefix="@(LootList.OffSpec.HasValue ? "mainspec" : null)" />
-                                    }
+            <MudList Clickable="true" Dense="true">
+                @foreach (var itemTypeGroup in Context.Items.Where(item => !DisallowedItems.Contains(item.Id)).GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+                {
+                    <MudDivider />
+                    <MudListSubheader Class="pb-1"><b>@itemTypeGroup.Key.Name</b></MudListSubheader>
+                    @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
+                    {
+                        <ItemLink Id="item.Id"
+                                  @onclick="() => Dialog.Close(DialogResult.Ok(item.Id))"
+                                  class="mud-list-item mud-list-item-gutters mud-list-item-clickable mud-ripple d-flex align-center">
+                            <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
+                                <ItemLinkIcon Size="IconSize.Small" Width="24" Height="24" />
+                            </MudAvatar>
+                            <ItemLinkText OverrideText="@item.Name" Colorize="true" Class="mr-auto" />
+                            @if (LootList.MainSpec.HasValue)
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"
+                                                   SpecPrefix="@(LootList.OffSpec.HasValue ? "mainspec" : null)" />
+                            }
 
-                                    @if (LootList.OffSpec.HasValue)
-                                    {
-                                        <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.OffSpec.Value) != 0)"
-                                                            SpecPrefix="offspec" />
-                                    }
-                                </span>
-                            </ItemLink>
-                        }
-                    </MudList>
-                </MudCard>
-            }
+                            @if (LootList.OffSpec.HasValue)
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.OffSpec.Value) != 0)"
+                                                   SpecPrefix="offspec" />
+                            }
+                        </ItemLink>
+                    }
+                }
+
+            </MudList>
         }
     </DialogContent>
     <DialogActions>

@@ -2,16 +2,19 @@
 @inject ApiClient Api
 
 <ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
-    <h1>
-        @character.Name
-        <RaceIcon Gender="character.Gender" Race="character.Race" Size="IconSize.Large" />
-        <ClassIcon PlayerClass="character.Class" Size="IconSize.Large" />
-    </h1>
-
-    @if (character.TeamName?.Length > 0)
-    {
-        <h2><a href="teams/@character.TeamName">&lt;@character.TeamName&gt;</a></h2>
-    }
+    <div class="d-flex align-center">
+        <MudAvatar Class="mr-2" Size="Size.Medium">
+            <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
+        </MudAvatar>
+        <MudAvatar Class="mr-2" Size="Size.Medium">
+            <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
+        </MudAvatar>
+        <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@character.Name</MudText>
+        @if (character.TeamName?.Length > 0)
+        {
+            <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
+        }
+    </div>
 
     <AuthorizeView Roles="@AppRoles.Administrator">
         <AdminView Character="character" />

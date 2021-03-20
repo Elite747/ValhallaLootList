@@ -17,10 +17,17 @@ namespace ValhallaLootList.Client.Shared
 
         protected virtual string GetAltText() => GetIconId();
 
+        protected virtual bool IconReady() => true;
+
         protected override sealed void BuildRenderTree(RenderTreeBuilder builder)
         {
             builder.OpenElement(1, "img");
-            builder.AddAttribute(2, "src", GenerateSourceUri());
+
+            if (IconReady())
+            {
+                builder.AddAttribute(2, "src", GenerateSourceUri());
+            }
+
             builder.AddAttribute(3, "alt", GetAltText());
             builder.AddMultipleAttributes(4, AdditionalAttributes);
             builder.CloseElement();

@@ -17,43 +17,47 @@
         @foreach (var ch in Team.Roster.OrderByRoleThenClassThenName())
         {
             var character = ch;
-            <MudListItem>
+            <MudDivider />
+            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
                 <div class="d-flex">
-                    <div>
-                        <div>
-                            <a href="characters/@character.Name">@character.Name</a>
-                            <RaceIcon Size="IconSize.Small" Race="character.Race" Gender="character.Gender" />
-                            @if (character.CurrentPhaseMainspec.HasValue)
-                            {
-                                <SpecIcon Size="IconSize.Small" Spec="character.CurrentPhaseMainspec.Value" />
-                            }
-                            else
-                            {
-                                <ClassIcon Size="IconSize.Small" PlayerClass="character.Class" />
-                            }
-                        </div>
-                        <div>
-                            @if (character.MemberStatus == RaidMemberStatus.Member)
-                            {
-                                <MudText>Member</MudText>
-                            }
-                            else
-                            {
-                                <MudText Color="Color.Warning">Trial (@(character.MemberStatus == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
-                            }
-                        </div>
+                    <MudAvatar Class="mr-2">
+                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
+                    </MudAvatar>
+                    <MudAvatar Class="mr-5">
+                        @if (character.CurrentPhaseMainspec.HasValue)
+                        {
+                            <SpecIcon Size="IconSize.Medium" Spec="character.CurrentPhaseMainspec.Value" width="40" height="40" />
+                        }
+                        else
+                        {
+                            <ClassIcon Size="IconSize.Medium" PlayerClass="character.Class" width="40" height="40" />
+                        }
+                    </MudAvatar>
+                    <div class="mr-auto">
+                        <MudText Inline="false">
+                            <MudLink Href="@("characters/" + character.Name)">@character.Name</MudLink>
+                        </MudText>
+                        @if (character.MemberStatus == RaidMemberStatus.Member)
+                        {
+                            <MudText Inline="false">Member</MudText>
+                        }
+                        else
+                        {
+                            <MudText Inline="false" Color="Color.Warning">Trial (@(character.MemberStatus == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
+                        }
                     </div>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
-                        <MudTooltip Text="Update Member">
+                        <MudTooltip Text="Update">
                             <MudIconButton OnClick="() => UpdateMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
                         </MudTooltip>
-                        <MudTooltip Text="Remove Member">
+                        <MudTooltip Text="Remove">
                             <MudIconButton OnClick="() => RemoveMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
                         </MudTooltip>
                     </AuthorizeView>
                 </div>
             </MudListItem>
         }
+        <MudDivider />
     </MudList>
 </MudCard>
 

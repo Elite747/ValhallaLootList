@@ -6,5 +6,11 @@
         }
         mql.addEventListener('change', schemeTest);
         return interop.invokeMethodAsync('SetIsDark', mql.matches);
+    },
+    makeDialogScrollable: function (id) {
+        let element = document.getElementById(id);
+        if (element) {
+            element.classList.add('mud-dialog-scrollable');
+        }
     }
 };

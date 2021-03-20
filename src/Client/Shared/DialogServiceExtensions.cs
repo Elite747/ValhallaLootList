@@ -16,7 +16,7 @@ namespace ValhallaLootList.Client.Shared
             DialogOptions? options = null)
             where TComponent : ComponentBase
         {
-            var dialog = dialogService.Show<TComponent>(title, parameters, options);
+            var dialog = dialogService.Show<TComponent>(title, parameters ?? new(), options ?? new());
 
             var result = await dialog.Result;
 

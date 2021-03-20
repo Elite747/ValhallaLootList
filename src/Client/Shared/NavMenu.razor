@@ -1,7 +1,28 @@
-﻿<MudNavMenu Class="mud-width-full">
+﻿@inject ApiClient Api
+
+<MudNavMenu Class="mud-width-full">
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudDivider Class="my-2" />
-    <MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
-    <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
-    <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
+    <AuthorizeView>
+        <MudDivider Class="my-2" />
+        <MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
+
+        <ApiExecutor Operation="Api.Teams.GetAllTeamNames">
+            <Success Context="teams">
+                <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
+                    @foreach (var team in teams)
+                    {
+                        <MudNavLink Href="@("teams/" + team)">@team</MudNavLink>
+                    }
+                </MudNavGroup>
+            </Success>
+            <Failure>
+                <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
+            </Failure>
+            <Running>
+                <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
+            </Running>
+        </ApiExecutor>
+
+        <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
+    </AuthorizeView>
 </MudNavMenu>

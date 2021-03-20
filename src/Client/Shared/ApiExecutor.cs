@@ -23,7 +23,7 @@ namespace ValhallaLootList.Client.Shared
         [Parameter] public RenderFragment? Running { get; set; }
         [Parameter] public RenderFragment<T>? Success { get; set; }
         [Parameter] public RenderFragment<T>? ChildContent { get; set; }
-        [Parameter] public RenderFragment<ProblemDetails>? Failure { get; set; }
+        [Parameter] public RenderFragment? Failure { get; set; }
 
         protected Task? Task { get; private set; }
         protected T? Value { get; private set; }
@@ -141,7 +141,10 @@ namespace ValhallaLootList.Client.Shared
 
                 if (Failure is not null)
                 {
-                    builder.AddContent(0, Failure, problem);
+                    builder.OpenComponent<CascadingValue<ProblemDetails>>(0);
+                    builder.AddAttribute(1, nameof(CascadingValue<ProblemDetails>.Value), problem);
+                    builder.AddAttribute(2, nameof(CascadingValue<ProblemDetails>.ChildContent), Failure);
+                    builder.CloseComponent();
                 }
                 else
                 {

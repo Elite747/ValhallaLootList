@@ -203,7 +203,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> PostVerify(string id)
         {
-            var character = await FindCharacterByIdOrNameAsync(id);
+            var character = await _context.Characters.FindAsync(id);
 
             if (character is null)
             {
@@ -225,7 +225,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> SetOwner(string id, [FromBody] string ownerId)
         {
-            var character = await FindCharacterByIdOrNameAsync(id);
+            var character = await _context.Characters.FindAsync(id);
 
             if (character is null)
             {
@@ -250,7 +250,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpDelete("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> DeleteOwner(string id)
         {
-            var character = await FindCharacterByIdOrNameAsync(id);
+            var character = await _context.Characters.FindAsync(id);
 
             if (character is null)
             {
@@ -268,7 +268,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpDelete("{id}"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> Delete(string id)
         {
-            var character = await FindCharacterByIdOrNameAsync(id);
+            var character = await _context.Characters.FindAsync(id);
 
             if (character is null)
             {
@@ -280,11 +280,6 @@ namespace ValhallaLootList.Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
-        }
-
-        private async Task<Character?> FindCharacterByIdOrNameAsync(string idOrName, CancellationToken cancellationToken = default)
-        {
-            return await _context.Characters.AsTracking().FirstOrDefaultAsync<Character>(c => c.Id == idOrName || c.Name.Equals(idOrName, StringComparison.OrdinalIgnoreCase), cancellationToken);
         }
 
         private static string NormalizeName(string name)

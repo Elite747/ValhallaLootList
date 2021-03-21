@@ -20,7 +20,14 @@
                         <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
                     </MudAvatar>
                     <MudAvatar Class="mr-5">
-                        <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
+                        @if (attendance.MainSpec.HasValue)
+                        {
+                            <SpecIcon Spec="attendance.MainSpec.Value" Size="IconSize.Medium" width="40" height="40" />
+                        }
+                        else
+                        {
+                            <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
+                        }
                     </MudAvatar>
                     <div class="mr-auto">
                         <MudText Inline="false">@character.Name</MudText>

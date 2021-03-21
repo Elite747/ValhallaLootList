@@ -90,6 +90,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
+                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec,
                     Character = new CharacterDto
                     {
                         Class = a.Character.Class,
@@ -245,6 +246,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
+                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec,
                     Character = new CharacterDto
                     {
                         Id = a.CharacterId,
@@ -330,10 +332,17 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var spec = await _context.CharacterLootLists
+                .AsNoTracking()
+                .Where(ll => ll.Phase == raid.Phase && ll.CharacterId == character.Id)
+                .Select(ll => (Specializations?)ll.MainSpec)
+                .FirstOrDefaultAsync();
+
             return new AttendanceDto
             {
                 IgnoreAttendance = attendee.IgnoreAttendance,
                 IgnoreReason = attendee.IgnoreReason,
+                MainSpec = spec,
                 Character = new CharacterDto
                 {
                     Class = character.Class,

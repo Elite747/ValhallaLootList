@@ -10,5 +10,7 @@ namespace ValhallaLootList.DataTransfer
         public bool IgnoreAttendance { get; set; }
 
         public string? IgnoreReason { get; set; }
+
+        public Specializations? MainSpec { get; set; }
     }
 }

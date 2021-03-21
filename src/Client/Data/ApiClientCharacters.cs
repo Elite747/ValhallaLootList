@@ -38,6 +38,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<CharacterSubmissionDto, CharacterDto>(HttpMethod.Put, "api/v1/characters/" + id, character);
         }
 
+        public IApiClientOperation Delete(string id)
+        {
+            return Client.CreateRequest(HttpMethod.Delete, "api/v1/characters/" + id);
+        }
+
         public IApiClientOperation<CharacterOwnerDto> GetOwner(string id)
         {
             return Client.CreateRequest<CharacterOwnerDto>(HttpMethod.Get, "api/v1/characters/" + id + "/owner");

@@ -320,6 +320,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (await _context.Drops.CountAsync(d => d.WinnerId == id || d.WinningEntry!.LootList.CharacterId == id) > 0)
+            {
+                return Problem("Can't delete a character who has already won loot.");
+            }
+
             _context.Characters.Remove(character);
 
             await _context.SaveChangesAsync();

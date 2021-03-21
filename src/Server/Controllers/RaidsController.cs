@@ -347,6 +347,36 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
+        [HttpPut("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<AttendanceDto>> PutAttendee(string id, string characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
+        {
+            var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
+
+            if (attendee is null)
+            {
+                return NotFound();
+            }
+
+            if (dto.IgnoreAttendance)
+            {
+                attendee.IgnoreAttendance = true;
+                attendee.IgnoreReason = dto.IgnoreReason;
+            }
+            else
+            {
+                attendee.IgnoreAttendance = false;
+                attendee.IgnoreReason = null;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new AttendanceDto
+            {
+                IgnoreAttendance = attendee.IgnoreAttendance,
+                IgnoreReason = attendee.IgnoreReason
+            };
+        }
+
         [HttpDelete("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> DeleteAttendee(string id, string characterId)
         {

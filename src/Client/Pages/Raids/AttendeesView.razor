@@ -31,7 +31,7 @@
                     </div>
                     <AuthorizeView Roles="@AppRoles.RaidLeader">
                         <MudTooltip Text="Edit">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
                         </MudTooltip>
                         @if (!Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
                         {
@@ -73,6 +73,14 @@
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
+    }
+
+    private Task OnEditClickedAsync(AttendanceDto attendance)
+    {
+        return DialogService.Show<UpdateAttendanceDialog>(
+            "Update Attendance",
+            new() { [nameof(UpdateAttendanceDialog.Attendance)] = attendance, [nameof(UpdateAttendanceDialog.Raid)] = Raid },
+            new() { MaxWidth = MaxWidth.ExtraSmall }).Result;
     }
 
     private Task AddRosteredAsync()

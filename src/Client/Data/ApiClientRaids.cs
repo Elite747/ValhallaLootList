@@ -53,6 +53,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId });
         }
 
+        public IApiClientOperation<AttendanceDto> UpdateAttendee(string raidId, string characterId, UpdateAttendanceSubmissionDto dto)
+        {
+            return Client.CreateRequest<UpdateAttendanceSubmissionDto, AttendanceDto>(HttpMethod.Put, $"api/v1/raids/{raidId}/attendees/{characterId}", dto);
+        }
+
         public IApiClientOperation RemoveAttendee(string raidId, string characterId)
         {
             return Client.CreateRequest<AttendeeSubmissionDto>(HttpMethod.Delete, $"api/v1/raids/{raidId}/attendees/{characterId}");

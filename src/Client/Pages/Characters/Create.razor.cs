@@ -32,7 +32,7 @@ namespace ValhallaLootList.Client.Pages.Characters
 
         private Task OnSubmit()
         {
-            return Api.Characters.Create(_character)
+            return (EditingCharacter is null ? Api.Characters.Create(_character) : Api.Characters.Update(EditingCharacter.Id, _character))
                 .OnSuccess(character => Dialog.Close(DialogResult.Ok(character)))
                 .ValidateWith(_problemValidator)
                 .ExecuteAsync();

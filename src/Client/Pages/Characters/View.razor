@@ -1,5 +1,6 @@
 ﻿@page "/Characters/{character}"
 @inject ApiClient Api
+@inject IDialogService DialogService
 
 <ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
     <div class="d-flex align-center">
@@ -14,6 +15,11 @@
         {
             <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
         }
+        <AuthorizeView Roles="@AppRoles.Administrator">
+            <MudTooltip Text="Edit">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(character)" />
+            </MudTooltip>
+        </AuthorizeView>
     </div>
 
     <AuthorizeView Roles="@AppRoles.Administrator">
@@ -36,4 +42,18 @@
 
 @code {
     [Parameter] public string Character { get; set; } = string.Empty;
+
+    private async Task EditAsync(CharacterDto character)
+    {
+        var updatedCharacter = await DialogService.ShowAsync<Create, CharacterDto>(
+            "Edit Character",
+            parameters: new() { [nameof(Create.EditingCharacter)] = character },
+            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (updatedCharacter is not null)
+        {
+            character.Name = updatedCharacter.Name;
+            character.Race = updatedCharacter.Race;
+            character.Gender = updatedCharacter.Gender;
+        }
+    }
 }

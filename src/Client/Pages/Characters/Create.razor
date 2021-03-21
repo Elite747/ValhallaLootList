@@ -31,7 +31,8 @@
             <MudSelect Label="Class"
                        Class="mt-3"
                        @bind-Value="_character.Class"
-                       For="() => _character.Class">
+                       For="() => _character.Class"
+                       Disabled="EditingCharacter is not null">
                 @foreach (var playerClass in _raceClasses)
                 {
                     <MudSelectItem T="Classes?" Value="@playerClass">@playerClass</MudSelectItem>
@@ -49,9 +50,18 @@
     private ProblemValidator? _problemValidator;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public CharacterDto? EditingCharacter { get; set; }
 
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+
+        if (EditingCharacter is not null)
+        {
+            _character.Class = EditingCharacter.Class;
+            _character.Gender = EditingCharacter.Gender;
+            _character.Name = EditingCharacter.Name;
+            _character.Race = EditingCharacter.Race;
+        }
     }
 }

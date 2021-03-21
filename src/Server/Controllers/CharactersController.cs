@@ -162,6 +162,51 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
+        [HttpPut("{id}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<CharacterDto>> Put(string id, [FromBody] CharacterSubmissionDto dto)
+        {
+            var character = await _context.Characters.FindAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            if (character.Class != dto.Class)
+            {
+                ModelState.AddModelError(nameof(dto.Class), "Can't change the class of a character.");
+                return ValidationProblem();
+            }
+
+            if (dto.Name?.Length > 0)
+            {
+                character.Name = dto.Name;
+            }
+
+            if (dto.Race.HasValue)
+            {
+                character.Race = dto.Race.Value;
+            }
+
+            if (dto.Gender.HasValue)
+            {
+                character.IsMale = dto.Gender == Gender.Male;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new CharacterDto
+            {
+                Class = character.Class,
+                Id = character.Id,
+                Name = character.Name,
+                Race = character.Race,
+                Gender = character.IsMale ? Gender.Male : Gender.Female,
+                Editable = User.IsAdmin() || character.OwnerId == User.GetDiscordId(),
+                TeamId = character.TeamId
+            };
+        }
+
         [HttpGet("{id}/Owner"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult<CharacterOwnerDto>> GetOwner(string id, [FromServices] DiscordService discordService)
         {

@@ -4,7 +4,7 @@
 @inject ISnackbar Snackbar
 
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
-    <MudCard Class="my-3">
+    <MudCard Class="mb-3">
         <MudCardContent>
             @if (owner.Owner is null)
             {

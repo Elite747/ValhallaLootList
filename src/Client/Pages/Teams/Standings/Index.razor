@@ -4,7 +4,7 @@
 <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
     <ApiExecutor Operation="() => Api.LootLists.GetForTeam(team.Id)" Context="lootLists" @ref="_executor">
         <CascadingValue Value="lootLists">
-            <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" OnRefresh="() => _executor?.RestartAsync()" />
+            <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" OnRefresh="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
         </CascadingValue>
     </ApiExecutor>
 </ApiExecutor>

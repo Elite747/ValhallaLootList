@@ -16,7 +16,7 @@
                         <GuildMemberDisplay Member="member" />
                     </ItemTemplate>
                 </MudAutocomplete>
-                <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
             </div>
         </ApiExecutor>
     </DialogContent>

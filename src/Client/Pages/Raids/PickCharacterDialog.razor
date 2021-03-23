@@ -16,7 +16,7 @@
                         <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
                     </ItemTemplate>
                 </MudAutocomplete>
-                <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
                 @if (ShowAdd)
                 {
                     <MudIconButton OnClick="() => AddAsync(characters)" Color="Color.Success" Icon="@Icons.Material.Filled.Add" />

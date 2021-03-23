@@ -9,7 +9,7 @@
         <MudList Clickable="true">
             <MudListSubheader Class="d-flex align-baseline">
                 <MudTooltip Text="Refresh Teams">
-                    <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
                 </MudTooltip>
 
                 <AuthorizeView Roles="@AppRoles.Administrator">

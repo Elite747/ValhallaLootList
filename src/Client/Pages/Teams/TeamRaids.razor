@@ -7,7 +7,7 @@
         </CardHeaderContent>
         <CardHeaderActions>
             <AuthorizeLeaderView TeamId="@Team.Id">
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync()" />
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
             </AuthorizeLeaderView>
         </CardHeaderActions>
     </MudCardHeader>

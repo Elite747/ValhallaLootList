@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -24,36 +23,52 @@ namespace ValhallaLootList.Client.Shared
         [Parameter] public RenderFragment<T>? Success { get; set; }
         [Parameter] public RenderFragment<T>? ChildContent { get; set; }
         [Parameter] public RenderFragment? Failure { get; set; }
+        [Parameter] public bool BackgroundRefresh { get; set; }
 
         protected Task? Task { get; private set; }
         protected T? Value { get; private set; }
         protected ProblemDetails? Problem { get; private set; }
 
-        public ValueTask StartAsync()
+        public Task StartAsync()
         {
             if (Task is null)
             {
-                SetTask();
+                (Task, _cts) = CreateNewTask();
+                StateHasChanged();
             }
 
-            return new(Task);
+            return Task;
         }
 
-        public ValueTask RestartAsync()
+        public Task RestartAsync()
         {
-            Reset();
-            return StartAsync();
+            if (BackgroundRefresh && Task?.Status == TaskStatus.RanToCompletion && Value is not null)
+            {
+                return BackgroundRestartAsync();
+            }
+            else
+            {
+                Reset(true);
+                return StartAsync();
+            }
         }
 
-        public void Reset()
+        private Task BackgroundRestartAsync()
         {
-            _cts?.Cancel();
+            var (task, cts) = CreateNewTask();
+
             _cts?.Dispose();
-            _cts = null;
-            Task = null;
-            Problem = null;
-            Value = default;
-            StateHasChanged();
+            _cts = cts;
+
+            task.ContinueWith(
+                task =>
+                {
+                    Task = task;
+                    StateHasChanged();
+                },
+                TaskContinuationOptions.ExecuteSynchronously);
+
+            return task;
         }
 
         public void Dispose()
@@ -79,7 +94,7 @@ namespace ValhallaLootList.Client.Shared
             if (ExecuteOnInitialized)
             {
                 Debug.Assert(Task is null);
-                SetTask();
+                (Task, _cts) = CreateNewTask();
             }
         }
 
@@ -166,23 +181,37 @@ namespace ValhallaLootList.Client.Shared
             {
                 if (disposing)
                 {
-                    Reset();
+                    Reset(false);
                 }
 
                 _disposedValue = true;
             }
         }
 
-        [MemberNotNull(nameof(Task), nameof(_cts))]
-        private void SetTask()
+        private void Reset(bool updateState)
         {
-            _cts = new();
-            Task = ConfigureOperation(Operation())
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
+            Task = null;
+            Problem = null;
+            Value = default;
+
+            if (updateState)
+            {
+                StateHasChanged();
+            }
+        }
+
+        private (Task, CancellationTokenSource) CreateNewTask()
+        {
+            var cts = new CancellationTokenSource();
+            var task = ConfigureOperation(Operation())
                 .OnSuccess(value => Value = value)
                 .OnFailure(problem => Problem = problem)
-                .ExecuteAsync(_cts.Token);
-            Task.ContinueWith(_ => StateHasChanged(), TaskContinuationOptions.ExecuteSynchronously);
-            StateHasChanged();
+                .ExecuteAsync(cts.Token);
+            task.ContinueWith(_ => StateHasChanged(), TaskContinuationOptions.ExecuteSynchronously);
+            return (task, cts);
         }
     }
 }

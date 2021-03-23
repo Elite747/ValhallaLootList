@@ -17,7 +17,7 @@
                               AdornmentIcon="@Icons.Filled.Search" />
 
                 <MudTooltip Text="Refresh Characters">
-                    <MudIconButton OnClick="() => _executor?.RestartAsync()" Icon="@Icons.Material.Filled.Refresh" />
+                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
                 </MudTooltip>
 
                 <AuthorizeView Context="auth">

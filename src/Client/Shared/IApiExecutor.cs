@@ -7,8 +7,7 @@ namespace ValhallaLootList.Client.Shared
 {
     public interface IApiExecutor
     {
-        void Reset();
-        ValueTask RestartAsync();
-        ValueTask StartAsync();
+        Task RestartAsync();
+        Task StartAsync();
     }
 }

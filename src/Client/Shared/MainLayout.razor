@@ -2,7 +2,11 @@
 @inject LocalStorageService LocalStorage
 
 <MudThemeProvider Theme="GetTheme()" />
-<MudDialogProvider />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.Small"
+                   Position="DialogPosition.Center"
+                   DisableBackdropClick="false"
+                   NoHeader="false" />
 <MudSnackbarProvider />
 <ThemeInterop ThemeChanged="SystemThemeChanged" />
 

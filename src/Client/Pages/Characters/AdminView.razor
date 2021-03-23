@@ -46,14 +46,21 @@
 
     private async Task SetOwnerAsync()
     {
-        if (await DialogService.ShowAsync<SetOwnerDialog, bool>(
-            "Verify Owner",
-            parameters: new()
+        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = Api.Members.GetAll;
+        var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
+            "Select Member",
+            new()
             {
-                [nameof(SetOwnerDialog.Character)] = Character
-            }))
+                [nameof(PickGuildMemberDialog.Operation)] = operation
+            },
+            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+
+        if (result is not null)
         {
-            // TODO
+            await Api.Characters.SetOwner(Character.Id, result.Id.ToString())
+                .OnSuccess((_,_) => _executor?.RestartAsync().AsTask() ?? Task.CompletedTask)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
         }
     }
 

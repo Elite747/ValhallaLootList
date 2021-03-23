@@ -5,7 +5,6 @@
 @inject ISnackbar Snackbar
 
 <EditForm OnValidSubmit="OnSubmit" Model="_lootList" class="m-4">
-    <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />
     <CustomValidator @ref="_bracketValidator" />
@@ -50,6 +49,8 @@
                                Model="_lootList"
                                SelectionRequested="OnSelectionRequestedAsync" />
         }
+
+        <MudValidationSummary Class="mb-1" />
 
         <div>
             <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Submit</MudButton>

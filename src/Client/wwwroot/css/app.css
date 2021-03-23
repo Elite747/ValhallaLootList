@@ -141,3 +141,10 @@
         display: flex;
         flex-direction: column;
     }
+
+.fab-container-fixed {
+    bottom: 16px;
+    right: 16px;
+    position: fixed;
+    z-index: 100;
+}

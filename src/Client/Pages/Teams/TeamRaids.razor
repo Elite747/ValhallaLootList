@@ -6,9 +6,9 @@
             <MudText Typo="Typo.h6">Recent Raids</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <AuthorizeView Roles="@AppRoles.RaidLeader">
+            <AuthorizeLeaderView TeamId="@Team.Id">
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync()" />
-            </AuthorizeView>
+            </AuthorizeLeaderView>
         </CardHeaderActions>
     </MudCardHeader>
     <ApiExecutor Operation="() => Api.Raids.GetRecentForTeam(Team.Id)" Context="raids" @ref="_executor">

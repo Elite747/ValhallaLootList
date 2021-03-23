@@ -64,9 +64,11 @@ namespace ValhallaLootList.Server
                     var claims = options.IdentityResources["openid"].UserClaims;
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
+                    claims.Add(AppClaimTypes.RaidLeader);
                     claims = options.ApiResources.Single().UserClaims;
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
+                    claims.Add(AppClaimTypes.RaidLeader);
                 })
                 .AddProfileService<IdentityProfileService>();
 

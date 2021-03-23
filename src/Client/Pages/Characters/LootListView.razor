@@ -21,9 +21,9 @@ else if (_lootList is not null)
                 {
                     <MudButton OnClick="() => _createList = true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Primary">Edit List</MudButton>
                 }
-                <AuthorizeView Roles="@AppRoles.RaidLeader">
+                <AuthorizeLeaderView TeamId="@_lootList.TeamId">
                     <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error">Lock List</MudButton>
-                </AuthorizeView>
+                </AuthorizeLeaderView>
             }
         </MudListSubheader>
         <MudDivider DividerType="DividerType.Middle" Class="my-6" />

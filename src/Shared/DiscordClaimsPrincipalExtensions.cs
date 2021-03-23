@@ -43,7 +43,17 @@ namespace ValhallaLootList
 
         public static long? GetDiscordId(this ClaimsPrincipal principal)
         {
-            if (long.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var result))
+            return GetDiscordId(principal, ClaimTypes.NameIdentifier);
+        }
+
+        public static long? GetDiscordIdFromClient(this ClaimsPrincipal principal)
+        {
+            return GetDiscordId(principal, "sub");
+        }
+
+        private static long? GetDiscordId(this ClaimsPrincipal principal, string claim)
+        {
+            if (long.TryParse(principal.FindFirst(claim)?.Value, out var result))
             {
                 return result;
             }

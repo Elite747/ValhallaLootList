@@ -1,0 +1,17 @@
+﻿<AuthorizeView Context="auth" Roles="@(LootMaster ? (AppRoles.LootMaster + "," + AppRoles.RaidLeader) : AppRoles.RaidLeader)">
+    @if (auth.User.HasClaim(AppClaimTypes.RaidLeader, TeamId))
+    {
+        @ChildContent
+    }
+</AuthorizeView>
+
+@code {
+    [Parameter] public string TeamId { get; set; } = null!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool LootMaster { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (TeamId is null) throw new ArgumentNullException(nameof(TeamId));
+    }
+}

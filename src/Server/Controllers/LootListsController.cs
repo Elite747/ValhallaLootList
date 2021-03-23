@@ -446,6 +446,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (!User.IsAdmin())
+            {
+                var teamId = await _context.Characters.Where(c => c.Id == characterId).Select(c => c.TeamId).FirstAsync();
+
+                if (string.IsNullOrEmpty(teamId) || !User.HasClaim(AppClaimTypes.RaidLeader, teamId))
+                {
+                    return Unauthorized();
+                }
+            }
+
             if (list.Locked)
             {
                 return Problem("Loot list is already locked.", statusCode: 400);

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Server.Discord
 {
@@ -44,6 +45,28 @@ namespace ValhallaLootList.Server.Discord
 
             _client = client;
             _memoryCache = memoryCache;
+        }
+
+        public async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id)
+        {
+            if (id.HasValue)
+            {
+                var guildMember = await GetMemberAsync(id.Value);
+
+                if (guildMember?.User is not null)
+                {
+                    return new GuildMemberDto
+                    {
+                        Discriminator = guildMember.User.Discriminator,
+                        Id = guildMember.User.Id,
+                        Nickname = guildMember.Nickname,
+                        Username = guildMember.User.Username,
+                        Avatar = guildMember.User.Avatar
+                    };
+                }
+            }
+
+            return null;
         }
 
         public async Task<GuildMemberInfo?> GetMemberInfoAsync(long memberId, CancellationToken cancellationToken = default)

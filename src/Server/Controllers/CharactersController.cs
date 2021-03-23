@@ -219,30 +219,9 @@ namespace ValhallaLootList.Server.Controllers
 
             return new CharacterOwnerDto
             {
-                Owner = await GetGuildMemberDtoAsync(character.OwnerId, discordService),
-                VerifiedBy = await GetGuildMemberDtoAsync(character.VerifiedById, discordService)
+                Owner = await discordService.GetGuildMemberDtoAsync(character.OwnerId),
+                VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
             };
-        }
-
-        private static async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id, DiscordService discordService)
-        {
-            if (id.HasValue)
-            {
-                var guildMember = await discordService.GetMemberAsync(id.Value);
-
-                if (guildMember?.User is not null)
-                {
-                    return new GuildMemberDto
-                    {
-                        Discriminator = guildMember.User.Discriminator,
-                        Id = guildMember.User.Id,
-                        Nickname = guildMember.Nickname,
-                        Username = guildMember.User.Username
-                    };
-                }
-            }
-
-            return null;
         }
 
         [HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]

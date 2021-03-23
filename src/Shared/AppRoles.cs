@@ -38,7 +38,7 @@ namespace ValhallaLootList
 
             options.AddPolicy(LootMaster, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, LootMaster)
+                .RequireClaim(AppClaimTypes.Role, LootMaster, RaidLeader)
                 .Build());
         }
     }

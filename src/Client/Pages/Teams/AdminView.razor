@@ -1,0 +1,75 @@
+﻿@inject ApiClient Api
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudCard Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Leaders</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <ApiExecutor Operation="() => Api.Teams.GetLeaders(Team.Id)" Context="leaders">
+        <MudList Dense="true">
+            @foreach (var leader in leaders)
+            {
+                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+                    <div class="d-flex align-center">
+                        <MudAvatar Class="mr-2">
+                            <GuildMemberAvatar Member="leader" Size="40" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.h6" Class="mr-auto">
+                            <GuildMemberDisplay Member="leader" />
+                        </MudText>
+                        <MudTooltip Text="Remove">
+                            <MudIconButton OnClick="() => RemoveLeaderAsync(leaders, leader)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                        </MudTooltip>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+        <MudCardActions>
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => AddLeaderAsync(leaders)">
+                Add Leader
+            </MudButton>
+        </MudCardActions>
+    </ApiExecutor>
+</MudCard>
+
+@code {
+    [Parameter] public TeamDto Team { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+
+    private async Task AddLeaderAsync(IList<GuildMemberDto> leaders)
+    {
+        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = () => Api.Members.GetInRoles(AppRoles.RaidLeader, AppRoles.LootMaster);
+        Func<GuildMemberDto, bool> filter = member => !leaders.Any(m2 => m2.Id == member.Id);
+        var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
+            "Select Member",
+            new()
+            {
+                [nameof(PickGuildMemberDialog.Operation)] = operation,
+                [nameof(PickGuildMemberDialog.Filter)] = filter
+            },
+            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+
+        if (result is not null)
+        {
+            await Api.Teams.AddLeader(Team.Id, result.Id.ToString())
+                .OnSuccess(member => leaders.Add(member))
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private Task RemoveLeaderAsync(IList<GuildMemberDto> leaders, GuildMemberDto leader)
+    {
+        return Api.Teams.RemoveLeader(Team.Id, leader.Id.ToString())
+            .OnSuccess(_ => leaders.Remove(leader))
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+}

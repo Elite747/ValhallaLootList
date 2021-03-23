@@ -42,5 +42,20 @@ namespace ValhallaLootList.Client.Data
         {
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/teams/{teamId}/members/{characterId}");
         }
+
+        public IApiClientOperation<IList<GuildMemberDto>> GetLeaders(string teamId)
+        {
+            return Client.CreateRequest<IList<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");
+        }
+
+        public IApiClientOperation<GuildMemberDto> AddLeader(string teamId, string userId)
+        {
+            return Client.CreateRequest<GuildMemberDto>(HttpMethod.Post, "api/v1/teams/" + teamId + "/leaders/" + userId);
+        }
+
+        public IApiClientOperation RemoveLeader(string teamId, string userId)
+        {
+            return Client.CreateRequest(HttpMethod.Delete, "api/v1/teams/" + teamId + "/leaders/" + userId);
+        }
     }
 }

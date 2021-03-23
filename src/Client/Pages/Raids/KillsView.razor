@@ -13,8 +13,9 @@
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</MudText>
             @if (kill.Drops.All(drop => drop.WinnerId is null))
             {
-                var encounterId = kill.EncounterId;
-                <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(encounterId)">Delete</MudButton>
+                <AuthorizeLeaderView TeamId="@Raid.TeamId">
+                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(localKill.EncounterId)">Delete</MudButton>
+                </AuthorizeLeaderView>
             }
         </MudCardContent>
         <MudList>
@@ -33,7 +34,7 @@
                             </ItemLink>
                             <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
                         </div>
-                        <AuthorizeView Roles="@AppRoles.LootMaster">
+                        <AuthorizeLeaderView TeamId="@Raid.TeamId">
                             @if (drop.WinnerId is null)
                             {
                                 <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
@@ -42,7 +43,7 @@
                             {
                                 <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
                             }
-                        </AuthorizeView>
+                        </AuthorizeLeaderView>
                     </div>
                 </MudListItem>
             }
@@ -50,7 +51,7 @@
     </MudCard>
 }
 
-<AuthorizeView Roles="@AppRoles.LootMaster">
+<AuthorizeLeaderView TeamId="@Raid.TeamId">
     <MudButton OnClick="AddClickedAsync"
                StartIcon="@Icons.Material.Filled.Add"
                Variant="Variant.Filled"
@@ -69,7 +70,7 @@
             Delete Raid
         </MudButton>
     }
-</AuthorizeView>
+</AuthorizeLeaderView>
 
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;

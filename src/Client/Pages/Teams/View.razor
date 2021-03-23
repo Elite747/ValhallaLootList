@@ -13,12 +13,17 @@
 
     <div class="d-flex">
         <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
-        <AuthorizeView Roles="@AppRoles.RaidLeader">
+        <AuthorizeLeaderView TeamId="@team.Id">
             <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
-        </AuthorizeView>
+        </AuthorizeLeaderView>
     </div>
 
     <MudGrid Class="mt-5">
+        <AuthorizeView Roles="@AppRoles.Administrator">
+            <MudItem xs="12">
+                <AdminView Team="team" />
+            </MudItem>
+        </AuthorizeView>
         <MudItem xs="12" md="6">
             <TeamMembers Team="team" />
         </MudItem>

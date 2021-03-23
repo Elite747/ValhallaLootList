@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using IdentityServer4.EntityFramework.Entities;
@@ -55,6 +56,12 @@ namespace ValhallaLootList.Server.Data
         {
             var now = DateTime.UtcNow;
             return PhaseDetails.AsNoTracking().Where(pd => pd.StartsAtUtc <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsLeaderOf(ClaimsPrincipal user, string teamId)
+        {
+            var userId = user.GetAppUserId();
+            return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamId) > 0;
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

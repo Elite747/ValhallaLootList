@@ -7,10 +7,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -146,6 +148,11 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("{id}/members"), Authorize(AppRoles.RaidLeader)]
         public async Task<ActionResult<TeamCharacterDto>> PostMember(string id, [FromBody] AddTeamMemberDto dto)
         {
+            if (!await _context.IsLeaderOf(User, id))
+            {
+                return Unauthorized();
+            }
+
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
                 return NotFound();
@@ -187,6 +194,11 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
         public async Task<IActionResult> PutMember(string id, string characterId, [FromBody] UpdateTeamMemberDto dto)
         {
+            if (!await _context.IsLeaderOf(User, id))
+            {
+                return Unauthorized();
+            }
+
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
                 return NotFound();
@@ -214,6 +226,11 @@ namespace ValhallaLootList.Server.Controllers
         [HttpDelete("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
         public async Task<IActionResult> DeleteMember(string id, string characterId)
         {
+            if (!await _context.IsLeaderOf(User, id))
+            {
+                return Unauthorized();
+            }
+
             if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
             {
                 return NotFound();
@@ -242,6 +259,76 @@ namespace ValhallaLootList.Server.Controllers
             await _context.SaveChangesAsync();
 
             return Accepted();
+        }
+
+        [HttpGet("{id}/leaders"), Authorize(AppRoles.Administrator)]
+        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
+        {
+            await foreach (var userId in _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.ClaimValue == id && claim.ClaimType == AppClaimTypes.RaidLeader)
+                .Select(claim => claim.UserId)
+                .AsAsyncEnumerable())
+            {
+                if (long.TryParse(userId, out var discordId))
+                {
+                    var guildMember = await discordService.GetGuildMemberDtoAsync(discordId);
+
+                    if (guildMember is not null)
+                    {
+                        yield return guildMember;
+                    }
+                }
+            }
+        }
+
+        [HttpPost("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(string id, string userId, [FromServices] DiscordService discordService)
+        {
+            if (await _context.RaidTeams.CountAsync(team => team.Id == id) == 0)
+            {
+                return NotFound();
+            }
+
+            if (await _context.Users.CountAsync(user => user.Id == userId) == 0)
+            {
+                return NotFound();
+            }
+
+            if (!long.TryParse(userId, out var discordId))
+            {
+                return Problem("Couldn't parse User ID.");
+            }
+
+            var guildMember = await discordService.GetGuildMemberDtoAsync(discordId);
+
+            if (guildMember is null)
+            {
+                return Problem("Couldn't locate the corresponding discord user.");
+            }
+
+            if (await _context.UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id) > 0)
+            {
+                return Problem("User is already a leader of this team.");
+            }
+
+            _context.UserClaims.Add(new IdentityUserClaim<string> { UserId = userId, ClaimType = AppClaimTypes.RaidLeader, ClaimValue = id });
+            await _context.SaveChangesAsync();
+
+            return guildMember;
+        }
+
+        [HttpDelete("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
+        public async Task<IActionResult> DeleteLeader(string id, string userId)
+        {
+            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id);
+
+            if (claim is null) return NotFound();
+
+            _context.UserClaims.Remove(claim);
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

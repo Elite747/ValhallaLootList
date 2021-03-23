@@ -20,7 +20,12 @@
                 @discordName<span class="font-weight-light text-muted">#@context.User.GetDiscordDiscriminator()</span>
             }
         </MudHidden>
-        <MudAvatar Image="@context.User.GetDiscordAvatarUrl()?.OriginalString" Class="mx-1" Color="Color.Transparent" />
+        <MudAvatar Class="mx-1" Color="Color.Transparent">
+            <GuildMemberAvatar Id="context.User.GetDiscordIdFromClient()"
+                               AvatarHash="@context.User.GetDiscordAvatarHash()"
+                               Discriminator="context.User.GetDiscordDiscriminator()"
+                               Size="40" />
+        </MudAvatar>
         <MudButton OnClick="BeginSignOut" Variant="Variant.Text" Color="Color.Inherit">Log out</MudButton>
     </Authorized>
     <NotAuthorized>

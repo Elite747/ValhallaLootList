@@ -189,6 +189,11 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
+            if (!await _context.IsLeaderOf(User, team.Id))
+            {
+                return Unauthorized();
+            }
+
             var raid = new Raid
             {
                 Phase = (byte)dto.Phase,
@@ -277,6 +282,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
+            }
+
             if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id) > 0)
             {
                 return Problem("Can't delete a raid with recorded kills.");
@@ -297,6 +307,11 @@ namespace ValhallaLootList.Server.Controllers
             if (raid is null)
             {
                 return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
             }
 
             var character = await _context.Characters.FindAsync(dto.CharacterId);
@@ -359,6 +374,18 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<AttendanceDto>> PutAttendee(string id, string characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
         {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
+            }
+
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
 
             if (attendee is null)
@@ -389,6 +416,18 @@ namespace ValhallaLootList.Server.Controllers
         [HttpDelete("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> DeleteAttendee(string id, string characterId)
         {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
+            }
+
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
 
             if (attendee is null)
@@ -423,6 +462,11 @@ namespace ValhallaLootList.Server.Controllers
             if (raid is null)
             {
                 return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
             }
 
             var encounter = await _context.Encounters
@@ -538,6 +582,18 @@ namespace ValhallaLootList.Server.Controllers
         [HttpDelete("{id}/Kills/{encounterId}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult> DeleteKill(string id, string encounterId)
         {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            {
+                return Unauthorized();
+            }
+
             var kill = await _context.EncounterKills.FindAsync(encounterId, id);
 
             if (kill is null)

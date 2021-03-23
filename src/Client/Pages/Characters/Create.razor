@@ -38,6 +38,15 @@
                     <MudSelectItem T="Classes?" Value="@playerClass">@playerClass</MudSelectItem>
                 }
             </MudSelect>
+            @if (AllowSubmitNonOwned)
+            {
+                <MudTooltip Text="When unchecked, this indicates that this character is not owned by you. Uncheck this if you are adding a character on someone's behalf."
+                            Class="mt-3">
+                    <MudCheckBox @bind-Checked="_character.SenderIsOwner"
+                                 Label="This character is mine"
+                                 For="() => _character.SenderIsOwner" />
+                </MudTooltip>
+            }
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
@@ -51,6 +60,8 @@
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public CharacterDto? EditingCharacter { get; set; }
+    [Parameter] public bool AllowSubmitNonOwned { get; set; }
+    [Parameter] public bool DefaultSenderIsOwner { get; set; } = true;
 
     protected override void OnParametersSet()
     {
@@ -63,5 +74,7 @@
             _character.Name = EditingCharacter.Name;
             _character.Race = EditingCharacter.Race;
         }
+
+        _character.SenderIsOwner = DefaultSenderIsOwner;
     }
 }

@@ -18,5 +18,7 @@ namespace ValhallaLootList.DataTransfer
 
         [Required]
         public Gender? Gender { get; set; }
+
+        public bool SenderIsOwner { get; set; } = true;
     }
 }

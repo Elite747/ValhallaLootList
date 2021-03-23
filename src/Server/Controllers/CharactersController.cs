@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -135,18 +134,24 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            var currentUserId = User.GetDiscordId();
-
             var character = new Character
             {
                 Class = dto.Class.Value,
                 MemberStatus = RaidMemberStatus.FullTrial,
-                VerifiedById = User.IsAdmin() ? currentUserId : null,
                 Name = normalizedName,
                 Race = dto.Race.Value,
-                IsMale = dto.Gender == Gender.Male,
-                OwnerId = currentUserId
+                IsMale = dto.Gender == Gender.Male
             };
+
+            if (dto.SenderIsOwner)
+            {
+                character.OwnerId = User.GetDiscordId();
+
+                if (User.IsAdmin())
+                {
+                    character.VerifiedById = character.OwnerId;
+                }
+            }
 
             _context.Characters.Add(character);
 

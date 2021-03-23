@@ -21,14 +21,8 @@ namespace ValhallaLootList.Client.Pages.Characters
             [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior }
         };
 
-        private readonly CharacterSubmissionDto _character;
-        private Classes[] _raceClasses;
-
-        public Create()
-        {
-            _character = new();
-            _raceClasses = Array.Empty<Classes>();
-        }
+        private readonly CharacterSubmissionDto _character = new();
+        private Classes[] _raceClasses = Array.Empty<Classes>();
 
         private Task OnSubmit()
         {

@@ -68,6 +68,11 @@
     {
         var character = await DialogService.ShowAsync<Pages.Characters.Create, CharacterDto>(
             "Create Character",
+            parameters: new() 
+            {
+                [nameof(Pages.Characters.Create.AllowSubmitNonOwned)] = true,
+                [nameof(Pages.Characters.Create.DefaultSenderIsOwner)] = false
+            },
             options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (character is not null)

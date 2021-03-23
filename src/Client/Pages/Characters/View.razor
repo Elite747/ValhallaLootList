@@ -33,19 +33,41 @@
 
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
         <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4" @ref="_tabs" @bind-ActivePanelIndex="ActivePanelIndex">
+                @{ var index = 0;  }
                 @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
                 {
                     <MudTabPanel Text="@($"Phase {phase}")">
                         <LootListView Character="character" Phase="phase" LootLists="lootLists" />
                     </MudTabPanel>
+                    @if (phase == config.CurrentPhase)
+                    {
+                        _defaultActivePanelIndex = index;
+                    }
+                    index++;
                 }
+                <MudTabPanel Text="Won Items">
+                    <WonItemsView Character="character" />
+                </MudTabPanel>
+                <MudTabPanel Text="Attendance">
+                    <AttendanceView Character="character" />
+                </MudTabPanel>
             </MudTabs>
         </ApiExecutor>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
+    private MudTabs? _tabs;
+    private int? _activePanelIndex;
+    private int _defaultActivePanelIndex;
+
+    private int ActivePanelIndex
+    {
+        get => _activePanelIndex ?? _defaultActivePanelIndex;
+        set => _activePanelIndex = value;
+    }
+
     [Parameter] public string Character { get; set; } = string.Empty;
 
     private async Task EditAsync(CharacterDto character)

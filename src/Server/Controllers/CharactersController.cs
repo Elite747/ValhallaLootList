@@ -294,6 +294,25 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
+        [HttpGet("{id}/Attendances")]
+        public IAsyncEnumerable<CharacterAttendanceDto> GetAttendances(string id)
+        {
+            return _context.RaidAttendees
+                .AsNoTracking()
+                .Where(ra => ra.CharacterId == id)
+                .OrderByDescending(ra => ra.Raid.StartedAtUtc)
+                .Select(ra => new CharacterAttendanceDto
+                {
+                    IgnoreAttendance = ra.IgnoreAttendance,
+                    IgnoreReason = ra.IgnoreReason,
+                    RaidId = ra.RaidId,
+                    StartedAt = new DateTimeOffset(ra.Raid.StartedAtUtc, TimeSpan.Zero),
+                    TeamId = ra.Raid.RaidTeamId,
+                    TeamName = ra.Raid.RaidTeam.Name
+                })
+                .AsAsyncEnumerable();
+        }
+
         [HttpDelete("{id}"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult> Delete(string id)
         {

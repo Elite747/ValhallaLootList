@@ -1,0 +1,46 @@
+﻿@inject ApiClient Api 
+
+<ApiExecutor Operation="() => Api.Drops.GetForCharacter(Character.Id)" Context="drops">
+    @if (drops.Count > 0)
+    {
+        <MudList Dense="true">
+            @foreach (var drop in drops)
+            {
+                <MudDivider />
+                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+                    <div class="d-flex">
+                        <MudAvatar Class="mr-5" Rounded="true">
+                            <ItemIcon ItemId="drop.ItemId" Size="IconSize.Medium" width="40" height="40" />
+                        </MudAvatar>
+                        <div class="mr-auto">
+                            <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true">
+                                <ItemLinkText />
+                            </ItemLink>
+                            <div>
+                                <MudText Typo="Typo.caption" Inline="false">
+                                    Awarded @drop.AwardedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)
+                                    <MudLink Href="@("raids/" + drop.RaidId)" Typo="Typo.caption">View Raid</MudLink>
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    else
+    {
+        <div class="m-4">
+            <p>@Character.Name has not won any items yet.</p>
+        </div>
+    }
+</ApiExecutor>
+
+@code {
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+    }
+}

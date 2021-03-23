@@ -62,6 +62,10 @@ namespace ValhallaLootList.Client.Data
         {
             return Client.CreateRequest(HttpMethod.Post, "api/v1/characters/" + id + "/verify");
         }
+        public IApiClientOperation<IList<CharacterAttendanceDto>> GetAttendances(string id)
+        {
+            return Client.CreateRequest<IList<CharacterAttendanceDto>>(HttpMethod.Get, "api/v1/characters/" + id + "/attendances");
+        }
 
         public IApiClientOperation<CharacterDto> Create(CharacterSubmissionDto character)
         {

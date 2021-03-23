@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
@@ -23,7 +24,24 @@ namespace ValhallaLootList.Server.Controllers
             _prioCalculator = prioCalculator;
         }
 
-        [HttpPut("{id}")]
+        [HttpGet]
+        public IAsyncEnumerable<WonDropDto> Get(string characterId)
+        {
+            return _context.Drops
+                .AsNoTracking()
+                .Where(drop => drop.WinnerId == characterId || drop.WinningEntry!.LootList.CharacterId == characterId)
+                .OrderByDescending(drop => drop.AwardedAtUtc)
+                .Select(drop => new WonDropDto
+                {
+                    CharacterId = drop.WinnerId ?? characterId,
+                    ItemId = drop.ItemId,
+                    AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
+                    RaidId = drop.EncounterKillRaidId
+                })
+                .AsAsyncEnumerable();
+        }
+
+        [HttpPut("{id}"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<EncounterDropDto>> PutAssign(string id, [FromBody] AwardDropSubmissionDto dto)
         {
             var now = DateTime.UtcNow;
@@ -32,6 +50,17 @@ namespace ValhallaLootList.Server.Controllers
             if (drop is null)
             {
                 return NotFound();
+            }
+
+            var teamId = await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.Id == drop.EncounterKillRaidId)
+                .Select(r => r.RaidTeamId)
+                .FirstOrDefaultAsync();
+
+            if (!await _context.IsLeaderOf(User, teamId))
+            {
+                return Unauthorized();
             }
 
             if (dto.WinnerId?.Length > 0 && drop.WinnerId?.Length > 0)
@@ -128,7 +157,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id}/Ranks")]
+        [HttpGet("{id}/Ranks"), Authorize(AppRoles.LootMaster)]
         public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(string id)
         {
             var drop = await _context.Drops.FindAsync(id);
@@ -136,6 +165,17 @@ namespace ValhallaLootList.Server.Controllers
             if (drop is null)
             {
                 return NotFound();
+            }
+
+            var teamId = await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.Id == drop.EncounterKillRaidId)
+                .Select(r => r.RaidTeamId)
+                .FirstOrDefaultAsync();
+
+            if (!await _context.IsLeaderOf(User, teamId))
+            {
+                return Unauthorized();
             }
 
             var killerIds = await _context.CharacterEncounterKills

@@ -1,0 +1,35 @@
+﻿@inject ApiClient Api
+
+<ApiExecutor Operation="() => Api.Characters.GetAttendances(Character.Id)" Context="attendances">
+    @if (attendances.Count > 0)
+    {
+        <MudList Dense="true" Clickable="true">
+            @foreach (var attendance in attendances)
+            {
+                <MudDivider />
+                <MudListItem Href="@("raids/" + attendance.RaidId)"
+                             IconColor="Color.Error"
+                             Icon="@(attendance.IgnoreAttendance ? Icons.Material.Filled.Error : null)">
+                    <MudText Typo="Typo.h6">@attendance.TeamName</MudText>
+                    <MudText Typo="Typo.caption">@attendance.StartedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Error">@attendance.IgnoreReason</MudText>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    else
+    {
+        <div class="m-4">
+            <p>@Character.Name has not attended any raids yet.</p>
+        </div>
+    }
+</ApiExecutor>
+
+@code {
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+    }
+}

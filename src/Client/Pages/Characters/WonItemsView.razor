@@ -1,9 +1,18 @@
-﻿@inject ApiClient Api 
+﻿@inject ApiClient Api
 
-<ApiExecutor Operation="() => Api.Drops.GetForCharacter(Character.Id)" Context="drops">
-    @if (drops.Count > 0)
-    {
-        <MudList Dense="true">
+<MudList Dense="true">
+    <MudListSubheader>
+        <MudButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   Color="Color.Primary"
+                   Class="mr-2">
+            Refresh
+        </MudButton>
+    </MudListSubheader>
+    <ApiExecutor Operation="() => Api.Drops.GetForCharacter(Character.Id)" Context="drops" @ref="_executor">
+        @if (drops.Count > 0)
+        {
             @foreach (var drop in drops)
             {
                 <MudDivider />
@@ -26,17 +35,19 @@
                     </div>
                 </MudListItem>
             }
-        </MudList>
-    }
-    else
-    {
-        <div class="m-4">
-            <p>@Character.Name has not won any items yet.</p>
-        </div>
-    }
-</ApiExecutor>
+        }
+        else
+        {
+            <MudListSubheader>
+                <p>@Character.Name has not won any items yet.</p>
+            </MudListSubheader>
+        }
+    </ApiExecutor>
+</MudList>
 
 @code {
+    private IApiExecutor? _executor;
+
     [Parameter] public CharacterDto Character { get; set; } = null!;
 
     protected override void OnParametersSet()

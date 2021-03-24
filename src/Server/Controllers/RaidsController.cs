@@ -251,7 +251,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
-                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec,
+                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec,
                     Character = new CharacterDto
                     {
                         Id = a.CharacterId,
@@ -261,7 +261,7 @@ namespace ValhallaLootList.Server.Controllers
                         Name = a.Character.Name,
                         Race = a.Character.Race,
                         TeamId = a.Character.TeamId,
-                        TeamName = a.Character.Team!.Name
+                        TeamName = a.Character.Team?.Name
                     }
                 }).ToList(),
                 StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
@@ -455,6 +455,11 @@ namespace ValhallaLootList.Server.Controllers
             {
                 ModelState.AddModelError(nameof(dto.Characters), "At least one character must be specified.");
                 return ValidationProblem();
+            }
+
+            if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId) > 0)
+            {
+                return Problem("That boss already has a recorded kill for this raid.");
             }
 
             var raid = await _context.Raids.FindAsync(id);

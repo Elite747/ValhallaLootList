@@ -1,0 +1,78 @@
+﻿@inject ApiClient Api
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+
+@if (_characters is not null)
+{
+    <MudCard Class="m-5" Elevation="5">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">My Characters</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                               Color="Color.Primary"
+                               OnClick="CreateClickedAsync" />
+            </CardHeaderActions>
+        </MudCardHeader>
+        @if (_characters.Count == 0)
+        {
+            <MudCardContent>
+                You don't have any characters yet!
+            </MudCardContent>
+        }
+        else
+        {
+            <MudList Dense="true" Clickable="true">
+                @foreach (var ch in _characters)
+                {
+                    <MudListItem Href="@("characters/" + ch.Name)">
+                        <div class="d-flex">
+                            <MudAvatar Class="mr-1" Size="Size.Small">
+                                <RaceIcon Race="ch.Race" Gender="ch.Gender" Size="IconSize.Small" width="24" height="24" />
+                            </MudAvatar>
+                            <MudAvatar Class="mr-1" Size="Size.Small">
+                                <ClassIcon PlayerClass="ch.Class" Size="IconSize.Small" width="24" height="24" />
+                            </MudAvatar>
+                            <MudText Inline="false">@ch.Name</MudText>
+                        </div>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </MudCard>
+}
+
+@code {
+    private IList<CharacterDto>? _characters;
+
+    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (User is null) throw new ArgumentNullException(nameof(User));
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return Api.Characters.GetOwned()
+            .OnSuccess(characters => _characters = characters)
+            .ExecuteAsync();
+    }
+
+    private async Task CreateClickedAsync()
+    {
+        var character = await DialogService.ShowAsync<Pages.Characters.Create, CharacterDto>(
+            "Create Character",
+            parameters: new()
+            {
+                [nameof(Pages.Characters.Create.AllowSubmitNonOwned)] = User.IsAdmin(),
+                [nameof(Pages.Characters.Create.DefaultSenderIsOwner)] = true
+            },
+            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (character is not null)
+        {
+            Nav.NavigateTo("/characters/" + character.Name);
+        }
+    }
+}

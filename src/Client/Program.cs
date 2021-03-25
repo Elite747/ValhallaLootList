@@ -24,7 +24,7 @@ namespace ValhallaLootList.Client
             builder.Services.AddHttpClient(ApiClient.HttpClientKey, client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
-            builder.Services.AddHttpClient(WowheadClient.HttpClientKey, client => client.BaseAddress = new Uri("https://www.wowhead.com/"));
+            builder.Services.AddHttpClient(WowheadClient.HttpClientKey);
 
             builder.Services.AddMemoryCache()
                 .AddTransient<LocalStorageService>()

@@ -17,36 +17,23 @@ namespace ValhallaLootList.Client.Data
     {
         public const string HttpClientKey = "WowheadAPI";
         private readonly HttpClient _httpClient;
+        private readonly string _domain;
         private bool _disposedValue;
 
         public WowheadClient(IHttpClientFactory httpClientFactory, IOptions<JsonSerializerOptions> jsonOptions)
         {
             _httpClient = httpClientFactory.CreateClient(HttpClientKey);
+            _domain = "tbc";
             JsonSerializerOptions = jsonOptions.Value;
         }
 
         public JsonSerializerOptions JsonSerializerOptions { get; }
 
-        public string GetDomain()
-        {
-            var host = _httpClient.BaseAddress?.Host;
-
-            if (host?.Length > 0)
-            {
-                int i = host.IndexOf('.');
-
-                if (i != host.LastIndexOf('.'))
-                {
-                    return host[..i];
-                }
-            }
-
-            return string.Empty;
-        }
+        public string GetDomain() => _domain;
 
         public async Task<object?> GetItemAsync(uint id, CancellationToken cancellationToken = default)
         {
-            using var response = await _httpClient.GetAsync($"tooltip/item/{id}", cancellationToken);
+            using var response = await _httpClient.GetAsync($"https://{_domain}.wowhead.com/tooltip/item/{id}", cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {

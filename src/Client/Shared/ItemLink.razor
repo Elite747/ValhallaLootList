@@ -1,5 +1,5 @@
-﻿<a data-wowhead="@(Id > 0 ? $"item={Id}" : null)"
-   href="@(LinkEnabled ? $"https://www.wowhead.com/item={Id}" : null)"
+﻿<a data-wowhead="@(Id > 0 ? $"item={Id}&domain=tbc" : null)"
+   href="@(LinkEnabled ? $"https://tbc.wowhead.com/item={Id}" : null)"
    style="@(LinkEnabled ? null : "cursor: pointer")"
    @attributes="AdditionalAttributes">
     <CascadingValue Value="_context">

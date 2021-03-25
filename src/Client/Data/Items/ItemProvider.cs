@@ -60,7 +60,7 @@ namespace ValhallaLootList.Client.Data.Items
         {
             return (
                 await _wowheadInterop.GetTypeIdFromTypeStringAsync("item", cancellationToken),
-                await _wowheadInterop.GetDataEnvFromTermAsync("live", cancellationToken), // TODO: change this to 'burningCrusade' when wowhead supports it.
+                await _wowheadInterop.GetDataEnvFromTermAsync("burningCrusade", cancellationToken),
                 await _wowheadInterop.GetLocaleFromDomainAsync(_wowheadClient.GetDomain(), cancellationToken)
                 );
         }

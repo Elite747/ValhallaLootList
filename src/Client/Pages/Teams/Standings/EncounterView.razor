@@ -1,0 +1,38 @@
+﻿<MudList Dense="true" Class="flex-grow-1">
+    <MudListSubheader>
+        <MudText Typo="Typo.h6">@Encounter.Name</MudText>
+    </MudListSubheader>
+    @foreach (var itemId in Encounter.Items)
+    {
+        <MudDivider />
+        <MudListItem>
+            <div class="d-flex">
+                <div class="mr-3">
+                    <ItemLink Id="itemId" LinkEnabled="true" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
+                </div>
+                <div class="mr-auto">
+                    @if (Standings.TryGetValue(itemId, out var itemStandings))
+                    {
+                        foreach (var entry in itemStandings.OrderByDescending(e => e.prio).ThenBy(e => e.name))
+                        {
+                            <MudText Color="entry.won ? Color.Success : Color.Default">
+                                @(entry.prio.HasValue ? $"{entry.name} ({entry.prio.Value})" : entry.name)
+                            </MudText>
+                        }
+                    }
+                </div>
+            </div>
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+    [Parameter] public EncounterDto Encounter { get; set; } = null!;
+    [Parameter] public Dictionary<uint, List<(string name, int? prio, bool won)>> Standings { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Encounter is null) throw new ArgumentNullException(nameof(Encounter));
+        if (Standings is null) throw new ArgumentNullException(nameof(Standings));
+    }
+}

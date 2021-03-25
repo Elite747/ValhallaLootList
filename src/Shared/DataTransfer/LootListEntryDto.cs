@@ -13,6 +13,8 @@ namespace ValhallaLootList.DataTransfer
 
         public uint? ItemId { get; set; }
 
+        public uint? RewardFromId { get; set; }
+
         public string? ItemName { get; set; }
 
         public bool Won { get; set; }

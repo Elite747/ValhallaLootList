@@ -1,16 +1,107 @@
-﻿@page "/Teams/{team}/Standings"
+﻿@page "/Teams/{team}/Standings/{encounter?}"
 @inject ApiClient Api
+@inject ISnackbar Snackbar 
 
-<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
-    <ApiExecutor Operation="() => Api.LootLists.GetForTeam(team.Id)" Context="lootLists" @ref="_executor">
-        <CascadingValue Value="lootLists">
-            <InstancesPresenter @bind-SelectedInstanceId="@_selectedInstanceId" OnRefresh="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-        </CascadingValue>
+<MudPaper Class="d-flex">
+    <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
+        <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+            <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+                @{
+                    var (selectedEncounter, selectedInstance) = GetSelected(instances);
+                    var selectedPhase = selectedInstance?.Phase ?? phaseConfig.CurrentPhase;
+
+                    if (!_initialized)
+                    {
+                        _ = RefreshAsync(team.Id);
+                    }
+                }
+                <MudList Clickable="true">
+                    <MudListItem OnClick="() => RefreshAsync(team.Id)" Icon="@Icons.Material.Filled.Refresh" Text="Refresh" />
+                    <MudDivider />
+                    @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
+                    {
+                        <MudListItem InitiallyExpanded="phase == selectedPhase">
+                            <ChildContent>
+                                Phase @phase
+                            </ChildContent>
+                            <NestedList>
+                                @foreach (var instance in instances.Where(i => i.Phase == phase).OrderBy(i => i.Name))
+                                {
+                                    <MudListItem InitiallyExpanded="selectedInstance?.Id == instance.Id" Text="@instance.Name">
+                                        <NestedList>
+                                            @foreach (var encounter in instance.Encounters)
+                                            {
+                                                <MudListItem Class="@(encounter.Id == selectedEncounter?.Id ? "mud-selected-item" : null)"
+                                                             Href="@($"Teams/{Team}/Standings/{encounter.Id}")">
+                                                    <div class="ml-2">
+                                                        @encounter.Name
+                                                    </div>
+                                                </MudListItem>
+                                            }
+                                        </NestedList>
+                                    </MudListItem>
+                                }
+                            </NestedList>
+                        </MudListItem>
+                    }
+                </MudList>
+                <MudDivider Vertical="true" FlexItem="true" />
+                @if (selectedEncounter is not null)
+                {
+                    <EncounterView Standings="_standings" Encounter="selectedEncounter" />
+                }
+            </ApiExecutor>
+        </ApiExecutor>
     </ApiExecutor>
-</ApiExecutor>
+</MudPaper>
 
 @code {
     [Parameter] public string Team { get; set; } = string.Empty;
-    private string? _selectedInstanceId;
-    private IApiExecutor? _executor;
+    [Parameter] public string? Encounter { get; set; }
+    private readonly Dictionary<uint, List<(string name, int? prio, bool won)>> _standings = new();
+    private bool _initialized;
+
+    private (EncounterDto?, InstanceDto?) GetSelected(IEnumerable<InstanceDto> instances)
+    {
+        foreach (var instance in instances)
+        {
+            foreach (var encounter in instance.Encounters)
+            {
+                if (string.Equals(encounter.Id, Encounter, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (encounter, instance);
+                }
+            }
+        }
+        return (null, null);
+    }
+
+    private Task RefreshAsync(long teamId)
+    {
+        _initialized = true;
+        return Api.LootLists.GetForTeam(teamId)
+            .OnSuccess(lootLists =>
+            {
+                _standings.Clear();
+                foreach (var lootList in lootLists)
+                {
+                    foreach (var entry in lootList.Entries)
+                    {
+                        var itemId = entry.RewardFromId ?? entry.ItemId;
+                        if (itemId.HasValue)
+                        {
+                            if (!_standings.TryGetValue(itemId.Value, out var itemStandings))
+                            {
+                                _standings[itemId.Value] = itemStandings = new();
+                            }
+
+                            itemStandings.Add((lootList.CharacterName!, entry.Prio, entry.Won));
+                        }
+                    }
+                }
+                StateHasChanged();
+            })
+        .SendErrorTo(Snackbar)
+        .ExecuteAsync();
+    }
 }

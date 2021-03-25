@@ -622,6 +622,7 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         Id = entry.Id,
                         ItemId = entry.ItemId,
+                        RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
                         Prio = showRanks ? prio : null,
                         Rank = showRanks ? entry.Rank : 0,

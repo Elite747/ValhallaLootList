@@ -14,7 +14,7 @@
             {
                 var dayIndex = i;
                 <MudGrid>
-                    <MudItem>
+                    <MudItem xs="12" sm="3">
                         <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day">
                             @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
                             {
@@ -22,13 +22,13 @@
                             }
                         </MudSelect>
                     </MudItem>
-                    <MudItem>
+                    <MudItem xs="12" sm="5">
                         <MudTimePicker @bind-Time="_team.Schedules[dayIndex].StartTime" Label="Start Time" Culture="CultureInfo.CurrentCulture" />
                     </MudItem>
-                    <MudItem>
+                    <MudItem xs="12" sm="3">
                         <MudTextField @bind-Value="_team.Schedules[dayIndex].Duration" Label="Duration" Variant="Variant.Text" Adornment="Adornment.End" AdornmentText="hrs" />
                     </MudItem>
-                    <MudItem>
+                    <MudItem xs="12" sm="1">
                         <MudIconButton OnClick="() => RemoveScheduleClicked(dayIndex)" Icon="@Icons.Material.Filled.Remove" Color="Color.Error" />
                     </MudItem>
                 </MudGrid>

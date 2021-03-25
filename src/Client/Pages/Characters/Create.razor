@@ -40,7 +40,7 @@
             </MudSelect>
             @if (AllowSubmitNonOwned)
             {
-                <MudTooltip Text="When unchecked, this indicates that this character is not owned by you. Uncheck this if you are adding a character on someone's behalf."
+                <MudTooltip Text="When checked, indicates that this character is owned by you. Uncheck this if you are adding a character on someone's behalf."
                             Class="mt-3">
                     <MudCheckBox @bind-Checked="_character.SenderIsOwner"
                                  Label="This character is mine"

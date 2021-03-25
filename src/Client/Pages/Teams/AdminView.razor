@@ -1,6 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject ClaimsSynchronizer ClaimsSync
 
 <MudCard Elevation="5">
     <MudCardHeader>
@@ -61,13 +62,14 @@
         if (result is not null)
         {
             await Api.Teams.AddLeader(Team.Id, result.Id)
-                .OnSuccess(member =>
+                .OnSuccess((member, ct) =>
                 {
                     leaders.Add(member);
-                    if (member.Id == User.GetDiscordIdFromClient() && User.Identity is System.Security.Claims.ClaimsIdentity identity)
+                    if (member.Id == User.GetDiscordIdFromClient())
                     {
-                        identity.AddClaim(new System.Security.Claims.Claim(AppClaimTypes.RaidLeader, Team.Id.ToString()));
+                        return ClaimsSync.AddAsync(User, AppClaimTypes.RaidLeader, Team.Id.ToString(), ct);
                     }
+                    return Task.CompletedTask;
                 })
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
@@ -77,18 +79,14 @@
     private Task RemoveLeaderAsync(IList<GuildMemberDto> leaders, GuildMemberDto leader)
     {
         return Api.Teams.RemoveLeader(Team.Id, leader.Id)
-            .OnSuccess(_ =>
+            .OnSuccess((_, ct) =>
             {
                 leaders.Remove(leader);
-                if (leader.Id == User.GetDiscordIdFromClient() && User.Identity is System.Security.Claims.ClaimsIdentity identity)
+                if (leader.Id == User.GetDiscordIdFromClient())
                 {
-                    var teamIdString = Team.Id.ToString();
-                    var claim = identity.FindFirst(claim => claim.Type == AppClaimTypes.RaidLeader && claim.Value == teamIdString);
-                    if (claim is not null)
-                    {
-                        identity.RemoveClaim(claim);
-                    }
+                    return ClaimsSync.RemoveAsync(User, AppClaimTypes.RaidLeader, Team.Id.ToString(), ct);
                 }
+                return Task.CompletedTask;
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();

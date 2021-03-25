@@ -33,7 +33,8 @@ namespace ValhallaLootList.Client
                 .AddScoped<WowheadInterop>()
                 .AddScoped<ItemProvider>()
                 .AddSingleton<ItemCache>()
-                .AddSingleton<TeamsSource>();
+                .AddSingleton<TeamsSource>()
+                .AddScoped<ClaimsSynchronizer>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 

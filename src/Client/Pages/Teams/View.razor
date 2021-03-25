@@ -23,9 +23,9 @@
 
     <div class="d-flex">
         <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
-        <AuthorizeLeaderView TeamId="@team.Id">
+        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@team.Id">
             <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
-        </AuthorizeLeaderView>
+        </AuthorizeView>
     </div>
 
     <MudGrid Class="mt-5">

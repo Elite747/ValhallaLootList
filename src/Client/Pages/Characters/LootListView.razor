@@ -20,94 +20,31 @@ else
                 }
                 else
                 {
-                    <AuthorizeLeaderView TeamId="@_lootList.TeamId">
+                    <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@_lootList.TeamId">
                         <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="mr-2">Lock</MudButton>
-                    </AuthorizeLeaderView>
-                    if (_lootList.Owned)
-                    {
+                    </AuthorizeView>
+                    <AuthorizeView Policy="@AppRoles.CharacterOwnerOrAdmin" Resource="_lootList.CharacterId">
                         <MudButton OnClick="() => _createList = true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Primary">Edit</MudButton>
-                    }
+                    </AuthorizeView>
                 }
             </MudListSubheader>
 
-            @if (_lootList.Owned || _lootList.Locked)
+            @if (_lootList.Locked || _lootList.Entries.Any(e => e.Rank > 0))
             {
-                var rows = _lootList.Entries.GroupBy(e => e.Rank);
-                var rowSize = rows.Select(row => row.Count()).Max();
-                @foreach (var row in rows.OrderByDescending(g => g.Key))
-                {
-                    <MudDivider />
-                    <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
-                        <MudGrid>
-                            <MudItem xs="12" md="3" lg="2">
-                                <MudText Typo="Typo.h6" GutterBottom="false">Rank @row.Key</MudText>
-                            </MudItem>
-                            @foreach (var entry in row)
-                            {
-                                <MudItem xs="12" md="9 / rowSize" lg="10 / rowSize">
-                                    @if (entry.ItemId > 0)
-                                    {
-                                        <ItemLink Id="entry.ItemId"
-                                                  LinkEnabled="true"
-                                                  Colorize="true"
-                                                  Bracketize="true"
-                                                  OverrideText="@entry.ItemName"
-                                                  class="d-flex align-center">
-                                            @if (entry.Prio.HasValue)
-                                            {
-                                                <MudBadge Content="entry.Prio.Value" Color="Color.Info" Overlap="true">
-                                                    <MudAvatar Rounded="true" Class="mr-2">
-                                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                                    </MudAvatar>
-                                                </MudBadge>
-                                            }
-                                            else if (entry.Won)
-                                            {
-                                                <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                                                    <MudAvatar Rounded="true" Class="mr-2">
-                                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                                    </MudAvatar>
-                                                </MudBadge>
-                                            }
-                                            else
-                                            {
-                                                <MudAvatar Rounded="true" Class="mr-2">
-                                                    <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                                </MudAvatar>
-                                            }
-                                            <ItemLinkText />
-                                        </ItemLink>
-                                    }
-                                </MudItem>
-                            }
-                        </MudGrid>
-                    </MudListItem>
-                }
+                <PrioListView LootList="_lootList" />
             }
             else
             {
-                @foreach (var entry in _lootList.Entries.OrderBy(e => e.ItemName))
-                {
-                    <MudListItem>
-                        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
-                        @if (entry.Won)
-                        {
-                            <MudTooltip Text="Won">
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                            </MudTooltip>
-                        }
-                    </MudListItem>
-                }
+                <NoPrioListView LootList="_lootList" />
             }
         }
         else
         {
-            @if (Character.Editable)
-            {
+            <AuthorizeView Policy="@AppRoles.CharacterOwnerOrAdmin" Resource="Character.Id">
                 <MudListSubheader>
                     <MudButton OnClick="() => _createList = true" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
                 </MudListSubheader>
-            }
+            </AuthorizeView>
             <MudListSubheader>
                 <p>@Character.Name does not have a loot list for Phase @Phase.</p>
             </MudListSubheader>

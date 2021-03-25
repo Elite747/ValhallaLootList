@@ -71,10 +71,12 @@ namespace ValhallaLootList.Server
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
                     claims.Add(AppClaimTypes.RaidLeader);
+                    claims.Add(AppClaimTypes.Character);
                     claims = options.ApiResources.Single().UserClaims;
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
                     claims.Add(AppClaimTypes.RaidLeader);
+                    claims.Add(AppClaimTypes.Character);
                 })
                 .AddProfileService<IdentityProfileService>();
 

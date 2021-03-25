@@ -12,5 +12,15 @@
         if (element) {
             element.classList.add('mud-dialog-scrollable');
         }
+    },
+    updateUserRoles: async function (prop, claims) {
+        let user = await AuthenticationService.instance._userManager.getUser();
+        if (claims) {
+            user.profile[prop] = claims;
+        }
+        else {
+            delete user.profile[prop];
+        }
+        await AuthenticationService.instance._userManager.storeUser(user);
     }
 };

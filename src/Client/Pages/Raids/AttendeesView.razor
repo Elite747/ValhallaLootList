@@ -36,7 +36,7 @@
                             <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
                         }
                     </div>
-                    <AuthorizeLeaderView TeamId="@Raid.TeamId">
+                    <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
                         <MudTooltip Text="Edit">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
                         </MudTooltip>
@@ -46,17 +46,17 @@
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
                             </MudTooltip>
                         }
-                    </AuthorizeLeaderView>
+                    </AuthorizeView>
                 </div>
             </MudListItem>
         }
         <MudDivider />
     </MudList>
     <MudCardActions>
-        <AuthorizeLeaderView TeamId="@Raid.TeamId">
+        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
             <MudButton OnClick="AddRosteredAsync" Variant="Variant.Text" Color="Color.Primary" Class="mr-2">Add Rostered Member</MudButton>
             <MudButton OnClick="AddUnrosteredAsync" Variant="Variant.Text" Color="Color.Primary">Add Unrostered Member</MudButton>
-        </AuthorizeLeaderView>
+        </AuthorizeView>
     </MudCardActions>
 </MudCard>
 

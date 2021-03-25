@@ -28,7 +28,7 @@
     </div>
 
     <AuthorizeView Roles="@AppRoles.Administrator">
-        <AdminView Character="character" />
+        <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">

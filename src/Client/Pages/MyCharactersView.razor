@@ -2,49 +2,37 @@
 @inject IDialogService DialogService
 @inject NavigationManager Nav
 
-@if (_characters is not null)
-{
-    <MudCard Class="ma-5" Elevation="5">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">My Characters</MudText>
-            </CardHeaderContent>
-            <CardHeaderActions>
-                <MudIconButton Icon="@Icons.Material.Filled.Add"
-                               Color="Color.Primary"
-                               OnClick="CreateClickedAsync" />
-            </CardHeaderActions>
-        </MudCardHeader>
-        @if (_characters.Count == 0)
+<MudCard Class="ma-5" Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">My Characters</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                            Color="Color.Primary"
+                            OnClick="CreateClickedAsync" />
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudList Dense="true" Clickable="true">
+        @foreach (var character in _characters.OrderBy(c => c.Name))
         {
-            <MudCardContent>
-                You don't have any characters yet!
-            </MudCardContent>
+            <MudListItem Href="@("characters/" + character.Name)">
+                <div class="d-flex">
+                    <MudAvatar Class="mr-1" Size="Size.Small">
+                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Small" width="24" height="24" />
+                    </MudAvatar>
+                    <MudAvatar Class="mr-1" Size="Size.Small">
+                        <ClassIcon PlayerClass="character.Class" Size="IconSize.Small" width="24" height="24" />
+                    </MudAvatar>
+                    <MudText Inline="false">@character.Name</MudText>
+                </div>
+            </MudListItem>
         }
-        else
-        {
-            <MudList Dense="true" Clickable="true">
-                @foreach (var ch in _characters)
-                {
-                    <MudListItem Href="@("characters/" + ch.Name)">
-                        <div class="d-flex">
-                            <MudAvatar Class="mr-1" Size="Size.Small">
-                                <RaceIcon Race="ch.Race" Gender="ch.Gender" Size="IconSize.Small" width="24" height="24" />
-                            </MudAvatar>
-                            <MudAvatar Class="mr-1" Size="Size.Small">
-                                <ClassIcon PlayerClass="ch.Class" Size="IconSize.Small" width="24" height="24" />
-                            </MudAvatar>
-                            <MudText Inline="false">@ch.Name</MudText>
-                        </div>
-                    </MudListItem>
-                }
-            </MudList>
-        }
-    </MudCard>
-}
+    </MudList>
+</MudCard>
 
 @code {
-    private IList<CharacterDto>? _characters;
+    private readonly List<CharacterDto> _characters = new();
 
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
 
@@ -55,9 +43,23 @@
 
     protected override Task OnInitializedAsync()
     {
-        return Api.Characters.GetOwned()
-            .OnSuccess(characters => _characters = characters)
-            .ExecuteAsync();
+        var tasks = new List<Task>();
+
+        foreach (var claim in User.FindAll(AppClaimTypes.Character))
+        {
+            if (long.TryParse(claim.Value, out var characterId))
+            {
+                tasks.Add(Api.Characters.Get(characterId)
+                    .OnSuccess(character =>
+                    {
+                        _characters.Add(character);
+                        StateHasChanged();
+                    })
+                    .ExecuteAsync());
+            }
+        }
+
+        return Task.WhenAll(tasks);
     }
 
     private async Task CreateClickedAsync()

@@ -79,9 +79,6 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var currentUserId = User.GetDiscordId();
-            bool isAdmin = User.IsAdmin();
-
             dto.Attendees = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(a => a.RaidId == id)
@@ -94,7 +91,6 @@ namespace ValhallaLootList.Server.Controllers
                     Character = new CharacterDto
                     {
                         Class = a.Character.Class,
-                        Editable = isAdmin || a.Character.OwnerId == currentUserId,
                         Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                         Id = a.CharacterId,
                         Name = a.Character.Name,
@@ -242,9 +238,6 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
-            var currentUserId = User.GetDiscordId();
-            bool isAdmin = User.IsAdmin();
-
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
             {
                 Attendees = raid.Attendees.Select(a => new AttendanceDto
@@ -256,7 +249,6 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         Id = a.CharacterId,
                         Class = a.Character.Class,
-                        Editable = isAdmin || a.Character.OwnerId == currentUserId,
                         Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                         Name = a.Character.Name,
                         Race = a.Character.Race,
@@ -361,7 +353,6 @@ namespace ValhallaLootList.Server.Controllers
                 Character = new CharacterDto
                 {
                     Class = character.Class,
-                    Editable = User.IsAdmin() || User.GetDiscordId() == character.OwnerId,
                     Gender = character.IsFemale ? Gender.Female : Gender.Male,
                     Id = character.Id,
                     Name = character.Name,

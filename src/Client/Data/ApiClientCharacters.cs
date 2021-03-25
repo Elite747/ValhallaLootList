@@ -28,11 +28,6 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=none");
         }
 
-        public IApiClientOperation<IList<CharacterDto>> GetOwned()
-        {
-            return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?owned=true");
-        }
-
         public IApiClientOperation<CharacterDto> Get(long id)
         {
             return Client.CreateRequest<CharacterDto>(HttpMethod.Get, "api/v1/characters/" + id);

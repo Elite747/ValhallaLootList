@@ -13,9 +13,9 @@
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)</MudText>
             @if (kill.Drops.All(drop => drop.WinnerId is null))
             {
-                <AuthorizeLeaderView TeamId="@Raid.TeamId">
+                <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
                     <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(localKill.EncounterId)">Delete</MudButton>
-                </AuthorizeLeaderView>
+                </AuthorizeView>
             }
         </MudCardContent>
         <MudList>
@@ -34,7 +34,7 @@
                             </ItemLink>
                             <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
                         </div>
-                        <AuthorizeLeaderView TeamId="@Raid.TeamId">
+                        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
                             @if (drop.WinnerId is null)
                             {
                                 <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
@@ -43,7 +43,7 @@
                             {
                                 <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
                             }
-                        </AuthorizeLeaderView>
+                        </AuthorizeView>
                     </div>
                 </MudListItem>
             }
@@ -51,7 +51,7 @@
     </MudCard>
 }
 
-<AuthorizeLeaderView TeamId="@Raid.TeamId">
+<AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
     <MudButton OnClick="AddClickedAsync"
                StartIcon="@Icons.Material.Filled.Add"
                Variant="Variant.Filled"
@@ -70,7 +70,7 @@
             Delete Raid
         </MudButton>
     }
-</AuthorizeLeaderView>
+</AuthorizeView>
 
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;

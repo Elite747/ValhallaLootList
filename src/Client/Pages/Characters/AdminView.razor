@@ -2,6 +2,7 @@
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject ClaimsSynchronizer ClaimsSync 
 
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
     <MudCard Class="mb-3">
@@ -24,7 +25,7 @@
             }
         </MudCardContent>
         <MudCardActions>
-            <MudButton OnClick="SetOwnerAsync" Color="Color.Primary">@(owner.Owner is null ? "Set" : "Change") Owner</MudButton>
+            <MudButton OnClick="() => SetOwnerAsync(owner.Owner)" Color="Color.Primary">@(owner.Owner is null ? "Set" : "Change") Owner</MudButton>
 
             @if (owner.VerifiedBy is null && owner.Owner is not null)
             {
@@ -38,13 +39,15 @@
     private IApiExecutor? _executor;
 
     [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Character is null) throw new ArgumentNullException(nameof(Character));
+        if (User is null) throw new ArgumentNullException(nameof(User));
     }
 
-    private async Task SetOwnerAsync()
+    private async Task SetOwnerAsync(GuildMemberDto? oldOwner)
     {
         Func<IApiClientOperation<IList<GuildMemberDto>>> operation = Api.Members.GetAll;
         var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
@@ -58,7 +61,22 @@
         if (result is not null)
         {
             await Api.Characters.SetOwner(Character.Id, result.Id)
-                .OnSuccess((_,_) => _executor?.RestartAsync() ?? Task.CompletedTask)
+                .OnSuccess(async (_, ct) =>
+                {
+                    var currentUserId = User.GetDiscordIdFromClient();
+                    if (oldOwner?.Id == currentUserId)
+                    {
+                        await ClaimsSync.RemoveAsync(User, AppClaimTypes.RaidLeader, Character.Id.ToString(), ct);
+                    }
+                    if (result.Id == currentUserId)
+                    {
+                        await ClaimsSync.AddAsync(User, AppClaimTypes.RaidLeader, Character.Id.ToString(), ct);
+                    }
+                    if (_executor is not null)
+                    {
+                        await _executor.RestartAsync();
+                    }
+                })
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }

@@ -10,5 +10,7 @@ namespace ValhallaLootList
         public const string Role = "role";
 
         public const string RaidLeader = nameof(RaidLeader);
+
+        public const string Character = nameof(Character);
     }
 }

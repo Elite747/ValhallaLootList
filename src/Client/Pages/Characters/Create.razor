@@ -1,85 +1,87 @@
-﻿@attribute [Authorize]
-@inject ApiClient Api
+﻿@inject ApiClient Api
+@inject ClaimsSynchronizer ClaimsSync 
 
-<EditForm OnValidSubmit="OnSubmit" Model="_character">
-    <DataAnnotationsValidator />
-    <ProblemValidator @ref="_problemValidator" />
+<AuthorizeView Context="auth">
+    <EditForm OnValidSubmit="() => OnSubmit(auth.User)" Model="_character">
+        <DataAnnotationsValidator />
+        <ProblemValidator @ref="_problemValidator" />
 
-    <MudDialog>
-        <DialogContent>
-            <MudTextField Label="Name"
-                          HelperText="Enter the name exactly as it is spelled in-game."
-                          @bind-Value="_character.Name"
-                          For="() => _character.Name" />
-            <MudSelect Label="Gender"
-                       Class="mt-3"
-                       @bind-Value="_character.Gender"
-                       For="() => _character.Gender">
-                <MudSelectItem T="Gender?" Value="@Gender.Male">
-                    <div class="d-flex align-center">
-                        <MudAvatar Rounded="true" Image="images/male.png" Size="Size.Small" Class="mr-2" />
-                        <span>Male</span>
-                    </div>
-                </MudSelectItem>
-                <MudSelectItem T="Gender?" Value="@Gender.Female">
-                    <div class="d-flex align-center">
-                        <MudAvatar Rounded="true" Image="images/female.png" Size="Size.Small" Class="mr-2" />
-                        <span>Female</span>
-                    </div>
-                </MudSelectItem>
-            </MudSelect>
-            <MudSelect Label="Race"
-                       Class="mt-3"
-                       ValueChanged="(PlayerRace? race) => RaceChanged(race)"
-                       Value="@_character.Race"
-                       For="() => _character.Race"
-                       ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty">
-                @foreach (var race in _classRaces)
-                {
-                    <MudSelectItem T="PlayerRace?" Value="@race">
+        <MudDialog>
+            <DialogContent>
+                <MudTextField Label="Name"
+                              HelperText="Enter the name exactly as it is spelled in-game."
+                              @bind-Value="_character.Name"
+                              For="() => _character.Name" />
+                <MudSelect Label="Gender"
+                           Class="mt-3"
+                           @bind-Value="_character.Gender"
+                           For="() => _character.Gender">
+                    <MudSelectItem T="Gender?" Value="@Gender.Male">
                         <div class="d-flex align-center">
-                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
-                                <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Small" width="24" height="24" />
-                            </MudAvatar>
-                            <span>@race.GetDisplayName()</span>
+                            <MudAvatar Rounded="true" Image="images/male.png" Size="Size.Small" Class="mr-2" />
+                            <span>Male</span>
                         </div>
                     </MudSelectItem>
-                }
-            </MudSelect>
-            <MudSelect Label="Class"
-                       Class="mt-3"
-                       @bind-Value="_character.Class"
-                       For="() => _character.Class"
-                       Disabled="EditingCharacter is not null"
-                       ToStringFunc="pc => pc.HasValue ? pc.Value.GetDisplayName() : string.Empty">
-                @foreach (var playerClass in _raceClasses)
-                {
-                    <MudSelectItem T="Classes?" Value="@playerClass">
+                    <MudSelectItem T="Gender?" Value="@Gender.Female">
                         <div class="d-flex align-center">
-                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
-                                <ClassIcon PlayerClass="playerClass" Size="IconSize.Small" width="24" height="24" />
-                            </MudAvatar>
-                            <span>@playerClass.GetDisplayName()</span>
+                            <MudAvatar Rounded="true" Image="images/female.png" Size="Size.Small" Class="mr-2" />
+                            <span>Female</span>
                         </div>
                     </MudSelectItem>
+                </MudSelect>
+                <MudSelect Label="Race"
+                           Class="mt-3"
+                           ValueChanged="(PlayerRace? race) => RaceChanged(race)"
+                           Value="@_character.Race"
+                           For="() => _character.Race"
+                           ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty">
+                    @foreach (var race in _classRaces)
+                    {
+                        <MudSelectItem T="PlayerRace?" Value="@race">
+                            <div class="d-flex align-center">
+                                <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                    <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Small" width="24" height="24" />
+                                </MudAvatar>
+                                <span>@race.GetDisplayName()</span>
+                            </div>
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect Label="Class"
+                           Class="mt-3"
+                           @bind-Value="_character.Class"
+                           For="() => _character.Class"
+                           Disabled="EditingCharacter is not null"
+                           ToStringFunc="pc => pc.HasValue ? pc.Value.GetDisplayName() : string.Empty">
+                    @foreach (var playerClass in _raceClasses)
+                    {
+                        <MudSelectItem T="Classes?" Value="@playerClass">
+                            <div class="d-flex align-center">
+                                <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                    <ClassIcon PlayerClass="playerClass" Size="IconSize.Small" width="24" height="24" />
+                                </MudAvatar>
+                                <span>@playerClass.GetDisplayName()</span>
+                            </div>
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                @if (AllowSubmitNonOwned)
+                {
+                    <MudTooltip Text="When checked, indicates that this character is owned by you. Uncheck this if you are adding a character on someone's behalf."
+                                Class="mt-3">
+                        <MudCheckBox @bind-Checked="_character.SenderIsOwner"
+                                     Label="This character is mine"
+                                     For="() => _character.SenderIsOwner" />
+                    </MudTooltip>
                 }
-            </MudSelect>
-            @if (AllowSubmitNonOwned)
-            {
-                <MudTooltip Text="When checked, indicates that this character is owned by you. Uncheck this if you are adding a character on someone's behalf."
-                            Class="mt-3">
-                    <MudCheckBox @bind-Checked="_character.SenderIsOwner"
-                                 Label="This character is mine"
-                                 For="() => _character.SenderIsOwner" />
-                </MudTooltip>
-            }
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+</AuthorizeView>
 
 @code {
     private readonly CharacterSubmissionDto _character = new();

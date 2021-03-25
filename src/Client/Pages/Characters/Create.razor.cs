@@ -3,9 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using MudBlazor;
 using ValhallaLootList.Client.Data;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Characters
 {
@@ -47,10 +50,18 @@ namespace ValhallaLootList.Client.Pages.Characters
 
         private static readonly PlayerRace[] _allRaces;
 
-        private Task OnSubmit()
+        private Task OnSubmit(ClaimsPrincipal user)
         {
             return (EditingCharacter is null ? Api.Characters.Create(_character) : Api.Characters.Update(EditingCharacter.Id, _character))
-                .OnSuccess(character => Dialog.Close(DialogResult.Ok(character)))
+                .OnSuccess((CharacterDto character, CancellationToken ct) =>
+                {
+                    Dialog.Close(DialogResult.Ok(character));
+                    if (_character.SenderIsOwner)
+                    {
+                        return ClaimsSync.AddAsync(user, AppClaimTypes.Character, character.Id.ToString(), ct);
+                    }
+                    return Task.CompletedTask;
+                })
                 .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }

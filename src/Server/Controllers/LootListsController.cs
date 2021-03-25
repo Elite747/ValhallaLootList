@@ -19,11 +19,13 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZoneInfo;
+        private readonly IAuthorizationService _authorizationService;
 
-        public LootListsController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo)
+        public LootListsController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo, IAuthorizationService authorizationService)
         {
             _context = context;
             _serverTimeZoneInfo = serverTimeZoneInfo;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet]
@@ -49,6 +51,12 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult<LootListDto>> PostLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
             var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
 
             if (bracketTemplates.Count == 0)
@@ -69,11 +77,6 @@ namespace ValhallaLootList.Server.Controllers
             if (character is null)
             {
                 return NotFound();
-            }
-
-            if (!User.IsAdmin() && character.OwnerId != User.GetDiscordId())
-            {
-                return Unauthorized();
             }
 
             if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
@@ -242,6 +245,12 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult<LootListDto>> PutLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
             if (list is null)
@@ -264,11 +273,6 @@ namespace ValhallaLootList.Server.Controllers
             if (character is null)
             {
                 return NotFound();
-            }
-
-            if (!User.IsAdmin() && character.OwnerId != User.GetDiscordId())
-            {
-                return Unauthorized();
             }
 
             if (list.Locked)
@@ -540,9 +544,6 @@ namespace ValhallaLootList.Server.Controllers
                 entryQuery = entryQuery.Where(e => e.LootList.Phase == phase.Value);
             }
 
-            var currentUserId = User.GetDiscordId();
-            bool isAdmin = User.IsAdmin();
-
             var dtos = await lootListQuery
                 .Select(ll => new LootListDto
                 {
@@ -550,7 +551,6 @@ namespace ValhallaLootList.Server.Controllers
                     CharacterId = ll.CharacterId,
                     CharacterName = ll.Character.Name,
                     CharacterMemberStatus = ll.Character.MemberStatus,
-                    Owned = isAdmin || ll.Character.OwnerId == currentUserId,
                     TeamId = ll.Character.TeamId,
                     TeamName = ll.Character.Team!.Name,
                     Locked = ll.Locked,
@@ -569,6 +569,8 @@ namespace ValhallaLootList.Server.Controllers
                 .GroupBy(a => a.CharacterId)
                 .Select(g => new { CharacterId = g.Key, Count = g.Select(a => a.Date).Distinct().Count() })
                 .ToDictionaryAsync(g => g.CharacterId, g => g.Count);
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
 
             await foreach (var entry in entryQuery
                 .OrderByDescending(e => e.Rank)
@@ -616,7 +618,7 @@ namespace ValhallaLootList.Server.Controllers
                         }
                     }
 
-                    bool showRanks = dto.Locked || dto.Owned;
+                    bool showRanks = dto.Locked || authorizationResult.Succeeded;
 
                     dto.Entries.Add(new LootListEntryDto
                     {

@@ -13,8 +13,6 @@ namespace ValhallaLootList.DataTransfer
 
         public string? CharacterName { get; set; }
 
-        public bool Owned { get; set; }
-
         public RaidMemberStatus CharacterMemberStatus { get; set; }
 
         public long? TeamId { get; set; }

@@ -79,5 +79,15 @@ namespace ValhallaLootList
         {
             return principal.HasClaim(AppClaimTypes.Role, AppRoles.LootMaster);
         }
+
+        public static bool IsLeaderOf(this ClaimsPrincipal principal, long teamId)
+        {
+            return principal.HasClaim(AppClaimTypes.RaidLeader, teamId.ToString());
+        }
+
+        public static bool IsOwnerOf(this ClaimsPrincipal principal, long characterId)
+        {
+            return principal.HasClaim(AppClaimTypes.Character, characterId.ToString());
+        }
     }
 }

@@ -30,14 +30,12 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet]
         public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
         {
-            var currentUserId = User.GetDiscordId();
-            bool isAdmin = User.IsAdmin();
-
             var query = _context.Characters.AsNoTracking();
 
             if (owned)
             {
-                query = query.Where(c => c.OwnerId == currentUserId);
+                //TODO
+                throw new NotSupportedException();
             }
 
             if (team?.Length > 0)
@@ -66,8 +64,7 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
-                    Editable = isAdmin || c.OwnerId == currentUserId
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male
                 })
                 .AsAsyncEnumerable();
         }
@@ -86,9 +83,6 @@ namespace ValhallaLootList.Server.Controllers
 
         private async Task<ActionResult<CharacterDto>> GetAsync(Expression<Func<Character, bool>> match)
         {
-            var currentUserId = User.GetDiscordId();
-            bool isAdmin = User.IsAdmin();
-
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(match)
@@ -100,8 +94,7 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.Team!.Id,
                     TeamName = c.Team.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
-                    Editable = isAdmin || c.OwnerId == currentUserId
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male
                 })
                 .FirstOrDefaultAsync();
 
@@ -161,11 +154,15 @@ namespace ValhallaLootList.Server.Controllers
 
             if (dto.SenderIsOwner)
             {
-                character.OwnerId = User.GetDiscordId();
+                var userId = User.GetDiscordId();
+
+                Debug.Assert(userId.HasValue);
+
+                _context.UserClaims.Add(new() { UserId = userId.Value, ClaimType = AppClaimTypes.Character, ClaimValue = character.Id.ToString() });
 
                 if (User.IsAdmin())
                 {
-                    character.VerifiedById = character.OwnerId;
+                    character.VerifiedById = userId;
                 }
             }
 
@@ -223,7 +220,6 @@ namespace ValhallaLootList.Server.Controllers
                 Name = character.Name,
                 Race = character.Race,
                 Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                Editable = User.IsAdmin() || character.OwnerId == User.GetDiscordId(),
                 TeamId = character.TeamId
             };
         }
@@ -231,16 +227,27 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("{id:long}/Owner"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
         {
-            var character = await _context.Characters.Where(c => c.Id == id).Select(c => new { c.OwnerId, c.VerifiedById }).FirstOrDefaultAsync();
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Select(c => new { c.VerifiedById })
+                .FirstOrDefaultAsync();
 
             if (character is null)
             {
                 return NotFound();
             }
 
+            var idString = id.ToString();
+
+            var claim = await _context.UserClaims.AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
+                .Select(c => new { c.UserId })
+                .FirstOrDefaultAsync();
+
             return new CharacterOwnerDto
             {
-                Owner = await discordService.GetGuildMemberDtoAsync(character.OwnerId),
+                Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
                 VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
             };
         }
@@ -281,10 +288,18 @@ namespace ValhallaLootList.Server.Controllers
 
             if (user is null)
             {
-                return Problem("No user with that id exists.", statusCode: 400);
+                return Problem("No user with that id exists.");
             }
 
-            character.OwnerId = user.Id;
+            var idString = id.ToString();
+
+            var existingClaims = await _context.UserClaims
+                .AsTracking()
+                .Where(claim => claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == idString)
+                .ToListAsync();
+
+            _context.UserClaims.RemoveRange(existingClaims);
+            _context.UserClaims.Add(new() { ClaimType = AppClaimTypes.Character, ClaimValue = idString, UserId = ownerId });
             character.VerifiedById = User.GetDiscordId();
 
             await _context.SaveChangesAsync();
@@ -302,7 +317,15 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            character.OwnerId = null;
+            var idString = id.ToString();
+
+            var existingClaims = await _context.UserClaims
+                .AsTracking()
+                .Where(claim => claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == idString)
+                .ToListAsync();
+
+            _context.UserClaims.RemoveRange(existingClaims);
+
             character.VerifiedById = null;
 
             await _context.SaveChangesAsync();

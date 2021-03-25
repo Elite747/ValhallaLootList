@@ -11,9 +11,9 @@ namespace ValhallaLootList.DataTransfer
         private List<AttendanceDto>? _attendees;
         private List<EncounterKillDto>? _kills;
 
-        public string Id { get; set; } = string.Empty;
+        public long Id { get; set; }
 
-        public string TeamId { get; set; } = string.Empty;
+        public long TeamId { get; set; }
 
         public string TeamName { get; set; } = string.Empty;
 

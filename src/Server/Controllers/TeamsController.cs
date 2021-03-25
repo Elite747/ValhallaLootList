@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -35,12 +36,23 @@ namespace ValhallaLootList.Server.Controllers
                 .AsAsyncEnumerable();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TeamDto>> Get(string id)
+        [HttpGet("{id:long}")]
+        public Task<ActionResult<TeamDto>> Get(long id)
+        {
+            return GetTeamAsync(team => team.Id == id);
+        }
+
+        [HttpGet("ByName/{name}")]
+        public Task<ActionResult<TeamDto>> Get(string name)
+        {
+            return GetTeamAsync(team => team.Name == name);
+        }
+
+        private async Task<ActionResult<TeamDto>> GetTeamAsync(Expression<Func<RaidTeam, bool>> match)
         {
             var team = await _context.RaidTeams
                 .AsNoTracking()
-                .Where(team => team.Id == id || team.Name.Equals(id, StringComparison.OrdinalIgnoreCase))
+                .Where(match)
                 .Select(team => new TeamDto
                 {
                     Id = team.Id,
@@ -71,7 +83,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.Id,
                     c.Name,
                     c.Race,
-                    c.IsMale,
+                    c.IsFemale,
                     c.MemberStatus,
                     CurrentLootList = c.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec, l.Phase }).FirstOrDefault()
                 })
@@ -82,7 +94,7 @@ namespace ValhallaLootList.Server.Controllers
                     Class = character.Class,
                     CurrentPhaseMainspec = character.CurrentLootList?.MainSpec,
                     CurrentPhaseOffspec = character.CurrentLootList?.OffSpec,
-                    Gender = character.IsMale ? Gender.Male : Gender.Female,
+                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
                     Id = character.Id,
                     MemberStatus = character.MemberStatus,
                     Name = character.Name,
@@ -94,7 +106,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost, Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult<CharacterDto>> Post([FromBody] TeamSubmissionDto dto)
+        public async Task<ActionResult<CharacterDto>> Post([FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!ModelState.IsValid)
             {
@@ -108,7 +120,7 @@ namespace ValhallaLootList.Server.Controllers
                 ModelState.AddModelError(nameof(dto.Schedules), "At least one raid day schedule must be entered.");
             }
 
-            var team = new RaidTeam
+            var team = new RaidTeam(idGenerator.CreateId())
             {
                 Name = dto.Name
             };
@@ -119,7 +131,7 @@ namespace ValhallaLootList.Server.Controllers
                 Debug.Assert(scheduleDto.StartTime.HasValue);
                 Debug.Assert(scheduleDto.Duration.HasValue);
 
-                team.Schedules.Add(new RaidTeamSchedule
+                team.Schedules.Add(new RaidTeamSchedule(idGenerator.CreateId())
                 {
                     Day = scheduleDto.Day.Value,
                     Duration = TimeSpan.FromHours(scheduleDto.Duration.Value),
@@ -145,8 +157,8 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id}/members"), Authorize(AppRoles.RaidLeader)]
-        public async Task<ActionResult<TeamCharacterDto>> PostMember(string id, [FromBody] AddTeamMemberDto dto)
+        [HttpPost("{id:long}/members"), Authorize(AppRoles.RaidLeader)]
+        public async Task<ActionResult<TeamCharacterDto>> PostMember(long id, [FromBody] AddTeamMemberDto dto)
         {
             if (!await _context.IsLeaderOf(User, id))
             {
@@ -165,7 +177,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (character.TeamId?.Length > 0 && character.TeamId != id)
+            if (character.TeamId.HasValue && character.TeamId != id)
             {
                 return Problem("Character is already a part of another team.");
             }
@@ -183,7 +195,7 @@ namespace ValhallaLootList.Server.Controllers
                 Class = character.Class,
                 CurrentPhaseMainspec = characterLootList?.MainSpec,
                 CurrentPhaseOffspec = characterLootList?.OffSpec,
-                Gender = character.IsMale ? Gender.Male : Gender.Female,
+                Gender = character.IsFemale ? Gender.Female : Gender.Male,
                 Id = character.Id,
                 MemberStatus = character.MemberStatus,
                 Name = character.Name,
@@ -191,8 +203,8 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPut("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
-        public async Task<IActionResult> PutMember(string id, string characterId, [FromBody] UpdateTeamMemberDto dto)
+        [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppRoles.RaidLeader)]
+        public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
         {
             if (!await _context.IsLeaderOf(User, id))
             {
@@ -223,8 +235,8 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpDelete("{id}/members/{characterId}"), Authorize(AppRoles.RaidLeader)]
-        public async Task<IActionResult> DeleteMember(string id, string characterId)
+        [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppRoles.RaidLeader)]
+        public async Task<IActionResult> DeleteMember(long id, long characterId)
         {
             if (!await _context.IsLeaderOf(User, id))
             {
@@ -261,7 +273,7 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpGet("{id}/leaders"), Authorize(AppRoles.Administrator)]
+        [HttpGet("{id:long}/leaders"), Authorize(AppRoles.Administrator)]
         public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
         {
             await foreach (var userId in _context.UserClaims
@@ -270,20 +282,17 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(claim => claim.UserId)
                 .AsAsyncEnumerable())
             {
-                if (long.TryParse(userId, out var discordId))
-                {
-                    var guildMember = await discordService.GetGuildMemberDtoAsync(discordId);
+                var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
 
-                    if (guildMember is not null)
-                    {
-                        yield return guildMember;
-                    }
+                if (guildMember is not null)
+                {
+                    yield return guildMember;
                 }
             }
         }
 
-        [HttpPost("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(string id, string userId, [FromServices] DiscordService discordService)
+        [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordService discordService)
         {
             if (await _context.RaidTeams.CountAsync(team => team.Id == id) == 0)
             {
@@ -295,31 +304,27 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!long.TryParse(userId, out var discordId))
-            {
-                return Problem("Couldn't parse User ID.");
-            }
-
-            var guildMember = await discordService.GetGuildMemberDtoAsync(discordId);
+            var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
 
             if (guildMember is null)
             {
                 return Problem("Couldn't locate the corresponding discord user.");
             }
 
-            if (await _context.UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id) > 0)
+            var idString = id.ToString();
+            if (await _context.UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString) > 0)
             {
                 return Problem("User is already a leader of this team.");
             }
 
-            _context.UserClaims.Add(new IdentityUserClaim<string> { UserId = userId, ClaimType = AppClaimTypes.RaidLeader, ClaimValue = id });
+            _context.UserClaims.Add(new IdentityUserClaim<long> { UserId = userId, ClaimType = AppClaimTypes.RaidLeader, ClaimValue = idString });
             await _context.SaveChangesAsync();
 
             return guildMember;
         }
 
         [HttpDelete("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
-        public async Task<IActionResult> DeleteLeader(string id, string userId)
+        public async Task<IActionResult> DeleteLeader(string id, long userId)
         {
             var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id);
 

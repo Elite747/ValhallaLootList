@@ -8,7 +8,7 @@ namespace ValhallaLootList.DataTransfer
     public class AddTeamMemberDto
     {
         [Required]
-        public string? CharacterId { get; set; }
+        public long? CharacterId { get; set; }
 
         public RaidMemberStatus MemberStatus { get; set; }
     }

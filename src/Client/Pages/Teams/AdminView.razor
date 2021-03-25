@@ -37,10 +37,12 @@
 
 @code {
     [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
+        if (User is null) throw new ArgumentNullException(nameof(User));
     }
 
     private async Task AddLeaderAsync(IList<GuildMemberDto> leaders)
@@ -58,8 +60,15 @@
 
         if (result is not null)
         {
-            await Api.Teams.AddLeader(Team.Id, result.Id.ToString())
-                .OnSuccess(member => leaders.Add(member))
+            await Api.Teams.AddLeader(Team.Id, result.Id)
+                .OnSuccess(member =>
+                {
+                    leaders.Add(member);
+                    if (member.Id == User.GetDiscordIdFromClient() && User.Identity is System.Security.Claims.ClaimsIdentity identity)
+                    {
+                        identity.AddClaim(new System.Security.Claims.Claim(AppClaimTypes.RaidLeader, Team.Id.ToString()));
+                    }
+                })
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
@@ -67,8 +76,20 @@
 
     private Task RemoveLeaderAsync(IList<GuildMemberDto> leaders, GuildMemberDto leader)
     {
-        return Api.Teams.RemoveLeader(Team.Id, leader.Id.ToString())
-            .OnSuccess(_ => leaders.Remove(leader))
+        return Api.Teams.RemoveLeader(Team.Id, leader.Id)
+            .OnSuccess(_ =>
+            {
+                leaders.Remove(leader);
+                if (leader.Id == User.GetDiscordIdFromClient() && User.Identity is System.Security.Claims.ClaimsIdentity identity)
+                {
+                    var teamIdString = Team.Id.ToString();
+                    var claim = identity.FindFirst(claim => claim.Type == AppClaimTypes.RaidLeader && claim.Value == teamIdString);
+                    if (claim is not null)
+                    {
+                        identity.RemoveClaim(claim);
+                    }
+                }
+            })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }

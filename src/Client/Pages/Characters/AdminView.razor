@@ -57,7 +57,7 @@
 
         if (result is not null)
         {
-            await Api.Characters.SetOwner(Character.Id, result.Id.ToString())
+            await Api.Characters.SetOwner(Character.Id, result.Id)
                 .OnSuccess((_,_) => _executor?.RestartAsync() ?? Task.CompletedTask)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();

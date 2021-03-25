@@ -7,11 +7,11 @@ namespace ValhallaLootList.DataTransfer
 {
     public class CharacterAttendanceDto
     {
-        public string RaidId { get; set; } = string.Empty;
+        public long RaidId { get; set; }
 
         public DateTimeOffset StartedAt { get; set; }
 
-        public string TeamId { get; set; } = string.Empty;
+        public long TeamId { get; set; }
 
         public string TeamName { get; set; } = string.Empty;
 

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class AppUser : IdentityUser
+    public class AppUser : IdentityUser<long>
     {
     }
 }

@@ -7,19 +7,31 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class Drop : KeyedRow
+    public class Drop
     {
-        public string? AwardedBy { get; set; }
+        public Drop(long id)
+        {
+            if (id <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), "Id cannot be less than or equal to zero.");
+            }
 
-        public DateTime AwardedAtUtc { get; set; }
+            Id = id;
+        }
+
+        public long Id { get; }
+
+        public long? AwardedBy { get; set; }
+
+        public DateTimeOffset AwardedAt { get; set; }
 
         [Required]
         public uint ItemId { get; set; }
 
-        public string? WinnerId { get; set; }
+        public long? WinnerId { get; set; }
 
         [Required]
-        public string EncounterKillRaidId { get; set; } = null!;
+        public long EncounterKillRaidId { get; set; }
 
         [Required]
         public string EncounterKillEncounterId { get; set; } = null!;

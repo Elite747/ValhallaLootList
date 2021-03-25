@@ -20,9 +20,9 @@ namespace ValhallaLootList.Client.Pages.Raids
             var lastKill = raid.Kills.Count == 0 ? null : raid.Kills[^1];
             foreach (var id in raid.Attendees.Select(a => a.Character?.Id))
             {
-                if (id?.Length > 0 && lastKill?.Characters.Contains(id) != false)
+                if (id.HasValue && lastKill?.Characters.Contains(id.Value) != false)
                 {
-                    Attendees.Add(id);
+                    Attendees.Add(id.Value);
                 }
             }
         }
@@ -57,9 +57,9 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         public Dictionary<uint, int> Drops { get; } = new();
 
-        public HashSet<string> Attendees { get; } = new();
+        public HashSet<long> Attendees { get; } = new();
 
-        public void ToggleAttendee(string id)
+        public void ToggleAttendee(long id)
         {
             if (!Attendees.Add(id))
             {

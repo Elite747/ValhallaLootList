@@ -11,7 +11,7 @@
                     foreach (var entry in prioGroup)
                     {
                         var characterId = entry.CharacterId;
-                        var characterName = Raid.Attendees.Find(c => c.Character?.Id == characterId)?.Character?.Name ?? characterId;
+                        var characterName = Raid.Attendees.Find(c => c.Character?.Id == characterId)?.Character?.Name ?? characterId.ToString();
                         <MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(characterId))" IconColor="Color.Error" Icon="@(highlight ? Icons.Material.Filled.Error : null)">
                             <div>@(entry.Priority.HasValue ? string.Format(CultureInfo.CurrentCulture,"({0:N0})", entry.Priority.Value) : "") @characterName</div>
                             @if (entry.Details?.Length > 0)

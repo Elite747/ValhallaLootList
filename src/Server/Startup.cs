@@ -37,6 +37,12 @@ namespace ValhallaLootList.Server
             services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
             services.AddScoped<DiscordRoleMap>();
 
+            services.AddIdGen(options =>
+            {
+                options.GeneratorId = Configuration.GetValue<int?>("GeneratorId").GetValueOrDefault();
+                options.SequenceOverflowStrategy = IdGen.SequenceOverflowStrategy.SpinWait;
+            });
+
             services.AddHttpClient<DiscordService>()
                 .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
                 {
@@ -44,7 +50,7 @@ namespace ValhallaLootList.Server
                 });
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseMySql(Configuration.GetConnectionString("DefaultConnection"), MySqlServerVersion.LatestSupportedServerVersion, sql => sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), sql => sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 

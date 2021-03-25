@@ -8,13 +8,13 @@ namespace ValhallaLootList.Server.Data
     public class DropPass
     {
         [Required]
-        public string CharacterId { get; set; } = null!;
+        public long CharacterId { get; set; }
 
         [Required]
         public virtual Character Character { get; set; } = null!;
 
         [Required]
-        public string DropId { get; set; } = null!;
+        public long DropId { get; set; }
 
         [Required]
         public virtual Drop Drop { get; set; } = null!;

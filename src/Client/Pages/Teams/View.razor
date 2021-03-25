@@ -19,9 +19,9 @@
     </div>
 
     <MudGrid Class="mt-5">
-        <AuthorizeView Roles="@AppRoles.Administrator">
+        <AuthorizeView Roles="@AppRoles.Administrator" Context="auth">
             <MudItem xs="12">
-                <AdminView Team="team" />
+                <AdminView Team="team" User="auth.User" />
             </MudItem>
         </AuthorizeView>
         <MudItem xs="12" md="6">

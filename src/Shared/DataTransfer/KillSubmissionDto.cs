@@ -8,13 +8,13 @@ namespace ValhallaLootList.DataTransfer
 {
     public class KillSubmissionDto
     {
-        private List<string>? _characters;
+        private List<long>? _characters;
         private List<uint>? _drops;
 
         [Required]
         public string? EncounterId { get; set; }
 
-        public List<string> Characters
+        public List<long> Characters
         {
             get => _characters ??= new();
             set => _characters = value;

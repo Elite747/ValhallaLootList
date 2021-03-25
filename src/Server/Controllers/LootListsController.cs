@@ -27,7 +27,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IList<LootListDto>>> Get(string? characterId = null, string? teamId = null, byte? phase = null)
+        public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, byte? phase = null)
         {
             try
             {
@@ -46,8 +46,8 @@ namespace ValhallaLootList.Server.Controllers
             }
         }
 
-        [HttpPost("Phase{phase:int}/{characterId}")]
-        public async Task<ActionResult<LootListDto>> PostLootList(string characterId, byte phase, [FromBody] LootListSubmissionDto dto)
+        [HttpPost("Phase{phase:int}/{characterId:long}")]
+        public async Task<ActionResult<LootListDto>> PostLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
 
@@ -164,7 +164,7 @@ namespace ValhallaLootList.Server.Controllers
             var items = await _context.Items
                 .AsNoTracking()
                 .Where(item => allItemIds.Contains(item.Id))
-                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, Phase = (item.RewardFromId != null ? item.RewardFrom!.Encounter!.Instance.Phase : item.Encounter!.Instance!.Phase) }) // TODO: simplify phase query
+                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, item.Phase })
                 .ToDictionaryAsync(item => item.Id);
 
             var bothSpecs = dto.OffSpec.HasValue ? (dto.MainSpec.Value | dto.OffSpec.Value) : dto.MainSpec.Value;
@@ -206,7 +206,7 @@ namespace ValhallaLootList.Server.Controllers
                                     ModelState.AddModelError($"Items[{rank}][{col}]", restriction.Reason);
                                 }
 
-                                list.Entries.Add(new LootListEntry
+                                list.Entries.Add(new LootListEntry(idGenerator.CreateId())
                                 {
                                     ItemId = itemId,
                                     LootList = list,
@@ -239,8 +239,8 @@ namespace ValhallaLootList.Server.Controllers
             return CreatedAtAction(nameof(Get), new { characterId = character.Id, phase }, dtos[0]);
         }
 
-        [HttpPut("Phase{phase:int}/{characterId}")]
-        public async Task<ActionResult<LootListDto>> PutLootList(string characterId, byte phase, [FromBody] LootListSubmissionDto dto)
+        [HttpPut("Phase{phase:int}/{characterId:long}")]
+        public async Task<ActionResult<LootListDto>> PutLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
@@ -295,7 +295,7 @@ namespace ValhallaLootList.Server.Controllers
 
             foreach (var existingEntry in list.Entries.ToList())
             {
-                if (string.IsNullOrEmpty(existingEntry.DropId))
+                if (!existingEntry.DropId.HasValue)
                 {
                     list.Entries.Remove(existingEntry);
                     _context.LootListEntries.Remove(existingEntry);
@@ -363,7 +363,7 @@ namespace ValhallaLootList.Server.Controllers
             var items = await _context.Items
                 .AsNoTracking()
                 .Where(item => allItemIds.Contains(item.Id))
-                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, Phase = (item.RewardFromId != null ? item.RewardFrom!.Encounter!.Instance.Phase : item.Encounter!.Instance!.Phase) }) // TODO: simplify phase query
+                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, item.Phase })
                 .ToDictionaryAsync(item => item.Id);
 
             var bothSpecs = dto.OffSpec.HasValue ? (dto.MainSpec.Value | dto.OffSpec.Value) : dto.MainSpec.Value;
@@ -405,7 +405,7 @@ namespace ValhallaLootList.Server.Controllers
                                     ModelState.AddModelError($"Items[{rank}][{col}]", restriction.Reason);
                                 }
 
-                                list.Entries.Add(new LootListEntry
+                                list.Entries.Add(new LootListEntry(idGenerator.CreateId())
                                 {
                                     ItemId = itemId,
                                     LootList = list,
@@ -436,8 +436,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok(dtos[0]);
         }
 
-        [HttpPost("Phase{phase:int}/{characterId}/Lock"), Authorize(AppRoles.RaidLeader)]
-        public async Task<ActionResult> PostLock(string characterId, byte phase)
+        [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppRoles.RaidLeader)]
+        public async Task<ActionResult> PostLock(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
@@ -450,7 +450,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 var teamId = await _context.Characters.Where(c => c.Id == characterId).Select(c => c.TeamId).FirstAsync();
 
-                if (string.IsNullOrEmpty(teamId) || !User.HasClaim(AppClaimTypes.RaidLeader, teamId))
+                if (!teamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, teamId.Value.ToString()))
                 {
                     return Unauthorized();
                 }
@@ -468,8 +468,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId}/Unlock"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult> PostUnlock(string characterId, byte phase)
+        [HttpPost("Phase{phase:int}/{characterId:long}/Unlock"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> PostUnlock(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
@@ -490,16 +490,16 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        private async Task<IList<LootListDto>?> CreateDtosAsync(string? characterId, string? teamId, byte? phase)
+        private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
         {
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
             var passQuery = _context.DropPasses.AsNoTracking();
             var entryQuery = _context.LootListEntries.AsNoTracking();
             var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance);
 
-            if (characterId?.Length > 0)
+            if (characterId.HasValue)
             {
-                if (teamId?.Length > 0)
+                if (teamId.HasValue)
                 {
                     throw new ArgumentException("Either characterId or teamId must be set, but not both.");
                 }
@@ -517,7 +517,7 @@ namespace ValhallaLootList.Server.Controllers
                 attendanceQuery = attendanceQuery.Where(a => a.CharacterId == characterId);
                 teamId = character.TeamId;
             }
-            else if (teamId?.Length > 0)
+            else if (teamId.HasValue)
             {
                 if (await _context.RaidTeams.CountAsync(team => team.Id == teamId) == 0)
                 {
@@ -564,9 +564,8 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(pass => new { pass.CharacterId, pass.Drop.ItemId, pass.RelativePriority })
                 .ToListAsync();
 
-            var offset = TimeSpanHelpers.GetTimeZoneOffsetString(_serverTimeZoneInfo.BaseUtcOffset);
             var attendances = await attendanceQuery
-                .Select(a => new { a.CharacterId, MySqlTranslations.ConvertTz(a.Raid.StartedAtUtc, "+00:00", offset).Date })
+                .Select(a => new { a.CharacterId, a.Raid.StartedAt.Date })
                 .GroupBy(a => a.CharacterId)
                 .Select(g => new { CharacterId = g.Key, Count = g.Select(a => a.Date).Distinct().Count() })
                 .ToDictionaryAsync(g => g.CharacterId, g => g.Count);

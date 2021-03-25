@@ -8,10 +8,10 @@ namespace ValhallaLootList.Server.Data
     public class CharacterEncounterKill
     {
         [Required]
-        public string CharacterId { get; set; } = null!;
+        public long CharacterId { get; set; }
 
         [Required]
-        public string EncounterKillRaidId { get; set; } = null!;
+        public long EncounterKillRaidId { get; set; }
 
         [Required]
         public string EncounterKillEncounterId { get; set; } = null!;

@@ -9,7 +9,7 @@ namespace ValhallaLootList.DataTransfer
     public class EncounterKillDto
     {
         private List<EncounterDropDto>? _drops;
-        private List<string>? _characters;
+        private List<long>? _characters;
 
         public string EncounterId { get; set; } = string.Empty;
 
@@ -23,7 +23,7 @@ namespace ValhallaLootList.DataTransfer
             set => _drops = value;
         }
 
-        public List<string> Characters
+        public List<long> Characters
         {
             get => _characters ??= new();
             set => _characters = value;

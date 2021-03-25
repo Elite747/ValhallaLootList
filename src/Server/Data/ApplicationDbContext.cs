@@ -10,14 +10,14 @@ using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Extensions;
 using IdentityServer4.EntityFramework.Interfaces;
 using IdentityServer4.EntityFramework.Options;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Options;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<AppUser>, IPersistedGrantDbContext
+    public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long>,  long>, IPersistedGrantDbContext
     {
         private readonly OperationalStoreOptions _operationalStoreOptions;
 
@@ -27,7 +27,7 @@ namespace ValhallaLootList.Server.Data
         }
 
         public ApplicationDbContext(string connectionString)
-            : base(new DbContextOptionsBuilder<ApplicationDbContext>().UseMySql(connectionString, MySqlServerVersion.LatestSupportedServerVersion).Options)
+            : base(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connectionString).Options)
         {
             _operationalStoreOptions = new OperationalStoreOptions();
         }
@@ -54,14 +54,15 @@ namespace ValhallaLootList.Server.Data
 
         public Task<byte> GetCurrentPhaseAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            return PhaseDetails.AsNoTracking().Where(pd => pd.StartsAtUtc <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
+            var now = DateTimeOffset.UtcNow;
+            return PhaseDetails.AsNoTracking().Where(pd => pd.StartsAt <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
         }
 
-        public async Task<bool> IsLeaderOf(ClaimsPrincipal user, string teamId)
+        public async Task<bool> IsLeaderOf(ClaimsPrincipal user, long teamId)
         {
-            var userId = user.GetAppUserId();
-            return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamId) > 0;
+            var userId = user.GetDiscordId();
+            var teamIdString = teamId.ToString();
+            return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamIdString) > 0;
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -70,7 +71,11 @@ namespace ValhallaLootList.Server.Data
 
             builder.ConfigurePersistedGrantContext(_operationalStoreOptions);
 
-            builder.Entity<Character>().HasIndex(e => e.Name).IsUnique();
+            builder.Entity<Character>(e =>
+            {
+                e.HasIndex(character => character.Name).IsUnique();
+                e.Property(character => character.Id).ValueGeneratedNever();
+            });
 
             builder.Entity<CharacterEncounterKill>()
                 .ToTable("CharacterEncounterKill")
@@ -78,29 +83,59 @@ namespace ValhallaLootList.Server.Data
 
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
 
+            builder.Entity<Drop>().Property(drop => drop.Id).ValueGeneratedNever();
+
             builder.Entity<DropPass>().HasKey(e => new { e.DropId, e.CharacterId });
 
-            builder.Entity<EncounterKill>().HasKey(e => new { e.EncounterId, e.RaidId });
+            builder.Entity<Encounter>().Property(encounter => encounter.Id).ValueGeneratedNever();
 
-            builder.Entity<RaidAttendee>().HasKey(e => new { e.CharacterId, e.RaidId });
+            builder.Entity<EncounterKill>().HasKey(kill => new { kill.EncounterId, kill.RaidId });
 
-            builder.Entity<RaidTeam>().HasIndex(e => e.Name).IsUnique();
+            builder.Entity<Instance>().Property(instance => instance.Id).ValueGeneratedNever();
 
-            builder.Entity<Bracket>().HasKey(e => new { e.Phase, e.Index });
-            builder.Entity<Bracket>().HasData(
-                // Phase 1 brackets
-                new(phase: 1, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
-                );
+            builder.Entity<Item>().Property(item => item.Id).ValueGeneratedNever();
 
-            builder.Entity<PhaseDetails>().HasData(
-                new PhaseDetails(id: 1, startsAtUtc: default)
-                );
+            builder.Entity<RaidAttendee>().HasKey(attendee => new { attendee.CharacterId, attendee.RaidId });
 
-            builder.HasDbFunction(typeof(MySqlTranslations).GetMethod(nameof(MySqlTranslations.ConvertTz)))
-                .HasTranslation(args => new SqlFunctionExpression("CONVERT_TZ", args, nullable: true, args.Select(_ => false), typeof(DateTime), null));
+            builder.Entity<Raid>().Property(raid => raid.Id).ValueGeneratedNever();
+
+            builder.Entity<RaidTeam>(e =>
+            {
+                e.HasIndex(raid => raid.Name).IsUnique();
+                e.Property(team => team.Id).ValueGeneratedNever();
+            });
+
+            builder.Entity<RaidTeamSchedule>().Property(schedule => schedule.Id).ValueGeneratedNever();
+
+            builder.Entity<ItemRestriction>(e =>
+            {
+                e.Property(restriction => restriction.Id).ValueGeneratedNever();
+                e.HasIndex(restriction => new { restriction.RestrictionLevel, restriction.Specializations });
+            });
+
+            builder.Entity<LootListEntry>().Property(entry => entry.Id).ValueGeneratedNever();
+
+            builder.Entity<Bracket>(e =>
+            {
+                e.HasKey(bracket => new { bracket.Phase, bracket.Index });
+                e.HasData(
+                    // Phase 1 brackets
+                    new(phase: 1, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 1, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 1, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
+                    );
+            });
+
+            builder.Entity<PhaseDetails>(e =>
+            {
+                e.Property(phase => phase.Id).ValueGeneratedNever();
+                e.HasData(
+                    new PhaseDetails(id: 1, startsAt: default)
+                    );
+            });
+
+            builder.Entity<AppUser>().Property(e => e.Id).ValueGeneratedNever();
         }
 
         Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();

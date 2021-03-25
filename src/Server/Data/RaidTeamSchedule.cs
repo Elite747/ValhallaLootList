@@ -6,8 +6,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class RaidTeamSchedule : KeyedRow
+    public class RaidTeamSchedule
     {
+        public RaidTeamSchedule(long id)
+        {
+            if (id <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), "Id cannot be less than or equal to zero.");
+            }
+
+            Id = id;
+        }
+
+        public long Id { get; }
+
         [Required]
         public virtual RaidTeam RaidTeam { get; init; } = null!;
 

@@ -200,7 +200,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 user = new AppUser
                 {
-                    Id = info.ProviderKey,
+                    Id = long.Parse(info.ProviderKey),
                     UserName = guildMember.DisplayName
                 };
 

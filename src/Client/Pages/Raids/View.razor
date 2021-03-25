@@ -1,10 +1,10 @@
-﻿@page "/raids/{RaidId}"
+﻿@page "/raids/{RaidId:long}"
 @inject ApiClient Api
 
 <ApiExecutor Operation="() => Api.Raids.Get(RaidId)" Context="raid" @ref="_executor" BackgroundRefresh="true">
     <h1>Team @raid.TeamName Raid</h1>
     <h3>Phase @raid.Phase</h3>
-    <h3>@raid.StartedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)</h3>
+    <h3>@raid.StartedAt.ToLocalTime().ToString("f", CultureInfo.CurrentCulture)</h3>
 
     <AttendeesView Raid="raid" />
     <KillsView Raid="raid" />
@@ -19,5 +19,5 @@
 @code {
     private IApiExecutor? _executor;
 
-    [Parameter] public string RaidId { get; set; } = string.Empty;
+    [Parameter] public long RaidId { get; set; }
 }

@@ -44,7 +44,7 @@ namespace ValhallaLootList.Client
                 })
                 .AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
 
-            builder.Services.AddAuthorizationCore(AppRoles.ConfigureAuthorization);
+            builder.Services.AddAuthorizationCore(options => { var dp = options.DefaultPolicy; AppRoles.ConfigureAuthorization(options); options.DefaultPolicy = dp; });
 
             builder.Services.AddMudServices(options =>
             {

@@ -18,17 +18,17 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, "api/v1/raids");
         }
 
-        public IApiClientOperation<IList<RaidDto>> GetRecentForTeam(string teamId)
+        public IApiClientOperation<IList<RaidDto>> GetRecentForTeam(long teamId)
         {
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, $"api/v1/raids?team={teamId}");
         }
 
-        public IApiClientOperation<IList<RaidDto>> GetForMonth(int year, int month, string? teamId = null)
+        public IApiClientOperation<IList<RaidDto>> GetForMonth(int year, int month, long? teamId = null)
         {
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, $"api/v1/raids?team={teamId}&y={year}&m={month}");
         }
 
-        public IApiClientOperation<RaidDto> Get(string raidId)
+        public IApiClientOperation<RaidDto> Get(long raidId)
         {
             return Client.CreateRequest<RaidDto>(HttpMethod.Get, "api/v1/raids/" + raidId);
         }
@@ -38,32 +38,32 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<RaidSubmissionDto, RaidDto>(HttpMethod.Post, "api/v1/raids", submission);
         }
 
-        public IApiClientOperation Delete(string raidId)
+        public IApiClientOperation Delete(long raidId)
         {
             return Client.CreateRequest(HttpMethod.Delete, "api/v1/raids/" + raidId);
         }
 
-        public IApiClientOperation Delete(string raidId, string encounterId)
+        public IApiClientOperation Delete(long raidId, string encounterId)
         {
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/raids/{raidId}/Kills/{encounterId}");
         }
 
-        public IApiClientOperation<AttendanceDto> AddAttendee(string raidId, string characterId)
+        public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId)
         {
             return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId });
         }
 
-        public IApiClientOperation<AttendanceDto> UpdateAttendee(string raidId, string characterId, UpdateAttendanceSubmissionDto dto)
+        public IApiClientOperation<AttendanceDto> UpdateAttendee(long raidId, long characterId, UpdateAttendanceSubmissionDto dto)
         {
             return Client.CreateRequest<UpdateAttendanceSubmissionDto, AttendanceDto>(HttpMethod.Put, $"api/v1/raids/{raidId}/attendees/{characterId}", dto);
         }
 
-        public IApiClientOperation RemoveAttendee(string raidId, string characterId)
+        public IApiClientOperation RemoveAttendee(long raidId, long characterId)
         {
             return Client.CreateRequest<AttendeeSubmissionDto>(HttpMethod.Delete, $"api/v1/raids/{raidId}/attendees/{characterId}");
         }
 
-        public IApiClientOperation<EncounterKillDto> AddKill(string raidId, KillSubmissionDto killSubmission)
+        public IApiClientOperation<EncounterKillDto> AddKill(long raidId, KillSubmissionDto killSubmission)
         {
             return Client.CreateRequest<KillSubmissionDto, EncounterKillDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/kills", killSubmission);
         }

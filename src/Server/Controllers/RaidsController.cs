@@ -4,12 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
@@ -23,27 +23,27 @@ namespace ValhallaLootList.Server.Controllers
             _context = context;
         }
 
-        public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, string? team = null)
+        public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, long? team = null)
         {
-            DateTime startUtc, endUtc;
+            DateTimeOffset start, end;
             if (m.HasValue || y.HasValue)
             {
                 var startUnspecified = new DateTime(y ?? DateTime.Today.Year, m ?? DateTime.Today.Month, 1);
                 var startRealm = new DateTimeOffset(startUnspecified, realmTimeZoneInfo.GetUtcOffset(startUnspecified));
-                startUtc = startRealm.UtcDateTime;
-                endUtc = startRealm.AddMonths(1).UtcDateTime;
+                start = startRealm;
+                end = startRealm.AddMonths(1);
             }
             else
             {
-                endUtc = DateTime.UtcNow;
-                startUtc = endUtc.AddMonths(-1);
+                end = DateTimeOffset.UtcNow;
+                start = end.AddMonths(-1);
             }
 
-            var query = _context.Raids.AsNoTracking().Where(r => r.StartedAtUtc >= startUtc && r.StartedAtUtc < endUtc);
+            var query = _context.Raids.AsNoTracking().Where(r => r.StartedAt >= start && r.StartedAt < end);
 
-            if (team?.Length > 0)
+            if (team.HasValue)
             {
-                query = query.Where(r => r.RaidTeamId == team);
+                query = query.Where(r => r.RaidTeamId == team.Value);
             }
 
             return query
@@ -51,22 +51,22 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     Id = r.Id,
                     Phase = r.Phase,
-                    StartedAt = new DateTimeOffset(r.StartedAtUtc, TimeSpan.Zero),
+                    StartedAt = r.StartedAt,
                     TeamId = r.RaidTeamId,
                     TeamName = r.RaidTeam.Name
                 })
                 .AsAsyncEnumerable();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RaidDto>> Get(string id)
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<RaidDto>> Get(long id)
         {
             var dto = await _context.Raids
                 .AsNoTracking()
                 .Where(raid => raid.Id == id)
                 .Select(raid => new RaidDto
                 {
-                    StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
+                    StartedAt = raid.StartedAt,
                     Id = raid.Id,
                     Phase = raid.Phase,
                     TeamId = raid.RaidTeamId,
@@ -95,7 +95,7 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         Class = a.Character.Class,
                         Editable = isAdmin || a.Character.OwnerId == currentUserId,
-                        Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                        Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                         Id = a.CharacterId,
                         Name = a.Character.Name,
                         Race = a.Character.Race,
@@ -108,10 +108,10 @@ namespace ValhallaLootList.Server.Controllers
             dto.Kills = await _context.EncounterKills
                 .AsNoTracking()
                 .Where(k => k.RaidId == id)
-                .OrderBy(k => k.KilledAtUtc)
+                .OrderBy(k => k.KilledAt)
                 .Select(k => new EncounterKillDto
                 {
-                    KilledAt = new DateTimeOffset(k.KilledAtUtc, TimeSpan.Zero),
+                    KilledAt = k.KilledAt,
                     EncounterId = k.EncounterId,
                     EncounterName = k.Encounter.Name,
                 })
@@ -139,9 +139,9 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     d.Id,
                     d.EncounterKillEncounterId,
-                    d.AwardedAtUtc,
-                    AwardedBy = (string?)d.AwardedBy,
-                    WinnerId = (string?)d.WinnerId,
+                    d.AwardedAt,
+                    AwardedBy = (long?)d.AwardedBy,
+                    WinnerId = (long?)d.WinnerId,
                     WinnerName = (string?)d.Winner!.Name,
                     d.ItemId,
                     ItemName = d.Item.Name
@@ -152,7 +152,7 @@ namespace ValhallaLootList.Server.Controllers
                 killDictionary[drop.EncounterKillEncounterId].Drops.Add(new EncounterDropDto
                 {
                     Id = drop.Id,
-                    AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
+                    AwardedAt = drop.AwardedAt,
                     AwardedBy = drop.AwardedBy,
                     ItemId = drop.ItemId,
                     ItemName = drop.ItemName,
@@ -165,7 +165,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost, Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<RaidDto>> Post([FromBody] RaidSubmissionDto dto)
+        public async Task<ActionResult<RaidDto>> Post([FromServices] TimeZoneInfo realmTimeZoneInfo, [FromBody] RaidSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
 
@@ -175,7 +175,7 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (phaseDetails.StartsAtUtc > DateTime.UtcNow)
+            if (phaseDetails.StartsAt > DateTimeOffset.UtcNow)
             {
                 ModelState.AddModelError(nameof(dto.Phase), "Phase is not yet active.");
                 return ValidationProblem();
@@ -194,12 +194,12 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            var raid = new Raid
+            var raid = new Raid(idGenerator.CreateId())
             {
                 Phase = (byte)dto.Phase,
                 RaidTeam = team,
                 RaidTeamId = team.Id,
-                StartedAtUtc = DateTime.UtcNow
+                StartedAt = realmTimeZoneInfo.TimeZoneNow()
             };
 
             var characters = await _context.Characters.AsTracking().Where(c => dto.Attendees.Contains(c.Id)).ToListAsync();
@@ -257,14 +257,14 @@ namespace ValhallaLootList.Server.Controllers
                         Id = a.CharacterId,
                         Class = a.Character.Class,
                         Editable = isAdmin || a.Character.OwnerId == currentUserId,
-                        Gender = a.Character.IsMale ? Gender.Male : Gender.Female,
+                        Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                         Name = a.Character.Name,
                         Race = a.Character.Race,
                         TeamId = a.Character.TeamId,
                         TeamName = a.Character.Team?.Name
                     }
                 }).ToList(),
-                StartedAt = new DateTimeOffset(raid.StartedAtUtc, TimeSpan.Zero),
+                StartedAt = raid.StartedAt,
                 Id = raid.Id,
                 Phase = raid.Phase,
                 TeamId = team.Id,
@@ -272,8 +272,8 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpDelete("{id}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult> Delete(string id)
+        [HttpDelete("{id:long}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult> Delete(long id)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -299,8 +299,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("{id}/Attendees"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<AttendanceDto>> PostAttendee(string id, [FromBody] AttendeeSubmissionDto dto)
+        [HttpPost("{id:long}/Attendees"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<AttendanceDto>> PostAttendee(long id, [FromBody] AttendeeSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -362,7 +362,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     Class = character.Class,
                     Editable = User.IsAdmin() || User.GetDiscordId() == character.OwnerId,
-                    Gender = character.IsMale ? Gender.Male : Gender.Female,
+                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
                     Id = character.Id,
                     Name = character.Name,
                     Race = character.Race,
@@ -371,8 +371,8 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpPut("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<AttendanceDto>> PutAttendee(string id, string characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
+        [HttpPut("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<AttendanceDto>> PutAttendee(long id, long characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -413,8 +413,8 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpDelete("{id}/Attendees/{characterId}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult> DeleteAttendee(string id, string characterId)
+        [HttpDelete("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult> DeleteAttendee(long id, long characterId)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -442,8 +442,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("{id}/Kills"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<EncounterKillDto>> PostKill(string id, [FromBody] KillSubmissionDto dto)
+        [HttpPost("{id:long}/Kills"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (dto.Drops.Count == 0)
             {
@@ -494,7 +494,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var kill = new EncounterKill
             {
-                KilledAtUtc = DateTime.UtcNow,
+                KilledAt = realmTimeZoneInfo.TimeZoneNow(),
                 EncounterId = encounter.Id,
                 Raid = raid,
                 RaidId = raid.Id
@@ -546,7 +546,7 @@ namespace ValhallaLootList.Server.Controllers
                 }
                 else
                 {
-                    kill.Drops.Add(new Drop
+                    kill.Drops.Add(new Drop(idGenerator.CreateId())
                     {
                         EncounterKill = kill,
                         EncounterKillEncounterId = kill.EncounterId,
@@ -568,12 +568,12 @@ namespace ValhallaLootList.Server.Controllers
 
             return new EncounterKillDto
             {
-                KilledAt = new DateTimeOffset(kill.KilledAtUtc, TimeSpan.Zero),
+                KilledAt = kill.KilledAt,
                 Characters = kill.Characters.Select(c => c.CharacterId).ToList(),
                 Drops = kill.Drops.Select(d => new EncounterDropDto
                 {
                     Id = d.Id,
-                    AwardedAt = new DateTimeOffset(d.AwardedAtUtc, TimeSpan.Zero),
+                    AwardedAt = d.AwardedAt,
                     AwardedBy = d.AwardedBy,
                     ItemId = d.ItemId,
                     WinnerId = d.Winner?.Id,
@@ -584,8 +584,8 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpDelete("{id}/Kills/{encounterId}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult> DeleteKill(string id, string encounterId)
+        [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult> DeleteKill(long id, string encounterId)
         {
             var raid = await _context.Raids.FindAsync(id);
 

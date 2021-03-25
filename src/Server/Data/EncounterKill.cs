@@ -9,10 +9,10 @@ namespace ValhallaLootList.Server.Data
 {
     public class EncounterKill
     {
-        public DateTime KilledAtUtc { get; set; }
+        public DateTimeOffset KilledAt { get; set; }
 
         [Required]
-        public string RaidId { get; set; } = null!;
+        public long RaidId { get; set; }
 
         [Required]
         public string EncounterId { get; set; } = null!;

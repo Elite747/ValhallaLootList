@@ -8,15 +8,15 @@ namespace ValhallaLootList.DataTransfer
 {
     public class RaidSubmissionDto : IValidatableObject
     {
-        private List<string>? _attendees;
+        private List<long>? _attendees;
 
         [Required]
-        public string? TeamId { get; set; }
+        public long? TeamId { get; set; }
 
         [Required]
         public int Phase { get; set; }
 
-        public List<string> Attendees
+        public List<long> Attendees
         {
             get => _attendees ??= new();
             set => _attendees = value;

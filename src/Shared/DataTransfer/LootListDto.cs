@@ -9,7 +9,7 @@ namespace ValhallaLootList.DataTransfer
     {
         private List<LootListEntryDto>? _entries;
 
-        public string CharacterId { get; set; } = string.Empty;
+        public long CharacterId { get; set; }
 
         public string? CharacterName { get; set; }
 
@@ -17,7 +17,7 @@ namespace ValhallaLootList.DataTransfer
 
         public RaidMemberStatus CharacterMemberStatus { get; set; }
 
-        public string? TeamId { get; set; }
+        public long? TeamId { get; set; }
 
         public string? TeamName { get; set; }
 
@@ -29,7 +29,7 @@ namespace ValhallaLootList.DataTransfer
 
         public bool Locked { get; set; }
 
-        public string? ApprovedBy { get; set; }
+        public long? ApprovedBy { get; set; }
 
         public List<LootListEntryDto> Entries
         {

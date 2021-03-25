@@ -13,7 +13,7 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<LootListDto>> GetForCharacter(string id, byte? phase = null)
+        public IApiClientOperation<IList<LootListDto>> GetForCharacter(long id, byte? phase = null)
         {
             string path = "api/v1/lootlists?characterId=" + id;
 
@@ -25,7 +25,7 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
         }
 
-        public IApiClientOperation<IList<LootListDto>> GetForTeam(string id, byte? phase = null)
+        public IApiClientOperation<IList<LootListDto>> GetForTeam(long id, byte? phase = null)
         {
             string path = "api/v1/lootlists?teamId=" + id;
 
@@ -37,22 +37,22 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
         }
 
-        public IApiClientOperation<LootListDto> Create(string characterId, byte phase, LootListSubmissionDto submission)
+        public IApiClientOperation<LootListDto> Create(long characterId, byte phase, LootListSubmissionDto submission)
         {
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation<LootListDto> Recreate(string characterId, byte phase, LootListSubmissionDto submission)
+        public IApiClientOperation<LootListDto> Recreate(long characterId, byte phase, LootListSubmissionDto submission)
         {
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation Lock(string characterId, byte phase)
+        public IApiClientOperation Lock(long characterId, byte phase)
         {
             return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/lock");
         }
 
-        public IApiClientOperation Unlock(string characterId, byte phase)
+        public IApiClientOperation Unlock(long characterId, byte phase)
         {
             return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/unlock");
         }

@@ -51,31 +51,28 @@ namespace ValhallaLootList.Server.Controllers
 
             await foreach (var row in query.AsAsyncEnumerable())
             {
-                if (long.TryParse(row.Id, out var discordId))
+                if (!users.TryGetValue(row.Id, out var dto))
                 {
-                    if (!users.TryGetValue(discordId, out var dto))
-                    {
-                        users[discordId] = dto = new() { Id = discordId, Nickname = row.UserName };
-                    }
+                    users[row.Id] = dto = new() { Id = row.Id, Nickname = row.UserName };
+                }
 
-                    switch (row.ClaimType)
-                    {
-                        case AppClaimTypes.Role when role?.Length > 0:
-                            if (role.Contains(row.ClaimValue))
-                            {
-                                matchesRoles.Add(discordId);
-                            }
-                            break;
-                        case DiscordClaimTypes.AvatarHash:
-                            dto.Avatar = row.ClaimValue;
-                            break;
-                        case DiscordClaimTypes.Discriminator:
-                            dto.Discriminator = row.ClaimValue;
-                            break;
-                        case DiscordClaimTypes.Username:
-                            dto.Username = row.ClaimValue;
-                            break;
-                    }
+                switch (row.ClaimType)
+                {
+                    case AppClaimTypes.Role when role?.Length > 0:
+                        if (role.Contains(row.ClaimValue))
+                        {
+                            matchesRoles.Add(row.Id);
+                        }
+                        break;
+                    case DiscordClaimTypes.AvatarHash:
+                        dto.Avatar = row.ClaimValue;
+                        break;
+                    case DiscordClaimTypes.Discriminator:
+                        dto.Discriminator = row.ClaimValue;
+                        break;
+                    case DiscordClaimTypes.Username:
+                        dto.Username = row.ClaimValue;
+                        break;
                 }
             }
 

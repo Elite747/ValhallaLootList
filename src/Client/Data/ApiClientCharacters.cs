@@ -18,7 +18,7 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters");
         }
 
-        public IApiClientOperation<IList<CharacterDto>> GetByTeam(string team)
+        public IApiClientOperation<IList<CharacterDto>> GetByTeam(long team)
         {
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=" + team);
         }
@@ -33,41 +33,46 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?owned=true");
         }
 
-        public IApiClientOperation<CharacterDto> Get(string id)
+        public IApiClientOperation<CharacterDto> Get(long id)
         {
             return Client.CreateRequest<CharacterDto>(HttpMethod.Get, "api/v1/characters/" + id);
         }
 
-        public IApiClientOperation<CharacterDto> Update(string id, CharacterSubmissionDto character)
+        public IApiClientOperation<CharacterDto> Get(string name)
+        {
+            return Client.CreateRequest<CharacterDto>(HttpMethod.Get, "api/v1/characters/byname/" + name);
+        }
+
+        public IApiClientOperation<CharacterDto> Update(long id, CharacterSubmissionDto character)
         {
             return Client.CreateRequest<CharacterSubmissionDto, CharacterDto>(HttpMethod.Put, "api/v1/characters/" + id, character);
         }
 
-        public IApiClientOperation Delete(string id)
+        public IApiClientOperation Delete(long id)
         {
             return Client.CreateRequest(HttpMethod.Delete, "api/v1/characters/" + id);
         }
 
-        public IApiClientOperation<CharacterOwnerDto> GetOwner(string id)
+        public IApiClientOperation<CharacterOwnerDto> GetOwner(long id)
         {
             return Client.CreateRequest<CharacterOwnerDto>(HttpMethod.Get, "api/v1/characters/" + id + "/owner");
         }
 
-        public IApiClientOperation SetOwner(string id, string ownerId)
+        public IApiClientOperation SetOwner(long id, long ownerId)
         {
             return Client.CreateRequest(HttpMethod.Put, "api/v1/characters/" + id + "/ownerid", ownerId);
         }
 
-        public IApiClientOperation DeleteOwner(string id)
+        public IApiClientOperation DeleteOwner(long id)
         {
             return Client.CreateRequest(HttpMethod.Delete, "api/v1/characters/" + id + "/ownerid");
         }
 
-        public IApiClientOperation VerifyOwner(string id)
+        public IApiClientOperation VerifyOwner(long id)
         {
             return Client.CreateRequest(HttpMethod.Post, "api/v1/characters/" + id + "/verify");
         }
-        public IApiClientOperation<IList<CharacterAttendanceDto>> GetAttendances(string id)
+        public IApiClientOperation<IList<CharacterAttendanceDto>> GetAttendances(long id)
         {
             return Client.CreateRequest<IList<CharacterAttendanceDto>>(HttpMethod.Get, "api/v1/characters/" + id + "/attendances");
         }

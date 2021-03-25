@@ -7,14 +7,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class Raid : KeyedRow
+    public class Raid
     {
-        public DateTime StartedAtUtc { get; set; }
+        public Raid(long id)
+        {
+            if (id <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), "Id cannot be less than or equal to zero.");
+            }
+
+            Id = id;
+        }
+
+        public long Id { get; }
+
+        public DateTimeOffset StartedAt { get; set; }
 
         public byte Phase { get; set; }
 
         [Required]
-        public string RaidTeamId { get; set; } = string.Empty;
+        public long RaidTeamId { get; set; }
 
         [Required]
         public virtual RaidTeam RaidTeam { get; set; } = null!;

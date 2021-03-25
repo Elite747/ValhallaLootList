@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,9 +46,13 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     query = query.Where(c => c.TeamId == null);
                 }
+                else if (long.TryParse(team, out var teamId))
+                {
+                    query = query.Where(c => c.TeamId == teamId);
+                }
                 else
                 {
-                    query = query.Where(c => c.TeamId == team || c.Team!.Name == team);
+                    query = query.Where(c => c.Team!.Name == team);
                 }
             }
 
@@ -61,21 +66,32 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
-                    Gender = c.IsMale ? Gender.Male : Gender.Female,
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
                     Editable = isAdmin || c.OwnerId == currentUserId
                 })
                 .AsAsyncEnumerable();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CharacterDto>> Get(string id)
+        [HttpGet("{id:long}")]
+        public Task<ActionResult<CharacterDto>> Get(long id)
+        {
+            return GetAsync(c => c.Id == id);
+        }
+
+        [HttpGet("ByName/{name}")]
+        public Task<ActionResult<CharacterDto>> Get(string name)
+        {
+            return GetAsync(c => c.Name == name);
+        }
+
+        private async Task<ActionResult<CharacterDto>> GetAsync(Expression<Func<Character, bool>> match)
         {
             var currentUserId = User.GetDiscordId();
             bool isAdmin = User.IsAdmin();
 
             var character = await _context.Characters
                 .AsNoTracking()
-                .Where(c => c.Id == id || c.Name.Equals(id, StringComparison.OrdinalIgnoreCase))
+                .Where(match)
                 .Select(c => new CharacterDto
                 {
                     Class = c.Class,
@@ -84,7 +100,7 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.Team!.Id,
                     TeamName = c.Team.Name,
-                    Gender = c.IsMale ? Gender.Male : Gender.Female,
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
                     Editable = isAdmin || c.OwnerId == currentUserId
                 })
                 .FirstOrDefaultAsync();
@@ -98,7 +114,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CharacterDto>> Post([FromBody] CharacterSubmissionDto dto)
+        public async Task<ActionResult<CharacterDto>> Post([FromBody] CharacterSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!ModelState.IsValid)
             {
@@ -134,13 +150,13 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            var character = new Character
+            var character = new Character(idGenerator.CreateId())
             {
                 Class = dto.Class.Value,
                 MemberStatus = RaidMemberStatus.FullTrial,
                 Name = normalizedName,
                 Race = dto.Race.Value,
-                IsMale = dto.Gender == Gender.Male
+                IsFemale = dto.Gender == Gender.Female
             };
 
             if (dto.SenderIsOwner)
@@ -163,12 +179,12 @@ namespace ValhallaLootList.Server.Controllers
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                Gender = character.IsMale ? Gender.Male : Gender.Female
+                Gender = character.IsFemale ? Gender.Female : Gender.Male
             });
         }
 
-        [HttpPut("{id}"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult<CharacterDto>> Put(string id, [FromBody] CharacterSubmissionDto dto)
+        [HttpPut("{id:long}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<CharacterDto>> Put(long id, [FromBody] CharacterSubmissionDto dto)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -195,7 +211,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (dto.Gender.HasValue)
             {
-                character.IsMale = dto.Gender == Gender.Male;
+                character.IsFemale = dto.Gender == Gender.Female;
             }
 
             await _context.SaveChangesAsync();
@@ -206,14 +222,14 @@ namespace ValhallaLootList.Server.Controllers
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                Gender = character.IsMale ? Gender.Male : Gender.Female,
+                Gender = character.IsFemale ? Gender.Female : Gender.Male,
                 Editable = User.IsAdmin() || character.OwnerId == User.GetDiscordId(),
                 TeamId = character.TeamId
             };
         }
 
-        [HttpGet("{id}/Owner"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult<CharacterOwnerDto>> GetOwner(string id, [FromServices] DiscordService discordService)
+        [HttpGet("{id:long}/Owner"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
         {
             var character = await _context.Characters.Where(c => c.Id == id).Select(c => new { c.OwnerId, c.VerifiedById }).FirstOrDefaultAsync();
 
@@ -229,8 +245,8 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpPost("{id}/Verify"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult> PostVerify(string id)
+        [HttpPost("{id:long}/Verify"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> PostVerify(long id)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -251,8 +267,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult> SetOwner(string id, [FromBody] string ownerId)
+        [HttpPut("{id:long}/OwnerId"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -268,7 +284,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("No user with that id exists.", statusCode: 400);
             }
 
-            character.OwnerId = long.Parse(user.Id);
+            character.OwnerId = user.Id;
             character.VerifiedById = User.GetDiscordId();
 
             await _context.SaveChangesAsync();
@@ -276,8 +292,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpDelete("{id}/OwnerId"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult> DeleteOwner(string id)
+        [HttpDelete("{id:long}/OwnerId"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> DeleteOwner(long id)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -294,27 +310,27 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpGet("{id}/Attendances")]
-        public IAsyncEnumerable<CharacterAttendanceDto> GetAttendances(string id)
+        [HttpGet("{id:long}/Attendances")]
+        public IAsyncEnumerable<CharacterAttendanceDto> GetAttendances(long id)
         {
             return _context.RaidAttendees
                 .AsNoTracking()
                 .Where(ra => ra.CharacterId == id)
-                .OrderByDescending(ra => ra.Raid.StartedAtUtc)
+                .OrderByDescending(ra => ra.Raid.StartedAt)
                 .Select(ra => new CharacterAttendanceDto
                 {
                     IgnoreAttendance = ra.IgnoreAttendance,
                     IgnoreReason = ra.IgnoreReason,
                     RaidId = ra.RaidId,
-                    StartedAt = new DateTimeOffset(ra.Raid.StartedAtUtc, TimeSpan.Zero),
+                    StartedAt = ra.Raid.StartedAt,
                     TeamId = ra.Raid.RaidTeamId,
                     TeamName = ra.Raid.RaidTeam.Name
                 })
                 .AsAsyncEnumerable();
         }
 
-        [HttpDelete("{id}"), Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult> Delete(string id)
+        [HttpDelete("{id:long}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> Delete(long id)
         {
             var character = await _context.Characters.FindAsync(id);
 

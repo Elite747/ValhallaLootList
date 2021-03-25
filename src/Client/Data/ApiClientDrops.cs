@@ -13,17 +13,17 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<WonDropDto>> GetForCharacter(string characterId)
+        public IApiClientOperation<IList<WonDropDto>> GetForCharacter(long characterId)
         {
             return Client.CreateRequest<IList<WonDropDto>>(HttpMethod.Get, "api/v1/drops?characterId=" + characterId);
         }
 
-        public IApiClientOperation<IList<ItemPrioDto>> GetPriorityRankings(string dropId)
+        public IApiClientOperation<IList<ItemPrioDto>> GetPriorityRankings(long dropId)
         {
             return Client.CreateRequest<IList<ItemPrioDto>>(HttpMethod.Get, $"api/v1/drops/{dropId}/ranks");
         }
 
-        public IApiClientOperation<EncounterDropDto> Assign(string dropId, string? characterId)
+        public IApiClientOperation<EncounterDropDto> Assign(long dropId, long? characterId)
         {
             return Client.CreateRequest<AwardDropSubmissionDto, EncounterDropDto>(
                 HttpMethod.Put,

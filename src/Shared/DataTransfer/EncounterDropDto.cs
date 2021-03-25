@@ -7,17 +7,17 @@ namespace ValhallaLootList.DataTransfer
 {
     public class EncounterDropDto
     {
-        public string Id { get; set; } = string.Empty;
+        public long Id { get; set; }
 
         public uint ItemId { get; set; }
 
         public string? ItemName { get; set; }
 
-        public string? WinnerId { get; set; }
+        public long? WinnerId { get; set; }
 
         public string? WinnerName { get; set; }
 
-        public string? AwardedBy { get; set; }
+        public long? AwardedBy { get; set; }
 
         public DateTimeOffset AwardedAt { get; set; }
     }

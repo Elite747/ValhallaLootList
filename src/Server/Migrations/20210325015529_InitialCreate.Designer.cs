@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValhallaLootList.Server.Data;
@@ -9,55 +10,56 @@ using ValhallaLootList.Server.Data;
 namespace ValhallaLootList.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210213003728_InitialCreate")]
+    [Migration("20210325015529_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.3");
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("ProductVersion", "5.0.3")
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
                 {
                     b.Property<string>("UserCode")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ClientId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasMaxLength(50000)
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("DeviceCode")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("Expiration")
                         .IsRequired()
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SessionId")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SubjectId")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("UserCode");
 
@@ -73,43 +75,43 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.Property<string>("Key")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ClientId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("ConsumedTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasMaxLength(50000)
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("Expiration")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SessionId")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SubjectId")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Key");
 
@@ -122,47 +124,50 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("PersistedGrants");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<long>", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex");
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -171,21 +176,21 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("AspNetRoleClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -194,22 +199,21 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("AspNetUserClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
                         .HasMaxLength(128)
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -218,13 +222,13 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("AspNetUserLogins");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<long>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -233,21 +237,21 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("AspNetUserRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(128)
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -256,55 +260,55 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.AppUser", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
@@ -313,24 +317,92 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.Bracket", b =>
+                {
+                    b.Property<byte>("Phase")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("Index")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("AllowOffspec")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowTypeDuplicates")
+                        .HasColumnType("bit");
+
+                    b.Property<byte>("MaxItems")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("MaxRank")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("MinRank")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Phase", "Index");
+
+                    b.ToTable("Brackets");
+
+                    b.HasData(
+                        new
+                        {
+                            Phase = (byte)1,
+                            Index = (byte)0,
+                            AllowOffspec = false,
+                            AllowTypeDuplicates = false,
+                            MaxItems = (byte)1,
+                            MaxRank = (byte)18,
+                            MinRank = (byte)15
+                        },
+                        new
+                        {
+                            Phase = (byte)1,
+                            Index = (byte)1,
+                            AllowOffspec = false,
+                            AllowTypeDuplicates = false,
+                            MaxItems = (byte)1,
+                            MaxRank = (byte)14,
+                            MinRank = (byte)11
+                        },
+                        new
+                        {
+                            Phase = (byte)1,
+                            Index = (byte)2,
+                            AllowOffspec = false,
+                            AllowTypeDuplicates = false,
+                            MaxItems = (byte)2,
+                            MaxRank = (byte)10,
+                            MinRank = (byte)7
+                        },
+                        new
+                        {
+                            Phase = (byte)1,
+                            Index = (byte)3,
+                            AllowOffspec = true,
+                            AllowTypeDuplicates = true,
+                            MaxItems = (byte)2,
+                            MaxRank = (byte)6,
+                            MinRank = (byte)1
+                        });
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.Character", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Class")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsLeader")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsMale")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("IsFemale")
+                        .HasColumnType("bit");
 
                     b.Property<int>("MemberStatus")
                         .HasColumnType("int");
@@ -338,17 +410,19 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("varchar(16) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(16)");
 
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<long?>("OwnerId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Race")
                         .HasColumnType("int");
 
-                    b.Property<string>("TeamId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long?>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("VerifiedById")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -362,14 +436,14 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterEncounterKill", b =>
                 {
-                    b.Property<string>("EncounterKillRaidId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("EncounterKillRaidId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("EncounterKillEncounterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("CharacterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "CharacterId");
 
@@ -382,17 +456,17 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterLootList", b =>
                 {
-                    b.Property<string>("CharacterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
 
                     b.Property<byte>("Phase")
-                        .HasColumnType("tinyint unsigned");
+                        .HasColumnType("tinyint");
 
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<long?>("ApprovedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("Locked")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<int>("MainSpec")
                         .HasColumnType("int");
@@ -407,25 +481,29 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Drop", b =>
                 {
-                    b.Property<string>("EncounterKillRaidId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("AwardedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("AwardedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("EncounterKillEncounterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<uint>("ItemId")
-                        .HasColumnType("int unsigned");
+                    b.Property<long>("EncounterKillRaidId")
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTime>("AwardedAtUtc")
-                        .HasColumnType("datetime(6)");
+                    b.Property<long>("ItemId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("AwardedBy")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<long?>("WinnerId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("WinnerId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "ItemId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ItemId");
 
@@ -438,22 +516,16 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.DropPass", b =>
                 {
-                    b.Property<string>("DropEncounterKillRaidId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("DropId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("DropEncounterKillEncounterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<uint>("DropItemId")
-                        .HasColumnType("int unsigned");
-
-                    b.Property<string>("CharacterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("RelativePriority")
                         .HasColumnType("int");
 
-                    b.HasKey("DropEncounterKillRaidId", "DropEncounterKillEncounterId", "DropItemId", "CharacterId");
+                    b.HasKey("DropId", "CharacterId");
 
                     b.HasIndex("CharacterId");
 
@@ -463,22 +535,24 @@ namespace ValhallaLootList.Server.Migrations
             modelBuilder.Entity("ValhallaLootList.Server.Data.Encounter", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<short>("Index")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("InstanceId")
                         .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("InstanceId");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Encounters");
                 });
@@ -486,13 +560,13 @@ namespace ValhallaLootList.Server.Migrations
             modelBuilder.Entity("ValhallaLootList.Server.Data.EncounterKill", b =>
                 {
                     b.Property<string>("EncounterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("RaidId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("RaidId")
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTime>("KilledAtUtc")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset>("KilledAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("EncounterId", "RaidId");
 
@@ -504,28 +578,26 @@ namespace ValhallaLootList.Server.Migrations
             modelBuilder.Entity("ValhallaLootList.Server.Data.Instance", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<byte>("Phase")
-                        .HasColumnType("tinyint unsigned");
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Instances");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Item", b =>
                 {
-                    b.Property<uint>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Agility")
                         .HasColumnType("int");
@@ -543,7 +615,7 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<double>("DPS")
-                        .HasColumnType("double");
+                        .HasColumnType("float");
 
                     b.Property<int>("Defense")
                         .HasColumnType("int");
@@ -552,20 +624,19 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("EncounterId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Expertise")
                         .HasColumnType("int");
 
                     b.Property<bool>("HasOnUse")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("HasProc")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("HasSpecial")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<int>("Haste")
                         .HasColumnType("int");
@@ -593,10 +664,13 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Parry")
                         .HasColumnType("int");
+
+                    b.Property<byte>("Phase")
+                        .HasColumnType("tinyint");
 
                     b.Property<int>("PhysicalHit")
                         .HasColumnType("int");
@@ -610,8 +684,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("Resilience")
                         .HasColumnType("int");
 
-                    b.Property<uint?>("RewardFromId")
-                        .HasColumnType("int unsigned");
+                    b.Property<long?>("RewardFromId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Slot")
                         .HasColumnType("int");
@@ -620,7 +694,7 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<double>("Speed")
-                        .HasColumnType("double");
+                        .HasColumnType("float");
 
                     b.Property<int>("SpellCrit")
                         .HasColumnType("int");
@@ -666,19 +740,19 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.ItemRestriction", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("Automated")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
-                    b.Property<uint>("ItemId")
-                        .HasColumnType("int unsigned");
+                    b.Property<long>("ItemId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("RestrictionLevel")
                         .HasColumnType("int");
@@ -690,34 +764,36 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasIndex("ItemId");
 
+                    b.HasIndex("RestrictionLevel", "Specializations");
+
                     b.ToTable("ItemRestrictions");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.LootListEntry", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
-                    b.Property<uint?>("ItemId")
-                        .HasColumnType("int unsigned");
+                    b.Property<long?>("DropId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("LootListCharacterId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long?>("ItemId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LootListCharacterId")
+                        .HasColumnType("bigint");
 
                     b.Property<byte>("LootListPhase")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<short>("PassCount")
-                        .HasColumnType("smallint");
+                        .HasColumnType("tinyint");
 
                     b.Property<byte>("Rank")
-                        .HasColumnType("tinyint unsigned");
-
-                    b.Property<bool>("Won")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DropId")
+                        .IsUnique()
+                        .HasFilter("[DropId] IS NOT NULL");
 
                     b.HasIndex("ItemId");
 
@@ -726,25 +802,41 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("LootListEntries");
                 });
 
-            modelBuilder.Entity("ValhallaLootList.Server.Data.Raid", b =>
+            modelBuilder.Entity("ValhallaLootList.Server.Data.PhaseDetails", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<byte>("Id")
+                        .HasColumnType("tinyint");
 
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<string>("RaidTeamId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<DateTime>("StartedAtUtc")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("InstanceId");
+                    b.ToTable("PhaseDetails");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            StartsAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("ValhallaLootList.Server.Data.Raid", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("Phase")
+                        .HasColumnType("tinyint");
+
+                    b.Property<long>("RaidTeamId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("RaidTeamId");
 
@@ -753,20 +845,17 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.RaidAttendee", b =>
                 {
-                    b.Property<string>("CharacterId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("RaidId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("RaidId")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("IgnoreAttendance")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("bit");
 
                     b.Property<string>("IgnoreReason")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<bool>("UsingOffspec")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CharacterId", "RaidId");
 
@@ -777,12 +866,12 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.RaidTeam", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -794,21 +883,20 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.RaidTeamSchedule", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Day")
                         .HasColumnType("int");
 
                     b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time(6)");
+                        .HasColumnType("time");
 
-                    b.Property<string>("RaidTeamId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<long>("RaidTeamId")
+                        .HasColumnType("bigint");
 
                     b.Property<TimeSpan>("RealmTimeStart")
-                        .HasColumnType("time(6)");
+                        .HasColumnType("time");
 
                     b.HasKey("Id");
 
@@ -817,16 +905,16 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("RaidTeamSchedules");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<long>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.AppUser", null)
                         .WithMany()
@@ -835,7 +923,7 @@ namespace ValhallaLootList.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.AppUser", null)
                         .WithMany()
@@ -844,9 +932,9 @@ namespace ValhallaLootList.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<long>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<long>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -859,7 +947,7 @@ namespace ValhallaLootList.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.AppUser", null)
                         .WithMany()
@@ -916,7 +1004,7 @@ namespace ValhallaLootList.Server.Migrations
                         .IsRequired();
 
                     b.HasOne("ValhallaLootList.Server.Data.Character", "Winner")
-                        .WithMany("WonDrops")
+                        .WithMany()
                         .HasForeignKey("WinnerId");
 
                     b.HasOne("ValhallaLootList.Server.Data.EncounterKill", "EncounterKill")
@@ -942,7 +1030,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasOne("ValhallaLootList.Server.Data.Drop", "Drop")
                         .WithMany("Passes")
-                        .HasForeignKey("DropEncounterKillRaidId", "DropEncounterKillEncounterId", "DropItemId")
+                        .HasForeignKey("DropId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -985,9 +1073,7 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.HasOne("ValhallaLootList.Server.Data.Encounter", "Encounter")
                         .WithMany("Items")
-                        .HasForeignKey("EncounterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EncounterId");
 
                     b.HasOne("ValhallaLootList.Server.Data.Item", "RewardFrom")
                         .WithMany()
@@ -1011,6 +1097,10 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.LootListEntry", b =>
                 {
+                    b.HasOne("ValhallaLootList.Server.Data.Drop", "Drop")
+                        .WithOne("WinningEntry")
+                        .HasForeignKey("ValhallaLootList.Server.Data.LootListEntry", "DropId");
+
                     b.HasOne("ValhallaLootList.Server.Data.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId");
@@ -1021,6 +1111,8 @@ namespace ValhallaLootList.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Drop");
+
                     b.Navigation("Item");
 
                     b.Navigation("LootList");
@@ -1028,19 +1120,11 @@ namespace ValhallaLootList.Server.Migrations
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Raid", b =>
                 {
-                    b.HasOne("ValhallaLootList.Server.Data.Instance", "Instance")
-                        .WithMany()
-                        .HasForeignKey("InstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "RaidTeam")
                         .WithMany("Raids")
                         .HasForeignKey("RaidTeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Instance");
 
                     b.Navigation("RaidTeam");
                 });
@@ -1084,8 +1168,6 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("EncounterKills");
 
                     b.Navigation("Passes");
-
-                    b.Navigation("WonDrops");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterLootList", b =>
@@ -1096,6 +1178,8 @@ namespace ValhallaLootList.Server.Migrations
             modelBuilder.Entity("ValhallaLootList.Server.Data.Drop", b =>
                 {
                     b.Navigation("Passes");
+
+                    b.Navigation("WinningEntry");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Encounter", b =>

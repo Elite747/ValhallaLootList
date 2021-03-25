@@ -9,7 +9,7 @@ namespace ValhallaLootList.Server.Data
     public class CharacterLootList
     {
         [Required]
-        public string CharacterId { get; set; } = null!;
+        public long CharacterId { get; set; }
 
         [Required]
         public virtual Character Character { get; set; } = null!;
@@ -22,7 +22,7 @@ namespace ValhallaLootList.Server.Data
 
         public bool Locked { get; set; }
 
-        public string? ApprovedBy { get; set; }
+        public long? ApprovedBy { get; set; }
 
         public virtual ICollection<LootListEntry> Entries { get; set; } = new HashSet<LootListEntry>();
     }

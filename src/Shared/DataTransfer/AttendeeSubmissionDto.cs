@@ -8,6 +8,6 @@ namespace ValhallaLootList.DataTransfer
     public class AttendeeSubmissionDto
     {
         [Required]
-        public string? CharacterId { get; set; }
+        public long? CharacterId { get; set; }
     }
 }

@@ -8,10 +8,10 @@ namespace ValhallaLootList.Server.Data
     public class RaidAttendee
     {
         [Required]
-        public string RaidId { get; set; } = null!;
+        public long RaidId { get; set; }
 
         [Required]
-        public string CharacterId { get; set; } = null!;
+        public long CharacterId { get; set; }
 
         [Required]
         public virtual Raid Raid { get; set; } = null!;

@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer
 {
     public class ItemPrioDto
     {
-        public string CharacterId { get; set; } = string.Empty;
+        public long CharacterId { get; set; }
 
         public int? Priority { get; set; }
 

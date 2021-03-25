@@ -7,12 +7,12 @@ namespace ValhallaLootList.DataTransfer
 {
     public class WonDropDto
     {
-        public string CharacterId { get; set; } = string.Empty;
+        public long CharacterId { get; set; }
 
         public uint ItemId { get; set; }
 
         public DateTimeOffset AwardedAt { get; set; }
 
-        public string RaidId { get; set; } = string.Empty;
+        public long RaidId { get; set; }
     }
 }

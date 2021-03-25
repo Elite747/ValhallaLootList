@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer
 {
     public class LootListEntryDto
     {
-        public string? Id { get; set; }
+        public long Id { get; set; }
 
         public int Rank { get; set; }
 

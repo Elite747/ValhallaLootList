@@ -10,7 +10,7 @@
         <MudCardContent>
             <MudText Typo="Typo.h6">@kill.EncounterName</MudText>
             <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
-            <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("t", CultureInfo.CurrentCulture)</MudText>
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)</MudText>
             @if (kill.Drops.All(drop => drop.WinnerId is null))
             {
                 <AuthorizeLeaderView TeamId="@Raid.TeamId">

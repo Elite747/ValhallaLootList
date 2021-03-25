@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace ValhallaLootList.SeedAndMigrate
             {
                 if (!existingItems.TryGetValue(seedItem.Id, out var item))
                 {
-                    item = new Item { Id = seedItem.Id };
+                    item = new Item(seedItem.Id);
                     _context.Items.Add(item);
                     existingItems.Add(item.Id, item);
                 }
@@ -106,7 +107,7 @@ namespace ValhallaLootList.SeedAndMigrate
             {
                 if (!existingInstances.TryGetValue(seedInstance.Id, out var instance))
                 {
-                    instance = new Instance { Id = seedInstance.Id };
+                    instance = new Instance(seedInstance.Id);
                     _context.Instances.Add(instance);
                 }
 
@@ -117,7 +118,7 @@ namespace ValhallaLootList.SeedAndMigrate
                 {
                     if (!existingEncounters.TryGetValue(seedEncounter.Id, out var encounter))
                     {
-                        encounter = new Encounter { Id = seedEncounter.Id };
+                        encounter = new Encounter(seedEncounter.Id);
                         _context.Encounters.Add(encounter);
                     }
 
@@ -131,6 +132,12 @@ namespace ValhallaLootList.SeedAndMigrate
                         var item = existingItems[itemId];
                         item.Encounter = encounter;
                         item.EncounterId = encounter.Id;
+                        item.Phase = seedInstance.Phase;
+
+                        foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
+                        {
+                            sourceItem.Phase = seedInstance.Phase;
+                        }
                     }
                 }
             }

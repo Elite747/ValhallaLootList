@@ -27,7 +27,7 @@
                             </ItemLink>
                             <div>
                                 <MudText Typo="Typo.caption" Inline="false">
-                                    Awarded @drop.AwardedAt.ToOffset(TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture)
+                                    Awarded @drop.AwardedAt.ToLocalTime().ToString("f", CultureInfo.CurrentCulture)
                                     <MudLink Href="@("raids/" + drop.RaidId)" Typo="Typo.caption">View Raid</MudLink>
                                 </MudText>
                             </div>

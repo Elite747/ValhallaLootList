@@ -5,6 +5,6 @@ namespace ValhallaLootList.DataTransfer
 {
     public class AwardDropSubmissionDto
     {
-        public string? WinnerId { get; set; }
+        public long? WinnerId { get; set; }
     }
 }

@@ -26,7 +26,7 @@ namespace ValhallaLootList.Client.Pages.Teams
             }
         }
 
-        private void ToggleAttendee(string id)
+        private void ToggleAttendee(long id)
         {
             if (_model.Attendees.Contains(id))
             {
@@ -54,13 +54,13 @@ namespace ValhallaLootList.Client.Pages.Teams
 
         public class RaidSubmissionModel
         {
-            private HashSet<string>? _attendees;
+            private HashSet<long>? _attendees;
 
             [Required]
             public int Phase { get; set; }
 
             [Required]
-            public HashSet<string> Attendees
+            public HashSet<long> Attendees
             {
                 get => _attendees ??= new();
                 set => _attendees = value;

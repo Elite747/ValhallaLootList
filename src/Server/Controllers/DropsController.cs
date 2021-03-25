@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
@@ -25,26 +26,26 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<WonDropDto> Get(string characterId)
+        public IAsyncEnumerable<WonDropDto> Get(long characterId)
         {
             return _context.Drops
                 .AsNoTracking()
                 .Where(drop => drop.WinnerId == characterId || drop.WinningEntry!.LootList.CharacterId == characterId)
-                .OrderByDescending(drop => drop.AwardedAtUtc)
+                .OrderByDescending(drop => drop.AwardedAt)
                 .Select(drop => new WonDropDto
                 {
                     CharacterId = drop.WinnerId ?? characterId,
                     ItemId = drop.ItemId,
-                    AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
+                    AwardedAt = drop.AwardedAt,
                     RaidId = drop.EncounterKillRaidId
                 })
                 .AsAsyncEnumerable();
         }
 
-        [HttpPut("{id}"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<EncounterDropDto>> PutAssign(string id, [FromBody] AwardDropSubmissionDto dto)
+        [HttpPut("{id:long}"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo)
         {
-            var now = DateTime.UtcNow;
+            var now = realmTimeZoneInfo.TimeZoneNow();
             var drop = await _context.Drops.FindAsync(id);
 
             if (drop is null)
@@ -55,22 +56,27 @@ namespace ValhallaLootList.Server.Controllers
             var teamId = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.Id == drop.EncounterKillRaidId)
-                .Select(r => r.RaidTeamId)
+                .Select(r => (long?)r.RaidTeamId)
                 .FirstOrDefaultAsync();
 
-            if (!await _context.IsLeaderOf(User, teamId))
+            if (!teamId.HasValue)
+            {
+                return NotFound();
+            }
+
+            if (!await _context.IsLeaderOf(User, teamId.Value))
             {
                 return Unauthorized();
             }
 
-            if (dto.WinnerId?.Length > 0 && drop.WinnerId?.Length > 0)
+            if (dto.WinnerId.HasValue && drop.WinnerId.HasValue)
             {
                 ModelState.AddModelError(nameof(dto.WinnerId), "Existing winner must be cleared before setting a new winner.");
                 return ValidationProblem();
             }
 
-            drop.AwardedAtUtc = now;
-            drop.AwardedBy = User.GetAppUserId();
+            drop.AwardedAt = now;
+            drop.AwardedBy = User.GetDiscordId();
 
             var killers = await _context.CharacterEncounterKills
                 .AsTracking()
@@ -81,7 +87,7 @@ namespace ValhallaLootList.Server.Controllers
             await _context.Entry(drop).Collection(drop => drop.Passes).LoadAsync();
             drop.Passes.Clear();
 
-            if (dto.WinnerId?.Length > 0)
+            if (dto.WinnerId.HasValue)
             {
                 var winner = killers.Find(k => k.Id == dto.WinnerId);
 
@@ -149,7 +155,7 @@ namespace ValhallaLootList.Server.Controllers
             return new EncounterDropDto
             {
                 Id = drop.Id,
-                AwardedAt = new DateTimeOffset(drop.AwardedAtUtc, TimeSpan.Zero),
+                AwardedAt = drop.AwardedAt,
                 AwardedBy = drop.AwardedBy,
                 ItemId = drop.ItemId,
                 WinnerId = drop.WinnerId,
@@ -157,8 +163,8 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id}/Ranks"), Authorize(AppRoles.LootMaster)]
-        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(string id)
+        [HttpGet("{id:long}/Ranks"), Authorize(AppRoles.LootMaster)]
+        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(long id)
         {
             var drop = await _context.Drops.FindAsync(id);
 

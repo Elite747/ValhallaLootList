@@ -21,7 +21,6 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         private async Task DeleteAsync(string encounterId)
         {
-            Debug.Assert(Raid.Id?.Length > 0);
             await Api.Raids.Delete(Raid.Id, encounterId)
                 .OnSuccess(_ =>
                 {
@@ -50,7 +49,7 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         private async Task BeginAssignAsync(EncounterDropDto drop)
         {
-            var characterId = await DialogService.ShowAsync<AssignLootDialog, string?>(
+            var characterId = await DialogService.ShowAsync<AssignLootDialog, long?>(
                 "Assigning " + (drop.ItemName ?? "Item"),
                 parameters: new()
                 {
@@ -58,13 +57,13 @@ namespace ValhallaLootList.Client.Pages.Raids
                     [nameof(AssignLootDialog.Raid)] = Raid
                 });
 
-            if (characterId?.Length > 0)
+            if (characterId.HasValue)
             {
                 await AssignAsync(drop, characterId);
             }
         }
 
-        private Task AssignAsync(EncounterDropDto drop, string? characterId)
+        private Task AssignAsync(EncounterDropDto drop, long? characterId)
         {
             return Api.Drops.Assign(drop.Id, characterId)
                 .OnSuccess(response =>

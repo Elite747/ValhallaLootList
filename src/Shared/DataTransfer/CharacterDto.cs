@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer
 {
     public class CharacterDto
     {
-        public string Id { get; set; } = string.Empty;
+        public long Id { get; set; }
 
         public string? Name { get; set; }
 
@@ -15,7 +15,7 @@ namespace ValhallaLootList.DataTransfer
 
         public Gender Gender { get; set; }
 
-        public string? TeamId { get; set; }
+        public long? TeamId { get; set; }
 
         public string? TeamName { get; set; }
 

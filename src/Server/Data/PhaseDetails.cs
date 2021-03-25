@@ -7,18 +7,14 @@ namespace ValhallaLootList.Server.Data
 {
     public class PhaseDetails
     {
-        public PhaseDetails()
-        {
-        }
-
-        public PhaseDetails(byte id, DateTime startsAtUtc)
+        public PhaseDetails(byte id, DateTimeOffset startsAt)
         {
             Id = id;
-            StartsAtUtc = startsAtUtc;
+            StartsAt = startsAt;
         }
 
-        public byte Id { get; set; }
+        public byte Id { get; }
 
-        public DateTime StartsAtUtc { get; set; }
+        public DateTimeOffset StartsAt { get; set; }
     }
 }

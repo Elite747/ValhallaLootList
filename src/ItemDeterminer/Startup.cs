@@ -22,7 +22,7 @@ namespace ValhallaLootList.ItemDeterminer
             services.AddHostedService<App>();
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseMySql(Configuration.GetConnectionString("DefaultConnection"), MySqlServerVersion.LatestSupportedServerVersion));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
     }
 }

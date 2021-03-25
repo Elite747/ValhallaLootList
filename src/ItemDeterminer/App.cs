@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IdGen;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ namespace ValhallaLootList.ItemDeterminer
         private readonly ApplicationDbContext _appContext;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly List<IDeterminationRule> _rules;
+        private readonly IIdGenerator<long> _idGenerator = new IdGenerator(0);
 
         public App(ILogger<App> logger, ApplicationDbContext appContext, IHostApplicationLifetime hostApplicationLifetime)
         {
@@ -40,7 +42,7 @@ namespace ValhallaLootList.ItemDeterminer
 
             var restrictions = await _appContext.ItemRestrictions.ToListAsync(cancellationToken);
 
-            var restrictionsToKeep = new HashSet<string>();
+            var restrictionsToKeep = new HashSet<long>();
 
             await foreach (var item in _appContext.Items.AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
@@ -49,7 +51,7 @@ namespace ValhallaLootList.ItemDeterminer
                     foreach (var restriction in rule.GetDeterminations(item)
                         .Where(d => d.Level != DeterminationLevel.Allowed)
                         .GroupBy(d => new { d.Reason, d.Level })
-                        .Select(g => new ItemRestriction
+                        .Select(g => new ItemRestriction(_idGenerator.CreateId())
                         {
                             Automated = true,
                             Item = item,

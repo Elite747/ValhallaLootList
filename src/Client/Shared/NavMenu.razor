@@ -4,11 +4,13 @@
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
     <AuthorizeView>
         <MudDivider Class="my-2" />
+        <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
         <MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
 
         <ApiExecutor Operation="Api.Teams.GetAllTeamNames">
             <Success Context="teams">
                 <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
+                    <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
                     @foreach (var team in teams)
                     {
                         <MudNavLink Href="@("teams/" + team)">@team</MudNavLink>
@@ -22,7 +24,5 @@
                 <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
             </Running>
         </ApiExecutor>
-
-        <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
     </AuthorizeView>
 </MudNavMenu>

@@ -18,9 +18,14 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<string>>(HttpMethod.Get, "api/v1/teams");
         }
 
-        public IApiClientOperation<TeamDto> Get(string teamId)
+        public IApiClientOperation<TeamDto> Get(long teamId)
         {
             return Client.CreateRequest<TeamDto>(HttpMethod.Get, "api/v1/teams/" + teamId);
+        }
+
+        public IApiClientOperation<TeamDto> Get(string teamName)
+        {
+            return Client.CreateRequest<TeamDto>(HttpMethod.Get, "api/v1/teams/byname/" + teamName);
         }
 
         public IApiClientOperation<TeamDto> Create(TeamSubmissionDto submission)
@@ -28,32 +33,32 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<TeamSubmissionDto, TeamDto>(HttpMethod.Post, "api/v1/teams", submission);
         }
 
-        public IApiClientOperation<TeamCharacterDto> AddMember(string teamId, AddTeamMemberDto dto)
+        public IApiClientOperation<TeamCharacterDto> AddMember(long teamId, AddTeamMemberDto dto)
         {
             return Client.CreateRequest<AddTeamMemberDto, TeamCharacterDto>(HttpMethod.Post, $"api/v1/teams/{teamId}/members", dto);
         }
 
-        public IApiClientOperation UpdateMember(string teamId, string characterId, UpdateTeamMemberDto dto)
+        public IApiClientOperation UpdateMember(long teamId, long characterId, UpdateTeamMemberDto dto)
         {
             return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}", dto);
         }
 
-        public IApiClientOperation RemoveMember(string teamId, string characterId)
+        public IApiClientOperation RemoveMember(long teamId, long characterId)
         {
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/teams/{teamId}/members/{characterId}");
         }
 
-        public IApiClientOperation<IList<GuildMemberDto>> GetLeaders(string teamId)
+        public IApiClientOperation<IList<GuildMemberDto>> GetLeaders(long teamId)
         {
             return Client.CreateRequest<IList<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");
         }
 
-        public IApiClientOperation<GuildMemberDto> AddLeader(string teamId, string userId)
+        public IApiClientOperation<GuildMemberDto> AddLeader(long teamId, long userId)
         {
             return Client.CreateRequest<GuildMemberDto>(HttpMethod.Post, "api/v1/teams/" + teamId + "/leaders/" + userId);
         }
 
-        public IApiClientOperation RemoveLeader(string teamId, string userId)
+        public IApiClientOperation RemoveLeader(long teamId, long userId)
         {
             return Client.CreateRequest(HttpMethod.Delete, "api/v1/teams/" + teamId + "/leaders/" + userId);
         }

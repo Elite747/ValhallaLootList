@@ -3,12 +3,21 @@
 @inject IDialogService DialogService
 
 <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
-    <h1>@team.Name</h1>
+    <div class="d-flex align-center mb-3">
+        <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@team.Name</MudText>
+        <AuthorizeView Roles="@AppRoles.Administrator">
+            <MudTooltip Text="Edit">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
+            </MudTooltip>
+        </AuthorizeView>
+    </div>
 
     @foreach (var schedule in team.Schedules)
     {
         var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
-        <h4>@(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))</h4>
+        <MudText Typo="Typo.h6">
+            @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))
+        </MudText>
     }
 
     <div class="d-flex">
@@ -39,5 +48,16 @@
     private void StartRaid(TeamDto team)
     {
         DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = team });
+    }
+
+    private async Task EditAsync(TeamDto team)
+    {
+        var dto = await DialogService.ShowAsync<Create, TeamDto>("Edit Team", new() { [nameof(Create.EditingTeam)] = team });
+
+        if (dto is not null)
+        {
+            team.Name = dto.Name;
+            team.Schedules = dto.Schedules;
+        }
     }
 }

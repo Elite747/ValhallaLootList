@@ -1,6 +1,7 @@
 ﻿@page "/teams"
 @inject ApiClient Api
-@inject IDialogService DialogService 
+@inject IDialogService DialogService
+@inject NavigationManager Nav
 
 <h1>Raid Teams</h1>
 
@@ -29,8 +30,13 @@
 @code {
     private IApiExecutor? _executor;
 
-    private void CreateClicked()
+    private async Task CreateClicked()
     {
-        DialogService.Show<Create>("Create Team");
+        var dto = await DialogService.ShowAsync<Create, TeamDto>("Create Team");
+
+        if (dto is not null)
+        {
+            Nav.NavigateTo("teams/" + dto.Id);
+        }
     }
 }

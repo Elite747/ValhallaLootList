@@ -106,7 +106,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost, Authorize(AppRoles.Administrator)]
-        public async Task<ActionResult<CharacterDto>> Post([FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        public async Task<ActionResult<TeamDto>> Post([FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!ModelState.IsValid)
             {
@@ -145,6 +145,74 @@ namespace ValhallaLootList.Server.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(Get), new { id = team.Id }, new TeamDto
+            {
+                Id = team.Id,
+                Name = team.Name,
+                Schedules = team.Schedules.Select(s => new ScheduleDto
+                {
+                    Day = s.Day,
+                    RealmTimeStart = s.RealmTimeStart,
+                    Duration = s.Duration
+                }).ToList()
+            });
+        }
+
+        [HttpPut("{id:long}"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult<TeamDto>> Put(long id, [FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationProblem();
+            }
+
+            Debug.Assert(dto.Name?.Length > 1);
+
+            if (dto.Schedules.Count == 0)
+            {
+                ModelState.AddModelError(nameof(dto.Schedules), "At least one raid day schedule must be entered.");
+            }
+
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            team.Name = dto.Name;
+
+            var schedules = await _context.RaidTeamSchedules.AsTracking().Where(s => s.RaidTeam == team).OrderBy(s => s.Id).ToListAsync();
+
+            for (int i = 0, count = Math.Max(schedules.Count, dto.Schedules.Count); i < count; i++)
+            {
+                switch ((i < schedules.Count, i < dto.Schedules.Count))
+                {
+                    case (true, true):
+                        var scheduleDto = dto.Schedules[i];
+                        Debug.Assert(scheduleDto.Day.HasValue);
+                        Debug.Assert(scheduleDto.StartTime.HasValue);
+                        Debug.Assert(scheduleDto.Duration.HasValue);
+                        schedules[i].Day = scheduleDto.Day.Value;
+                        schedules[i].Duration = TimeSpan.FromHours(scheduleDto.Duration.Value);
+                        schedules[i].RealmTimeStart = scheduleDto.StartTime.Value;
+                        break;
+                    case (true, false):
+                        _context.RaidTeamSchedules.Remove(schedules[i]);
+                        break;
+                    case (false, true):
+                        scheduleDto = dto.Schedules[i];
+                        Debug.Assert(scheduleDto.Day.HasValue);
+                        Debug.Assert(scheduleDto.StartTime.HasValue);
+                        Debug.Assert(scheduleDto.Duration.HasValue);
+                        _context.RaidTeamSchedules.Add(new(idGenerator.CreateId())
+                        {
+                            Day = scheduleDto.Day.Value,
+                            Duration = TimeSpan.FromHours(scheduleDto.Duration.Value),
+                            RealmTimeStart = scheduleDto.StartTime.Value,
+                            RaidTeam = team
+                        });
+                        break;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new TeamDto
             {
                 Id = team.Id,
                 Name = team.Name,

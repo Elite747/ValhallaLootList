@@ -3,14 +3,14 @@
 ### Prerequisites
 
 1. ASP.Net Core 5.x SDK (Included with Visual Studio 2019)
-2. MySQL server
+2. SQL Server
 3. Discord Application credentials
 
 ### Database Setup
 
-For local development, a MySQL database server needs to be used. Initializing and upgrading the database is done using the `SeedAndMigrate` tool. Using this tool requires a connection to your development database. Once you have a local MySQL server running (or access to an existing MySQL server), you need to store the connection strings using the .net Secret Manager tool.
+For local development, a SQL Server database needs to be used. Initializing and upgrading the database is done using the `SeedAndMigrate` tool. Using this tool requires a connection to your development database. Visual Studio includes a built-in version of SQL Server Express, which may be used. If running with Visual studio, you may use this connection string: `Data Source=(localdb)\\MSSQLLocalDB;Database=ValhallaLootListDatabase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False`
 
-In the root directory, run the following commands:
+Once you have a valid connection string, run the following command in the root directory:
 
 ```
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your application connection string>" -p src/server
@@ -18,7 +18,7 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your application
 
 Note: The Secret Manager is configured to be shared across all projects. You only need to set secrets in one project for them to be available in all of them.
 
-Once the world DB is set up, and your development MySQL server is running, run the following command to either initialize and populate the development database or update your existing database:
+Once a valid connection string is set up, run the following command to set up and seed the database:
 
 ```
 dotnet run -p src/SeedAndMigrate
@@ -38,22 +38,13 @@ Once set, you can generate the `seed.items.json` using the following command:
 dotnet run -p src/ItemImporter
 ```
 
-### Item Restriction Determinations
-
-Item restrictions are done separate from database initialization as they are expected to change at a rapid pace. The `ItemDeterminer` tool is what contains all of the rules used to restrict items from being listed by certain classes or specs, and will update the database to match the rules defined. This tool is safe to run at any time, and should be run after any rule code is added, changed, or removed.
-
-To update item restrictions, run the following command:
-
-```
-dotnet run -p src/ItemDeterminer
-```
-
 ### Discord integration
 
-Discord is used for authentication and authorization via OAuth. To use it, the client secret must be configured. The client secret must **never** be present in source control. When you have access to the client secret, set it using the Secret Manager tool via the following command:
+Discord is used for authentication and authorization via OAuth. To use it, the client secret and bot token must be configured. These secrets should **never** be present in source control. When you have access to these values, set them using the Secret Manager tool via the following command:
 
 ```
 dotnet user-secrets set "Discord:ClientSecret" "<discord client secret>" -p src/server
+dotnet user-secrets set "Discord:BotToken" "<discord bot token>" -p src/server
 ```
 
 ### Conclusion

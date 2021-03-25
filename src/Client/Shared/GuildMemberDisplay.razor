@@ -1,10 +1,10 @@
 ﻿@if (Member?.Nickname?.Length > 0)
 {
-    <span>@Member.Nickname <span class="text-muted">(@Member.Username#@Member.Discriminator)</span></span>
+    <span>@Member.Nickname <span class="mud-text-secondary">(@Member.Username#@Member.Discriminator)</span></span>
 }
 else if (Member is not null)
 {
-    <span>@Member.Username<span class="text-muted">#@Member.Discriminator</span></span>
+    <span>@Member.Username<span class="mud-text-secondary">#@Member.Discriminator</span></span>
 }
 
 @code {

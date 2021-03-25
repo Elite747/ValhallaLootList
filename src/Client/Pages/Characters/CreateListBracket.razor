@@ -40,7 +40,7 @@
                             <ItemLink Id="id" @onclick="async () => await SelectionRequested.InvokeAsync(new() { Bracket = Bracket, Column = column, Rank = row.Key })">
                                 @if (id == 0)
                                 {
-                                    <span class="text-primary">Select Item</span>
+                                    <span class="mud-primary-text">Select Item</span>
                                 }
                                 else
                                 {
@@ -64,8 +64,10 @@
                                 <ul>
                                     @foreach (var restriction in restrictions)
                                     {
-                                        <li class="@(restriction.Level == ItemRestrictionLevel.ManualReview ? "text-warning" : "text-danger")">
-                                            @restriction.Reason
+                                        <li>
+                                            <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                                                @restriction.Reason
+                                            </MudText>
                                         </li>
                                     }
                                 </ul>

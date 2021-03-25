@@ -78,7 +78,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
             {
-                return Problem(statusCode: 400, title: "Bad Request", detail: "A loot list for that character and phase already exists.");
+                return Problem("A loot list for that character and phase already exists.");
             }
 
             if (!dto.MainSpec.Value.IsClass(character.Class))
@@ -139,19 +139,19 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            await foreach (var wonItemId in _context.Drops.AsNoTracking()
+            await foreach (var wonItem in _context.Drops.AsNoTracking()
                 .Where(drop => drop.WinnerId == character.Id || drop.WinningEntry.LootList.CharacterId == character.Id)
-                .Select(drop => drop.ItemId)
+                .Select(drop => new { drop.ItemId, drop.Item.Name })
                 .AsAsyncEnumerable())
             {
-                if (allItemIds.Contains(wonItemId))
+                if (allItemIds.Contains(wonItem.ItemId))
                 {
                     foreach (var (rank, itemIds) in dto.Items)
                     {
-                        var col = Array.IndexOf(itemIds, wonItemId);
+                        var col = Array.IndexOf(itemIds, wonItem.ItemId);
                         if (col >= 0)
                         {
-                            ModelState.AddModelError($"Items[{rank}][{col}]", "You have already won this item and may not put it on a new loot list.");
+                            ModelState.AddModelError($"Items[{rank}][{col}]", $"You have already won {wonItem.Name} and may not put it on a new loot list.");
                         }
                     }
 
@@ -193,7 +193,7 @@ namespace ValhallaLootList.Server.Controllers
                             {
                                 if (phase != item.Phase)
                                 {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", "Item is not in the same content phase as the specified loot list phase.");
+                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"{item.Name} is not in the same content phase as the specified loot list phase.");
                                 }
 
                                 if (!bracketTemplate.AllowTypeDuplicates && !bracketItemGroups.Add(new ItemGroup(item.Type, item.Slot)))
@@ -203,7 +203,7 @@ namespace ValhallaLootList.Server.Controllers
 
                                 foreach (var restriction in restrictions[itemId].Where(r => (r.Specializations & bracketSpec) != 0))
                                 {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", restriction.Reason);
+                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot add {item.Name}: {restriction.Reason}");
                                 }
 
                                 list.Entries.Add(new LootListEntry(idGenerator.CreateId())
@@ -338,19 +338,19 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            await foreach (var wonItemId in _context.Drops.AsNoTracking()
+            await foreach (var wonItem in _context.Drops.AsNoTracking()
                 .Where(drop => drop.WinnerId == character.Id || drop.WinningEntry.LootList.CharacterId == character.Id)
-                .Select(drop => drop.ItemId)
+                .Select(drop => new { drop.ItemId, drop.Item.Name })
                 .AsAsyncEnumerable())
             {
-                if (allItemIds.Contains(wonItemId))
+                if (allItemIds.Contains(wonItem.ItemId))
                 {
                     foreach (var (rank, itemIds) in dto.Items)
                     {
-                        var col = Array.IndexOf(itemIds, wonItemId);
+                        var col = Array.IndexOf(itemIds, wonItem.ItemId);
                         if (col >= 0)
                         {
-                            ModelState.AddModelError($"Items[{rank}][{col}]", "You have already won this item and may not put it on a new loot list.");
+                            ModelState.AddModelError($"Items[{rank}][{col}]", $"You have already won {wonItem.Name} and may not put it on a new loot list.");
                         }
                     }
 
@@ -392,7 +392,7 @@ namespace ValhallaLootList.Server.Controllers
                             {
                                 if (phase != item.Phase)
                                 {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", "Item is not in the same content phase as the specified loot list phase.");
+                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"{item.Name} is not in the same content phase as the specified loot list phase.");
                                 }
 
                                 if (!bracketTemplate.AllowTypeDuplicates && !bracketItemGroups.Add(new ItemGroup(item.Type, item.Slot)))
@@ -402,7 +402,7 @@ namespace ValhallaLootList.Server.Controllers
 
                                 foreach (var restriction in restrictions[itemId].Where(r => (r.Specializations & bracketSpec) != 0))
                                 {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", restriction.Reason);
+                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot add {item.Name}: {restriction.Reason}");
                                 }
 
                                 list.Entries.Add(new LootListEntry(idGenerator.CreateId())

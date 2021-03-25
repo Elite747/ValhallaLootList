@@ -21,7 +21,10 @@ namespace ValhallaLootList.SeedAndMigrate
         {
             services.AddHostedService<App>();
 
-            services.Configure<Config>(config =>
+            services.AddScoped<Seeder.SeederStep>();
+            services.AddScoped<ItemDeterminer.ItemDeterminerStep>();
+
+            services.Configure<Seeder.Config>(config =>
             {
                 config.SeedInstancesPath = Configuration.GetValue<string>(nameof(config.SeedInstancesPath));
                 config.SeedItemsPath = Configuration.GetValue<string>(nameof(config.SeedItemsPath));

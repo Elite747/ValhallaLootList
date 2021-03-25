@@ -18,6 +18,11 @@ namespace ValhallaLootList.Client.Data
             _js = js;
         }
 
+        public ValueTask HideTooltipAsync(CancellationToken cancellationToken = default)
+        {
+            return _js.InvokeVoidAsync("WH.Tooltip.hide", cancellationToken);
+        }
+
         public ValueTask<int> GetLocaleFromDomainAsync(string domain, CancellationToken cancellationToken = default)
         {
             return _js.InvokeAsync<int>("WH.getLocaleFromDomain", cancellationToken, domain);

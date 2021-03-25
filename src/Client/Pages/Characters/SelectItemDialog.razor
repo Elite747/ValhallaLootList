@@ -1,4 +1,6 @@
-﻿<MudDialogScrollFix />
+﻿@inject WowheadInterop WH
+
+<MudDialogScrollFix />
 <MudDialog DisableSidePadding="true">
     <DialogContent>
         @if (Context.Items is not null)
@@ -10,8 +12,9 @@
                     <MudListSubheader Class="pb-1"><b>@itemTypeGroup.Key.Name</b></MudListSubheader>
                     @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
                     {
+                        var id = item.Id;
                         <ItemLink Id="item.Id"
-                                  @onclick="() => Dialog.Close(DialogResult.Ok(item.Id))"
+                                  @onclick="() => LinkClickedAsync(id)"
                                   class="mud-list-item mud-list-item-gutters mud-list-item-clickable mud-ripple d-flex align-center">
                             <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
                                 <ItemLinkIcon Size="IconSize.Small" Width="24" Height="24" />
@@ -56,5 +59,11 @@
         if (Context is null) throw new ArgumentNullException(nameof(Context));
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
         if (DisallowedItems is null) throw new ArgumentNullException(nameof(DisallowedItems));
+    }
+
+    private async Task LinkClickedAsync(uint itemId)
+    {
+        Dialog.Close(DialogResult.Ok(itemId));
+        await WH.HideTooltipAsync();
     }
 }

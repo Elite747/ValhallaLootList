@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MudBlazor;
 using ValhallaLootList.Client.Data;
-using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Characters
 {
@@ -21,8 +20,32 @@ namespace ValhallaLootList.Client.Pages.Characters
             [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior }
         };
 
-        private readonly CharacterSubmissionDto _character = new();
-        private Classes[] _raceClasses = Array.Empty<Classes>();
+        private static readonly Dictionary<Classes, PlayerRace[]> _raceLookup = new()
+        {
+            [Classes.Druid] = new[] { PlayerRace.NightElf },
+            [Classes.Hunter] = new[] { PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+            [Classes.Mage] = new[] { PlayerRace.Human, PlayerRace.Gnome, PlayerRace.Draenei },
+            [Classes.Paladin] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.Draenei },
+            [Classes.Priest] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+            [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
+            [Classes.Shaman] = new[] { PlayerRace.Draenei },
+            [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
+            [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei }
+        };
+
+        private static readonly Classes[] _allClasses = new[] {
+            Classes.Druid,
+            Classes.Hunter,
+            Classes.Mage,
+            Classes.Paladin,
+            Classes.Priest,
+            Classes.Rogue,
+            Classes.Shaman,
+            Classes.Warlock,
+            Classes.Warrior
+        };
+
+        private static readonly PlayerRace[] _allRaces;
 
         private Task OnSubmit()
         {
@@ -35,11 +58,11 @@ namespace ValhallaLootList.Client.Pages.Characters
         private void RaceChanged(PlayerRace? newValue)
         {
             _character.Race = newValue;
-            _raceClasses = (newValue.HasValue && _classLookup.TryGetValue(newValue.Value, out var raceClasses)) ? raceClasses : Array.Empty<Classes>();
+            _raceClasses = (newValue.HasValue && _classLookup.TryGetValue(newValue.Value, out var raceClasses)) ? raceClasses : _allClasses;
 
             if (Array.IndexOf(_raceClasses, _character.Class) < 0)
             {
-                _character.Class = 0;
+                _character.Class = null;
             }
         }
     }

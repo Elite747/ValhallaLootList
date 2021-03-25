@@ -15,27 +15,53 @@
                        Class="mt-3"
                        @bind-Value="_character.Gender"
                        For="() => _character.Gender">
-                <MudSelectItem T="Gender?" Value="@Gender.Male">Male</MudSelectItem>
-                <MudSelectItem T="Gender?" Value="@Gender.Female">Female</MudSelectItem>
+                <MudSelectItem T="Gender?" Value="@Gender.Male">
+                    <div class="d-flex align-center">
+                        <MudAvatar Rounded="true" Image="images/male.png" Size="Size.Small" Class="mr-2" />
+                        <span>Male</span>
+                    </div>
+                </MudSelectItem>
+                <MudSelectItem T="Gender?" Value="@Gender.Female">
+                    <div class="d-flex align-center">
+                        <MudAvatar Rounded="true" Image="images/female.png" Size="Size.Small" Class="mr-2" />
+                        <span>Female</span>
+                    </div>
+                </MudSelectItem>
             </MudSelect>
             <MudSelect Label="Race"
                        Class="mt-3"
                        ValueChanged="(PlayerRace? race) => RaceChanged(race)"
                        Value="@_character.Race"
-                       For="() => _character.Race">
-                @foreach (var race in Enum.GetValues<PlayerRace>())
+                       For="() => _character.Race"
+                       ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty">
+                @foreach (var race in _classRaces)
                 {
-                    <MudSelectItem T="PlayerRace?" Value="@race">@race.GetDisplayName()</MudSelectItem>
+                    <MudSelectItem T="PlayerRace?" Value="@race">
+                        <div class="d-flex align-center">
+                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Small" width="24" height="24" />
+                            </MudAvatar>
+                            <span>@race.GetDisplayName()</span>
+                        </div>
+                    </MudSelectItem>
                 }
             </MudSelect>
             <MudSelect Label="Class"
                        Class="mt-3"
                        @bind-Value="_character.Class"
                        For="() => _character.Class"
-                       Disabled="EditingCharacter is not null">
+                       Disabled="EditingCharacter is not null"
+                       ToStringFunc="pc => pc.HasValue ? pc.Value.GetDisplayName() : string.Empty">
                 @foreach (var playerClass in _raceClasses)
                 {
-                    <MudSelectItem T="Classes?" Value="@playerClass">@playerClass</MudSelectItem>
+                    <MudSelectItem T="Classes?" Value="@playerClass">
+                        <div class="d-flex align-center">
+                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                <ClassIcon PlayerClass="playerClass" Size="IconSize.Small" width="24" height="24" />
+                            </MudAvatar>
+                            <span>@playerClass.GetDisplayName()</span>
+                        </div>
+                    </MudSelectItem>
                 }
             </MudSelect>
             @if (AllowSubmitNonOwned)
@@ -56,7 +82,10 @@
 </EditForm>
 
 @code {
+    private readonly CharacterSubmissionDto _character = new();
     private ProblemValidator? _problemValidator;
+    private Classes[] _raceClasses = _allClasses;
+    private PlayerRace[] _classRaces = _allRaces;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public CharacterDto? EditingCharacter { get; set; }
@@ -73,6 +102,10 @@
             _character.Gender = EditingCharacter.Gender;
             _character.Name = EditingCharacter.Name;
             _character.Race = EditingCharacter.Race;
+            if (_raceLookup.TryGetValue(EditingCharacter.Class, out var classRaces))
+            {
+                _classRaces = classRaces;
+            }
         }
 
         _character.SenderIsOwner = DefaultSenderIsOwner;

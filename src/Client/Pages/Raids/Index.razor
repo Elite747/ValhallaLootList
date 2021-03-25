@@ -7,15 +7,15 @@
 }
 
 <MudCard Elevation="5">
-    <div class="d-flex justify-content-between align-items-center">
-        <MudButton OnClick="() => ChangeMonth(-1)" Variant="Variant.Text" Size="Size.Small">&lt;</MudButton>
-        <h5 class="mt-2">@_date.ToString("MMMM", CultureInfo.CurrentCulture)</h5>
-        <MudButton OnClick="() => ChangeMonth(1)" Variant="Variant.Text" Size="Size.Small">&gt;</MudButton>
+    <div class="d-flex justify-space-between align-center">
+        <MudIconButton OnClick="() => ChangeMonth(-1)" Icon="@Icons.Material.Filled.ChevronLeft" />
+        <MudText Typo="Typo.h4">@_date.ToString("MMMM", CultureInfo.CurrentCulture)</MudText>
+        <MudIconButton OnClick="() => ChangeMonth(1)" Icon="@Icons.Material.Filled.ChevronRight" />
     </div>
     <MudOverlay Visible="_raidsLoading" Absolute="true">
         <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
     </MudOverlay>
-    <SimpleTableEx Bordered="true" FixedLayout="true" Class="m-0" Outlined="false">
+    <SimpleTableEx Bordered="true" FixedLayout="true" Class="ma-0" Outlined="false">
         <thead>
             <tr>
                 @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
@@ -41,23 +41,27 @@
 
                         @if (current.Month == _date.Month)
                         {
-                            <td class="p-0 m-0 @(current == DateTime.Today ? "mud-theme-secondary" : "")">
-                                <div class="float-right">
+                            <td class="pa-1 ma-0 @(current == DateTime.Today ? "mud-theme-secondary" : "")">
+                                <div style="float: right">
                                     @current.Day
                                 </div>
-                                <div style="min-height: 5rem">
+                                <div style="min-height: 6rem">
                                     @foreach (var raid in _raids.Where(r => r.StartedAt.ToLocalTime().Date == current).OrderBy(r => r.StartedAt))
                                     {
-                                        <MudButton Link="@("raids/" + raid.Id)" Size="Size.Small" Variant="Variant.Text">
-                                            @raid.TeamName (P.@raid.Phase)
-                                        </MudButton>
+                                        <MudTooltip Text="@($"{raid.TeamName} Phase {raid.Phase} raid on {raid.StartedAt.ToLocalTime().ToString("f", CultureInfo.CurrentCulture)}")">
+                                            <div>
+                                                <MudLink Href="@("raids/" + raid.Id)" Color="Color.Inherit">
+                                                    @raid.TeamName (P.@raid.Phase)
+                                                </MudLink>
+                                            </div>
+                                        </MudTooltip>
                                     }
                                 </div>
                             </td>
                         }
                         else
                         {
-                            <td class="p-0 m-0 mud-theme-dark"></td>
+                            <td class="pa-0 ma-0 mud-theme-dark"></td>
                         }
                     }
                 </tr>

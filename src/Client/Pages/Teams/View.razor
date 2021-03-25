@@ -1,8 +1,9 @@
 ﻿@page "/Teams/{team}"
 @inject ApiClient Api
 @inject IDialogService DialogService
+@inject TeamsSource TeamsSource 
 
-<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
+<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team" @ref="_executor">
     <div class="d-flex align-center mb-3">
         <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@team.Name</MudText>
         <AuthorizeView Roles="@AppRoles.Administrator">
@@ -43,6 +44,8 @@
 </ApiExecutor>
 
 @code {
+    private IApiExecutor? _executor;
+
     [Parameter] public string Team { get; set; } = string.Empty;
 
     private void StartRaid(TeamDto team)
@@ -58,6 +61,9 @@
         {
             team.Name = dto.Name;
             team.Schedules = dto.Schedules;
+            await TeamsSource.RefreshAsync(Api);
         }
     }
+
+    protected override Task OnParametersSetAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 }

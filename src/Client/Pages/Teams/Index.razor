@@ -2,41 +2,48 @@
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject TeamsSource TeamsSource
+@implements IDisposable
 
 <h1>Raid Teams</h1>
 
 <MudPaper>
-    <ApiExecutor Operation="Api.Teams.GetAllTeamNames" Context="teamNames" @ref="_executor">
-        <MudList Clickable="true">
-            <MudListSubheader Class="d-flex align-baseline">
-                <MudTooltip Text="Refresh Teams">
-                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-                </MudTooltip>
+    <MudList Clickable="true">
+        <MudListSubheader Class="d-flex align-baseline">
+            <MudTooltip Text="Refresh Teams">
+                <MudIconButton OnClick="() => TeamsSource.RefreshAsync(Api)" Icon="@Icons.Material.Filled.Refresh" />
+            </MudTooltip>
 
-                <AuthorizeView Roles="@AppRoles.Administrator">
-                    <MudTooltip Text="Add Team">
-                        <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
-                    </MudTooltip>
-                </AuthorizeView>
-            </MudListSubheader>
-            @foreach (var team in teamNames)
-            {
-                <MudListItem Href="@("teams/" + team)">@team</MudListItem>
-            }
-        </MudList>
-    </ApiExecutor>
+            <AuthorizeView Roles="@AppRoles.Administrator">
+                <MudTooltip Text="Add Team">
+                    <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+                </MudTooltip>
+            </AuthorizeView>
+        </MudListSubheader>
+        @foreach (var team in TeamsSource.Teams)
+        {
+            <MudListItem Href="@("teams/" + team)">@team</MudListItem>
+        }
+    </MudList>
 </MudPaper>
 
 @code {
-    private IApiExecutor? _executor;
-
     private async Task CreateClicked()
     {
         var dto = await DialogService.ShowAsync<Create, TeamDto>("Create Team");
 
         if (dto is not null)
         {
-            Nav.NavigateTo("teams/" + dto.Id);
+            Nav.NavigateTo("teams/" + dto.Name);
+            await TeamsSource.RefreshAsync(Api);
         }
     }
+
+    protected override void OnInitialized()
+    {
+        TeamsSource.Updated += StateHasChanged;
+        TeamsSource.EnsureStarted(Api);
+    }
+
+    public void Dispose() => TeamsSource.Updated -= StateHasChanged;
 }

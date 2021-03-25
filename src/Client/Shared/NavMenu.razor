@@ -1,4 +1,6 @@
 ﻿@inject ApiClient Api
+@inject TeamsSource TeamsSource
+@implements IDisposable
 
 <MudNavMenu Class="mud-width-full">
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
@@ -7,15 +9,17 @@
         <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
         <MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
 
+        <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
+            <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
+            @foreach (var team in TeamsSource.Teams)
+            {
+                <MudNavLink Href="@("teams/" + team)">@team</MudNavLink>
+            }
+        </MudNavGroup>
+
+
         <ApiExecutor Operation="Api.Teams.GetAllTeamNames">
             <Success Context="teams">
-                <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
-                    <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
-                    @foreach (var team in teams)
-                    {
-                        <MudNavLink Href="@("teams/" + team)">@team</MudNavLink>
-                    }
-                </MudNavGroup>
             </Success>
             <Failure>
                 <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
@@ -26,3 +30,13 @@
         </ApiExecutor>
     </AuthorizeView>
 </MudNavMenu>
+
+@code {
+    protected override void OnInitialized()
+    {
+        TeamsSource.Updated += StateHasChanged;
+        TeamsSource.EnsureStarted(Api);
+    }
+
+    public void Dispose() => TeamsSource.Updated -= StateHasChanged;
+}

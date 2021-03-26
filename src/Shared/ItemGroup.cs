@@ -8,10 +8,19 @@ namespace ValhallaLootList
     public readonly struct ItemGroup : IEquatable<ItemGroup>, IComparable<ItemGroup>, IComparable
     {
         private const byte
-            _head = 1, _neck = 2, _shoulder = 3, _chest = 4,
-            _waist = 5, _legs = 6, _feet = 7, _wrist = 8,
-            _hands = 9, _finger = 10, _trinket = 11, _back = 12,
-            _weapon = 13, _offhand = 14, _misc = 15;
+            _head = 1,
+            _shoulder = 2,
+            _chest = 3,
+            _back = 4,
+            _wrist = 5,
+            _hands = 6,
+            _waist = 7,
+            _legs = 8,
+            _feet = 9,
+            _jewelry = 10,
+            _trinket = 11,
+            _weapon = 12,
+            _misc = 13;
 
         private readonly byte _value;
 
@@ -20,7 +29,7 @@ namespace ValhallaLootList
             _value = slot switch
             {
                 InventorySlot.Head => _head,
-                InventorySlot.Neck => _neck,
+                InventorySlot.Neck => _jewelry,
                 InventorySlot.Shoulder => _shoulder,
                 InventorySlot.Chest => _chest,
                 InventorySlot.Waist => _waist,
@@ -28,16 +37,10 @@ namespace ValhallaLootList
                 InventorySlot.Feet => _feet,
                 InventorySlot.Wrist => _wrist,
                 InventorySlot.Hands => _hands,
-                InventorySlot.Finger => _finger,
+                InventorySlot.Finger => _jewelry,
                 InventorySlot.Trinket => _trinket,
                 InventorySlot.Back => _back,
-                InventorySlot.MainHand or InventorySlot.OneHand or InventorySlot.TwoHand => _weapon,
-                InventorySlot.OffHand => type switch
-                {
-                    ItemType.Other or ItemType.Shield => _offhand,
-                    ItemType.Dagger or ItemType.Fist or ItemType.Axe or ItemType.Mace or ItemType.Sword => _weapon,
-                    _ => default
-                },
+                InventorySlot.MainHand or InventorySlot.OneHand or InventorySlot.TwoHand or InventorySlot.OffHand => _weapon,
                 InventorySlot.Ranged => type switch
                 {
                     ItemType.Libram or ItemType.Idol or ItemType.Totem or ItemType.Wand => _misc,
@@ -50,21 +53,19 @@ namespace ValhallaLootList
 
         public string Name => _value switch
         {
-            _head => "Head",
-            _neck => "Neck",
-            _shoulder => "Shoulder",
-            _chest => "Chest",
-            _waist => "Waist",
-            _legs => "Legs",
-            _feet => "Feet",
-            _wrist => "Wrist",
-            _hands => "Hands",
-            _finger => "Finger",
-            _trinket => "Trinket",
-            _back => "Back",
-            _weapon => "Weapon",
-            _offhand => "Offhand",
-            _misc => "Special",
+            _head => "Head Armor",
+            _shoulder => "Shoulder Armor",
+            _chest => "Chest Armor",
+            _waist => "Waist Armor",
+            _legs => "Leg Armor",
+            _feet => "Foot Armor",
+            _wrist => "Wrist Armor",
+            _hands => "Hand Armor",
+            _jewelry => "Rings & Necklaces",
+            _trinket => "Trinkets",
+            _back => "Cloaks",
+            _weapon => "Weapons & Offhands",
+            _misc => "Wands & Relics",
             _ => "Unknown",
         };
 

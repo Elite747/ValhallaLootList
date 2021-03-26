@@ -16,18 +16,6 @@
                 <MudNavLink Href="@("teams/" + team)">@team</MudNavLink>
             }
         </MudNavGroup>
-
-
-        <ApiExecutor Operation="Api.Teams.GetAllTeamNames">
-            <Success Context="teams">
-            </Success>
-            <Failure>
-                <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
-            </Failure>
-            <Running>
-                <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt">Teams</MudNavLink>
-            </Running>
-        </ApiExecutor>
     </AuthorizeView>
 </MudNavMenu>
 

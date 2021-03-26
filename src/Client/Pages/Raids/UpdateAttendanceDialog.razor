@@ -14,7 +14,9 @@
             <MudTextField Label="Ignore Reason"
                           For="() =>_model.IgnoreReason"
                           @bind-Value="_model.IgnoreReason"
-                          Disabled="!_model.IgnoreAttendance" />
+                          Disabled="!_model.IgnoreAttendance"
+                          Variant="Variant.Outlined"
+                          Lines="3" />
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>

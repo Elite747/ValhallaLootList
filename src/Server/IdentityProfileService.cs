@@ -3,11 +3,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
@@ -19,18 +21,31 @@ namespace ValhallaLootList.Server
         private readonly UserManager<AppUser> _userManager;
         private readonly DiscordService _discordService;
         private readonly DiscordRoleMap _roles;
+        private readonly ApplicationDbContext _context;
 
-        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles, ILogger<DefaultProfileService> logger) : base(logger)
+        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
         {
             _userManager = userManager;
             _discordService = discordService;
             _roles = roles;
+            _context = context;
         }
 
-        public override Task GetProfileDataAsync(ProfileDataRequestContext context)
+        public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
+            await base.GetProfileDataAsync(context);
             context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
-            return base.GetProfileDataAsync(context);
+
+            if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
+            {
+                var claims = await _context.UserClaims
+                    .AsNoTracking()
+                    .Where(claim => claim.UserId == userId && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
+                    .Select(claim => new Claim(claim.ClaimType, claim.ClaimValue))
+                    .ToListAsync();
+
+                context.IssuedClaims.AddRange(claims);
+            }
         }
 
         public override async Task IsActiveAsync(IsActiveContext context)

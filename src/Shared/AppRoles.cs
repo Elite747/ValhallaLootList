@@ -41,8 +41,7 @@ namespace ValhallaLootList
                 .RequireAssertion(context => context.Resource switch
                 {
                     long teamId => context.User.IsRaidLeader() && context.User.IsLeaderOf(teamId),
-                    null => context.User.IsRaidLeader(),
-                    _ => false
+                    _ => context.User.IsRaidLeader()
                 })
                 .Build());
 
@@ -52,8 +51,7 @@ namespace ValhallaLootList
                 .RequireAssertion(context => context.Resource switch
                 {
                     long teamId => context.User.IsLootMaster() && context.User.IsLeaderOf(teamId),
-                    null => context.User.IsLootMaster(),
-                    _ => false
+                    _ => context.User.IsLootMaster()
                 })
                 .Build());
 
@@ -73,8 +71,7 @@ namespace ValhallaLootList
                 .RequireAssertion(context => context.Resource switch
                 {
                     long characterId => context.User.IsAdmin() || context.User.IsOwnerOf(characterId),
-                    null => context.User.IsAdmin(),
-                    _ => false
+                    _ => context.User.IsAdmin()
                 })
                 .Build());
         }

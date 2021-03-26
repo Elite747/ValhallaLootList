@@ -21,28 +21,39 @@
 
             <MudGrid Class="mt-3">
                 <MudItem xs="12" md="6">
-                    <label>Drops</label>
+                    <MudText Typo="Typo.subtitle2">Drops</MudText>
                     @foreach (var itemId in Input.Drops.Keys)
                     {
                         var localItemId = itemId;
-                        <ItemLink Id="localItemId" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
-                        <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId] = ((int?)chip?.Tag) ?? 0">
-                            <MudChip Tag="@(0)" Default="true">0</MudChip>
-                            <MudChip Tag="@(1)">1</MudChip>
-                            <MudChip Tag="@(2)">2</MudChip>
-                            <MudChip Tag="@(3)">3</MudChip>
-                        </MudChipSet>
+                        <div class="d-flex align-center py-1">
+                            <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
+                                <ItemIcon ItemId="itemId" Size="IconSize.Large" width="56" height="56" />
+                            </MudAvatar>
+                            <div class="mr-auto">
+                                <div>
+                                    <ItemLink Id="itemId">
+                                        <ItemLinkText Colorize="true" />
+                                    </ItemLink>
+                                </div>
+                                <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId] = ((int?)chip?.Tag) ?? 0">
+                                    <MudChip Tag="@(0)" Default="true">0</MudChip>
+                                    <MudChip Tag="@(1)">1</MudChip>
+                                    <MudChip Tag="@(2)">2</MudChip>
+                                    <MudChip Tag="@(3)">3</MudChip>
+                                </MudChipSet>
+                            </div>
+                        </div>
                     }
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <label>Present Raiders</label>
+                    <MudText Typo="Typo.subtitle2">Present Raiders</MudText>
                     <MudList Clickable="true" Dense="true">
                         @foreach (var character in Input.Raid.Attendees.Select(a => a.Character!))
                         {
                             var id = character.Id;
                             <MudListItem Icon="@(Input.Attendees.Contains(id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
-                                            OnClick="() => Input.ToggleAttendee(id)"
-                                            Text="@character.Name" />
+                                         OnClick="() => Input.ToggleAttendee(id)"
+                                         Text="@character.Name" />
                         }
                     </MudList>
                 </MudItem>

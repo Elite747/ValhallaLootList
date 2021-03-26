@@ -24,7 +24,7 @@ namespace ValhallaLootList.Server.Data
             _context = context;
         }
 
-        public record PrioCalculationResult(int? Priority, bool Locked, string? Details);
+        public record PrioCalculationResult(int? Priority, bool Locked, string? Details, bool IsError);
 
         public async Task<PrioCalculationResult> CalculatePrioAsync(long characterId, uint itemId)
         {
@@ -41,21 +41,21 @@ namespace ValhallaLootList.Server.Data
                 .OrderByDescending(e => e.Rank)
                 .ToListAsync();
 
+            var winCount = await _context.Drops.AsNoTracking().CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
+
+            if (winCount > 0 && winCount >= entries.Count)
+            {
+                return new(null, entries.Count > 0 && entries[0].Locked, "Already won.", true);
+            }
+
             if (entries.Count == 0)
             {
-                return new(null, false, "Character does not have the item on their list");
+                return new(null, false, "Not on Loot List or no submitted list.", false);
             }
 
             if (!entries[0].TeamId.HasValue)
             {
-                return new(null, entries[0].Locked, "Character is not on a raid team.");
-            }
-
-            var winCount = await _context.Drops.AsNoTracking().CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
-
-            if (winCount >= entries.Count)
-            {
-                return new(null, entries[0].Locked, "Character already won the item.");
+                return new(null, entries[0].Locked, "Not on a raid team.", false);
             }
 
             var entry = entries[winCount];
@@ -88,10 +88,10 @@ namespace ValhallaLootList.Server.Data
 
             if (!entry.Locked)
             {
-                return new(priority, false, "Character's loot list is not locked.");
+                return new(priority, false, "Loot List is not locked.", false);
             }
 
-            return new(priority, true, null);
+            return new(priority, true, null, false);
         }
 
         /// <summary>

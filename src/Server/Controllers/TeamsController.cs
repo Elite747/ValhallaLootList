@@ -256,7 +256,11 @@ namespace ValhallaLootList.Server.Controllers
             await _context.SaveChangesAsync();
 
             var currentPhase = await _context.GetCurrentPhaseAsync();
-            var characterLootList = await _context.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec }).FirstOrDefaultAsync();
+            var characterLootList = await _context.CharacterLootLists
+                .AsNoTracking()
+                .Where(l => l.Phase == currentPhase && l.CharacterId == character.Id)
+                .Select(l => new { l.MainSpec, l.OffSpec })
+                .FirstOrDefaultAsync();
 
             return Ok(new TeamCharacterDto
             {

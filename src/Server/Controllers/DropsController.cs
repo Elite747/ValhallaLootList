@@ -97,7 +97,7 @@ namespace ValhallaLootList.Server.Controllers
                     return ValidationProblem();
                 }
 
-                var (winnerPrio, _, _) = await _prioCalculator.CalculatePrioAsync(winner.Id, drop.ItemId);
+                var (winnerPrio, _, _, _) = await _prioCalculator.CalculatePrioAsync(winner.Id, drop.ItemId);
 
                 killers.Remove(winner);
 
@@ -119,7 +119,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 foreach (var killer in killers)
                 {
-                    var (prio, locked, _) = await _prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
+                    var (prio, locked, _, _) = await _prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
 
                     if (locked && prio.HasValue)
                     {
@@ -173,6 +173,17 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            var unequippableSpecs = Specializations.None;
+
+            await foreach (var specs in _context.ItemRestrictions
+                .AsNoTracking()
+                .Where(r => r.ItemId == drop.ItemId && r.RestrictionLevel == ItemRestrictionLevel.Unequippable)
+                .Select(r => r.Specializations)
+                .AsAsyncEnumerable())
+            {
+                unequippableSpecs |= specs;
+            }
+
             var teamId = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.Id == drop.EncounterKillRaidId)
@@ -187,21 +198,31 @@ namespace ValhallaLootList.Server.Controllers
             var killerIds = await _context.CharacterEncounterKills
                 .AsNoTracking()
                 .Where(c => c.EncounterKillEncounterId == drop.EncounterKillEncounterId && c.EncounterKillRaidId == drop.EncounterKillRaidId)
-                .Select(c => c.CharacterId)
+                .Select(c => new { Id = c.CharacterId, c.Character.Name, c.Character.Class })
                 .ToListAsync();
 
             var dto = new List<ItemPrioDto>();
 
-            foreach (var characterId in killerIds)
+            foreach (var character in killerIds)
             {
-                var (prio, _, details) = await _prioCalculator.CalculatePrioAsync(characterId, drop.ItemId);
-
-                dto.Add(new ItemPrioDto
+                var prio = new ItemPrioDto
                 {
-                    CharacterId = characterId,
-                    Priority = prio,
-                    Details = details
-                });
+                    CharacterId = character.Id,
+                    CharacterName = character.Name
+                };
+
+                if ((unequippableSpecs & character.Class.ToSpecializations()) != 0)
+                {
+                    prio.Priority = null;
+                    prio.IsError = true;
+                    prio.Details = "Cannot equip this item!";
+                }
+                else
+                {
+                    (prio.Priority, _, prio.Details, prio.IsError) = await _prioCalculator.CalculatePrioAsync(character.Id, drop.ItemId);
+                }
+
+                dto.Add(prio);
             }
 
             return dto;

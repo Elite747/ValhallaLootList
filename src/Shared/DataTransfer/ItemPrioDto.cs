@@ -7,8 +7,12 @@ namespace ValhallaLootList.DataTransfer
     {
         public long CharacterId { get; set; }
 
+        public string CharacterName { get; set; } = string.Empty;
+
         public int? Priority { get; set; }
 
         public string? Details { get; set; }
+
+        public bool IsError { get; set; }
     }
 }

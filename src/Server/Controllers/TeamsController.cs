@@ -20,10 +20,12 @@ namespace ValhallaLootList.Server.Controllers
     public class TeamsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
+        private readonly DiscordService _discordService;
 
-        public TeamsController(ApplicationDbContext context)
+        public TeamsController(ApplicationDbContext context, DiscordService discordService)
         {
             _context = context;
+            _discordService = discordService;
         }
 
         [HttpGet]
@@ -72,7 +74,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var currentPhase = await _context.GetCurrentPhaseAsync();
+            bool isLeader = await _context.IsLeaderOf(User, team.Id);
 
             await foreach (var character in _context.Characters
                 .AsNoTracking()
@@ -85,21 +87,54 @@ namespace ValhallaLootList.Server.Controllers
                     c.Race,
                     c.IsFemale,
                     c.MemberStatus,
-                    CurrentLootList = c.CharacterLootLists.Where(l => l.Phase == currentPhase).Select(l => new { l.MainSpec, l.OffSpec, l.Phase }).FirstOrDefault()
+                    Verified = c.VerifiedById.HasValue,
+                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList()
                 })
+                .AsSingleQuery()
                 .AsAsyncEnumerable())
             {
-                team.Roster.Add(new TeamCharacterDto
+                var memberDto = new MemberDto
                 {
-                    Class = character.Class,
-                    CurrentPhaseMainspec = character.CurrentLootList?.MainSpec,
-                    CurrentPhaseOffspec = character.CurrentLootList?.OffSpec,
-                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                    Id = character.Id,
-                    MemberStatus = character.MemberStatus,
-                    Name = character.Name,
-                    Race = character.Race
-                });
+                    Character = new()
+                    {
+                        Class = character.Class,
+                        Gender = character.IsFemale ? Gender.Female : Gender.Male,
+                        Id = character.Id,
+                        Name = character.Name,
+                        Race = character.Race,
+                        TeamId = team.Id,
+                        TeamName = team.Name
+                    },
+                    Status = character.MemberStatus,
+                    Verified = character.Verified
+                };
+
+                foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
+                {
+                    var lootListDto = new MemberLootListDto
+                    {
+                        Locked = lootList.Locked,
+                        MainSpec = lootList.MainSpec,
+                        Phase = lootList.Phase
+                    };
+
+                    if (isLeader)
+                    {
+                        if (lootList.ApprovedBy.HasValue)
+                        {
+                            lootListDto.Approved = true;
+                            lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
+                        }
+                        else
+                        {
+                            lootListDto.Approved = false;
+                        }
+                    }
+
+                    memberDto.LootLists.Add(lootListDto);
+                }
+
+                team.Roster.Add(memberDto);
             }
 
             return team;
@@ -226,7 +261,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("{id:long}/members"), Authorize(AppRoles.RaidLeader)]
-        public async Task<ActionResult<TeamCharacterDto>> PostMember(long id, [FromBody] AddTeamMemberDto dto)
+        public async Task<ActionResult<MemberDto>> PostMember(long id, [FromBody] AddTeamMemberDto dto)
         {
             if (!await _context.IsLeaderOf(User, id))
             {
@@ -255,29 +290,61 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
-            var currentPhase = await _context.GetCurrentPhaseAsync();
-            var characterLootList = await _context.CharacterLootLists
-                .AsNoTracking()
-                .Where(l => l.Phase == currentPhase && l.CharacterId == character.Id)
-                .Select(l => new { l.MainSpec, l.OffSpec })
-                .FirstOrDefaultAsync();
-
-            return Ok(new TeamCharacterDto
+            var returnDto = new MemberDto
             {
-                Class = character.Class,
-                CurrentPhaseMainspec = characterLootList?.MainSpec,
-                CurrentPhaseOffspec = characterLootList?.OffSpec,
-                Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                Id = character.Id,
-                MemberStatus = character.MemberStatus,
-                Name = character.Name,
-                Race = character.Race
-            });
+                Character = new()
+                {
+                    Class = character.Class,
+                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
+                    Id = character.Id,
+                    Name = character.Name,
+                    Race = character.Race,
+                    TeamId = id,
+                    TeamName = null // TODO
+                },
+                Status = character.MemberStatus,
+                Verified = character.VerifiedById.HasValue
+            };
+
+            await foreach (var lootList in _context.CharacterLootLists
+                .AsNoTracking()
+                .Where(l => l.CharacterId == character.Id)
+                .OrderBy(l => l.Phase)
+                .Select(l => new { l.MainSpec, l.Locked, l.ApprovedBy, l.Phase })
+                .AsAsyncEnumerable())
+            {
+                var lootListDto = new MemberLootListDto
+                {
+                    Locked = lootList.Locked,
+                    MainSpec = lootList.MainSpec,
+                    Phase = lootList.Phase
+                };
+
+                if (lootList.ApprovedBy.HasValue)
+                {
+                    lootListDto.Approved = true;
+                    lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
+                }
+                else
+                {
+                    lootListDto.Approved = false;
+                }
+
+                returnDto.LootLists.Add(lootListDto);
+            }
+
+            return returnDto;
         }
 
         [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppRoles.RaidLeader)]
         public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
         {
+            if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
+            {
+                ModelState.AddModelError(nameof(dto.MemberStatus), "Unknown member status.");
+                return ValidationProblem();
+            }
+
             if (!await _context.IsLeaderOf(User, id))
             {
                 return Unauthorized();

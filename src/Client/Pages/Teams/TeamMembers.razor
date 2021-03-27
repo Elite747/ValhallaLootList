@@ -1,111 +1,88 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar  
- 
-<MudCard Elevation="5">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Roster</MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
-                <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="() => AddMemberAsync(Team)" />
-            </AuthorizeView>
-        </CardHeaderActions>
-    </MudCardHeader>
-    <MudList>
-        @foreach (var ch in Team.Roster.OrderByRoleThenClassThenName())
-        {
-            var character = ch;
-            <MudDivider />
-            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
-                <div class="d-flex">
-                    <MudAvatar Class="mr-2">
-                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
-                    </MudAvatar>
-                    <MudAvatar Class="mr-5">
-                        @if (character.CurrentPhaseMainspec.HasValue)
-                        {
-                            <SpecIcon Size="IconSize.Medium" Spec="character.CurrentPhaseMainspec.Value" width="40" height="40" />
-                        }
-                        else
-                        {
-                            <ClassIcon Size="IconSize.Medium" PlayerClass="character.Class" width="40" height="40" />
-                        }
-                    </MudAvatar>
-                    <div class="mr-auto">
-                        <MudText Inline="false">
-                            <MudLink Href="@("characters/" + character.Name)">@character.Name</MudLink>
-                        </MudText>
-                        @if (character.MemberStatus == RaidMemberStatus.Member)
-                        {
-                            <MudText Inline="false">Member</MudText>
-                        }
-                        else
-                        {
-                            <MudText Inline="false" Color="Color.Warning">Trial (@(character.MemberStatus == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
-                        }
-                    </div>
+@inject ISnackbar Snackbar
+
+<MudExpansionPanels Elevation="5" Dense="true">
+    <div class="mud-expand-panel mud-elevation-5 mud-expand-panel-border">
+        <div class="mud-expand-panel-text">
+            <div class="mud-card-header">
+                <div class="mud-card-header-content">
+                    <MudText Typo="Typo.h6">Roster</MudText>
+                </div>
+                <div class="mud-card-header-actions">
                     <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
-                        <MudTooltip Text="Update">
-                            <MudIconButton OnClick="() => UpdateMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" />
-                        </MudTooltip>
-                        <MudTooltip Text="Remove">
-                            <MudIconButton OnClick="() => RemoveMemberAsync(Team, character)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
-                        </MudTooltip>
+                        <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="AddMemberAsync" />
                     </AuthorizeView>
                 </div>
-            </MudListItem>
-        }
-    </MudList>
-</MudCard>
+            </div>
+        </div>
+    </div>
+    @foreach (var m in Team.Roster.OrderByRoleThenClassThenName(_phase))
+    {
+        var member = m;
+        var selected = member.Character.Id == _selectedMemberId;
+        var phaseLootList = member.LootLists.Find(ll => ll.Phase == _phase);
+        <MudExpansionPanel Class="@(selected ? "mud-selected-item" : null)"
+                           IsExpanded="selected"
+                           IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <MudAvatar Class="mr-2">
+                        <RaceIcon Race="member.Character.Race" Gender="member.Character.Gender" Size="IconSize.Medium" width="40" height="40" />
+                    </MudAvatar>
+                    <MudAvatar Class="mr-5">
+                        @if (phaseLootList is not null)
+                        {
+                            <SpecIcon Size="IconSize.Medium" Spec="phaseLootList.MainSpec" width="40" height="40" />
+                        }
+                        else
+                        {
+                            <ClassIcon Size="IconSize.Medium" PlayerClass="member.Character.Class" width="40" height="40" />
+                        }
+                    </MudAvatar>
+                    <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
+                    @if (phaseLootList is null || phaseLootList.Approved == false || member.Verified == false)
+                    {
+                        <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                    }
+                    @if (member.Status != RaidMemberStatus.Member)
+                    {
+                        <MudText Inline="true" Color="Color.Warning">Trial (@(member.Status == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
+                    }
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MemberView Team="Team" Member="member" Phase="_phase" MemberUpdated="StateHasChanged" />
+            </ChildContent>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>
 
 @code {
+    private byte _phase;
+    private long? _selectedMemberId;
+
     [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public string? SelectedMemberName { get; set; }
+    [Parameter] public byte? SelectedPhase { get; set; }
+    [Parameter] public byte CurrentPhase { get; set; }
 
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
+        _phase = SelectedPhase ?? CurrentPhase;
     }
 
-    private async Task AddMemberAsync(TeamDto team)
+    private async Task AddMemberAsync()
     {
-        var result = await DialogService.ShowAsync<MemberAdder, TeamCharacterDto>(
+        var result = await DialogService.ShowAsync<MemberAdder, MemberDto>(
             "Add Member",
-            new() { [nameof(MemberAdder.Team)] = team },
+            new() { [nameof(MemberAdder.Team)] = Team },
             new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (result is not null)
         {
-            team.Roster.Add(result);
-        }
-    }
-
-    private async Task UpdateMemberAsync(TeamDto team, TeamCharacterDto character)
-    {
-        var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
-            "Update Member",
-            new() { [nameof(UpdateMemberDialog.Team)] = team, [nameof(UpdateMemberDialog.Character)] = character },
-            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-
-        if (result.HasValue)
-        {
-            character.MemberStatus = result.Value;
-        }
-    }
-
-    private async Task RemoveMemberAsync(TeamDto team, TeamCharacterDto character)
-    {
-        if (await DialogService.ShowAsync<RemoveMemberDialog, bool>("Remove Member", new() { [nameof(RemoveMemberDialog.CharacterName)] = character.Name }))
-        {
-            await Api.Teams.RemoveMember(team.Id, character.Id)
-                .OnSuccess(_ =>
-                {
-                    team.Roster.Remove(character);
-                    StateHasChanged();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
+            Team.Roster.Add(result);
         }
     }
 }

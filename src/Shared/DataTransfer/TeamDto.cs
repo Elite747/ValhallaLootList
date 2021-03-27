@@ -13,6 +13,6 @@ namespace ValhallaLootList.DataTransfer
 
         public List<ScheduleDto> Schedules { get; set; } = new();
 
-        public List<TeamCharacterDto> Roster { get; set; } = new();
+        public List<MemberDto> Roster { get; set; } = new();
     }
 }

@@ -20,9 +20,9 @@ namespace ValhallaLootList.Client.Pages.Teams
             if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
             if (Team is null) throw new ArgumentNullException(nameof(Team));
 
-            foreach (var character in Team.Roster)
+            foreach (var member in Team.Roster)
             {
-                _model.Attendees.Add(character.Id);
+                _model.Attendees.Add(member.Character.Id);
             }
         }
 

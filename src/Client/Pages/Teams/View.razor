@@ -1,52 +1,117 @@
-﻿@page "/Teams/{team}"
+﻿@page "/Teams/{teamName}"
 @inject ApiClient Api
 @inject IDialogService DialogService
-@inject TeamsSource TeamsSource 
+@inject TeamsSource TeamsSource
+@inject NavigationManager Nav
 
-<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team" @ref="_executor">
-    <div class="d-flex align-center mb-3">
-        <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@team.Name</MudText>
-        <AuthorizeView Roles="@AppRoles.Administrator">
-            <MudTooltip Text="Edit">
-                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
-            </MudTooltip>
-        </AuthorizeView>
-    </div>
+<ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+    <ApiExecutor Operation="() => Api.Teams.Get(TeamName)" Context="team" @ref="_executor">
+        <div class="d-flex align-center mb-3">
+            <MudText Typo="Typo.h4" GutterBottom="false">@team.Name</MudText>
+            <AuthorizeView Roles="@AppRoles.Administrator">
+                <MudTooltip Text="Edit" Class="ml-2">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
+                </MudTooltip>
+            </AuthorizeView>
+            <MudSelect T="byte"
+                       Value="_phase ?? phaseConfig.CurrentPhase"
+                       ValueChanged="OnPhaseChanged"
+                       Label="Phase"
+                       Variant="Variant.Outlined"
+                       OffsetX="false"
+                       OffsetY="false"
+                       Class="ml-5"
+                       Dense="true"
+                       ToStringFunc="@(phase => $"Phase {phase}")">
+                @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
+                {
+                    <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
 
-    @foreach (var schedule in team.Schedules)
-    {
-        var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
-        <MudText Typo="Typo.h6">
-            @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))
-        </MudText>
-    }
+        @foreach (var schedule in team.Schedules)
+        {
+            var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
+            <MudText Typo="Typo.h6">
+                @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))
+            </MudText>
+        }
 
-    <div class="d-flex">
-        <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
-        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@team.Id">
-            <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
-        </AuthorizeView>
-    </div>
+        <div class="d-flex">
+            <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
+            <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@team.Id">
+                <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
+            </AuthorizeView>
+        </div>
 
-    <MudGrid Class="mt-5">
-        <AuthorizeView Roles="@AppRoles.Administrator" Context="auth">
-            <MudItem xs="12">
-                <AdminView Team="team" User="auth.User" />
+        <MudGrid Class="mt-5">
+            <AuthorizeView Roles="@AppRoles.Administrator" Context="auth">
+                <MudItem xs="12">
+                    <AdminView Team="team" User="auth.User" />
+                </MudItem>
+            </AuthorizeView>
+            <MudItem xs="12" md="6">
+                <TeamMembers Team="team" SelectedPhase="_phase" CurrentPhase="phaseConfig.CurrentPhase" />
             </MudItem>
-        </AuthorizeView>
-        <MudItem xs="12" md="6">
-            <TeamMembers Team="team" />
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <TeamRaids Team="team" />
-        </MudItem>
-    </MudGrid>
+            <MudItem xs="12" md="6">
+                <TeamRaids Team="team" />
+            </MudItem>
+        </MudGrid>
+    </ApiExecutor>
 </ApiExecutor>
 
 @code {
     private IApiExecutor? _executor;
+    private string? _teamName;
+    private bool _teamChanged;
+    private byte? _phase;
 
-    [Parameter] public string Team { get; set; } = string.Empty;
+    [Parameter]
+    public string TeamName
+    {
+        get => _teamName ?? string.Empty;
+        set
+        {
+            if (_teamName != value)
+            {
+                _teamName = value;
+                _teamChanged = true;
+            }
+        }
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Nav.ToAbsoluteUri(Nav.Uri).Query).TryGetValue("phase", out var phaseStrings)
+            && phaseStrings.Count == 1
+            && byte.TryParse(phaseStrings[0], out var phase))
+        {
+            _phase = phase;
+        }
+        else
+        {
+            _phase = null;
+        }
+
+        if (_teamChanged)
+        {
+            _teamChanged = false;
+            if (_executor is not null)
+            {
+                return _executor.RestartAsync();
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    private void OnPhaseChanged(byte phase)
+    {
+        if (_phase != phase)
+        {
+            Nav.NavigateTo($"teams/{TeamName}?phase={phase}");
+        }
+    }
 
     private void StartRaid(TeamDto team)
     {
@@ -64,6 +129,4 @@
             await TeamsSource.RefreshAsync(Api);
         }
     }
-
-    protected override Task OnParametersSetAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 }

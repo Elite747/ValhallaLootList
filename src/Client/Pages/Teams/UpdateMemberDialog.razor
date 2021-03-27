@@ -5,7 +5,7 @@
     <ProblemValidator @ref="_problemValidator" />
     <MudDialog>
         <TitleContent>
-            Update Status for @Character.Name
+            Update Status for @Member.Character.Name
         </TitleContent>
         <DialogContent>
             <MudSelect @bind-Value="_model.MemberStatus"
@@ -31,21 +31,24 @@
     private ProblemValidator? _problemValidator;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
-    [Parameter] public TeamCharacterDto Character { get; set; } = null!;
+    [Parameter] public MemberDto Member { get; set; } = null!;
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
-        if (Character is null) throw new ArgumentNullException(nameof(Character));
+        if (Member is null) throw new ArgumentNullException(nameof(Member));
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
 
-        _model.MemberStatus = Character.MemberStatus;
+        if (Member.Status.HasValue)
+        {
+            _model.MemberStatus = Member.Status.Value;
+        }
     }
 
     private Task OnSubmitAsync()
     {
-        return Api.Teams.UpdateMember(Team.Id, Character.Id, _model)
+        return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, _model)
             .OnSuccess(_ => Dialog.Close(DialogResult.Ok(_model.MemberStatus)))
             .ValidateWith(_problemValidator)
             .ExecuteAsync();

@@ -25,19 +25,19 @@
             </ApiExecutor>
 
             <MudList Clickable="true" Dense="true">
-                @foreach (var character in Team.Roster)
+                @foreach (var member in Team.Roster)
                 {
-                    <MudListItem Icon="@(_model.Attendees.Contains(character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
-                                 OnClick="() => ToggleAttendee(character.Id)">
-                        @if (character.CurrentPhaseMainspec.HasValue)
+                    <MudListItem Icon="@(_model.Attendees.Contains(member.Character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
+                                 OnClick="() => ToggleAttendee(member.Character.Id)">
+                        @if (member.LootLists.Find(ll => ll.Phase == _model.Phase)?.MainSpec is Specializations spec)
                         {
-                            <SpecIcon Size="IconSize.Tiny" Spec="character.CurrentPhaseMainspec.Value" />
+                            <SpecIcon Size="IconSize.Tiny" Spec="spec" />
                         }
                         else
                         {
-                            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" />
+                            <ClassIcon Size="IconSize.Tiny" PlayerClass="member.Character.Class" />
                         }
-                        <span class="ml-2">@character.Name</span>
+                        <span class="ml-2">@member.Character.Name</span>
                     </MudListItem>
                 }
             </MudList>

@@ -38,9 +38,9 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<TeamSubmissionDto, TeamDto>(HttpMethod.Put, "api/v1/teams/" + teamId, submission);
         }
 
-        public IApiClientOperation<TeamCharacterDto> AddMember(long teamId, AddTeamMemberDto dto)
+        public IApiClientOperation<MemberDto> AddMember(long teamId, AddTeamMemberDto dto)
         {
-            return Client.CreateRequest<AddTeamMemberDto, TeamCharacterDto>(HttpMethod.Post, $"api/v1/teams/{teamId}/members", dto);
+            return Client.CreateRequest<AddTeamMemberDto, MemberDto>(HttpMethod.Post, $"api/v1/teams/{teamId}/members", dto);
         }
 
         public IApiClientOperation UpdateMember(long teamId, long characterId, UpdateTeamMemberDto dto)

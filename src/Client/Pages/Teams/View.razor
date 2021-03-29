@@ -38,13 +38,6 @@
             </MudText>
         }
 
-        <div class="d-flex">
-            <MudButton Link="@($"teams/{team.Name}/standings")" Variant="Variant.Filled" Color="Color.Primary" Class="mr-3">View Loot Standings</MudButton>
-            <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@team.Id">
-                <MudButton OnClick="() => StartRaid(team)" Variant="Variant.Filled" Color="Color.Primary">Start Raid</MudButton>
-            </AuthorizeView>
-        </div>
-
         <MudGrid Class="mt-5">
             <AuthorizeView Roles="@AppRoles.Administrator" Context="auth">
                 <MudItem xs="12">
@@ -73,6 +66,9 @@
             </MudItem>
             <MudItem xs="12" md="_reviewMode ? 12 : 6">
                 <TeamRaids Team="team" />
+            </MudItem>
+            <MudItem xs="12">
+                <ValhallaLootList.Client.Pages.Teams.Standings.Standings ShowExternalLink="true" Team="team" />
             </MudItem>
         </MudGrid>
     </ApiExecutor>
@@ -128,11 +124,6 @@
         {
             Nav.NavigateTo($"teams/{TeamName}?phase={phase}");
         }
-    }
-
-    private void StartRaid(TeamDto team)
-    {
-        DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = team });
     }
 
     private async Task EditAsync(TeamDto team)

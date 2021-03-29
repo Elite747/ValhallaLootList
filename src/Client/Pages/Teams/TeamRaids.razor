@@ -1,4 +1,5 @@
 ﻿@inject ApiClient Api
+@inject IDialogService DialogService
  
 <MudCard Elevation="5">
     <MudCardHeader>
@@ -7,8 +8,11 @@
         </CardHeaderContent>
         <CardHeaderActions>
             <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
+                <MudTooltip Text="Start New Raid">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="StartRaid" />
+                </MudTooltip>
             </AuthorizeView>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
         </CardHeaderActions>
     </MudCardHeader>
     <ApiExecutor Operation="() => Api.Raids.GetRecentForTeam(Team.Id)" Context="raids" @ref="_executor">
@@ -31,5 +35,10 @@
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+
+    private void StartRaid()
+    {
+        DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = Team });
     }
 }

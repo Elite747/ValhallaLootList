@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
-using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
@@ -277,7 +276,12 @@ namespace ValhallaLootList.Server.Controllers
 
             if (list.Locked)
             {
-                return Problem("The loot list is locked and may not be edited.", statusCode: 400);
+                return Problem("The loot list is locked and may not be edited.");
+            }
+
+            if (list.ApprovedBy.HasValue)
+            {
+                return Problem("Loot list has already been approved by a raid leader. Have an officer revoke the approval before trying to re-submit a new list.");
             }
 
             if (!dto.MainSpec.Value.IsClass(character.Class))
@@ -462,7 +466,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (list.Locked)
             {
-                return Problem("Loot list is already locked.", statusCode: 400);
+                return Problem("Loot list is already locked.");
             }
 
             list.Locked = true;
@@ -484,10 +488,65 @@ namespace ValhallaLootList.Server.Controllers
 
             if (!list.Locked)
             {
-                return Problem("Loot list is already unlocked.", statusCode: 400);
+                return Problem("Loot list is already unlocked.");
             }
 
             list.Locked = false;
+            list.ApprovedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("Phase{phase:int}/{characterId:long}/Approve"), Authorize(AppRoles.RaidLeader)]
+        public async Task<ActionResult> PostApprove(long characterId, byte phase)
+        {
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
+            {
+                return NotFound();
+            }
+
+            if (!User.IsAdmin())
+            {
+                var teamId = await _context.Characters.Where(c => c.Id == characterId).Select(c => c.TeamId).FirstAsync();
+
+                if (!teamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, teamId.Value.ToString()))
+                {
+                    return Unauthorized();
+                }
+            }
+
+            if (list.ApprovedBy.HasValue)
+            {
+                return Problem("Loot list is already approved.");
+            }
+
+            list.ApprovedBy = User.GetDiscordId();
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("Phase{phase:int}/{characterId:long}/Revoke"), Authorize(AppRoles.Administrator)]
+        public async Task<ActionResult> PostRevoke(long characterId, byte phase)
+        {
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
+            {
+                return NotFound();
+            }
+
+            if (!list.Locked)
+            {
+                return Problem("Loot list is already unapproved.");
+            }
+
+            list.ApprovedBy = null;
 
             await _context.SaveChangesAsync();
 

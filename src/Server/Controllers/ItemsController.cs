@@ -3,6 +3,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
@@ -18,43 +20,66 @@ namespace ValhallaLootList.Server.Controllers
             _context = context;
         }
 
-        public IAsyncEnumerable<ItemDto> Get(byte? phase, Specializations? spec, bool includeTokens = false)
+        public async Task<IEnumerable<ItemDto>> Get(byte phase, bool includeTokens = false)
         {
-            var query = _context.Items.AsNoTracking();
-
-            if (phase.HasValue)
-            {
-                query = query.Where(item => item.Phase == phase.Value);
-            }
+            var itemQuery = _context.Items.AsNoTracking().Where(item => item.Phase == phase);
+            var restrictionQuery = _context.ItemRestrictions.AsNoTracking().Where(r => r.Item.Phase == phase);
 
             if (!includeTokens)
             {
-                query = query.Where(item => item.Slot != InventorySlot.Unknown);
+                itemQuery = itemQuery.Where(item => item.Slot != InventorySlot.Unknown);
+                restrictionQuery = restrictionQuery.Where(r => r.Item.Slot != InventorySlot.Unknown);
             }
 
-            if (spec.HasValue && spec != Specializations.All)
-            {
-                query = query.Where(item => !item.Restrictions.Any(r => (r.Specializations & spec.Value) != 0 && r.RestrictionLevel == ItemRestrictionLevel.Unequippable));
-            }
-
-            return query
+            var items = await itemQuery
                 .Select(item => new ItemDto
                 {
                     Id = item.Id,
                     Name = item.Name,
                     Slot = item.Slot,
                     Type = item.Type,
-                    Restrictions = item.Restrictions
-                        .Where(r => (r.Specializations & Specializations.Warrior) != 0)
-                        .Select(r => new RestrictionDto
-                        {
-                            Level = r.RestrictionLevel,
-                            Reason = r.Reason,
-                            Specs = r.Specializations
-                        })
-                        .ToList()
                 })
-                .AsSingleQuery()
+                .ToDictionaryAsync(item => item.Id);
+
+            await foreach (var restriction in restrictionQuery
+                .OrderBy(r => r.ItemId)
+                .ThenBy(r => r.RestrictionLevel)
+                .Select(r => new
+                {
+                    r.ItemId,
+                    r.Reason,
+                    r.RestrictionLevel,
+                    r.Specializations
+                })
+                .AsAsyncEnumerable())
+            {
+                if (items.TryGetValue(restriction.ItemId, out var item))
+                {
+                    item.Restrictions.Add(new RestrictionDto
+                    {
+                        Level = restriction.RestrictionLevel,
+                        Reason = restriction.Reason,
+                        Specs = restriction.Specializations
+                    });
+                }
+            }
+
+            return items.Values;
+        }
+
+        [HttpGet("{itemId:int}/Restrictions")]
+        public IAsyncEnumerable<RestrictionDto> GetRestrictions(uint itemId)
+        {
+            return _context.ItemRestrictions
+                .AsNoTracking()
+                .Where(r => r.ItemId == itemId)
+                .OrderBy(r => r.RestrictionLevel)
+                .Select(r => new RestrictionDto
+                {
+                    Level = r.RestrictionLevel,
+                    Reason = r.Reason,
+                    Specs = r.Specializations
+                })
                 .AsAsyncEnumerable();
         }
     }

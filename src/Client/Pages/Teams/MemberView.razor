@@ -30,22 +30,27 @@
 
         @if (Member.LootLists.Find(ll => ll.Phase == Phase) is MemberLootListDto lootList)
         {
-            if (lootList.ApprovedBy is not null)
+            if (lootList.Approved == true)
             {
                 <MudText Color="Color.Success">Loot list for phase @Phase was approved!</MudText>
-                <p>
-                    Approved by <GuildMemberDisplay Member="lootList.ApprovedBy" />
-                </p>
+                @if (lootList.ApprovedBy is not null)
+                {
+                    <p>
+                        Approved by <GuildMemberDisplay Member="lootList.ApprovedBy" />
+                    </p>
+                }
             }
             else
             {
-                <MudText Color="Color.Warning">Loot list for phase @Phase has not been approved yet! Go <a href="">@*TODO*@here</a> to review and approve it.</MudText>
+                <MudText Color="Color.Warning">
+                    Loot list for phase @Phase has not been approved yet! Switch to the loot list view by clicking the <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.ListAlt" /> button above to review and approve loot lists.
+                </MudText>
             }
         }
         else
         {
             <MudText Color="Color.Warning">
-                Character does not have a loot list! Have the owner create one or create it on their behalf by going <a href="characters/@Member.Character.Name">here</a>.
+                Character does not have a loot list! Have the owner create one or create it on their behalf by going to their <a href="characters/@Member.Character.Name">character page</a>.
             </MudText>
         }
 

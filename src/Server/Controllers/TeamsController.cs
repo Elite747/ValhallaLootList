@@ -29,12 +29,12 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<string> Get()
+        public IAsyncEnumerable<TeamNameDto> Get()
         {
             return _context.RaidTeams
                 .AsNoTracking()
                 .OrderBy(c => c.Name)
-                .Select(c => c.Name)
+                .Select(c => new TeamNameDto { Id = c.Id, Name = c.Name })
                 .AsAsyncEnumerable();
         }
 

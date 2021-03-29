@@ -55,7 +55,6 @@ namespace ValhallaLootList.Client.Pages.Characters
 
         private readonly LootListSubmissionModel _lootList = new();
         private (Specializations Spec, string DisplayName)[]? _classSpecializations;
-        private IList<ItemDto>? _items = Array.Empty<ItemDto>();
         private readonly HashSet<uint> _disallowedItems = new();
 
         protected override Task OnInitializedAsync()
@@ -69,12 +68,12 @@ namespace ValhallaLootList.Client.Pages.Characters
             _lootList.Brackets.Clear();
 
             return Api.GetPhaseConfiguration()
-                .OnSuccess(ConfigureSubmissionModelAsync)
+                .OnSuccess(ConfigureSubmissionModel)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
 
-        private Task ConfigureSubmissionModelAsync(PhaseConfigDto config, CancellationToken cancellationToken)
+        private void ConfigureSubmissionModel(PhaseConfigDto config)
         {
             _disallowedItems.Clear();
 
@@ -132,50 +131,10 @@ namespace ValhallaLootList.Client.Pages.Characters
                         }
                     }
                 }
-
-                return UpdateItemListAsync(cancellationToken);
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private Task MainSpecChanged(Specializations? spec)
-        {
-            _lootList.MainSpec = spec;
-            return UpdateItemListAsync();
-        }
-
-        private Task OffSpecChanged(Specializations? spec)
-        {
-            _lootList.OffSpec = spec;
-            return UpdateItemListAsync();
-        }
-
-        private async Task UpdateItemListAsync(CancellationToken cancellationToken = default)
-        {
-            _items = null;
-            StateHasChanged();
-
-            if (_lootList.MainSpec.HasValue)
-            {
-                var spec = _lootList.MainSpec.Value;
-
-                if (_lootList.OffSpec.HasValue)
-                {
-                    spec |= _lootList.OffSpec.Value;
-                }
-
-                await Api.Items.Get(Phase, spec)
-                    .OnSuccess(items => _items = items)
-                    .OnFailure(_ => _items = Array.Empty<ItemDto>())
-                    .SendErrorTo(Snackbar)
-                    .ExecuteAsync(cancellationToken);
-
-                StateHasChanged();
             }
         }
 
-        private async Task OnSelectionRequestedAsync(ItemSelectionContext context)
+        private async Task OnSelectionRequestedAsync(ItemSelectionContext context, IList<ItemDto> allItems)
         {
             var alreadySelected = new HashSet<uint>();
 
@@ -194,7 +153,9 @@ namespace ValhallaLootList.Client.Pages.Characters
                 }
             }
 
-            var contextItems = _items?.Where(item => !alreadySelected.Contains(item.Id));
+            var spec = _lootList.MainSpec.GetValueOrDefault() | _lootList.OffSpec.GetValueOrDefault();
+
+            var contextItems = allItems.Where(item => !item.Restrictions.Any(r => r.Level == ItemRestrictionLevel.Unequippable && (r.Specs & spec) != 0)  && !alreadySelected.Contains(item.Id));
 
             if (context.Bracket?.Template.AllowTypeDuplicates == false)
             {
@@ -207,7 +168,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                         var itemId = items[i];
                         if (rank != context.Rank || i != context.Column)
                         {
-                            var item = _items?.FirstOrDefault(x => x.Id == itemId);
+                            var item = allItems.FirstOrDefault(x => x.Id == itemId);
 
                             if (item != null)
                             {
@@ -238,11 +199,11 @@ namespace ValhallaLootList.Client.Pages.Characters
 
             if (selectedId.HasValue)
             {
-                OnItemSelected(context, selectedId.Value);
+                OnItemSelected(context, selectedId.Value, allItems);
             }
         }
 
-        private void OnItemSelected(ItemSelectionContext context, uint selectedId)
+        private void OnItemSelected(ItemSelectionContext context, uint selectedId, IList<ItemDto> allItems)
         {
             Debug.Assert(context.Bracket is not null);
             Debug.Assert(_bracketValidator is not null);
@@ -257,7 +218,7 @@ namespace ValhallaLootList.Client.Pages.Characters
             _bracketValidator.ClearErrors();
             var errors = new Dictionary<string, List<string>>();
 
-            var allItems = new HashSet<uint>();
+            var selectedItems = new HashSet<uint>();
             var bracketItemGroups = new HashSet<ItemGroup>();
 
             for (int bracketNumber = 0; bracketNumber < _lootList.Brackets.Count; bracketNumber++)
@@ -272,7 +233,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                         uint id = items[col];
                         if (id > 0)
                         {
-                            var item = _items?.FirstOrDefault(i => i.Id == id);
+                            var item = allItems.FirstOrDefault(i => i.Id == id);
                             if (item is null)
                             {
                                 AddError(errors, rank, col, "Item does not exist or is not for your chosen specializations.");
@@ -280,7 +241,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                             else
                             {
                                 // check that there are no duplicate items.
-                                if (!allItems.Add(id))
+                                if (!selectedItems.Add(id))
                                 {
                                     AddError(errors, rank, col, "Duplicate items are not allowed.");
                                 }

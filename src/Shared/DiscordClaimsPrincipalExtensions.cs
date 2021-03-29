@@ -3,6 +3,7 @@
 
 using System;
 using System.Security.Claims;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList
 {
@@ -58,6 +59,38 @@ namespace ValhallaLootList
                 return result;
             }
             return null;
+        }
+
+        public static GuildMemberDto? CreateGuildMemberFromClient(this ClaimsPrincipal principal)
+        {
+            var id = GetDiscordIdFromClient(principal);
+            if (id.HasValue)
+            {
+                return CreateGuildMember(principal, id.Value);
+            }
+            return null;
+        }
+
+        public static GuildMemberDto? CreateGuildMemberFromServer(this ClaimsPrincipal principal)
+        {
+            var id = GetDiscordId(principal);
+            if (id.HasValue)
+            {
+                return CreateGuildMember(principal, id.Value);
+            }
+            return null;
+        }
+
+        private static GuildMemberDto CreateGuildMember(ClaimsPrincipal principal, long id)
+        {
+            return new GuildMemberDto
+            {
+                Avatar = principal.GetDiscordAvatarHash(),
+                Discriminator = principal.FindFirst(DiscordClaimTypes.Discriminator)?.Value ?? string.Empty,
+                Id = id,
+                Nickname = principal.Identity?.Name ?? principal.GetDiscordUsername() ?? string.Empty,
+                Username = principal.GetDiscordUsername() ?? string.Empty
+            };
         }
 
         public static bool IsAdmin(this ClaimsPrincipal principal)

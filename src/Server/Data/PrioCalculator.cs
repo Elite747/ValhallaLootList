@@ -36,6 +36,7 @@ namespace ValhallaLootList.Server.Data
                     e.Rank,
                     e.LootList.Locked,
                     e.LootList.Character.MemberStatus,
+                    e.LootList.ApprovedBy,
                     TeamId = (long?)e.LootList.Character.Team!.Id
                 })
                 .OrderByDescending(e => e.Rank)
@@ -89,6 +90,11 @@ namespace ValhallaLootList.Server.Data
             if (!entry.Locked)
             {
                 return new(priority, false, "Loot List is not locked.", false);
+            }
+
+            if (!entry.ApprovedBy.HasValue)
+            {
+                return new(priority, false, "Loot List is not approved.", false);
             }
 
             return new(priority, true, null, false);

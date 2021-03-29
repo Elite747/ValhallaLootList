@@ -56,5 +56,15 @@ namespace ValhallaLootList.Client.Data
         {
             return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/unlock");
         }
+
+        public IApiClientOperation Approve(long characterId, byte phase)
+        {
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/approve");
+        }
+
+        public IApiClientOperation RevokeApproval(long characterId, byte phase)
+        {
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/revoke");
+        }
     }
 }

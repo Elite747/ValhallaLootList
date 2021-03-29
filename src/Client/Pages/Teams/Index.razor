@@ -22,7 +22,7 @@
         </MudListSubheader>
         @foreach (var team in TeamsSource.Teams)
         {
-            <MudListItem Href="@("teams/" + team)">@team</MudListItem>
+            <MudListItem Href="@("teams/" + team.Name)">@team.Name</MudListItem>
         }
     </MudList>
 </MudPaper>

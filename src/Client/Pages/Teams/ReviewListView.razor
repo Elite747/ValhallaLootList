@@ -1,0 +1,217 @@
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudList Dense="true" Class="flex-grow-1">
+    <MudListSubheader>
+        <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
+        <MudText Color="_messageColor" Inline="false">@_message</MudText>
+
+        @if (LootList.ApprovedBy.HasValue)
+        {
+            <AuthorizeView Roles="@AppRoles.Administrator">
+                <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings from non-leaders.">
+                    <MudButton OnClick="RevokeApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                        Revoke Approval
+                    </MudButton>
+                </MudTooltip>
+            </AuthorizeView>
+        }
+        else
+        {
+            <MudTooltip Text="Approving a loot list will prevent it from being modified, but will not allow non-leaders to see rankings.">
+                <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                    Approve Loot List
+                </MudButton>
+            </MudTooltip>
+        }
+
+        @if (LootList.Locked)
+        {
+            <AuthorizeView Roles="@AppRoles.Administrator">
+                <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, the list must also have its approval revoked.">
+                    <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                </MudTooltip>
+            </AuthorizeView>
+        }
+        else
+        {
+            <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
+                <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
+            </MudTooltip>
+        }
+    </MudListSubheader>
+    @foreach (var row in _rows.OrderByDescending(g => g.Key))
+    {
+        <MudDivider />
+        <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+            <MudGrid>
+                <MudItem xs="12" md="3" lg="2">
+                    <MudText Typo="Typo.h6" GutterBottom="false">Rank @row.Key</MudText>
+                </MudItem>
+                @foreach (var entry in row)
+                {
+                    @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
+                    {
+                        <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize">
+                            <ItemLink Id="item.Id"
+                                      LinkEnabled="true"
+                                      Colorize="true"
+                                      Bracketize="true"
+                                      OverrideText="@item.Name"
+                                      class="d-flex align-center">
+                                @if (entry.Prio.HasValue)
+                                {
+                                    <MudBadge Content="entry.Prio.Value" Color="Color.Info" Overlap="true">
+                                        <MudAvatar Rounded="true" Class="mr-2">
+                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                        </MudAvatar>
+                                    </MudBadge>
+                                }
+                                else if (entry.Won)
+                                {
+                                    <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                                        <MudAvatar Rounded="true" Class="mr-2">
+                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                        </MudAvatar>
+                                    </MudBadge>
+                                }
+                                else
+                                {
+                                    <MudAvatar Rounded="true" Class="mr-2">
+                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                    </MudAvatar>
+                                }
+                                <ItemLinkText />
+                            </ItemLink>
+                            <ul>
+                                @foreach (var restriction in GetRestrictions(item, entry.Rank))
+                                {
+                                    <li>
+                                        <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                                            @restriction.Reason
+                                        </MudText>
+                                    </li>
+                                }
+                            </ul>
+                        </MudItem>
+                    }
+                }
+            </MudGrid>
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+    private IEnumerable<IGrouping<int, LootListEntryDto>> _rows = Enumerable.Empty<IGrouping<int, LootListEntryDto>>();
+    private int _rowSize;
+    private Color _messageColor;
+    private string? _message;
+
+    [Parameter] public LootListDto LootList { get; set; } = null!;
+    [Parameter] public IList<ItemDto> Items { get; set; } = null!;
+    [Parameter] public List<BracketDto> Brackets { get; set; } = null!;
+    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
+    [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (Brackets is null) throw new ArgumentNullException(nameof(Brackets));
+        if (User is null) throw new ArgumentNullException(nameof(User));
+        _rows = LootList.Entries.GroupBy(e => e.Rank);
+        _rowSize = _rows.Select(row => row.Count()).Max();
+
+        if (LootList.Locked)
+        {
+            if (LootList.ApprovedBy.HasValue)
+            {
+                _message = "Loot list is locked and approved!";
+                _messageColor = Color.Success;
+            }
+            else
+            {
+                _message = "Loot list is locked, but needs approval.";
+                _messageColor = Color.Warning;
+            }
+        }
+        else if (LootList.ApprovedBy.HasValue)
+        {
+            _message = "Loot list is approved, but not yet locked.";
+            _messageColor = Color.Warning;
+        }
+        else
+        {
+            _message = "Loot list has not yet been reviewed or locked.";
+            _messageColor = Color.Warning;
+        }
+    }
+
+    private BracketDto? GetBracket(int rank)
+    {
+        foreach (var bracket in Brackets)
+        {
+            if (rank >= bracket.MaxRank && rank <= bracket.MinRank)
+            {
+                return bracket;
+            }
+        }
+        return null;
+    }
+
+    private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, int rank)
+    {
+        var restrictions = item.Restrictions.Where(r => (r.Specs & LootList.MainSpec) != 0);
+
+        if (GetBracket(rank)?.AllowOffSpec == true && LootList.OffSpec != LootList.MainSpec)
+        {
+            if (restrictions.Any() ^ item.Restrictions.Any(r => (r.Specs & LootList.OffSpec) != 0))
+            {
+                return Array.Empty<RestrictionDto>();
+            }
+        }
+
+        return restrictions.OrderBy(r => r.Level);
+    }
+
+    private Task ApproveAsync()
+    {
+        return Api.LootLists.Approve(LootList.CharacterId, LootList.Phase)
+            .OnSuccess(_ => LootList.ApprovedBy = User.GetDiscordIdFromClient())
+            .OnSuccess(InvokeStatusUpdatedAsync)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task RevokeApproveAsync()
+    {
+        return Api.LootLists.RevokeApproval(LootList.CharacterId, LootList.Phase)
+            .OnSuccess(_ => LootList.ApprovedBy = null)
+            .OnSuccess(InvokeStatusUpdatedAsync)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task LockAsync()
+    {
+        return Api.LootLists.Lock(LootList.CharacterId, LootList.Phase)
+            .OnSuccess(_ => LootList.Locked = true)
+            .OnSuccess(InvokeStatusUpdatedAsync)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task UnlockAsync()
+    {
+        return Api.LootLists.Unlock(LootList.CharacterId, LootList.Phase)
+            .OnSuccess(_ => LootList.Locked = false)
+            .OnSuccess(InvokeStatusUpdatedAsync)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task InvokeStatusUpdatedAsync(System.Net.HttpStatusCode _, System.Threading.CancellationToken __)
+    {
+        return StatusUpdated.InvokeAsync(LootList);
+    }
+}

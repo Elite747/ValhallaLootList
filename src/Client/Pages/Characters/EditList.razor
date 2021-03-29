@@ -4,60 +4,56 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<EditForm OnValidSubmit="OnSubmit" Model="_lootList" class="ma-4">
-    <DataAnnotationsValidator />
-    <ProblemValidator @ref="_problemValidator" />
-    <CustomValidator @ref="_bracketValidator" />
-    <MudSelect Label="Main Spec"
-               For="() => _lootList.MainSpec"
-               ValueChanged="(Func<Specializations?, Task>)MainSpecChanged"
-               Value="@_lootList.MainSpec">
-        @if (_classSpecializations is not null)
-        {
-            foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
+<ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items">
+    <EditForm OnValidSubmit="OnSubmit" Model="_lootList" class="ma-4">
+        <DataAnnotationsValidator />
+        <ProblemValidator @ref="_problemValidator" />
+        <CustomValidator @ref="_bracketValidator" />
+        <MudSelect Label="Main Spec"
+                   For="() => _lootList.MainSpec"
+                   @bind-Value="@_lootList.MainSpec">
+            @if (_classSpecializations is not null)
             {
-                <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
+                {
+                    <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                }
             }
-        }
-    </MudSelect>
-    <MudSelect Label="Off Spec"
-               For="() => _lootList.OffSpec"
-               ValueChanged="(Func<Specializations?, Task>)OffSpecChanged"
-               Value="@_lootList.OffSpec">
-        @if (_classSpecializations is not null)
-        {
-            foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
+        </MudSelect>
+        <MudSelect Label="Off Spec"
+                   For="() => _lootList.OffSpec"
+                   @bind-Value="@_lootList.OffSpec">
+            @if (_classSpecializations is not null)
             {
-                <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
+                {
+                    <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                }
             }
-        }
-    </MudSelect>
-    @if (_items is null)
-    {
-        <LoadingIndicator />
-    }
-    else if (_items.Count == 0)
-    {
-        <div>Select a specialization.</div>
-    }
-    else
-    {
-        foreach (var bracket in _lootList.Brackets)
+        </MudSelect>
+        @if (!_lootList.MainSpec.HasValue)
         {
-            <CreateListBracket Bracket="bracket"
-                               Items="_items"
-                               Model="_lootList"
-                               SelectionRequested="OnSelectionRequestedAsync" />
+            <div>Select a specialization.</div>
         }
+        else
+        {
+            foreach (var bracket in _lootList.Brackets)
+            {
+                <CreateListBracket Bracket="bracket"
+                                   Items="items"
+                                   Model="_lootList"
+                                   SelectionRequested="context => OnSelectionRequestedAsync(context, items)" />
+            }
 
-        <MudValidationSummary Class="mb-1" />
+            <MudValidationSummary Class="mb-1" />
 
-        <div>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Submit</MudButton>
-            <MudButton OnClick="OnCancel" Variant="Variant.Text">Cancel</MudButton>
-        </div>
-    }
-</EditForm>
+            <div>
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Submit</MudButton>
+                <MudButton OnClick="OnCancel" Variant="Variant.Text">Cancel</MudButton>
+            </div>
+        }
+    </EditForm>
+</ApiExecutor>
 
 @code {
     [Parameter] public CharacterDto Character { get; set; } = null!;

@@ -11,8 +11,16 @@
                 </div>
                 <div class="mud-card-header-actions">
                     <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
-                        <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="AddMemberAsync" />
+                        <MudTooltip Text="Switch to Loot List view">
+                            <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Default" OnClick="OnSwitchViewClicked" />
+                        </MudTooltip>
+                        <MudTooltip Text="Add Member">
+                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Default" OnClick="AddMemberAsync" />
+                        </MudTooltip>
                     </AuthorizeView>
+                    <MudTooltip Text="Refresh">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="OnRefreshClicked" />
+                    </MudTooltip>
                 </div>
             </div>
         </div>
@@ -22,9 +30,7 @@
         var member = m;
         var selected = member.Character.Id == _selectedMemberId;
         var phaseLootList = member.LootLists.Find(ll => ll.Phase == _phase);
-        <MudExpansionPanel Class="@(selected ? "mud-selected-item" : null)"
-                           IsExpanded="selected"
-                           IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null">
+        <MudExpansionPanel IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null">
             <TitleContent>
                 <div class="d-flex align-center">
                     <MudAvatar Class="mr-2">
@@ -66,6 +72,8 @@
     [Parameter] public string? SelectedMemberName { get; set; }
     [Parameter] public byte? SelectedPhase { get; set; }
     [Parameter] public byte CurrentPhase { get; set; }
+    [Parameter] public EventCallback OnSwitchViewClicked { get; set; }
+    [Parameter] public EventCallback OnRefreshClicked { get; set; }
 
     protected override void OnParametersSet()
     {

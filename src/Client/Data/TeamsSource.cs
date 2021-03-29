@@ -4,17 +4,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data
 {
     public class TeamsSource
     {
         private bool _initialized;
-        private IList<string>? _teams;
+        private IList<TeamNameDto>? _teams;
 
         public event Action? Updated;
 
-        public IEnumerable<string> Teams => _teams ?? Array.Empty<string>();
+        public IEnumerable<TeamNameDto> Teams => _teams ?? Array.Empty<TeamNameDto>();
 
         public Task RefreshAsync(ApiClient api)
         {
@@ -34,6 +35,16 @@ namespace ValhallaLootList.Client.Data
             {
                 _ = RefreshAsync(api);
             }
+        }
+
+        public ValueTask EnsureStartedAsync(ApiClient api)
+        {
+            if (_initialized)
+            {
+                return default;
+            }
+
+            return new(RefreshAsync(api));
         }
     }
 }

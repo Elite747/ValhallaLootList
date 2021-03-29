@@ -1,0 +1,72 @@
+﻿@inject ApiClient Api
+  
+<MudCard Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Loot Lists</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudTooltip Text="Switch to roster view">
+                <MudIconButton Icon="@Icons.Material.Filled.ViewList" Color="Color.Default" OnClick="OnSwitchViewClicked" />
+            </MudTooltip>
+            <MudTooltip Text="Refresh">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
+            </MudTooltip>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudDivider />
+    <div class="d-flex">
+        <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+            <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items">
+                <ApiExecutor Operation="() => Api.LootLists.GetForTeam(TeamId, Phase)" Context="lootLists" @ref="_executor">
+                    <MudList Clickable="true">
+                        @foreach (var list in lootLists.OrderBy(ll => ll.CharacterName))
+                        {
+                            var characterId = list.CharacterId;
+                            <MudListItem Class="@(_characterId == list.CharacterId ? "mud-selected-item" : null)"
+                                            OnClick="() => _characterId = characterId"
+                                            Icon="@(list.Locked && list.ApprovedBy.HasValue ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
+                                            IconColor="@(list.Locked && list.ApprovedBy.HasValue ? Color.Success : Color.Warning)">
+                                @list.CharacterName
+                            </MudListItem>
+                        }
+                    </MudList>
+                    <MudDivider Vertical="true" FlexItem="true" />
+                    @if (lootLists.FirstOrDefault(list => _characterId == list.CharacterId) is LootListDto selectedList)
+                    {
+                        @if (phaseConfig.Brackets.TryGetValue(Phase, out var brackets))
+                        {
+                            <ReviewListView LootList="selectedList" Items="items" Brackets="brackets" User="User" StatusUpdated="OnStatusUpdatedAsync" />
+                        }
+                        else
+                        {
+                            <DefaultProblemView Problem="@(new() { Detail = "Phase is not valid." })" />
+                        }
+                    }
+                </ApiExecutor>
+            </ApiExecutor>
+        </ApiExecutor>
+    </div>
+</MudCard>
+
+@code {
+    private long? _characterId;
+    private IApiExecutor? _executor;
+
+    [Parameter] public long TeamId { get; set; }
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
+    [Parameter] public EventCallback OnSwitchViewClicked { get; set; }
+    [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (User is null) throw new ArgumentNullException(nameof(User));
+    }
+
+    private Task OnStatusUpdatedAsync(LootListDto arg)
+    {
+        StateHasChanged();
+        return StatusUpdated.InvokeAsync(arg);
+    }
+}

@@ -13,9 +13,9 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<string>> GetAllTeamNames()
+        public IApiClientOperation<IList<TeamNameDto>> GetAllTeamNames()
         {
-            return Client.CreateRequest<IList<string>>(HttpMethod.Get, "api/v1/teams");
+            return Client.CreateRequest<IList<TeamNameDto>>(HttpMethod.Get, "api/v1/teams");
         }
 
         public IApiClientOperation<TeamDto> Get(long teamId)

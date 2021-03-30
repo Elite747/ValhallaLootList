@@ -1,33 +1,32 @@
 ﻿@page "/loginerror"
+@page "/loginerror/{Reason}"
+@page "/loginerror/{Reason}/{RemoteError}"
 
 <h3>Login Error</h3>
 
 <div class="alert alert-danger" role="alert">
-    @(Reason switch
-    {
-        Reasons.FromDiscord => $"An error has occurred from Discord: '{RemoteError}'",
-        Reasons.FromLoginProvider => "Error loading external login information.",
-        Reasons.LockedOut => "Your account has been locked out.",
-        Reasons.FromAccountCreation => "An error has occurred while trying to create your user profile.",
-        Reasons.NotInGuild => "You are not in the guild discord.",
-        Reasons.NotAMember => "You have not been given member access in the guild discord.",
-        _ => "An unknown error has occurred while trying to log in."
-    })
+    @_message
 </div>
 
 @code {
-    [Parameter] public Reasons Reason { get; set; }
+    private string? _message;
+
+    [Parameter] public string? Reason { get; set; }
 
     [Parameter] public string? RemoteError { get; set; }
 
-    public enum Reasons
+    protected override void OnParametersSet()
     {
-        Unknown = 0,
-        FromDiscord = 1,
-        FromLoginProvider = 2,
-        LockedOut = 3,
-        FromAccountCreation = 4,
-        NotInGuild = 5,
-        NotAMember = 6
+        Enum.TryParse<LoginErrorReason>(Reason, true, out var loginError);
+        _message = loginError switch
+        {
+            LoginErrorReason.FromDiscord => $"An error has occurred from Discord: '{RemoteError}'",
+            LoginErrorReason.FromLoginProvider => "Error loading external login information.",
+            LoginErrorReason.LockedOut => "Your account has been locked out.",
+            LoginErrorReason.FromAccountCreation => "An error has occurred while trying to create your user profile.",
+            LoginErrorReason.NotInGuild => "You are not in the guild discord.",
+            LoginErrorReason.NotAMember => "You have not been given member access in the guild discord.",
+            _ => "An unknown error has occurred while trying to log in."
+        };
     }
 }

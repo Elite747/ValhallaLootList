@@ -55,13 +55,13 @@ namespace ValhallaLootList.Server.Controllers
             returnUrl ??= Url.Content("~/");
             if (remoteError != null)
             {
-                return LocalRedirect("~/loginerror?reason=1&remoteError=" + remoteError);
+                return LocalRedirect("~/loginerror/" + LoginErrorReason.FromDiscord + "/" + remoteError);
             }
 
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null || !long.TryParse(info.ProviderKey, out var discordId))
             {
-                return LocalRedirect("~/loginerror?reason=2");
+                return LocalRedirect("~/loginerror/" + LoginErrorReason.FromLoginProvider);
             }
 
             GuildMemberInfo? guildMember;
@@ -70,17 +70,18 @@ namespace ValhallaLootList.Server.Controllers
                 guildMember = await _discordService.GetMemberInfoAsync(discordId);
                 if (guildMember?.RoleNames is null)
                 {
-                    return LocalRedirect("~/loginerror?reason=5");
+                    return LocalRedirect("~/loginerror/" + LoginErrorReason.NotInGuild);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                return LocalRedirect("~/loginerror?reason=2");
+                _logger.LogError(ex, "A problem occurred while trying to get guild member information.");
+                return LocalRedirect("~/loginerror/FromLoginProvider");
             }
 
             if (!guildMember.RoleNames.Contains(_roles.Member))
             {
-                return LocalRedirect("~/loginerror?reason=6");
+                return LocalRedirect("~/loginerror/" + LoginErrorReason.NotAMember);
             }
 
             // Sign in the user with this external login provider if the user already has a login.
@@ -91,7 +92,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (await _signInManager.UserManager.IsLockedOutAsync(user))
                 {
-                    return LocalRedirect("~/loginerror?reason=3");
+                    return LocalRedirect("~/loginerror/" + LoginErrorReason.LockedOut);
                 }
 
                 if (user.UserName != guildMember.DisplayName)
@@ -116,7 +117,7 @@ namespace ValhallaLootList.Server.Controllers
 
                             if (!identityResult.Succeeded)
                             {
-                                return LocalRedirect("~/loginerror?reason=0");
+                                return LocalRedirect("~/loginerror");
                             }
                         }
                     }
@@ -176,7 +177,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     if (!identityResult.Succeeded)
                     {
-                        return LocalRedirect("~/loginerror?reason=0");
+                        return LocalRedirect("~/loginerror");
                     }
                 }
 
@@ -186,7 +187,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     if (!identityResult.Succeeded)
                     {
-                        return LocalRedirect("~/loginerror?reason=0");
+                        return LocalRedirect("~/loginerror");
                     }
                 }
 
@@ -239,7 +240,7 @@ namespace ValhallaLootList.Server.Controllers
                         }
                     }
                 }
-                return LocalRedirect("~/loginerror?reason=4");
+                return LocalRedirect("~/loginerror/" + LoginErrorReason.FromAccountCreation);
             }
         }
     }

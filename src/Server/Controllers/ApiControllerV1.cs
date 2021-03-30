@@ -8,7 +8,7 @@ namespace ValhallaLootList.Server.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize(AppRoles.Member)]
+    [Authorize(AppPolicies.Member)]
     public abstract class ApiControllerV1 : ControllerBase
     {
     }

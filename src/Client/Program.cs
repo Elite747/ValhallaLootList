@@ -4,6 +4,7 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,8 +36,10 @@ namespace ValhallaLootList.Client
                 .AddScoped<ItemProvider>()
                 .AddSingleton<ItemCache>()
                 .AddSingleton<TeamsSource>()
-                .AddScoped<ClaimsSynchronizer>()
-                .AddScoped<UserTimeProvider>();
+                .AddScoped<PermissionManager>()
+                .AddScoped<UserTimeProvider>()
+                .AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>()
+                .AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 
@@ -48,7 +51,7 @@ namespace ValhallaLootList.Client
                 })
                 .AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
 
-            builder.Services.AddAuthorizationCore(options => { var dp = options.DefaultPolicy; AppRoles.ConfigureAuthorization(options); options.DefaultPolicy = dp; });
+            builder.Services.AddAuthorizationCore(AppPolicies.ConfigureAuthorization);
 
             builder.Services.AddMudServices(options =>
             {

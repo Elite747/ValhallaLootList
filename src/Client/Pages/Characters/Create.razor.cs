@@ -50,7 +50,7 @@ namespace ValhallaLootList.Client.Pages.Characters
 
         private static readonly PlayerRace[] _allRaces;
 
-        private Task OnSubmit(ClaimsPrincipal user)
+        private Task OnSubmit()
         {
             return (EditingCharacter is null ? Api.Characters.Create(_character) : Api.Characters.Update(EditingCharacter.Id, _character))
                 .OnSuccess((CharacterDto character, CancellationToken ct) =>
@@ -58,7 +58,7 @@ namespace ValhallaLootList.Client.Pages.Characters
                     Dialog.Close(DialogResult.Ok(character));
                     if (_character.SenderIsOwner)
                     {
-                        return ClaimsSync.AddAsync(user, AppClaimTypes.Character, character.Id.ToString(), ct);
+                        return Permissions.RefreshAsync(ct);
                     }
                     return Task.CompletedTask;
                 })

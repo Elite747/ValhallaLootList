@@ -54,7 +54,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult<LootListDto>> PostLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
@@ -255,7 +255,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult<LootListDto>> PutLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
@@ -462,7 +462,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok(dtos[0]);
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppRoles.RaidLeader)]
+        [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppPolicies.RaidLeader)]
         public async Task<ActionResult> PostLock(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -506,7 +506,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Unlock"), Authorize(AppRoles.Administrator)]
+        [HttpPost("Phase{phase:int}/{characterId:long}/Unlock"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> PostUnlock(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -542,7 +542,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Approve"), Authorize(AppRoles.RaidLeader)]
+        [HttpPost("Phase{phase:int}/{characterId:long}/Approve"), Authorize(AppPolicies.RaidLeader)]
         public async Task<ActionResult> PostApprove(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -587,7 +587,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Revoke"), Authorize(AppRoles.Administrator)]
+        [HttpPost("Phase{phase:int}/{characterId:long}/Revoke"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> PostRevoke(long characterId, byte phase)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -708,7 +708,7 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(g => new { CharacterId = g.Key, Count = g.Select(a => a.Date).Distinct().Count() })
                 .ToDictionaryAsync(g => g.CharacterId, g => g.Count);
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
 
             var donations = await donationQuery.ToDictionaryAsync(d => d.CharacterId, d => d.Donated);
 

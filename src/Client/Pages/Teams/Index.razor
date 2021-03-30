@@ -14,7 +14,7 @@
                 <MudIconButton OnClick="() => TeamsSource.RefreshAsync(Api)" Icon="@Icons.Material.Filled.Refresh" />
             </MudTooltip>
 
-            <AuthorizeView Roles="@AppRoles.Administrator">
+            <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Add Team">
                     <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
                 </MudTooltip>

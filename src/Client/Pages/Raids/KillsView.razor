@@ -13,7 +13,7 @@
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at <DateTimeDisplay Date="kill.KilledAt" Format="t" /></MudText>
             @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))
             {
-                <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+                <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
                     <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(localKill.EncounterId)">Delete</MudButton>
                 </AuthorizeView>
             }
@@ -36,7 +36,7 @@
                         </div>
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
                         {
-                            <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+                            <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
                                 @if (drop.WinnerId is null)
                                 {
                                     <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
@@ -56,7 +56,7 @@
 
 @if (Raid.LocksAt > DateTimeOffset.UtcNow)
 {
-    <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+    <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
         <MudButton OnClick="AddClickedAsync"
                    StartIcon="@Icons.Material.Filled.Add"
                    Variant="Variant.Filled"

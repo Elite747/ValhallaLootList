@@ -2,7 +2,7 @@
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject ClaimsSynchronizer ClaimsSync 
+@inject PermissionManager Permissions
 
 <ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
     <MudCard Class="mb-3">
@@ -64,13 +64,9 @@
                 .OnSuccess(async (_, ct) =>
                 {
                     var currentUserId = User.GetDiscordIdFromClient();
-                    if (oldOwner?.Id == currentUserId)
+                    if (oldOwner?.Id == currentUserId || result.Id == currentUserId)
                     {
-                        await ClaimsSync.RemoveAsync(User, AppClaimTypes.RaidLeader, Character.Id.ToString(), ct);
-                    }
-                    if (result.Id == currentUserId)
-                    {
-                        await ClaimsSync.AddAsync(User, AppClaimTypes.RaidLeader, Character.Id.ToString(), ct);
+                        await Permissions.RefreshAsync(ct);
                     }
                     if (_executor is not null)
                     {

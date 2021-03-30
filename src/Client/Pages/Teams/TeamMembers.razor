@@ -10,7 +10,7 @@
                     <MudText Typo="Typo.h6">Roster</MudText>
                 </div>
                 <div class="mud-card-header-actions">
-                    <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
+                    <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="@Team.Id">
                         <MudTooltip Text="Switch to Loot List view">
                             <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Default" OnClick="OnSwitchViewClicked" />
                         </MudTooltip>

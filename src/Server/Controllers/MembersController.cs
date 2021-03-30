@@ -22,7 +22,7 @@ namespace ValhallaLootList.Server.Controllers
             _context = context;
         }
 
-        [HttpGet, Authorize(AppRoles.Administrator)]
+        [HttpGet, Authorize(AppPolicies.Administrator)]
         public async Task<IList<GuildMemberDto>> Get([FromQuery] string[]? role)
         {
             var claimTypes = new List<string>(4) { DiscordClaimTypes.AvatarHash, DiscordClaimTypes.Username, DiscordClaimTypes.Discriminator };

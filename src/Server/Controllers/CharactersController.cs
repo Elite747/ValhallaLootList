@@ -186,7 +186,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPut("{id:long}"), Authorize(AppRoles.Administrator)]
+        [HttpPut("{id:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<CharacterDto>> Put(long id, [FromBody] CharacterSubmissionDto dto)
         {
             var character = await _context.Characters.FindAsync(id);
@@ -232,7 +232,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Owner"), Authorize(AppRoles.Administrator)]
+        [HttpGet("{id:long}/Owner"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
         {
             var character = await _context.Characters
@@ -260,7 +260,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpPost("{id:long}/Verify"), Authorize(AppRoles.Administrator)]
+        [HttpPost("{id:long}/Verify"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> PostVerify(long id)
         {
             var character = await _context.Characters.FindAsync(id);
@@ -284,7 +284,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPut("{id:long}/OwnerId"), Authorize(AppRoles.Administrator)]
+        [HttpPut("{id:long}/OwnerId"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId)
         {
             var character = await _context.Characters.FindAsync(id);
@@ -319,7 +319,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpDelete("{id:long}/OwnerId"), Authorize(AppRoles.Administrator)]
+        [HttpDelete("{id:long}/OwnerId"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> DeleteOwner(long id)
         {
             var character = await _context.Characters.FindAsync(id);
@@ -366,7 +366,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsAsyncEnumerable();
         }
 
-        [HttpDelete("{id:long}"), Authorize(AppRoles.Administrator)]
+        [HttpDelete("{id:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> Delete(long id)
         {
             var character = await _context.Characters.FindAsync(id);

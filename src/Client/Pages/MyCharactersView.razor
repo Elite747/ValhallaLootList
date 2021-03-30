@@ -1,6 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject PermissionManager Permissions 
 
 <MudCard Class="ma-5" Elevation="5">
     <MudCardHeader>
@@ -41,25 +42,22 @@
         if (User is null) throw new ArgumentNullException(nameof(User));
     }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         var tasks = new List<Task>();
 
-        foreach (var claim in User.FindAll(AppClaimTypes.Character))
+        foreach (var characterId in await Permissions.GetOwnedCharacterIdsAsync())
         {
-            if (long.TryParse(claim.Value, out var characterId))
-            {
-                tasks.Add(Api.Characters.Get(characterId)
-                    .OnSuccess(character =>
-                    {
-                        _characters.Add(character);
-                        StateHasChanged();
-                    })
-                    .ExecuteAsync());
-            }
+            tasks.Add(Api.Characters.Get(characterId)
+                .OnSuccess(character =>
+                {
+                    _characters.Add(character);
+                    StateHasChanged();
+                })
+                .ExecuteAsync());
         }
 
-        return Task.WhenAll(tasks);
+        await Task.WhenAll(tasks);
     }
 
     private async Task CreateClickedAsync()

@@ -45,7 +45,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsAsyncEnumerable();
         }
 
-        [HttpPut("{id:long}"), Authorize(AppRoles.LootMaster)]
+        [HttpPut("{id:long}"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo)
         {
             var now = realmTimeZoneInfo.TimeZoneNow();
@@ -182,7 +182,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Ranks"), Authorize(AppRoles.LootMaster)]
+        [HttpGet("{id:long}/Ranks"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(long id)
         {
             var drop = await _context.Drops.FindAsync(id);

@@ -165,7 +165,7 @@ namespace ValhallaLootList.Server.Controllers
             return team;
         }
 
-        [HttpPost, Authorize(AppRoles.Administrator)]
+        [HttpPost, Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<TeamDto>> Post([FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!ModelState.IsValid)
@@ -223,7 +223,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPut("{id:long}"), Authorize(AppRoles.Administrator)]
+        [HttpPut("{id:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<TeamDto>> Put(long id, [FromBody] TeamSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!ModelState.IsValid)
@@ -297,7 +297,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id:long}/members"), Authorize(AppRoles.RaidLeader)]
+        [HttpPost("{id:long}/members"), Authorize(AppPolicies.RaidLeader)]
         public async Task<ActionResult<MemberDto>> PostMember(long id, [FromBody] AddTeamMemberDto dto)
         {
             if (!await _context.IsLeaderOf(User, id))
@@ -411,7 +411,7 @@ namespace ValhallaLootList.Server.Controllers
             return returnDto;
         }
 
-        [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppRoles.RaidLeader)]
+        [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
         public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
         {
             if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
@@ -459,7 +459,7 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppRoles.RaidLeader)]
+        [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
         public async Task<IActionResult> DeleteMember(long id, long characterId)
         {
             if (!await _context.IsLeaderOf(User, id))
@@ -507,7 +507,7 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpGet("{id:long}/leaders"), Authorize(AppRoles.Administrator)]
+        [HttpGet("{id:long}/leaders"), Authorize(AppPolicies.Administrator)]
         public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
         {
             await foreach (var userId in _context.UserClaims
@@ -525,7 +525,7 @@ namespace ValhallaLootList.Server.Controllers
             }
         }
 
-        [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppRoles.Administrator)]
+        [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordService discordService)
         {
             var team = await _context.RaidTeams.FindAsync(id);
@@ -569,7 +569,7 @@ namespace ValhallaLootList.Server.Controllers
             return guildMember;
         }
 
-        [HttpDelete("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
+        [HttpDelete("{id}/leaders/{userId}"), Authorize(AppPolicies.Administrator)]
         public async Task<IActionResult> DeleteLeader(string id, long userId)
         {
             var team = await _context.RaidTeams.FindAsync(id);

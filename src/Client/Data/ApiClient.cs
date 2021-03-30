@@ -31,6 +31,7 @@ namespace ValhallaLootList.Client.Data
             Items = new(this);
             LootLists = new(this);
             Members = new(this);
+            Permissions = new(this);
             Raids = new(this);
             Teams = new(this);
         }
@@ -50,6 +51,8 @@ namespace ValhallaLootList.Client.Data
         public ApiClientLootLists LootLists { get; }
 
         public ApiClientMembers Members { get; }
+
+        public ApiClientPermissions Permissions { get; }
 
         public ApiClientRaids Raids { get; }
 

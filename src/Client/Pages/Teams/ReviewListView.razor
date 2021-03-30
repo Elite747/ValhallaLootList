@@ -8,7 +8,7 @@
 
         @if (LootList.ApprovedBy.HasValue)
         {
-            <AuthorizeView Roles="@AppRoles.Administrator">
+            <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings from non-leaders.">
                     <MudButton OnClick="RevokeApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                         Revoke Approval
@@ -27,7 +27,7 @@
 
         @if (LootList.Locked)
         {
-            <AuthorizeView Roles="@AppRoles.Administrator">
+            <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, the list must also have its approval revoked.">
                     <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                 </MudTooltip>

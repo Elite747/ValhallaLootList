@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -36,6 +37,8 @@ namespace ValhallaLootList.Server
             services.AddScoped<PrioCalculator>();
             services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
             services.AddScoped<DiscordRoleMap>();
+            services.AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>();
+            services.AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>();
 
             services.AddIdGen(options =>
             {
@@ -91,7 +94,7 @@ namespace ValhallaLootList.Server
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove(AppClaimTypes.Role);
 
-            services.AddAuthorization(AppRoles.ConfigureAuthorization);
+            services.AddAuthorization(AppPolicies.ConfigureAuthorization);
 
             services.AddControllersWithViews();
             services.AddRazorPages().AddJsonOptions(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options.JsonSerializerOptions));

@@ -36,7 +36,7 @@
                             <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
                         }
                     </div>
-                    <AuthorizeView Policy="@AppRoles.LootMasterOrAdmin" Context="auth">
+                    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
                         {
                             <MudTooltip Text="Edit">
@@ -58,7 +58,7 @@
     <MudCardActions>
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
         {
-            <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+            <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
                 <MudButton OnClick="AddRosteredAsync" Variant="Variant.Text" Color="Color.Primary" Class="mr-2">Add Rostered Member</MudButton>
                 <MudButton OnClick="AddUnrosteredAsync" Variant="Variant.Text" Color="Color.Primary">Add Unrostered Member</MudButton>
             </AuthorizeView>

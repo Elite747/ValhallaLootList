@@ -17,7 +17,7 @@
         {
             <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
         }
-        <AuthorizeView Roles="@AppRoles.Administrator">
+        <AuthorizeView Policy="@AppPolicies.Administrator">
             <MudTooltip Text="Edit">
                 <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(character)" />
             </MudTooltip>
@@ -27,7 +27,7 @@
         </AuthorizeView>
     </div>
 
-    <AuthorizeView Roles="@AppRoles.Administrator">
+    <AuthorizeView Policy="@AppPolicies.Administrator">
         <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 

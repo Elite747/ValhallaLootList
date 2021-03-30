@@ -5,7 +5,7 @@
     <MudText Typo="Typo.h4" Inline="false">Team @raid.TeamName Raid</MudText>
     <MudText Typo="Typo.h6" Inline="false">Phase @raid.Phase</MudText>
     <MudText Typo="Typo.subtitle1" Inline="false"><DateTimeDisplay Date="raid.StartedAt" Format="f" /></MudText>
-    <AuthorizeView Resource="raid.TeamId" Policy="@AppRoles.LootMaster">
+    <AuthorizeView Resource="raid.TeamId" Policy="@AppPolicies.LootMaster">
         @if (raid.LocksAt > DateTimeOffset.UtcNow)
         {
             <MudText Typo="Typo.subtitle1" Color="Color.Warning">

@@ -1,8 +1,8 @@
 ﻿@inject ApiClient Api
-@inject ClaimsSynchronizer ClaimsSync 
+@inject PermissionManager Permissions
 
 <AuthorizeView Context="auth">
-    <EditForm OnValidSubmit="() => OnSubmit(auth.User)" Model="_character">
+    <EditForm OnValidSubmit="OnSubmit" Model="_character">
         <DataAnnotationsValidator />
         <ProblemValidator @ref="_problemValidator" />
 

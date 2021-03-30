@@ -28,7 +28,7 @@ namespace ValhallaLootList.Server.Controllers
             _telemetry = telemetry;
         }
 
-        [HttpPost, Authorize(AppRoles.RaidLeaderOrAdmin)]
+        [HttpPost, Authorize(AppPolicies.RaidLeaderOrAdmin)]
         public async Task<IActionResult> Post([FromBody] DonationSubmissionDto dto)
         {
             var character = await _context.Characters.FindAsync(dto.CharacterId);

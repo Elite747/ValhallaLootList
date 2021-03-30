@@ -2,7 +2,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<AuthorizeView Policy="@AppRoles.RaidLeader" Resource="Team.Id">
+<AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="Team.Id">
     <Authorized>
         <MudSelect T="RaidMemberStatus?"
                    Value="Member.Status"

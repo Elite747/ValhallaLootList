@@ -1,7 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject ClaimsSynchronizer ClaimsSync
+@inject PermissionManager Permissions
 
 <MudCard Elevation="5">
     <MudCardHeader>
@@ -71,7 +71,7 @@
                     leaders.Add(member);
                     if (member.Id == User.GetDiscordIdFromClient())
                     {
-                        return ClaimsSync.AddAsync(User, AppClaimTypes.RaidLeader, Team.Id.ToString(), ct);
+                        return Permissions.RefreshAsync(ct);
                     }
                     return Task.CompletedTask;
                 })
@@ -88,7 +88,7 @@
                 leaders.Remove(leader);
                 if (leader.Id == User.GetDiscordIdFromClient())
                 {
-                    return ClaimsSync.RemoveAsync(User, AppClaimTypes.RaidLeader, Team.Id.ToString(), ct);
+                    return Permissions.RefreshAsync(ct);
                 }
                 return Task.CompletedTask;
             })

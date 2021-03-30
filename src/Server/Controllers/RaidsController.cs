@@ -165,7 +165,7 @@ namespace ValhallaLootList.Server.Controllers
             return dto;
         }
 
-        [HttpPost, Authorize(AppRoles.LootMaster)]
+        [HttpPost, Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<RaidDto>> Post([FromServices] TimeZoneInfo realmTimeZoneInfo, [FromBody] RaidSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
@@ -276,7 +276,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpDelete("{id:long}"), Authorize(AppRoles.LootMasterOrAdmin)]
+        [HttpDelete("{id:long}"), Authorize(AppPolicies.LootMasterOrAdmin)]
         public async Task<ActionResult> Delete(long id)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -286,7 +286,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMasterOrAdmin);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMasterOrAdmin);
 
             if (!auth.Succeeded)
             {
@@ -323,7 +323,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("{id:long}/Attendees"), Authorize(AppRoles.LootMaster)]
+        [HttpPost("{id:long}/Attendees"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<AttendanceDto>> PostAttendee(long id, [FromBody] AttendeeSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -333,7 +333,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
 
             if (!auth.Succeeded)
             {
@@ -417,7 +417,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpPut("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMasterOrAdmin)]
+        [HttpPut("{id:long}/Attendees/{characterId:long}"), Authorize(AppPolicies.LootMasterOrAdmin)]
         public async Task<ActionResult<AttendanceDto>> PutAttendee(long id, long characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -427,7 +427,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMasterOrAdmin);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMasterOrAdmin);
 
             if (!auth.Succeeded)
             {
@@ -488,7 +488,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpDelete("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMaster)]
+        [HttpDelete("{id:long}/Attendees/{characterId:long}"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult> DeleteAttendee(long id, long characterId)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -498,7 +498,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
 
             if (!auth.Succeeded)
             {
@@ -546,7 +546,7 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("{id:long}/Kills"), Authorize(AppRoles.LootMaster)]
+        [HttpPost("{id:long}/Kills"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (dto.Drops.Count == 0)
@@ -568,7 +568,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
 
             if (!auth.Succeeded)
             {
@@ -710,7 +710,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppRoles.LootMaster)]
+        [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult> DeleteKill(long id, string encounterId)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -720,7 +720,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
 
             if (!auth.Succeeded)
             {

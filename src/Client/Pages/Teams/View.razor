@@ -8,7 +8,7 @@
     <ApiExecutor Operation="() => Api.Teams.Get(TeamName)" Context="team" @ref="_executor" BackgroundRefresh="true">
         <div class="d-flex align-center mb-3">
             <MudText Typo="Typo.h4" GutterBottom="false">@team.Name</MudText>
-            <AuthorizeView Roles="@AppRoles.Administrator">
+            <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Edit" Class="ml-2">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
                 </MudTooltip>
@@ -39,7 +39,7 @@
         }
 
         <MudGrid Class="mt-5">
-            <AuthorizeView Roles="@AppRoles.Administrator" Context="auth">
+            <AuthorizeView Policy="@AppPolicies.Administrator" Context="auth">
                 <MudItem xs="12">
                     <AdminView Team="team" User="auth.User" />
                 </MudItem>
@@ -47,7 +47,7 @@
             <MudItem xs="12" md="_reviewMode ? 12 : 6">
                 @if (_reviewMode)
                 {
-                    <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="team.Id">
+                    <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
                         <Review Phase="_phase ?? phaseConfig.CurrentPhase"
                                 TeamId="team.Id"
                                 OnSwitchViewClicked="() => _reviewMode = false"

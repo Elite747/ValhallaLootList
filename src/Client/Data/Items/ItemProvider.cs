@@ -10,14 +10,11 @@ namespace ValhallaLootList.Client.Data.Items
     public class ItemProvider
     {
         private readonly ItemCache _itemCache;
-        private readonly WowheadInterop _wowheadInterop;
         private readonly WowheadClient _wowheadClient;
-        private (int type, int env, int locale)? _config;
 
-        public ItemProvider(ItemCache itemCache, WowheadInterop wowheadInterop, WowheadClient wowheadClient)
+        public ItemProvider(ItemCache itemCache, WowheadClient wowheadClient)
         {
             _itemCache = itemCache;
-            _wowheadInterop = wowheadInterop;
             _wowheadClient = wowheadClient;
         }
 
@@ -28,25 +25,12 @@ namespace ValhallaLootList.Client.Data.Items
 
         private async Task<Item> GetFromInteropAsync(uint id, CancellationToken cancellationToken)
         {
-            _config ??= await GetConfigurationAsync(cancellationToken);
-
-            var (type, env, locale) = _config.Value;
-
-            var response = await _wowheadInterop.GetEntityAsync(type, id.ToString(), env, locale, cancellationToken);
-
-            if (response is WowheadItemResponse item)
-            {
-                return new Item(id, item.Name, item.Quality, item.Icon, item.Tooltip);
-            }
-
-            response = await _wowheadClient.GetItemAsync(id, cancellationToken);
+            var response = await _wowheadClient.GetItemAsync(id, cancellationToken);
 
             if (response is null)
             {
                 throw new Exception("Item does not exist.");
             }
-
-            await _wowheadInterop.RegisterEntityAsync(type, id.ToString(), env, locale, response, cancellationToken);
 
             if (response is WowheadItemResponse item2)
             {
@@ -54,15 +38,6 @@ namespace ValhallaLootList.Client.Data.Items
             }
 
             throw new Exception((response as WowheadErrorResponse)?.Error ?? "Could not retrieve item info.");
-        }
-
-        private async Task<(int type, int env, int locale)> GetConfigurationAsync(CancellationToken cancellationToken)
-        {
-            return (
-                await _wowheadInterop.GetTypeIdFromTypeStringAsync("item", cancellationToken),
-                await _wowheadInterop.GetDataEnvFromTermAsync("burningCrusade", cancellationToken),
-                await _wowheadInterop.GetLocaleFromDomainAsync(_wowheadClient.GetDomain(), cancellationToken)
-                );
         }
     }
 }

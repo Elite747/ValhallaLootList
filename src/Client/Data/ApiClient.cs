@@ -25,6 +25,7 @@ namespace ValhallaLootList.Client.Data
             _memoryCache = memoryCache;
 
             Characters = new(this);
+            Donations = new(this);
             Drops = new(this);
             Instances = new(this);
             Items = new(this);
@@ -37,6 +38,8 @@ namespace ValhallaLootList.Client.Data
         public JsonSerializerOptions JsonSerializerOptions { get; }
 
         public ApiClientCharacters Characters { get; }
+
+        public ApiClientDonations Donations { get; }
 
         public ApiClientDrops Drops { get; }
 

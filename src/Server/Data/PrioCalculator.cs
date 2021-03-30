@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.Server.Data
 {
@@ -18,10 +19,12 @@ namespace ValhallaLootList.Server.Data
             TrialWeek2Penalty = -9;
 
         private readonly ApplicationDbContext _context;
+        private readonly TimeZoneInfo _serverTimeZone;
 
-        public PrioCalculator(ApplicationDbContext context)
+        public PrioCalculator(ApplicationDbContext context, TimeZoneInfo serverTimeZone)
         {
             _context = context;
+            _serverTimeZone = serverTimeZone;
         }
 
         public record PrioCalculationResult(int? Priority, bool Locked, string? Details, bool IsError);
@@ -85,7 +88,14 @@ namespace ValhallaLootList.Server.Data
                                kill.Boss.Items.Any(i => i.Id == itemId))
                 .CountAsync();*/
 
-            var priority = CalculatePrio(entry.Rank, attendances, entry.MemberStatus, lostCount, underPrioCount);
+            var now = _serverTimeZone.TimeZoneNow();
+
+            var donated = await _context.Donations
+                .AsNoTracking()
+                .Where(d => d.CharacterId == characterId && d.Month == now.Month && d.Year == now.Year)
+                .SumAsync(d => (long)d.CopperAmount);
+
+            var priority = CalculatePrio(entry.Rank, attendances, entry.MemberStatus, lostCount, underPrioCount, donationThresholdMet: donated >= 50_00_00);
 
             if (!entry.Locked)
             {
@@ -108,9 +118,10 @@ namespace ValhallaLootList.Server.Data
         /// <param name="memberStatus">The trial status of the player.</param>
         /// <param name="lostCount">The number of times the player lost the item to a /roll or voluntarily passing.</param>
         /// <param name="underPrioCount">The number of times the player was not considered for the item due to others having higher priority.</param>
+        /// <param name="donationThresholdMet">If true, the player has donated enough for this month to get a bonus.</param>
         /// <param name="notDroppedCount">*UNUSED* The number of times the player witnessed the boss die from where the item drops from, but it did not drop.</param>
         /// <returns>The final calculated priority of an item for a player.</returns>
-        public static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount)//, int notDroppedCount)
+        public static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount, bool donationThresholdMet)//, int notDroppedCount)
         {
             int attendanceBonus = (int)Math.Floor((double)attendances / AttendancesPerPrioPoint);
 
@@ -126,7 +137,7 @@ namespace ValhallaLootList.Server.Data
                 _ => throw new ArgumentOutOfRangeException(nameof(memberStatus))
             };
 
-            return playerRank + attendanceBonus + passBonus + badLuckProtection + trialPenalty;
+            return playerRank + attendanceBonus + passBonus + badLuckProtection + trialPenalty + (donationThresholdMet ? 1 : 0);
         }
     }
 }

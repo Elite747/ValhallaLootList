@@ -17,7 +17,7 @@
 
         @if (Member.Verified == true)
         {
-            <MudText Color="Color.Success" Class="my-2">Character is verified!</MudText>
+            <MudText Color="Color.Success">Character is verified!</MudText>
         }
         else if (context.User.IsAdmin())
         {
@@ -25,7 +25,7 @@
         }
         else
         {
-            <MudText Color="Color.Warning" Class="my-2">Character is unverified! Have an admin verify the owner of this character to clear this message.</MudText>
+            <MudText Color="Color.Warning">Character is unverified! Have an admin verify the owner of this character to clear this message.</MudText>
         }
 
         @if (Member.LootLists.Find(ll => ll.Phase == Phase) is MemberLootListDto lootList)
@@ -35,9 +35,9 @@
                 <MudText Color="Color.Success">Loot list for phase @Phase was approved!</MudText>
                 @if (lootList.ApprovedBy is not null)
                 {
-                    <p>
+                    <MudText>
                         Approved by <GuildMemberDisplay Member="lootList.ApprovedBy" />
-                    </p>
+                    </MudText>
                 }
             }
             else
@@ -54,13 +54,18 @@
             </MudText>
         }
 
+        <DonationSummary Member="Member" />
+
+        <MudButton OnClick="AddDonationAsync" Color="Color.Primary" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachMoney">Add Donation</MudButton>
+
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove</MudButton>
     </Authorized>
     <NotAuthorized>
         @if (Member.Status.HasValue)
         {
-            <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning">Status: @GetDisplayString(Member.Status.Value)</MudText>
+            <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status.Value)</MudText>
         }
+        <DonationSummary Member="Member" />
     </NotAuthorized>
 </AuthorizeView>
 
@@ -120,6 +125,23 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
+
+    private async Task AddDonationAsync()
+    {
+        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"Add Donation ({Member.Character.Name})");
+        if (amount.HasValue)
+        {
+            await Api.Donations.Add(new(){ CopperAmount = amount.Value, CharacterId = Member.Character.Id })
+                .OnSuccess(_ =>
+                {
+                    Member.DonatedNextMonth += amount.Value;
+                    StateHasChanged();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+
     }
 
     private static string GetDisplayString(RaidMemberStatus? status)

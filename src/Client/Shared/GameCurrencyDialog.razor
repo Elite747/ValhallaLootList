@@ -1,0 +1,62 @@
+﻿@inject IDialogService DialogService
+
+<EditForm OnValidSubmit="() => Dialog.Close(DialogResult.Ok(_model.GetAmount()))" Model="_model">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    <MudTextField @bind-Value="_model.Gold" For="() => _model.Gold" Variant="Variant.Text" Label="Gold" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudTextField @bind-Value="_model.Silver" For="() => _model.Silver" Variant="Variant.Text" Label="Silver" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudTextField @bind-Value="_model.Copper" For="() => _model.Copper" Variant="Variant.Text" Label="Copper" Immediate="true" />
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Disabled="_model.GetAmount() == 0" Color="Color.Primary" Variant="Variant.Filled">Ok</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    private readonly InputModel _model = new();
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+
+    private class InputModel
+    {
+        [System.ComponentModel.DataAnnotations.Range(-10000, 10000)]
+        public int? Gold { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(-99, 99)]
+        public int? Silver { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(-99, 99)]
+        public int? Copper { get; set; }
+
+        public int GetAmount()
+        {
+            int amount = Copper.GetValueOrDefault();
+
+            if (Silver.HasValue)
+            {
+                amount += (Silver.Value * 100);
+            }
+
+            if (Gold.HasValue)
+            {
+                amount += (Gold.Value * 100 * 100);
+            }
+
+            return amount;
+        }
+    }
+}

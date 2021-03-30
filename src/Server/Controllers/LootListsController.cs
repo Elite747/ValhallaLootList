@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers
@@ -560,6 +561,14 @@ namespace ValhallaLootList.Server.Controllers
             var entryQuery = _context.LootListEntries.AsNoTracking();
             var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance);
 
+            var now = _serverTimeZoneInfo.TimeZoneNow();
+
+            var donationQuery = _context.Donations
+                .AsNoTracking()
+                .Where(d => d.Month == now.Month && d.Year == now.Year)
+                .GroupBy(d => new { d.CharacterId, d.Character.TeamId })
+                .Select(g => new { g.Key.CharacterId, g.Key.TeamId, Donated = g.Sum(d => (long)d.CopperAmount) });
+
             if (characterId.HasValue)
             {
                 if (teamId.HasValue)
@@ -578,6 +587,7 @@ namespace ValhallaLootList.Server.Controllers
                 passQuery = passQuery.Where(p => p.CharacterId == characterId);
                 entryQuery = entryQuery.Where(e => e.LootList.CharacterId == characterId);
                 attendanceQuery = attendanceQuery.Where(a => a.CharacterId == characterId);
+                donationQuery = donationQuery.Where(d => d.CharacterId == characterId);
                 teamId = character.TeamId;
             }
             else if (teamId.HasValue)
@@ -591,6 +601,7 @@ namespace ValhallaLootList.Server.Controllers
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
                 entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
+                donationQuery = donationQuery.Where(d => d.TeamId == teamId);
             }
             else
             {
@@ -630,6 +641,8 @@ namespace ValhallaLootList.Server.Controllers
                 .ToDictionaryAsync(g => g.CharacterId, g => g.Count);
 
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppRoles.CharacterOwnerOrAdmin);
+
+            var donations = await donationQuery.ToDictionaryAsync(d => d.CharacterId, d => d.Donated);
 
             await foreach (var entry in entryQuery
                 .OrderByDescending(e => e.Rank)
@@ -673,7 +686,9 @@ namespace ValhallaLootList.Server.Controllers
 
                             attendances.TryGetValue(entry.CharacterId, out var characterAttendances);
 
-                            prio = PrioCalculator.CalculatePrio(entry.Rank, characterAttendances, dto.CharacterMemberStatus, loss, underPrio);
+                            bool donationThresholdMet = donations.TryGetValue(entry.CharacterId, out var donated) && donated >= 50_00_00;
+
+                            prio = PrioCalculator.CalculatePrio(entry.Rank, characterAttendances, dto.CharacterMemberStatus, loss, underPrio, donationThresholdMet);
                         }
                     }
 

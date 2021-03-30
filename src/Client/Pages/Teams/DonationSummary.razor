@@ -1,0 +1,37 @@
+﻿<div>
+    <MudTooltip Text="This was what was donated last month for priority in the current month.">
+        <MudText Inline="false">
+            This month's donations: <GameCurrencyDisplay Amount="Member.DonatedThisMonth" />
+            @if (Member.DonatedThisMonth >= Member.ThisMonthRequiredDonations)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+            }
+        </MudText>
+    </MudTooltip>
+</div>
+<div>
+    <MudTooltip>
+        <TooltipContent>
+            <p>This is what has been donated so far for next month.</p>
+            <p>Donate at least <GameCurrencyDisplay Amount="Member.NextMonthRequiredDonations" /> to get a donation priority bonus next month.</p>
+        </TooltipContent>
+        <ChildContent>
+            <MudText Inline="false">
+                Next month's donations: <GameCurrencyDisplay Amount="Member.DonatedNextMonth" />
+                @if (Member.DonatedNextMonth >= Member.ThisMonthRequiredDonations)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                }
+            </MudText>
+        </ChildContent>
+    </MudTooltip>
+</div>
+
+@code {
+    [Parameter] public MemberDto Member { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Member is null) throw new ArgumentNullException(nameof(Member));
+    }
+}

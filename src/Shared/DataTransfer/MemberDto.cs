@@ -27,8 +27,21 @@ namespace ValhallaLootList.DataTransfer
 
         public bool? Verified { get; set; }
 
-        //TODO: Donation info
+        public long DonatedThisMonth { get; set; }
+
+        public long DonatedNextMonth { get; set; }
+
+        public long ThisMonthRequiredDonations { get; set; }
+
+        public long NextMonthRequiredDonations { get; set; }
 
         //TODO: Attendance info
+    }
+
+    public class DonationSubmissionDto
+    {
+        public long CharacterId { get; set; }
+
+        public int CopperAmount { get; set; }
     }
 }

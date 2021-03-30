@@ -1,0 +1,24 @@
+﻿@if (_gold > 0)
+{
+    <span class="moneygold">@_gold</span>
+}
+@if (_silver > 0)
+{
+    <span class="moneysilver">@_gold</span>
+}
+@if (_copper > 0 || Amount == 0)
+{
+    <span class="moneycopper">@_gold</span>
+}
+
+@code {
+    private long _gold, _silver, _copper;
+
+    [Parameter] public long Amount { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var goldSilver = Math.DivRem(Amount, 100, out _copper);
+        _gold = Math.DivRem(goldSilver, 100, out _silver);
+    }
+}

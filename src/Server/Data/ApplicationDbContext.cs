@@ -34,6 +34,7 @@ namespace ValhallaLootList.Server.Data
 
         public virtual DbSet<PersistedGrant> PersistedGrants { get; set; } = null!;
         public virtual DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; } = null!;
+        public virtual DbSet<Donation> Donations { get; set; } = null!;
         public virtual DbSet<Encounter> Encounters { get; set; } = null!;
         public virtual DbSet<EncounterKill> EncounterKills { get; set; } = null!;
         public virtual DbSet<CharacterEncounterKill> CharacterEncounterKills { get; set; } = null!;
@@ -84,6 +85,8 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
 
             builder.Entity<Drop>().Property(drop => drop.Id).ValueGeneratedNever();
+
+            builder.Entity<Donation>().Property(donation => donation.Id).ValueGeneratedNever();
 
             builder.Entity<DropPass>().HasKey(e => new { e.DropId, e.CharacterId });
 

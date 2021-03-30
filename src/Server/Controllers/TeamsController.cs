@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
@@ -21,11 +22,13 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly DiscordService _discordService;
+        private readonly TimeZoneInfo _serverTimeZone;
 
-        public TeamsController(ApplicationDbContext context, DiscordService discordService)
+        public TeamsController(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo serverTimeZone)
         {
             _context = context;
             _discordService = discordService;
+            _serverTimeZone = serverTimeZone;
         }
 
         [HttpGet]
@@ -76,6 +79,10 @@ namespace ValhallaLootList.Server.Controllers
 
             bool isLeader = await _context.IsLeaderOf(User, team.Id);
 
+            var now = _serverTimeZone.TimeZoneNow();
+            var thisMonth = new DateTime(now.Year, now.Month, 1);
+            var nextMonth = thisMonth.AddMonths(1);
+
             await foreach (var character in _context.Characters
                 .AsNoTracking()
                 .Where(c => c.TeamId == team.Id)
@@ -88,7 +95,9 @@ namespace ValhallaLootList.Server.Controllers
                     c.IsFemale,
                     c.MemberStatus,
                     Verified = c.VerifiedById.HasValue,
-                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList()
+                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList(),
+                    DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
+                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount)
                 })
                 .AsSingleQuery()
                 .AsAsyncEnumerable())
@@ -106,7 +115,11 @@ namespace ValhallaLootList.Server.Controllers
                         TeamName = team.Name
                     },
                     Status = character.MemberStatus,
-                    Verified = character.Verified
+                    Verified = character.Verified,
+                    DonatedThisMonth = character.DonatedThisMonth,
+                    DonatedNextMonth = character.DonatedNextMonth,
+                    ThisMonthRequiredDonations = 50_00_00, // TODO:
+                    NextMonthRequiredDonations = 50_00_00
                 };
 
                 foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
@@ -303,7 +316,9 @@ namespace ValhallaLootList.Server.Controllers
                     TeamName = null // TODO
                 },
                 Status = character.MemberStatus,
-                Verified = character.VerifiedById.HasValue
+                Verified = character.VerifiedById.HasValue,
+                ThisMonthRequiredDonations = 50_00_00, // TODO:
+                NextMonthRequiredDonations = 50_00_00
             };
 
             await foreach (var lootList in _context.CharacterLootLists
@@ -332,6 +347,20 @@ namespace ValhallaLootList.Server.Controllers
 
                 returnDto.LootLists.Add(lootListDto);
             }
+
+            var now = _serverTimeZone.TimeZoneNow();
+            var thisMonth = new DateTime(now.Year, now.Month, 1);
+            var nextMonth = thisMonth.AddMonths(1);
+
+            returnDto.DonatedThisMonth = await _context.Donations
+                .AsNoTracking()
+                .Where(d => d.CharacterId == character.Id && d.Month == thisMonth.Month && d.Year == thisMonth.Year)
+                .SumAsync(d => (long)d.CopperAmount);
+
+            returnDto.DonatedNextMonth = await _context.Donations
+                .AsNoTracking()
+                .Where(d => d.CharacterId == character.Id && nextMonth.Month == now.Month && d.Year == nextMonth.Year)
+                .SumAsync(d => (long)d.CopperAmount);
 
             return returnDto;
         }

@@ -1,7 +1,7 @@
 ﻿@inject ApiClient Api
 @inject NavigationManager Nav 
 
-<MudDialogScrollFix />
+<MudDialogScrollFix FixedFooter="true" />
 <EditForm OnValidSubmit="SubmitAsync" Model="_model">
     <DataAnnotationsValidator />
     <ProblemValidator @ref="_problemValidator" />

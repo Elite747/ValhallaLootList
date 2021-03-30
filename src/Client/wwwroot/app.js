@@ -7,10 +7,11 @@
         mql.addEventListener('change', schemeTest);
         return interop.invokeMethodAsync('SetIsDark', mql.matches);
     },
-    makeDialogScrollable: function (id) {
+    makeDialogScrollable: function (id, mode) {
         let element = document.getElementById(id);
         if (element) {
             element.classList.add('mud-dialog-scrollable');
+            element.classList.add(`mud-dialog-scrollable-${mode}`);
         }
     },
     updateUserRoles: async function (prop, claims) {

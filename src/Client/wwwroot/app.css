@@ -28,11 +28,25 @@
 }
 
     .mud-dialog-scrollable > :not(.mud-dialog-title) {
-        overflow: auto;
-        max-height: 100%;
         display: flex;
         flex-direction: column;
+        max-height: 100%;
     }
+
+.mud-dialog-scrollable-1 > :not(.mud-dialog-title) {
+    overflow: auto;
+}
+
+.mud-dialog-scrollable-2 > :not(.mud-dialog-title) {
+    overflow: hidden;
+}
+
+.mud-dialog-scrollable-2 .mud-dialog-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    overflow: auto;
+}
 
 .fab-container-fixed {
     bottom: 16px;

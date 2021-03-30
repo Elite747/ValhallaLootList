@@ -1,7 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject NavigationManager Nav 
+@inject NavigationManager Nav
 
 @foreach (var kill in Raid.Kills)
 {
@@ -11,9 +11,9 @@
             <MudText Typo="Typo.h6">@kill.EncounterName</MudText>
             <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at @kill.KilledAt.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)</MudText>
-            @if (kill.Drops.All(drop => drop.WinnerId is null))
+            @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))
             {
-                <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
+                <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
                     <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(localKill.EncounterId)">Delete</MudButton>
                 </AuthorizeView>
             }
@@ -34,16 +34,19 @@
                             </ItemLink>
                             <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
                         </div>
-                        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
-                            @if (drop.WinnerId is null)
-                            {
-                                <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
-                            }
-                            else
-                            {
-                                <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
-                            }
-                        </AuthorizeView>
+                        @if (Raid.LocksAt > DateTimeOffset.UtcNow)
+                        {
+                            <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+                                @if (drop.WinnerId is null)
+                                {
+                                    <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
+                                }
+                            </AuthorizeView>
+                        }
                     </div>
                 </MudListItem>
             }
@@ -51,26 +54,30 @@
     </MudCard>
 }
 
-<AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
-    <MudButton OnClick="AddClickedAsync"
-               StartIcon="@Icons.Material.Filled.Add"
-               Variant="Variant.Filled"
-               Color="Color.Primary"
-               Class="@(Raid.Kills.Count == 0 ? "mt-3" : null)">
-        Add Kill
-    </MudButton>
-
-    @if (Raid.Kills.Count == 0)
-    {
-        <MudButton OnClick="DeleteRaidAsync"
-                    StartIcon="@Icons.Material.Filled.Delete"
-                    Variant="Variant.Filled"
-                    Color="Color.Error"
-                    Class="mt-3 ml-3">
-            Delete Raid
+@if (Raid.LocksAt > DateTimeOffset.UtcNow)
+{
+    <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+        <MudButton OnClick="AddClickedAsync"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="@(Raid.Kills.Count == 0 ? "mt-3" : null)">
+            Add Kill
         </MudButton>
-    }
-</AuthorizeView>
+
+        @if (Raid.Kills.Count == 0)
+        {
+            <MudButton OnClick="DeleteRaidAsync"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       Variant="Variant.Filled"
+                       Color="Color.Error"
+                       Class="mt-3 ml-3">
+                Delete Raid
+            </MudButton>
+        }
+    </AuthorizeView>
+}
+
 
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;

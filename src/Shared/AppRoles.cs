@@ -19,6 +19,10 @@ namespace ValhallaLootList
 
         public const string CharacterOwnerOrAdmin = nameof(CharacterOwnerOrAdmin);
 
+        public const string RaidLeaderOrAdmin = nameof(RaidLeaderOrAdmin);
+
+        public const string LootMasterOrAdmin = nameof(LootMasterOrAdmin);
+
         public static void ConfigureAuthorization(AuthorizationOptions options)
         {
             var memberPolicy = new AuthorizationPolicyBuilder()
@@ -45,10 +49,30 @@ namespace ValhallaLootList
                 })
                 .Build());
 
+            options.AddPolicy(RaidLeaderOrAdmin, new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireClaim(AppClaimTypes.Role, Member)
+                .RequireAssertion(context => context.User.IsAdmin() || context.Resource switch
+                {
+                    long teamId => context.User.IsRaidLeader() && context.User.IsLeaderOf(teamId),
+                    _ => context.User.IsRaidLeader()
+                })
+                .Build());
+
             options.AddPolicy(LootMaster, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .RequireClaim(AppClaimTypes.Role, Member)
                 .RequireAssertion(context => context.Resource switch
+                {
+                    long teamId => context.User.IsLootMaster() && context.User.IsLeaderOf(teamId),
+                    _ => context.User.IsLootMaster()
+                })
+                .Build());
+
+            options.AddPolicy(LootMasterOrAdmin, new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireClaim(AppClaimTypes.Role, Member)
+                .RequireAssertion(context => context.User.IsAdmin() || context.Resource switch
                 {
                     long teamId => context.User.IsLootMaster() && context.User.IsLeaderOf(teamId),
                     _ => context.User.IsLootMaster()

@@ -36,11 +36,14 @@
                             <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
                         }
                     </div>
-                    <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
-                        <MudTooltip Text="Edit">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
-                        </MudTooltip>
-                        @if (!Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
+                    <AuthorizeView Policy="@AppRoles.LootMasterOrAdmin" Context="auth">
+                        @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
+                        {
+                            <MudTooltip Text="Edit">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
+                            </MudTooltip>
+                        }
+                        @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
                         {
                             <MudTooltip Text="Remove">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
@@ -53,10 +56,13 @@
         <MudDivider />
     </MudList>
     <MudCardActions>
-        <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Raid.TeamId">
-            <MudButton OnClick="AddRosteredAsync" Variant="Variant.Text" Color="Color.Primary" Class="mr-2">Add Rostered Member</MudButton>
-            <MudButton OnClick="AddUnrosteredAsync" Variant="Variant.Text" Color="Color.Primary">Add Unrostered Member</MudButton>
-        </AuthorizeView>
+        @if (Raid.LocksAt > DateTimeOffset.UtcNow)
+        {
+            <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Raid.TeamId">
+                <MudButton OnClick="AddRosteredAsync" Variant="Variant.Text" Color="Color.Primary" Class="mr-2">Add Rostered Member</MudButton>
+                <MudButton OnClick="AddUnrosteredAsync" Variant="Variant.Text" Color="Color.Primary">Add Unrostered Member</MudButton>
+            </AuthorizeView>
+        }
     </MudCardActions>
 </MudCard>
 

@@ -17,10 +17,12 @@ namespace ValhallaLootList.Server.Controllers
     public class RaidsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuthorizationService _authorizationService;
 
-        public RaidsController(ApplicationDbContext context)
+        public RaidsController(ApplicationDbContext context, IAuthorizationService authorizationService)
         {
             _context = context;
+            _authorizationService = authorizationService;
         }
 
         public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, long? team = null)
@@ -264,7 +266,7 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpDelete("{id:long}"), Authorize(AppRoles.LootMaster)]
+        [HttpDelete("{id:long}"), Authorize(AppRoles.LootMasterOrAdmin)]
         public async Task<ActionResult> Delete(long id)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -274,9 +276,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMasterOrAdmin);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6) && !User.IsAdmin())
+            {
+                return Problem("Can't delete a raid that has been active for more than 6 hours.");
             }
 
             if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id) > 0)
@@ -301,9 +310,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            {
+                return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
             var character = await _context.Characters.FindAsync(dto.CharacterId);
@@ -362,7 +378,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpPut("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMaster)]
+        [HttpPut("{id:long}/Attendees/{characterId:long}"), Authorize(AppRoles.LootMasterOrAdmin)]
         public async Task<ActionResult<AttendanceDto>> PutAttendee(long id, long characterId, [FromBody] UpdateAttendanceSubmissionDto dto)
         {
             var raid = await _context.Raids.FindAsync(id);
@@ -372,9 +388,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMasterOrAdmin);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6) && !User.IsAdmin())
+            {
+                return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
@@ -414,9 +437,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            {
+                return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
@@ -448,11 +478,6 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId) > 0)
-            {
-                return Problem("That boss already has a recorded kill for this raid.");
-            }
-
             var raid = await _context.Raids.FindAsync(id);
 
             if (raid is null)
@@ -460,9 +485,21 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            {
+                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+            }
+
+            if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId) > 0)
+            {
+                return Problem("That boss already has a recorded kill for this raid.");
             }
 
             var encounter = await _context.Encounters
@@ -585,9 +622,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, raid.RaidTeamId))
+            var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppRoles.LootMaster);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            {
+                return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
             var kill = await _context.EncounterKills.FindAsync(encounterId, id);

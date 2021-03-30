@@ -7,7 +7,7 @@
             <MudText Typo="Typo.h6">Recent Raids</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <AuthorizeView Policy="@AppRoles.RaidLeader" Resource="@Team.Id">
+            <AuthorizeView Policy="@AppRoles.LootMaster" Resource="@Team.Id">
                 <MudTooltip Text="Start New Raid">
                     <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="StartRaid" />
                 </MudTooltip>

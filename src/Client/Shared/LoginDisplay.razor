@@ -26,7 +26,6 @@
                                Discriminator="context.User.GetDiscordDiscriminator()"
                                Size="40" />
         </MudAvatar>
-        <MudButton OnClick="BeginSignOut" Variant="Variant.Text" Color="Color.Inherit">Log out</MudButton>
     </Authorized>
     <NotAuthorized>
         <MudButton OnClick="SignIn" Variant="Variant.Text" Color="Color.Inherit">Log in</MudButton>
@@ -34,11 +33,6 @@
 </AuthorizeView>
 
 @code{
-    private async Task BeginSignOut()
-    {
-        await SignOutManager.SetSignOutState();
-        Navigation.NavigateTo("authentication/logout");
-    }
 
     private void SignIn()
     {

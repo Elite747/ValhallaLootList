@@ -34,7 +34,7 @@
         {
             var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
             <MudText Typo="Typo.h6">
-                @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture))
+                @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture)) (server time)
             </MudText>
         }
 

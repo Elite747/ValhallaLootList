@@ -19,13 +19,7 @@
         </MudHidden>
         <MudAppBarSpacer />
         <LoginDisplay />
-        <MudTooltip Text="Theme">
-            <MudMenu Icon="@GetIcon()" Color="Color.Inherit" Direction="Direction.Left" OffsetX="true" Class="ml-1">
-                <MudMenuItem OnClick="() => SetThemeAsync(null)">System Default</MudMenuItem>
-                <MudMenuItem OnClick="@(() => SetThemeAsync("light"))">Light</MudMenuItem>
-                <MudMenuItem OnClick="@(() => SetThemeAsync("dark"))">Dark</MudMenuItem>
-            </MudMenu>
-        </MudTooltip>
+        <SettingsDisplay SelectedTheme="@_currentTheme" SelectedThemeChanged="SetThemeAsync" />
     </MudAppBar>
     <MudDrawer @bind-Open="@_navOpen" Elevation="5" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive">
         <NavMenu />

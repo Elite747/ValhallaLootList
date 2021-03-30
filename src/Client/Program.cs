@@ -11,6 +11,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Data.Items;
+using ValhallaLootList.Client.Shared;
 
 namespace ValhallaLootList.Client
 {
@@ -34,7 +35,8 @@ namespace ValhallaLootList.Client
                 .AddScoped<ItemProvider>()
                 .AddSingleton<ItemCache>()
                 .AddSingleton<TeamsSource>()
-                .AddScoped<ClaimsSynchronizer>();
+                .AddScoped<ClaimsSynchronizer>()
+                .AddScoped<UserTimeProvider>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 

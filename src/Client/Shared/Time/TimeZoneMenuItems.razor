@@ -1,0 +1,36 @@
+﻿@namespace ValhallaLootList.Client.Shared
+@implements IDisposable 
+@inject UserTimeProvider TimeProvider
+
+<MudListSubheader>
+    Display Times In
+</MudListSubheader>
+@foreach (var mode in Enum.GetValues<TimeFormatterMode>())
+{
+    <MudMenuItem OnClick="() => TimeProvider.SetModeAsync(mode)">
+        <div class="d-flex align-center">
+            <MudIcon Class="mr-2" Icon="@(mode == TimeProvider.Mode ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" />
+            <div>
+                @(mode switch
+                {
+                    TimeFormatterMode.Original => "Realm Time",
+                    TimeFormatterMode.Local => "Local Time",
+                    TimeFormatterMode.Utc => "UTC",
+                    _ => "Use Realm Time"
+                })
+            </div>
+        </div>
+    </MudMenuItem>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        TimeProvider.ModeChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        TimeProvider.ModeChanged -= StateHasChanged;
+    }
+}

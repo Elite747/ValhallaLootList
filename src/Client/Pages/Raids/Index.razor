@@ -1,6 +1,8 @@
 ﻿@page "/raids"
+@implements IDisposable
 @inject ApiClient Api
 @inject ISnackbar Snackbar
+@inject UserTimeProvider TimeProvider 
 @{
     var firstDayOfWeek = (int)CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
     var firstCalendarDay = _date.AddDays(firstDayOfWeek - (int)_date.DayOfWeek);
@@ -9,7 +11,9 @@
 <MudCard Elevation="5">
     <div class="d-flex justify-space-between align-center">
         <MudIconButton OnClick="() => ChangeMonth(-1)" Icon="@Icons.Material.Filled.ChevronLeft" />
-        <MudText Typo="Typo.h4">@_date.ToString("MMMM", CultureInfo.CurrentCulture)</MudText>
+        <MudText Typo="Typo.h4">
+            @TimeProvider.Convert(_date).ToString("MMMM", CultureInfo.CurrentCulture)
+        </MudText>
         <MudIconButton OnClick="() => ChangeMonth(1)" Icon="@Icons.Material.Filled.ChevronRight" />
     </div>
     <MudOverlay Visible="_raidsLoading" Absolute="true">
@@ -46,9 +50,9 @@
                                     @current.Day
                                 </div>
                                 <div style="min-height: 6rem">
-                                    @foreach (var raid in _raids.Where(r => r.StartedAt.ToLocalTime().Date == current).OrderBy(r => r.StartedAt))
+                                    @foreach (var raid in _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == current).OrderBy(r => r.StartedAt))
                                     {
-                                        <MudTooltip Text="@($"{raid.TeamName} Phase {raid.Phase} raid on {raid.StartedAt.ToLocalTime().ToString("f", CultureInfo.CurrentCulture)}")">
+                                        <MudTooltip Text="@($"{raid.TeamName} Phase {raid.Phase} raid on {TimeProvider.Convert(raid.StartedAt).ToString("f", CultureInfo.CurrentCulture)}")">
                                             <div>
                                                 <MudLink Href="@("raids/" + raid.Id)" Color="Color.Inherit">
                                                     @raid.TeamName (P.@raid.Phase)
@@ -77,6 +81,7 @@
 
     protected override Task OnInitializedAsync()
     {
+        TimeProvider.ModeChanged += StateHasChanged;
         _date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         return ChangeMonth(0);
     }
@@ -102,4 +107,6 @@
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
+
+    public void Dispose() => TimeProvider.ModeChanged -= StateHasChanged;
 }

@@ -20,7 +20,7 @@
             @foreach (var raid in raids.OrderByDescending(r => r.StartedAt))
             {
                 <MudListItem Href="@("raids/" + raid.Id)">
-                    Phase @raid.Phase Raid (@raid.StartedAt.ToLocalTime().ToString("D", CultureInfo.CurrentCulture))
+                    Phase @raid.Phase Raid (<DateTimeDisplay Date="raid.StartedAt" Format="D" />)
                 </MudListItem>
             }
         </MudList>

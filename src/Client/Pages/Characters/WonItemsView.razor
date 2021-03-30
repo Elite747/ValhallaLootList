@@ -27,7 +27,7 @@
                             </ItemLink>
                             <div>
                                 <MudText Typo="Typo.caption" Inline="false">
-                                    Awarded @drop.AwardedAt.ToLocalTime().ToString("f", CultureInfo.CurrentCulture)
+                                    Awarded <DateTimeDisplay Date="drop.AwardedAt" Format="f" />
                                     <MudLink Href="@("raids/" + drop.RaidId)" Typo="Typo.caption">View Raid</MudLink>
                                 </MudText>
                             </div>

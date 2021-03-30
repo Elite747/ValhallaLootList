@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +21,14 @@ namespace ValhallaLootList.Server.Controllers
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZoneInfo;
         private readonly IAuthorizationService _authorizationService;
+        private readonly TelemetryClient _telemetry;
 
-        public LootListsController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo, IAuthorizationService authorizationService)
+        public LootListsController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo, IAuthorizationService authorizationService, TelemetryClient telemetry)
         {
             _context = context;
             _serverTimeZoneInfo = serverTimeZoneInfo;
             _authorizationService = authorizationService;
+            _telemetry = telemetry;
         }
 
         [HttpGet]
@@ -236,6 +239,13 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("LootListCreated", User, props =>
+            {
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["Phase"] = list.Phase.ToString();
+            });
+
             var dtos = await CreateDtosAsync(character.Id, null, phase);
             Debug.Assert(dtos?.Count == 1);
 
@@ -439,6 +449,13 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("LootListUpdated", User, props =>
+            {
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["Phase"] = list.Phase.ToString();
+            });
+
             var dtos = await CreateDtosAsync(character.Id, null, phase);
             Debug.Assert(dtos?.Count == 1);
 
@@ -455,11 +472,16 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
             if (!User.IsAdmin())
             {
-                var teamId = await _context.Characters.Where(c => c.Id == characterId).Select(c => c.TeamId).FirstAsync();
-
-                if (!teamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, teamId.Value.ToString()))
+                if (!character.TeamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, character.TeamId.Value.ToString()))
                 {
                     return Unauthorized();
                 }
@@ -473,6 +495,13 @@ namespace ValhallaLootList.Server.Controllers
             list.Locked = true;
 
             await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("LootListLocked", User, props =>
+            {
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["Phase"] = list.Phase.ToString();
+            });
 
             return Ok();
         }
@@ -496,6 +525,19 @@ namespace ValhallaLootList.Server.Controllers
             list.ApprovedBy = null;
 
             await _context.SaveChangesAsync();
+
+            var characterName = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => c.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("LootListUnlocked", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["CharacterName"] = characterName;
+                props["Phase"] = list.Phase.ToString();
+            });
 
             return Ok();
         }
@@ -529,6 +571,19 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var characterName = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => c.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("LootListApproved", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["CharacterName"] = characterName;
+                props["Phase"] = list.Phase.ToString();
+            });
+
             return Ok();
         }
 
@@ -550,6 +605,19 @@ namespace ValhallaLootList.Server.Controllers
             list.ApprovedBy = null;
 
             await _context.SaveChangesAsync();
+
+            var characterName = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => c.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("LootListRevoked", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["CharacterName"] = characterName;
+                props["Phase"] = list.Phase.ToString();
+            });
 
             return Ok();
         }

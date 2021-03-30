@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,12 +24,14 @@ namespace ValhallaLootList.Server.Controllers
         private readonly ApplicationDbContext _context;
         private readonly DiscordService _discordService;
         private readonly TimeZoneInfo _serverTimeZone;
+        private readonly TelemetryClient _telemetry;
 
-        public TeamsController(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo serverTimeZone)
+        public TeamsController(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
         {
             _context = context;
             _discordService = discordService;
             _serverTimeZone = serverTimeZone;
+            _telemetry = telemetry;
         }
 
         [HttpGet]
@@ -201,6 +204,12 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("TeamAdded", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+            });
+
             return CreatedAtAction(nameof(Get), new { id = team.Id }, new TeamDto
             {
                 Id = team.Id,
@@ -269,6 +278,12 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("TeamUpdated", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+            });
+
             return Ok(new TeamDto
             {
                 Id = team.Id,
@@ -290,7 +305,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
             {
                 return NotFound();
             }
@@ -311,6 +328,14 @@ namespace ValhallaLootList.Server.Controllers
             character.MemberStatus = dto.MemberStatus;
 
             await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("TeamMemberAdded", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+            });
 
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
@@ -400,7 +425,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
             {
                 return NotFound();
             }
@@ -421,6 +448,14 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("TeamMemberStatusUpdated", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+            });
+
             return Accepted();
         }
 
@@ -432,7 +467,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (await _context.RaidTeams.AsNoTracking().CountAsync(t => t.Id == id) == 0)
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
             {
                 return NotFound();
             }
@@ -459,6 +496,14 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("TeamMemberRemoved", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+            });
+
             return Accepted();
         }
 
@@ -483,12 +528,16 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppRoles.Administrator)]
         public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordService discordService)
         {
-            if (await _context.RaidTeams.CountAsync(team => team.Id == id) == 0)
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
             {
                 return NotFound();
             }
 
-            if (await _context.Users.CountAsync(user => user.Id == userId) == 0)
+            var leader = await _context.Users.FindAsync(userId);
+
+            if (leader is null)
             {
                 return NotFound();
             }
@@ -509,18 +558,48 @@ namespace ValhallaLootList.Server.Controllers
             _context.UserClaims.Add(new IdentityUserClaim<long> { UserId = userId, ClaimType = AppClaimTypes.RaidLeader, ClaimValue = idString });
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("TeamLeaderAdded", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["LeaderId"] = leader.Id.ToString();
+                props["LeaderName"] = leader.UserName;
+            });
+
             return guildMember;
         }
 
         [HttpDelete("{id}/leaders/{userId}"), Authorize(AppRoles.Administrator)]
         public async Task<IActionResult> DeleteLeader(string id, long userId)
         {
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
+            {
+                return NotFound();
+            }
+
+            var leader = await _context.Users.FindAsync(userId);
+
+            if (leader is null)
+            {
+                return NotFound();
+            }
+
             var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id);
 
             if (claim is null) return NotFound();
 
             _context.UserClaims.Remove(claim);
             await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("TeamLeaderRemoved", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["LeaderId"] = leader.Id.ToString();
+                props["LeaderName"] = leader.UserName;
+            });
 
             return Ok();
         }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,13 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly PrioCalculator _prioCalculator;
+        private readonly TelemetryClient _telemetry;
 
-        public DropsController(ApplicationDbContext context, PrioCalculator prioCalculator)
+        public DropsController(ApplicationDbContext context, PrioCalculator prioCalculator, TelemetryClient telemetry)
         {
             _context = context;
             _prioCalculator = prioCalculator;
+            _telemetry = telemetry;
         }
 
         [HttpGet]
@@ -151,6 +154,22 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("DropAssigned", User, props =>
+            {
+                props["ItemId"] = drop.ItemId.ToString();
+                props["DropId"] = drop.Id.ToString();
+
+                if (drop.Winner is null)
+                {
+                    props["Unassigned"] = bool.TrueString;
+                }
+                else
+                {
+                    props["WinnerId"] = drop.Winner.Id.ToString();
+                    props["Winner"] = drop.Winner.Name;
+                }
+            });
 
             return new EncounterDropDto
             {

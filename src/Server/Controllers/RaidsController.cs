@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,13 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IAuthorizationService _authorizationService;
+        private readonly TelemetryClient _telemetry;
 
-        public RaidsController(ApplicationDbContext context, IAuthorizationService authorizationService)
+        public RaidsController(ApplicationDbContext context, IAuthorizationService authorizationService, TelemetryClient telemetry)
         {
             _context = context;
             _authorizationService = authorizationService;
+            _telemetry = telemetry;
         }
 
         public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, long? team = null)
@@ -240,6 +243,13 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            _telemetry.TrackEvent("RaidStarted", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["Phase"] = raid.Phase.ToString();
+            });
+
             return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
             {
                 Attendees = raid.Attendees.Select(a => new AttendanceDto
@@ -296,6 +306,19 @@ namespace ValhallaLootList.Server.Controllers
             _context.Raids.Remove(raid);
 
             await _context.SaveChangesAsync();
+
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("RaidDeleted", User, props =>
+            {
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+            });
 
             return Ok();
         }
@@ -354,6 +377,22 @@ namespace ValhallaLootList.Server.Controllers
             _context.RaidAttendees.Add(attendee);
 
             await _context.SaveChangesAsync();
+
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("AttendeeAdded", User, props =>
+            {
+                props["RaidId"] = raid.Id.ToString();
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+            });
 
             var spec = await _context.CharacterLootLists
                 .AsNoTracking()
@@ -420,6 +459,28 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => new { c.Id, c.Name })
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("AttendeeUpdated", User, props =>
+            {
+                props["RaidId"] = raid.Id.ToString();
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+            });
+
             return new AttendanceDto
             {
                 IgnoreAttendance = attendee.IgnoreAttendance,
@@ -459,6 +520,28 @@ namespace ValhallaLootList.Server.Controllers
             _context.RaidAttendees.Remove(attendee);
 
             await _context.SaveChangesAsync();
+
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => new { c.Id, c.Name })
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("AttendeeDeleted", User, props =>
+            {
+                props["RaidId"] = raid.Id.ToString();
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+            });
 
             return Ok();
         }
@@ -594,6 +677,21 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("KillAdded", User, props =>
+            {
+                props["RaidId"] = raid.Id.ToString();
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+                props["Encounter"] = encounter.Id;
+            });
+
             return new EncounterKillDto
             {
                 KilledAt = kill.KilledAt,
@@ -652,6 +750,21 @@ namespace ValhallaLootList.Server.Controllers
             _context.EncounterKills.Remove(kill);
 
             await _context.SaveChangesAsync();
+
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            _telemetry.TrackEvent("KillDeleted", User, props =>
+            {
+                props["RaidId"] = raid.Id.ToString();
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+                props["Phase"] = raid.Phase.ToString();
+                props["Encounter"] = kill.EncounterId;
+            });
 
             return Ok();
         }

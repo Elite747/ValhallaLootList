@@ -7,9 +7,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
@@ -20,11 +22,13 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZoneInfo;
+        private readonly TelemetryClient _telemetry;
 
-        public CharactersController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo)
+        public CharactersController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo, TelemetryClient telemetry)
         {
             _context = context;
             _serverTimeZoneInfo = serverTimeZoneInfo;
+            _telemetry = telemetry;
         }
 
         [HttpGet]
@@ -170,6 +174,8 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            TrackTelemetry("CharacterCreated", character);
+
             return CreatedAtAction(nameof(Get), new { id = character.Id }, new CharacterDto
             {
                 Class = character.Class,
@@ -212,6 +218,8 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            TrackTelemetry("CharacterUpdated", character);
 
             return new CharacterDto
             {
@@ -271,6 +279,8 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            TrackTelemetry("CharacterVerified", character);
+
             return Ok();
         }
 
@@ -304,6 +314,8 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            TrackTelemetry("CharacterOwnerSet", character);
+
             return Ok();
         }
 
@@ -329,6 +341,8 @@ namespace ValhallaLootList.Server.Controllers
             character.VerifiedById = null;
 
             await _context.SaveChangesAsync();
+
+            TrackTelemetry("CharacterOwnerUnset", character);
 
             return Ok();
         }
@@ -371,6 +385,8 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            TrackTelemetry("CharacterDeleted", character);
+
             return Ok();
         }
 
@@ -384,6 +400,15 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     span[i] = char.ToLowerInvariant(name[i]);
                 }
+            });
+        }
+
+        private void TrackTelemetry(string name, Character character)
+        {
+            _telemetry.TrackEvent(name, User, properties =>
+            {
+                properties["CharacterId"] = character.Id.ToString();
+                properties["Character"] = character.Name;
             });
         }
     }

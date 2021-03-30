@@ -102,6 +102,7 @@ namespace ValhallaLootList.Server
                 options.LogoutPath = "/account/logout";
                 options.AccessDeniedPath = "/accessdenied";
             });
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

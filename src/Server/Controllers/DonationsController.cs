@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using IdGen;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ValhallaLootList.DataTransfer;
@@ -17,12 +18,14 @@ namespace ValhallaLootList.Server.Controllers
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZone;
         private readonly IIdGenerator<long> _idGenerator;
+        private readonly TelemetryClient _telemetry;
 
-        public DonationsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, IIdGenerator<long> idGenerator)
+        public DonationsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, IIdGenerator<long> idGenerator, TelemetryClient telemetry)
         {
             _context = context;
             _serverTimeZone = serverTimeZone;
             _idGenerator = idGenerator;
+            _telemetry = telemetry;
         }
 
         [HttpPost, Authorize(AppRoles.RaidLeaderOrAdmin)]
@@ -51,6 +54,8 @@ namespace ValhallaLootList.Server.Controllers
             });
 
             await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("DonationAdded", User);
 
             return Ok();
         }

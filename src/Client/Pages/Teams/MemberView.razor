@@ -55,10 +55,11 @@
         }
 
         <DonationSummary Member="Member" />
+        <AttendanceSummary Member="Member" />
 
         <MudButton OnClick="AddDonationAsync" Color="Color.Primary" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachMoney">Add Donation</MudButton>
 
-        <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove</MudButton>
+        <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
         @if (Member.Status.HasValue)
@@ -66,6 +67,7 @@
             <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status.Value)</MudText>
         }
         <DonationSummary Member="Member" />
+        <AttendanceSummary Member="Member" />
     </NotAuthorized>
 </AuthorizeView>
 

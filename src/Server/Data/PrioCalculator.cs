@@ -16,7 +16,8 @@ namespace ValhallaLootList.Server.Data
             ObservedRaidsForAttendance = 8,
             AttendancesPerPrioPoint = 4,
             TrialWeek1Penalty = -18,
-            TrialWeek2Penalty = -9;
+            TrialWeek2Penalty = -9,
+            CopperForDonationPrio = 50_00_00;
 
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZone;
@@ -95,7 +96,7 @@ namespace ValhallaLootList.Server.Data
                 .Where(d => d.CharacterId == characterId && d.Month == now.Month && d.Year == now.Year)
                 .SumAsync(d => (long)d.CopperAmount);
 
-            var priority = CalculatePrio(entry.Rank, attendances, entry.MemberStatus, lostCount, underPrioCount, donationThresholdMet: donated >= 50_00_00);
+            var priority = CalculatePrio(entry.Rank, attendances, entry.MemberStatus, lostCount, underPrioCount, donationThresholdMet: donated >= CopperForDonationPrio);
 
             if (!entry.Locked)
             {
@@ -108,6 +109,11 @@ namespace ValhallaLootList.Server.Data
             }
 
             return new(priority, true, null, false);
+        }
+
+        public static int CalculateAttendanceBonus(int attendances)
+        {
+            return (int)Math.Floor((double)Math.Min(attendances, ObservedRaidsForAttendance) / AttendancesPerPrioPoint);
         }
 
         /// <summary>
@@ -123,7 +129,7 @@ namespace ValhallaLootList.Server.Data
         /// <returns>The final calculated priority of an item for a player.</returns>
         public static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount, bool donationThresholdMet)//, int notDroppedCount)
         {
-            int attendanceBonus = (int)Math.Floor((double)attendances / AttendancesPerPrioPoint);
+            int attendanceBonus = CalculateAttendanceBonus(attendances);
 
             int passBonus = (lostCount + underPrioCount);
 

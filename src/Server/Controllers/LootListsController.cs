@@ -686,7 +686,7 @@ namespace ValhallaLootList.Server.Controllers
 
                             attendances.TryGetValue(entry.CharacterId, out var characterAttendances);
 
-                            bool donationThresholdMet = donations.TryGetValue(entry.CharacterId, out var donated) && donated >= 50_00_00;
+                            bool donationThresholdMet = donations.TryGetValue(entry.CharacterId, out var donated) && donated >= PrioCalculator.CopperForDonationPrio;
 
                             prio = PrioCalculator.CalculatePrio(entry.Rank, characterAttendances, dto.CharacterMemberStatus, loss, underPrio, donationThresholdMet);
                         }

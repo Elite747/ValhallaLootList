@@ -97,7 +97,13 @@ namespace ValhallaLootList.Server.Controllers
                     Verified = c.VerifiedById.HasValue,
                     LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList(),
                     DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
-                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount)
+                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount),
+                    Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == team.Id)
+                        .Select(x => x.Raid.StartedAt.Date)
+                        .Distinct()
+                        .OrderByDescending(x => x)
+                        .Take(PrioCalculator.ObservedRaidsForAttendance)
+                        .Count()
                 })
                 .AsSingleQuery()
                 .AsAsyncEnumerable())
@@ -118,8 +124,11 @@ namespace ValhallaLootList.Server.Controllers
                     Verified = character.Verified,
                     DonatedThisMonth = character.DonatedThisMonth,
                     DonatedNextMonth = character.DonatedNextMonth,
-                    ThisMonthRequiredDonations = 50_00_00, // TODO:
-                    NextMonthRequiredDonations = 50_00_00
+                    ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                    NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                    Attendance = character.Attendance,
+                    AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
+                    AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(character.Attendance)
                 };
 
                 foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
@@ -303,6 +312,15 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var attendance = await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
+                .Select(x => x.Raid.StartedAt.Date)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .Take(PrioCalculator.ObservedRaidsForAttendance)
+                .CountAsync();
+
             var returnDto = new MemberDto
             {
                 Character = new()
@@ -317,8 +335,11 @@ namespace ValhallaLootList.Server.Controllers
                 },
                 Status = character.MemberStatus,
                 Verified = character.VerifiedById.HasValue,
-                ThisMonthRequiredDonations = 50_00_00, // TODO:
-                NextMonthRequiredDonations = 50_00_00
+                ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                Attendance = attendance,
+                AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
+                AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(attendance)
             };
 
             await foreach (var lootList in _context.CharacterLootLists

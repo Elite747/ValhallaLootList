@@ -23,8 +23,10 @@ jobs:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
     - name: Restore Migrator
       run: dotnet restore "${{ env.MIGRATE_DIRECTORY }}"
+    - name: Build Migrator
+      run: dotnet build "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: Seed and Migrate
-      run: dotnet run "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet run -p "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore --no-build
     - name: Restore
       run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
     - name: Build

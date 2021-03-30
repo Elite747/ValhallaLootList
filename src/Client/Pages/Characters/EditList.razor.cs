@@ -65,6 +65,12 @@ namespace ValhallaLootList.Client.Pages.Characters
             }
             _classSpecializations = _specLookup[Character.Class];
 
+            if (_classSpecializations.Length == 1)
+            {
+                _lootList.MainSpec = _classSpecializations[0].Spec;
+                _lootList.OffSpec = null;
+            }
+
             _lootList.Brackets.Clear();
 
             return Api.GetPhaseConfiguration()

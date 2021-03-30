@@ -9,28 +9,31 @@
         <DataAnnotationsValidator />
         <ProblemValidator @ref="_problemValidator" />
         <CustomValidator @ref="_bracketValidator" />
-        <MudSelect Label="Main Spec"
-                   For="() => _lootList.MainSpec"
-                   @bind-Value="@_lootList.MainSpec">
-            @if (_classSpecializations is not null)
-            {
-                foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
-                {
-                    <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
-                }
-            }
-        </MudSelect>
-        <MudSelect Label="Off Spec"
-                   For="() => _lootList.OffSpec"
-                   @bind-Value="@_lootList.OffSpec">
-            @if (_classSpecializations is not null)
-            {
-                foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
-                {
-                    <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
-                }
-            }
-        </MudSelect>
+        @if (_classSpecializations?.Length != 1)
+        {
+            <MudSelect Label="Main Spec"
+                       For="() => _lootList.MainSpec"
+                       @bind-Value="@_lootList.MainSpec">
+                @if (_classSpecializations is not null)
+                    {
+                        foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.OffSpec))
+                        {
+                        <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                        }
+                    }
+            </MudSelect>
+            <MudSelect Label="Off Spec"
+                       For="() => _lootList.OffSpec"
+                       @bind-Value="@_lootList.OffSpec">
+                @if (_classSpecializations is not null)
+                    {
+                        foreach (var spec in _classSpecializations.Where(spec => spec.Spec != _lootList.MainSpec))
+                        {
+                        <MudSelectItem T="Specializations?" Value="spec.Spec">@spec.DisplayName</MudSelectItem>
+                        }
+                    }
+            </MudSelect>
+        }
         @if (!_lootList.MainSpec.HasValue)
         {
             <div>Select a specialization.</div>

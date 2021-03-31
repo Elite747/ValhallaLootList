@@ -151,7 +151,7 @@
     {
         foreach (var bracket in Brackets)
         {
-            if (rank >= bracket.MaxRank && rank <= bracket.MinRank)
+            if (rank <= bracket.MaxRank && rank >= bracket.MinRank)
             {
                 return bracket;
             }

@@ -8,7 +8,7 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Authorization
 {
-    public class TeamLeaderPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
+    public class TeamLeaderPolicyHandler : AuthorizationHandler<TeamLeaderRequirement>
     {
         private readonly PermissionManager _permissionManager;
 
@@ -17,7 +17,7 @@ namespace ValhallaLootList.Client.Authorization
             _permissionManager = permissionManager;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement)
         {
             if (context.User.IsAdmin() && requirement.AllowAdmin)
             {

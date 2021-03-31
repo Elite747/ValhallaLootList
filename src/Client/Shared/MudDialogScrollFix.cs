@@ -11,6 +11,8 @@ namespace ValhallaLootList.Client.Shared
 {
     public class MudDialogScrollFix : ComponentBase
     {
+        [Parameter] public bool FixedFooter { get; set; }
+
         [Inject] public IJSRuntime JS { get; set; } = null!;
 
         [CascadingParameter] public MudDialogInstance Dialog { get; set; } = null!;
@@ -23,7 +25,7 @@ namespace ValhallaLootList.Client.Shared
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await JS.InvokeVoidAsync("valhallaLootList.makeDialogScrollable", "_" + Dialog.Id.ToString("N"));
+            await JS.InvokeVoidAsync("valhallaLootList.makeDialogScrollable", "_" + Dialog.Id.ToString("N"), FixedFooter ? 2 : 1);
         }
     }
 }

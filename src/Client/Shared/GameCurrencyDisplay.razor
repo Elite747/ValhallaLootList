@@ -1,14 +1,14 @@
-﻿@if (_gold > 0)
+﻿@if (_gold != 0)
 {
-    <span class="moneygold">@_gold</span>
+    <span gold>@_gold</span>
 }
-@if (_silver > 0)
+@if (_silver != 0)
 {
-    <span class="moneysilver">@_gold</span>
+    <span silver>@_silver</span>
 }
-@if (_copper > 0 || Amount == 0)
+@if (_copper != 0 || Amount == 0)
 {
-    <span class="moneycopper">@_gold</span>
+    <span copper>@_copper</span>
 }
 
 @code {

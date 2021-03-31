@@ -1,6 +1,6 @@
 ﻿@inject WowheadInterop WH
 
-<MudDialogScrollFix />
+<MudDialogScrollFix FixedFooter="true" />
 <MudDialog DisableSidePadding="true">
     <DialogContent>
         @if (Context.Items is not null)
@@ -13,25 +13,27 @@
                     @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
                     {
                         var id = item.Id;
-                        <ItemLink Id="item.Id"
-                                  @onclick="() => LinkClickedAsync(id)"
-                                  class="mud-list-item mud-list-item-gutters mud-list-item-clickable mud-ripple d-flex align-center">
-                            <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
-                                <ItemLinkIcon Size="IconSize.Small" Width="24" Height="24" />
-                            </MudAvatar>
-                            <ItemLinkText OverrideText="@item.Name" Colorize="true" Class="mr-auto" />
-                            @if (LootList.MainSpec.HasValue)
-                            {
-                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"
-                                                   SpecPrefix="@(LootList.OffSpec.HasValue ? "mainspec" : null)" />
-                            }
+                        <MudListItem OnClick="() => LinkClickedAsync(id)">
+                            <div class="d-flex align-center">
+                                <ItemLink Id="item.Id" class="d-flex align-center mr-auto">
+                                    <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
+                                        <ItemLinkIcon Size="IconSize.Small" Width="24" Height="24" />
+                                    </MudAvatar>
+                                    <ItemLinkText OverrideText="@item.Name" Colorize="true" Bracketize="true" />
+                                </ItemLink>
+                                @if (LootList.MainSpec.HasValue)
+                                {
+                                    <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"
+                                                       SpecPrefix="@(LootList.OffSpec.HasValue ? "MS" : null)" />
+                                }
 
-                            @if (LootList.OffSpec.HasValue)
-                            {
-                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.OffSpec.Value) != 0)"
-                                                   SpecPrefix="offspec" />
-                            }
-                        </ItemLink>
+                                @if (LootList.OffSpec.HasValue)
+                                {
+                                    <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.OffSpec.Value) != 0)"
+                                                       SpecPrefix="OS" />
+                                }
+                            </div>
+                        </MudListItem>
                     }
                 }
 

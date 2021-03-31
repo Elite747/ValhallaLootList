@@ -9,7 +9,7 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Authorization
 {
-    public class TeamLeaderPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
+    public class TeamLeaderPolicyHandler : AuthorizationHandler<TeamLeaderRequirement>
     {
         private readonly ApplicationDbContext _context;
 
@@ -18,7 +18,7 @@ namespace ValhallaLootList.Server.Authorization
             _context = context;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement)
         {
             if (context.User.IsAdmin() && requirement.AllowAdmin)
             {

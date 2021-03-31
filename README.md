@@ -1,3 +1,9 @@
+## Environments
+
+Integration: https://valhallalootlistdev.azurewebsites.net
+
+Production: https://valhallalootlist.azurewebsites.net
+
 ## Building Instructions
 
 ### Prerequisites

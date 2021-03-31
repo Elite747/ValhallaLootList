@@ -144,24 +144,17 @@ namespace ValhallaLootList.Server.Controllers
                     }
                 }
 
-                var existingRoleClaims = existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role).ToDictionary(claim => claim.Value);
+                var existingRoleClaims = existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role).ToList();
 
                 foreach (var updatedRole in guildMember.RoleNames)
                 {
-                    if (existingRoleClaims.TryGetValue(updatedRole, out var existingRoleClaim))
-                    {
-                        existingRoleClaims.Remove(updatedRole);
-                    }
-                    else
+                    if (existingRoleClaims.RemoveAll(claim => claim.Value == updatedRole) == 0)
                     {
                         newClaims.Add(new Claim(DiscordClaimTypes.Role, updatedRole));
                     }
                 }
 
-                foreach (var existingRoleClaim in existingRoleClaims.Values)
-                {
-                    removedClaims.Add(existingRoleClaim);
-                }
+                removedClaims.AddRange(existingRoleClaims);
 
                 foreach (var newRole in guildMember.RoleNames)
                 {

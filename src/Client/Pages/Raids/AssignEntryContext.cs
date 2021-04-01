@@ -62,12 +62,15 @@ namespace ValhallaLootList.Client.Pages.Raids
             {
                 Color = Color.Error;
                 Message = "Not present for this kill!";
+                Disabled = true;
             }
         }
 
         public int? Prio { get; }
 
         public bool IsError { get; }
+
+        public bool Disabled { get; set; }
 
         public CharacterDto Character { get; }
 
@@ -79,8 +82,11 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         public void SetTied()
         {
-            Color = Color.Warning;
-            Message = "Tied Priority!";
+            if (!Disabled)
+            {
+                Color = Color.Warning;
+                Message = "Tied Priority!";
+            }
         }
     }
 }

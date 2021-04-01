@@ -272,9 +272,9 @@ namespace ValhallaLootList.Server.Controllers
             var now = serverTimeZone.TimeZoneNow();
             var observedAttendances = PrioCalculator.Scope.ObservedAttendances;
 
-            var presentTeamRaiders = await _context.CharacterEncounterKills
-                .AsTracking()
-                .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId)
+            var presentTeamRaiders = await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(a => a.RaidId == drop.EncounterKillRaidId && a.Character.TeamId == drop.TeamId)
                 .Select(c => new
                 {
                     Id = c.CharacterId,

@@ -1,4 +1,4 @@
-﻿<MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))">
+﻿<MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))" Disabled="Context.Disabled">
     <div class="d-flex align-center">
         <MudAvatar Class="mr-5" Color="Context.Color" Size="Size.Small">@Context.AvatarContent</MudAvatar>
         <div class="align-baseline">

@@ -82,6 +82,7 @@ namespace ValhallaLootList.Server.Controllers
 
             bool isLeader = await _context.IsLeaderOf(User, team.Id);
 
+            var scope = PrioCalculator.Scope;
             var now = _serverTimeZone.TimeZoneNow();
             var thisMonth = new DateTime(now.Year, now.Month, 1);
             var nextMonth = thisMonth.AddMonths(1);
@@ -105,7 +106,7 @@ namespace ValhallaLootList.Server.Controllers
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
-                        .Take(PrioCalculator.ObservedRaidsForAttendance)
+                        .Take(scope.ObservedAttendances)
                         .Count()
                 })
                 .AsSingleQuery()
@@ -127,11 +128,10 @@ namespace ValhallaLootList.Server.Controllers
                     Verified = character.Verified,
                     DonatedThisMonth = character.DonatedThisMonth,
                     DonatedNextMonth = character.DonatedNextMonth,
-                    ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
-                    NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                    ThisMonthRequiredDonations = scope.RequiredDonationCopper,
+                    NextMonthRequiredDonations = scope.RequiredDonationCopper,
                     Attendance = character.Attendance,
-                    AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
-                    AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(character.Attendance)
+                    AttendanceMax = scope.ObservedAttendances
                 };
 
                 foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
@@ -337,13 +337,14 @@ namespace ValhallaLootList.Server.Controllers
                 props["CharacterName"] = character.Name;
             });
 
+            var scope = PrioCalculator.Scope;
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
                 .Select(x => x.Raid.StartedAt.Date)
                 .Distinct()
                 .OrderByDescending(x => x)
-                .Take(PrioCalculator.ObservedRaidsForAttendance)
+                .Take(scope.ObservedAttendances)
                 .CountAsync();
 
             var returnDto = new MemberDto
@@ -360,11 +361,10 @@ namespace ValhallaLootList.Server.Controllers
                 },
                 Status = character.MemberStatus,
                 Verified = character.VerifiedById.HasValue,
-                ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
-                NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                ThisMonthRequiredDonations = scope.RequiredDonationCopper,
+                NextMonthRequiredDonations = scope.RequiredDonationCopper,
                 Attendance = attendance,
-                AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
-                AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(attendance)
+                AttendanceMax = scope.ObservedAttendances
             };
 
             await foreach (var lootList in _context.CharacterLootLists

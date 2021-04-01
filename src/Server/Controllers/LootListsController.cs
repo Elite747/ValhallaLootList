@@ -625,7 +625,7 @@ namespace ValhallaLootList.Server.Controllers
         private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
         {
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
-            var passQuery = _context.DropPasses.AsNoTracking();
+            var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue);
             var entryQuery = _context.LootListEntries.AsNoTracking();
             var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance);
 
@@ -712,6 +712,13 @@ namespace ValhallaLootList.Server.Controllers
 
             var donations = await donationQuery.ToDictionaryAsync(d => d.CharacterId, d => d.Donated);
 
+            foreach (var dto in dtos)
+            {
+                attendances.TryGetValue(dto.CharacterId, out int attended);
+                donations.TryGetValue(dto.CharacterId, out long donated);
+                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, donated));
+            }
+
             await foreach (var entry in entryQuery
                 .OrderByDescending(e => e.Rank)
                 .Select(e => new
@@ -730,46 +737,22 @@ namespace ValhallaLootList.Server.Controllers
                 var dto = dtos.Find(x => x.CharacterId == entry.CharacterId && x.Phase == entry.Phase);
                 if (dto is not null)
                 {
-                    int? prio = null;
+                    var bonuses = new List<PriorityBonusDto>();
 
-                    if (entry.ItemId.HasValue)
+                    if (entry.ItemId.HasValue && !entry.Won)
                     {
                         var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-
-                        if (!entry.Won && dto.Locked)
-                        {
-                            int loss = 0, underPrio = 0;
-
-                            foreach (var pass in passes.Where(p => p.ItemId == entry.ItemId && p.CharacterId == entry.CharacterId))
-                            {
-                                if (pass.RelativePriority >= 0)
-                                {
-                                    loss++;
-                                }
-                                else
-                                {
-                                    underPrio++;
-                                }
-                            }
-
-                            attendances.TryGetValue(entry.CharacterId, out var characterAttendances);
-
-                            bool donationThresholdMet = donations.TryGetValue(entry.CharacterId, out var donated) && donated >= PrioCalculator.CopperForDonationPrio;
-
-                            prio = PrioCalculator.CalculatePrio(entry.Rank, characterAttendances, dto.CharacterMemberStatus, loss, underPrio, donationThresholdMet);
-                        }
+                        bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.ItemId == rewardFromId && p.CharacterId == entry.CharacterId)));
                     }
-
-                    bool showRanks = dto.Locked || authorizationResult.Succeeded;
 
                     dto.Entries.Add(new LootListEntryDto
                     {
+                        Bonuses = bonuses,
                         Id = entry.Id,
                         ItemId = entry.ItemId,
                         RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
-                        Prio = showRanks ? prio : null,
-                        Rank = showRanks ? entry.Rank : 0,
+                        Rank = dto.Locked || authorizationResult.Succeeded ? entry.Rank : 0,
                         Won = entry.Won
                     });
                 }

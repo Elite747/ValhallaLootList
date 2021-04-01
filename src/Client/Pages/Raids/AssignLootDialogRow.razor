@@ -1,53 +1,23 @@
-﻿<MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(Entry.CharacterId))">
+﻿<MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))">
     <div class="d-flex align-center">
-        <MudAvatar Class="mr-5" Color="_color" Size="Size.Small">@_avatarContent</MudAvatar>
+        <MudAvatar Class="mr-5" Color="Context.Color" Size="Size.Small">@Context.AvatarContent</MudAvatar>
         <div class="align-baseline">
-            <MudText Typo="Typo.h5" Inline="true" Class="mr-2">@Entry.CharacterName</MudText>
-            @if (Entry.Details?.Length > 0)
+            <MudText Typo="Typo.h5" Inline="true" Class="mr-2">@Context.Character.Name</MudText>
+            @if (Context.Message?.Length > 0)
             {
-                <MudText Typo="Typo.caption" Color="_color" Class="mr-2">@Entry.Details</MudText>
-            }
-            @if (Tied)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Warning">Tied Priority!</MudText>
+                <MudText Typo="Typo.caption" Color="Context.Color" Class="mr-2">@Context.Message</MudText>
             }
         </div>
     </div>
 </MudListItem>
 
 @code {
-    private Color _color = Color.Primary;
-    private string? _avatarContent;
-
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
-    [Parameter] public ItemPrioDto Entry { get; set; } = null!;
-    [Parameter] public bool Tied { get; set; }
+    [Parameter] public AssignEntryContext Context { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
-        if (Entry is null) throw new ArgumentNullException(nameof(Entry));
-
-        if (Entry.Priority.HasValue)
-        {
-            _avatarContent = string.Format(CultureInfo.CurrentCulture, "{0:N0}", Entry.Priority.Value);
-        }
-        else
-        {
-            _avatarContent = "!";
-        }
-
-        if (Entry.IsError)
-        {
-            _color = Color.Error;
-        }
-        else if (!Entry.Priority.HasValue || Tied || Entry.Details?.Length > 0)
-        {
-            _color = Color.Warning;
-        }
-        else
-        {
-            _color = Color.Primary;
-        }
+        if (Context is null) throw new ArgumentNullException(nameof(Context));
     }
 }

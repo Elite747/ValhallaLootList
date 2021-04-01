@@ -63,7 +63,7 @@
 </MudCard>
 
 @code {
-    private readonly Dictionary<uint, List<(string name, int? prio, bool won)>> _standings = new();
+    private readonly Dictionary<uint, List<StandingContext>> _standings = new();
     private bool _teamChanged;
     private TeamDto? _team;
 
@@ -99,7 +99,7 @@
     {
         _teamChanged = false;
         return Api.LootLists.GetForTeam(Team.Id)
-            .OnSuccess(lootLists =>
+            .OnSuccess((IList<LootListDto> lootLists) =>
             {
                 _standings.Clear();
                 foreach (var lootList in lootLists)
@@ -114,7 +114,7 @@
                                 _standings[itemId.Value] = itemStandings = new();
                             }
 
-                            itemStandings.Add((lootList.CharacterName!, entry.Prio, entry.Won));
+                            itemStandings.Add(new(lootList, entry));
                         }
                     }
                 }

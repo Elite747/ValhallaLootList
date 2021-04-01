@@ -13,10 +13,32 @@
                 <div class="mr-auto">
                     @if (Standings.TryGetValue(itemId, out var itemStandings))
                     {
-                        foreach (var entry in itemStandings.OrderByDescending(e => e.prio).ThenBy(e => e.name))
+                        foreach (var entry in itemStandings.OrderByDescending(e => e.Prio).ThenBy(e => e.CharacterName))
                         {
-                            <MudText Color="entry.won ? Color.Success : Color.Default">
-                                @(entry.prio.HasValue ? $"{entry.name} ({entry.prio.Value})" : entry.name)
+                            <MudText Color="entry.Entry.Won ? Color.Success : Color.Default">
+                                @if (entry.Prio.HasValue && !entry.Entry.Won)
+                                {
+                                    <MudTooltip>
+                                        <TooltipContent>
+                                            <div>
+                                                Rank @entry.Entry.Rank
+                                            </div>
+                                            @foreach (var bonus in entry.Bonuses)
+                                            {
+                                                <div>
+                                                    +@bonus.Value (@bonus.Description)
+                                                </div>
+                                            }
+                                        </TooltipContent>
+                                        <ChildContent>
+                                            @entry.CharacterName (@entry.Prio.Value)
+                                        </ChildContent>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    @entry.CharacterName
+                                }
                             </MudText>
                         }
                     }
@@ -28,7 +50,7 @@
 
 @code {
     [Parameter] public EncounterDto Encounter { get; set; } = null!;
-    [Parameter] public Dictionary<uint, List<(string name, int? prio, bool won)>> Standings { get; set; } = null!;
+    [Parameter] public Dictionary<uint, List<StandingContext>> Standings { get; set; } = null!;
 
     protected override void OnParametersSet()
     {

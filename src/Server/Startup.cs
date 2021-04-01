@@ -34,7 +34,6 @@ namespace ValhallaLootList.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(Configuration.GetValue<string>("RealmTimeZone")));
-            services.AddScoped<PrioCalculator>();
             services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
             services.AddScoped<DiscordRoleMap>();
             services.AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>();

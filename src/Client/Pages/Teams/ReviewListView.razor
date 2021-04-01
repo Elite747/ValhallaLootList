@@ -59,9 +59,9 @@
                                       Bracketize="true"
                                       OverrideText="@item.Name"
                                       class="d-flex align-center">
-                                @if (entry.Prio.HasValue)
+                                @if (entry.Rank != 0)
                                 {
-                                    <MudBadge Content="entry.Prio.Value" Color="Color.Info" Overlap="true">
+                                    <MudBadge Content="entry.Rank" Color="Color.Info" Overlap="true">
                                         <MudAvatar Rounded="true" Class="mr-2">
                                             <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
                                         </MudAvatar>

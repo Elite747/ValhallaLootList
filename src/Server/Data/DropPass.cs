@@ -20,5 +20,7 @@ namespace ValhallaLootList.Server.Data
         public virtual Drop Drop { get; set; } = null!;
 
         public int RelativePriority { get; set; }
+
+        public long? WonEntryId { get; set; }
     }
 }

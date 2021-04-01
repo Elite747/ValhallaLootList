@@ -64,24 +64,40 @@
 
 @code {
     private readonly Dictionary<uint, List<(string name, int? prio, bool won)>> _standings = new();
+    private bool _teamChanged;
+    private TeamDto? _team;
 
-    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public TeamDto Team
+    {
+        get => _team ?? throw new InvalidOperationException("Team parameter is required.");
+        set
+        {
+            if (_team != value)
+            {
+                _team = value;
+                _teamChanged = true;
+            }
+        }
+    }
+
     [Parameter] public bool ShowExternalLink { get; set; }
     [Parameter] public string? SelectedEncounterId { get; set; }
     [Parameter] public EventCallback<string?> SelectedEncounterIdChanged { get; set; }
 
-    protected override void OnParametersSet()
+    protected override Task OnParametersSetAsync()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
-    }
 
-    protected override Task OnInitializedAsync()
-    {
-        return RefreshAsync();
+        if (_teamChanged)
+        {
+            return RefreshAsync();
+        }
+        return Task.CompletedTask;
     }
 
     private Task RefreshAsync()
     {
+        _teamChanged = false;
         return Api.LootLists.GetForTeam(Team.Id)
             .OnSuccess(lootLists =>
             {

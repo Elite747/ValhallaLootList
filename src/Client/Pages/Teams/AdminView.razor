@@ -18,9 +18,21 @@
                         <MudAvatar Class="mr-2">
                             <GuildMemberAvatar Member="leader" Size="40" />
                         </MudAvatar>
-                        <MudText Typo="Typo.h6" Class="mr-auto">
-                            <GuildMemberDisplay Member="leader" />
-                        </MudText>
+                        <div class="mr-auto">
+                            <MudText Typo="Typo.h6" Inline="false">
+                                <GuildMemberDisplay Member="leader" />
+                            </MudText>
+                            <div class="d-flex">
+                                @if (leader.AppRoles.Contains(AppRoles.RaidLeader))
+                                {
+                                    <MudChip Size="Size.Small" Label="true" Class="mr-2">Raid Leader</MudChip>
+                                }
+                                @if (leader.AppRoles.Contains(AppRoles.LootMaster))
+                                {
+                                    <MudChip Size="Size.Small" Label="true" Class="mr-2">Loot Master</MudChip>
+                                }
+                            </div>
+                        </div>
                         <MudTooltip Text="Remove">
                             <MudIconButton OnClick="() => RemoveLeaderAsync(leaders, leader)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
                         </MudTooltip>

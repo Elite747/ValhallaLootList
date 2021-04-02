@@ -25,12 +25,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet, Authorize(AppPolicies.Administrator)]
         public async Task<IList<GuildMemberDto>> Get([FromQuery] string[]? role)
         {
-            var claimTypes = new List<string>(4) { DiscordClaimTypes.AvatarHash, DiscordClaimTypes.Username, DiscordClaimTypes.Discriminator };
-
-            if (role?.Length > 0)
-            {
-                claimTypes.Add(AppClaimTypes.Role);
-            }
+            string[] claimTypes = { DiscordClaimTypes.AvatarHash, DiscordClaimTypes.Username, DiscordClaimTypes.Discriminator, AppClaimTypes.Role };
 
             var query = from user in _context.Users.AsNoTracking()
                         join claim in
@@ -58,11 +53,15 @@ namespace ValhallaLootList.Server.Controllers
 
                 switch (row.ClaimType)
                 {
-                    case AppClaimTypes.Role when role?.Length > 0:
-                        if (role.Contains(row.ClaimValue))
+                    case AppClaimTypes.Role:
+                        dto.AppRoles.Add(row.ClaimValue);
+                        if (role?.Contains(row.ClaimValue, StringComparer.OrdinalIgnoreCase) == true)
                         {
-                            matchesRoles.Add(row.Id);
+                            matchesRoles.Add(dto.Id);
                         }
+                        break;
+                    case DiscordClaimTypes.Role:
+                        dto.DiscordRoles.Add(row.ClaimValue);
                         break;
                     case DiscordClaimTypes.AvatarHash:
                         dto.Avatar = row.ClaimValue;

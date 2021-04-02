@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -20,14 +19,12 @@ namespace ValhallaLootList.Server
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly DiscordService _discordService;
-        private readonly DiscordRoleMap _roles;
         private readonly ApplicationDbContext _context;
 
-        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
+        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
         {
             _userManager = userManager;
             _discordService = discordService;
-            _roles = roles;
             _context = context;
         }
 
@@ -62,22 +59,12 @@ namespace ValhallaLootList.Server
                 {
                     var oldClaims = await _userManager.GetClaimsAsync(user);
 
-                    var guildMember = await _discordService.GetMemberInfoAsync(id);
+                    var guildMember = await _discordService.GetGuildMemberDtoAsync(id);
 
                     if (guildMember is not null)
                     {
                         var oldAppRoles = oldClaims.Where(claim => claim.Type == AppClaimTypes.Role).Select(claim => claim.Value).ToHashSet();
-                        var newAppRoles = new HashSet<string>();
-
-                        foreach (var (appRole, discordRole) in _roles.AllRoles)
-                        {
-                            if (guildMember.RoleNames?.Contains(discordRole) == true)
-                            {
-                                newAppRoles.Add(appRole);
-                            }
-                        }
-
-                        context.IsActive = newAppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(newAppRoles);
+                        context.IsActive = guildMember.AppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(guildMember.AppRoles);
                     }
                 }
             }

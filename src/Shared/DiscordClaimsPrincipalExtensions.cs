@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Linq;
 using System.Security.Claims;
 using ValhallaLootList.DataTransfer;
 
@@ -89,7 +90,9 @@ namespace ValhallaLootList
                 Discriminator = principal.FindFirst(DiscordClaimTypes.Discriminator)?.Value ?? string.Empty,
                 Id = id,
                 Nickname = principal.Identity?.Name ?? principal.GetDiscordUsername() ?? string.Empty,
-                Username = principal.GetDiscordUsername() ?? string.Empty
+                Username = principal.GetDiscordUsername() ?? string.Empty,
+                AppRoles = principal.FindAll(AppClaimTypes.Role).Select(claim => claim.Value).ToList(),
+                DiscordRoles = principal.FindAll(DiscordClaimTypes.Role).Select(claim => claim.Value).ToList()
             };
         }
 

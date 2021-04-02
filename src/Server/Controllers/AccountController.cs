@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
@@ -21,14 +22,12 @@ namespace ValhallaLootList.Server.Controllers
     {
         private readonly SignInManager<AppUser> _signInManager;
         private readonly DiscordService _discordService;
-        private readonly DiscordRoleMap _roles;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(SignInManager<AppUser> signInManager, DiscordService discordService, DiscordRoleMap roles, ILogger<AccountController> logger)
+        public AccountController(SignInManager<AppUser> signInManager, DiscordService discordService, ILogger<AccountController> logger)
         {
             _signInManager = signInManager;
             _discordService = discordService;
-            _roles = roles;
             _logger = logger;
         }
 
@@ -64,11 +63,11 @@ namespace ValhallaLootList.Server.Controllers
                 return LocalRedirect("~/loginerror/" + LoginErrorReason.FromLoginProvider);
             }
 
-            GuildMemberInfo? guildMember;
+            GuildMemberDto? guildMember;
             try
             {
-                guildMember = await _discordService.GetMemberInfoAsync(discordId);
-                if (guildMember?.RoleNames is null)
+                guildMember = await _discordService.GetGuildMemberDtoAsync(discordId);
+                if (guildMember is null)
                 {
                     return LocalRedirect("~/loginerror/" + LoginErrorReason.NotInGuild);
                 }
@@ -79,7 +78,7 @@ namespace ValhallaLootList.Server.Controllers
                 return LocalRedirect("~/loginerror/FromLoginProvider");
             }
 
-            if (!guildMember.RoleNames.Contains(_roles.Member))
+            if (!guildMember.AppRoles.Contains(AppRoles.Member))
             {
                 return LocalRedirect("~/loginerror/" + LoginErrorReason.NotAMember);
             }
@@ -95,9 +94,11 @@ namespace ValhallaLootList.Server.Controllers
                     return LocalRedirect("~/loginerror/" + LoginErrorReason.LockedOut);
                 }
 
-                if (user.UserName != guildMember.DisplayName)
+                string displayName = guildMember.GetDisplayName();
+
+                if (user.UserName != displayName)
                 {
-                    user.UserName = guildMember.DisplayName;
+                    user.UserName = displayName;
                     await _signInManager.UserManager.UpdateAsync(user);
                 }
 
@@ -127,11 +128,11 @@ namespace ValhallaLootList.Server.Controllers
                     }
                 }
 
-                foreach (var (appRole, discordRole) in _roles.AllRoles)
+                foreach (var appRole in AppRoles.All)
                 {
                     var currentClaim = existingClaims.FirstOrDefault(claim => string.Equals(claim.Type, AppClaimTypes.Role) && string.Equals(claim.Value, appRole));
 
-                    if (guildMember.RoleNames.Contains(discordRole))
+                    if (guildMember.AppRoles.Contains(appRole))
                     {
                         if (currentClaim is null)
                         {
@@ -146,23 +147,15 @@ namespace ValhallaLootList.Server.Controllers
 
                 var existingRoleClaims = existingClaims.Where(claim => claim.Type == DiscordClaimTypes.Role).ToList();
 
-                foreach (var updatedRole in guildMember.RoleNames)
+                foreach (var updatedRole in guildMember.DiscordRoles)
                 {
-                    if (existingRoleClaims.RemoveAll(claim => claim.Value == updatedRole) == 0)
+                    if (existingRoleClaims.RemoveAll(claim => claim.Type == DiscordClaimTypes.Role && claim.Value == updatedRole) == 0)
                     {
                         newClaims.Add(new Claim(DiscordClaimTypes.Role, updatedRole));
                     }
                 }
 
                 removedClaims.AddRange(existingRoleClaims);
-
-                foreach (var newRole in guildMember.RoleNames)
-                {
-                    if (!existingClaims.Any(claim => claim.Type == DiscordClaimTypes.Role && claim.Value == newRole))
-                    {
-                        newClaims.Add(new Claim(DiscordClaimTypes.Role, newRole));
-                    }
-                }
 
                 if (newClaims.Count != 0)
                 {
@@ -195,7 +188,7 @@ namespace ValhallaLootList.Server.Controllers
                 user = new AppUser
                 {
                     Id = long.Parse(info.ProviderKey),
-                    UserName = guildMember.DisplayName
+                    UserName = guildMember.GetDisplayName()
                 };
 
                 identityResult = await _signInManager.UserManager.CreateAsync(user);
@@ -210,17 +203,14 @@ namespace ValhallaLootList.Server.Controllers
 
                         var claims = info.Principal.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)).ToList();
 
-                        foreach (var role in guildMember.RoleNames)
+                        foreach (var role in guildMember.DiscordRoles)
                         {
                             claims.Add(new Claim(DiscordClaimTypes.Role, role));
+                        }
 
-                            foreach (var (appRole, discordRole) in _roles.AllRoles)
-                            {
-                                if (string.Equals(role, discordRole, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    claims.Add(new Claim(AppClaimTypes.Role, appRole));
-                                }
-                            }
+                        foreach (var role in guildMember.AppRoles)
+                        {
+                            claims.Add(new Claim(AppClaimTypes.Role, role));
                         }
 
                         identityResult = await _signInManager.UserManager.AddClaimsAsync(user, claims);

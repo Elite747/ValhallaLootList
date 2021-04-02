@@ -47,26 +47,51 @@ namespace ValhallaLootList.Server.Discord
             _memoryCache = memoryCache;
         }
 
-        public async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id)
+        public async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id, CancellationToken cancellationToken = default)
         {
-            if (id.HasValue)
-            {
-                var guildMember = await GetMemberAsync(id.Value);
+            if (!id.HasValue)  return null;
+            var member = await GetMemberAsync(id.Value, cancellationToken);
+            if (member?.User is null) return null;
 
-                if (guildMember?.User is not null)
+            var guildRoles = await GetRolesAsync(cancellationToken);
+            if (guildRoles is null) throw new Exception("Couldn't load guild roles.");
+
+            var dto = new GuildMemberDto
+            {
+                Discriminator = member.User.Discriminator,
+                Id = member.User.Id,
+                Nickname = member.Nickname,
+                Username = member.User.Username,
+                Avatar = member.User.Avatar
+            };
+
+            foreach (var roleId in member.Roles)
+            {
+                if (guildRoles.TryGetValue(roleId, out var role))
                 {
-                    return new GuildMemberDto
+                    dto.DiscordRoles.Add(role.Name);
+                }
+                else
+                {
+                    _memoryCache.Remove(_rolesCacheKey);
+                    guildRoles = await GetRolesAsync(cancellationToken);
+                    if (guildRoles is null) throw new Exception("Couldn't load guild roles.");
+                    if (guildRoles.TryGetValue(roleId, out role))
                     {
-                        Discriminator = guildMember.User.Discriminator,
-                        Id = guildMember.User.Id,
-                        Nickname = guildMember.Nickname,
-                        Username = guildMember.User.Username,
-                        Avatar = guildMember.User.Avatar
-                    };
+                        dto.DiscordRoles.Add(role.Name);
+                    }
                 }
             }
 
-            return null;
+            foreach (var (appRole, discordRole) in _options.AppRoleMap)
+            {
+                if (dto.DiscordRoles.Contains(discordRole))
+                {
+                    dto.AppRoles.Add(appRole);
+                }
+            }
+
+            return dto;
         }
 
         public async Task<GuildMemberInfo?> GetMemberInfoAsync(long memberId, CancellationToken cancellationToken = default)

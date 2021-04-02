@@ -6,25 +6,13 @@
 
 <AuthorizeView>
     <Authorized>
-        <MudHidden Breakpoint="Breakpoint.Xs">
-            @{
-                var username = context.User.Identity?.Name;
-                var discordName = context.User.GetDiscordUsername();
-            }
-            @if (username != discordName)
-            {
-                @username
-            }
-            else
-            {
-                @discordName<span class="mud-text-secondary">#@context.User.GetDiscordDiscriminator()</span>
-            }
-        </MudHidden>
+        @{ 
+            var guildMember = context.User.CreateGuildMemberFromClient();
+            System.Diagnostics.Debug.Assert(guildMember is not null);
+        }
+        <MudHidden Breakpoint="Breakpoint.Xs">@guildMember.GetDisplayName()</MudHidden>
         <MudAvatar Class="mx-1" Color="Color.Transparent">
-            <GuildMemberAvatar Id="context.User.GetDiscordIdFromClient()"
-                               AvatarHash="@context.User.GetDiscordAvatarHash()"
-                               Discriminator="context.User.GetDiscordDiscriminator()"
-                               Size="40" />
+            <GuildMemberAvatar Member="guildMember" Size="40" />
         </MudAvatar>
     </Authorized>
     <NotAuthorized>

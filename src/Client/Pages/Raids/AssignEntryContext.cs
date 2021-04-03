@@ -1,7 +1,8 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
 using MudBlazor;
 using ValhallaLootList.DataTransfer;
 
@@ -19,13 +20,16 @@ namespace ValhallaLootList.Client.Pages.Raids
             if (entry is not null)
             {
                 Prio = entry.Rank;
+                Rank = entry.Rank;
+                Bonuses = entry.Bonuses;
 
                 foreach (var bonus in entry.Bonuses)
                 {
-                    Prio += bonus.Value;
+                    if (bonus.Value != 0)
+                    {
+                        Prio += bonus.Value;
+                    }
                 }
-
-                AvatarContent = string.Format(CultureInfo.CurrentCulture, "{0:N0}", Prio);
 
                 if (!entry.Locked)
                 {
@@ -45,8 +49,8 @@ namespace ValhallaLootList.Client.Pages.Raids
             }
             else
             {
-                AvatarContent = "!";
                 Color = Color.Error;
+                Bonuses = Array.Empty<PriorityBonusDto>();
 
                 if (character.TeamId == raid.TeamId)
                 {
@@ -78,7 +82,11 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         public string Message { get; private set; }
 
-        public string AvatarContent { get; }
+        public string Icon => Color == Color.Success ? Icons.Material.Filled.CheckCircleOutline : Icons.Material.Filled.ErrorOutline;
+
+        public int? Rank { get; set; }
+
+        public IList<PriorityBonusDto> Bonuses { get; }
 
         public void SetTied()
         {

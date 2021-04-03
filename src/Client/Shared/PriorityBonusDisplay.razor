@@ -1,0 +1,63 @@
+﻿@if (Bonus.Value != 0 || ShowIfZero)
+{
+    @if (Bonus.Value >= 0)
+    {
+        <span> + @Bonus.Value (</span>
+    }
+    else
+    {
+        <span> - @(-Bonus.Value) (</span>
+    }
+
+    @if (Condensed)
+    {
+        <span>@Bonus.Type</span>
+    }
+    else if (Bonus is AttendancePriorityBonusDto attendance)
+    {
+        <span>Attended @attendance.Attended/@attendance.ObservedAttendances raids</span>
+    }
+    else if (Bonus is DonationPriorityBonusDto donation)
+    {
+        <span>Donated <GameCurrencyDisplay Amount="@donation.DonatedCopper" /></span>
+        @if (donation.DonatedCopper < donation.RequiredDonations)
+        {
+            <span> of the required <GameCurrencyDisplay Amount="@donation.RequiredDonations" /></span>
+        }
+    }
+    else if (Bonus is LossPriorityBonusDto loss)
+    {
+        <span>Seen @loss.TimesSeen without winning</span>
+    }
+    else if (Bonus is MembershipPriorityBonusDto membership)
+    {
+        if (membership.Status == RaidMemberStatus.Member)
+        {
+            <span>Member</span>
+        }
+        else if (membership.Status is RaidMemberStatus.HalfTrial or RaidMemberStatus.FullTrial)
+        {
+            <span>Trial</span>
+        }
+        else
+        {
+            <span>Unknown membership status</span>
+        }
+    }
+    else
+    {
+        <span>@Bonus.Type</span>
+    }
+    <span>)</span>
+}
+
+@code {
+    [Parameter] public PriorityBonusDto Bonus { get; set; } = null!;
+    [Parameter] public bool Condensed { get; set; }
+    [Parameter] public bool ShowIfZero { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Bonus is null) throw new ArgumentNullException(nameof(Bonus));
+    }
+}

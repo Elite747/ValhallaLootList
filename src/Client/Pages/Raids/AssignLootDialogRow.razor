@@ -1,11 +1,29 @@
 ﻿<MudListItem OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))" Disabled="Context.Disabled">
     <div class="d-flex align-center">
-        <MudAvatar Class="mr-5" Color="Context.Color" Size="Size.Small">@Context.AvatarContent</MudAvatar>
-        <div class="align-baseline">
-            <MudText Typo="Typo.h5" Inline="true" Class="mr-2">@Context.Character.Name</MudText>
+        <MudIcon Class="mr-5" Color="Context.Color" Size="Size.Large" Icon="@Context.Icon" />
+        <div class="mr-auto">
+            <div class="d-flex align-center">
+                <MudText Typo="Typo.h5" Inline="false" GutterBottom="false" Class="mr-2" Style="white-space: nowrap">
+                    @Context.Character.Name
+                    @if (Context.Prio.HasValue)
+                    {
+                        @: (@Context.Prio.Value)
+                    }
+                </MudText>
+                @if (Context.Rank.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Inline="false">
+                        Rank @Context.Rank 
+                        @foreach (var bonus in Context.Bonuses)
+                        {
+                            <PriorityBonusDisplay Bonus="bonus" Condensed="true" />
+                        }
+                    </MudText>
+                }
+            </div>
             @if (Context.Message?.Length > 0)
             {
-                <MudText Typo="Typo.caption" Color="Context.Color" Class="mr-2">@Context.Message</MudText>
+                <MudText Typo="Typo.caption" Inline="false" Color="Context.Color" Class="mr-2">@Context.Message</MudText>
             }
         </div>
     </div>

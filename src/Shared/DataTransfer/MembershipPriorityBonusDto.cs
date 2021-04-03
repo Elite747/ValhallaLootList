@@ -3,10 +3,8 @@
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class PriorityBonusDto
+    public class MembershipPriorityBonusDto : PriorityBonusDto
     {
-        public int Value { get; set; }
-
-        public string Type { get; set; } = string.Empty;
+        public RaidMemberStatus Status { get; set; }
     }
 }

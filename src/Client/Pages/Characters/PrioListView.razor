@@ -31,7 +31,7 @@
                                         @foreach (var bonus in context.Bonuses)
                                         {
                                             <div>
-                                                +@bonus.Value (@bonus.Description)
+                                                <PriorityBonusDisplay Bonus="bonus" />
                                             </div>
                                         }
                                     </TooltipContent>

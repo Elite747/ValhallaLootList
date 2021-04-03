@@ -3,10 +3,10 @@
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class PriorityBonusDto
+    public class DonationPriorityBonusDto : PriorityBonusDto
     {
-        public int Value { get; set; }
+        public long DonatedCopper { get; set; }
 
-        public string Type { get; set; } = string.Empty;
+        public int RequiredDonations { get; set; }
     }
 }

@@ -29,6 +29,7 @@ namespace ValhallaLootList.Serialization
             options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
             options.Converters.Add(new TimeSpanConverter());
+            options.Converters.Add(new PriorityBonusConverter());
         }
     }
 }

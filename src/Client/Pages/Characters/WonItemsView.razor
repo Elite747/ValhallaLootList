@@ -18,20 +18,20 @@
                 <MudDivider />
                 <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
                     <div class="d-flex">
-                        <MudAvatar Class="mr-5" Rounded="true">
-                            <ItemIcon ItemId="drop.ItemId" Size="IconSize.Medium" width="40" height="40" />
-                        </MudAvatar>
-                        <div class="mr-auto">
-                            <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true">
-                                <ItemLinkText />
-                            </ItemLink>
-                            <div>
-                                <MudText Typo="Typo.caption" Inline="false">
-                                    Awarded <DateTimeDisplay Date="drop.AwardedAt" Format="f" />
-                                    <MudLink Href="@("raids/" + drop.RaidId)" Typo="Typo.caption">View Raid</MudLink>
-                                </MudText>
+                        <CascadingItemContext Id="drop.ItemId">
+                            <MudAvatar Class="mr-5" Rounded="true">
+                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                            </MudAvatar>
+                            <div class="mr-auto">
+                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" />
+                                <div>
+                                    <MudText Typo="Typo.caption" Inline="false">
+                                        Awarded <DateTimeDisplay Date="drop.AwardedAt" Format="f" />
+                                        <MudLink Href="@("raids/" + drop.RaidId)" Typo="Typo.caption">View Raid</MudLink>
+                                    </MudText>
+                                </div>
                             </div>
-                        </div>
+                        </CascadingItemContext>
                     </div>
                 </MudListItem>
             }

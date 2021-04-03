@@ -1,7 +1,7 @@
 ﻿@foreach (var entry in LootList.Entries.OrderBy(e => e.ItemName))
 {
     <MudListItem>
-        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" OverrideText="@entry.ItemName" />
+        <ItemLink Id="entry.ItemId" LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@entry.ItemName" />
         @if (entry.Won)
         {
             <MudTooltip Text="Won">

@@ -54,3 +54,11 @@
     position: fixed;
     z-index: 100;
 }
+
+.text-bracket::before {
+    content: "[";
+}
+
+.text-bracket::after {
+    content: "]";
+}

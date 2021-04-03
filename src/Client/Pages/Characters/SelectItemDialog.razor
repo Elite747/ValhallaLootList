@@ -15,12 +15,12 @@
                         var id = item.Id;
                         <MudListItem OnClick="() => LinkClickedAsync(id)">
                             <div class="d-flex align-center">
-                                <ItemLink Id="item.Id" class="d-flex align-center mr-auto">
+                                <CascadingItemContext Id="item.Id">
                                     <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
-                                        <ItemLinkIcon Size="IconSize.Small" Width="24" Height="24" />
+                                        <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
                                     </MudAvatar>
-                                    <ItemLinkText OverrideText="@item.Name" Colorize="true" Bracketize="true" />
-                                </ItemLink>
+                                    <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" Class="mr-auto" />
+                                </CascadingItemContext>
                                 @if (LootList.MainSpec.HasValue)
                                 {
                                     <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"

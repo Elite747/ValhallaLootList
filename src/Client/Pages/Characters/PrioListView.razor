@@ -8,40 +8,50 @@
             </MudItem>
             @foreach (var entry in row)
             {
-                <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize">
+                <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize" Class="d-flex align-center">
                     @if (entry.ItemId > 0)
                     {
-                        <ItemLink Id="entry.ItemId"
-                                  LinkEnabled="true"
-                                  Colorize="true"
-                                  Bracketize="true"
-                                  OverrideText="@entry.ItemName"
-                                  class="d-flex align-center">
-                            @if (entry.Rank != 0)
-                            {
-                                var context = new ValhallaLootList.Client.Pages.Teams.Standings.StandingContext(LootList, entry);
-                                <MudBadge Content="context.Prio.GetValueOrDefault()" Color="Color.Info" Overlap="true">
-                                    <MudAvatar Rounded="true" Class="mr-2">
-                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                    </MudAvatar>
-                                </MudBadge>
-                            }
-                            else if (entry.Won)
+                        <CascadingItemContext Id="entry.ItemId">
+                            @if (entry.Won)
                             {
                                 <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
                                     <MudAvatar Rounded="true" Class="mr-2">
-                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                        <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                                     </MudAvatar>
                                 </MudBadge>
+                            }
+                            else if (entry.Rank != 0)
+                            {
+                                var context = new ValhallaLootList.Client.Pages.Teams.Standings.StandingContext(LootList, entry);
+                                <MudTooltip>
+                                    <TooltipContent>
+                                        <div>
+                                            Rank @entry.Rank
+                                        </div>
+                                        @foreach (var bonus in context.Bonuses)
+                                        {
+                                            <div>
+                                                +@bonus.Value (@bonus.Description)
+                                            </div>
+                                        }
+                                    </TooltipContent>
+                                    <ChildContent>
+                                        <MudBadge Content="context.Prio.GetValueOrDefault()" Color="Color.Info" Overlap="true">
+                                            <MudAvatar Rounded="true" Class="mr-2">
+                                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                            </MudAvatar>
+                                        </MudBadge>
+                                    </ChildContent>
+                                </MudTooltip>
                             }
                             else
                             {
                                 <MudAvatar Rounded="true" Class="mr-2">
-                                    <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                                 </MudAvatar>
                             }
-                            <ItemLinkText />
-                        </ItemLink>
+                            <ItemLink Colorize="true" Bracketize="true" LinkEnabled="true" PlaceholderText="@entry.ItemName" />
+                        </CascadingItemContext>
                     }
                 </MudItem>
             }

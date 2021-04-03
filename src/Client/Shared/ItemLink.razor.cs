@@ -1,75 +1,120 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using MudBlazor.Utilities;
 using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client.Shared
 {
-    public partial class ItemLink : ComponentBase
+    public partial class ItemLink : MudComponentBase
     {
-        private readonly ItemLinkContext _context = new();
+        private Item? _item;
+        private bool _loading, _failed;
 
-        [Parameter]
-        public uint? Id
+        protected string? Classname => new CssBuilder()
+            .AddClass($"q{Quality}", Colorize)
+            .AddClass("text-bracket", Bracketize)
+            .AddClass(Class)
+            .Build();
+
+        protected string? CompleteStyle => new StyleBuilder()
+            .AddStyle(Style)
+            .AddStyle("cursor", "pointer", !LinkEnabled)
+            .Build();
+
+        protected string? Target => LinkEnabled ? "_blank" : null;
+
+        protected string? Href
         {
-            get => _context.Id;
-            set => _context.Id = value;
+            get
+            {
+                if (LinkEnabled)
+                {
+                    uint? id = Context?.Id ?? Id;
+
+                    if (id > 0)
+                    {
+                        return $"https://tbc.wowhead.com/item={id}";
+                    }
+                }
+
+                return null;
+            }
         }
 
-        [Parameter]
-        public IconSize? IconSize
+        protected string? DataWowhead
         {
-            get => _context.IconSize;
-            set => _context.IconSize = value;
+            get
+            {
+                uint? id = Context?.Id ?? Id;
+
+                if (id > 0)
+                {
+                    return $"item={id}&domain=tbc";
+                }
+                return null;
+            }
         }
 
-        [Parameter]
-        public bool Bracketize
+        protected int Quality
         {
-            get => _context.Bracketize;
-            set => _context.Bracketize = value;
+            get
+            {
+                if (Context?.Item is not null)
+                {
+                    return Context.Item.Quality;
+                }
+                if (_item is not null)
+                {
+                    return _item.Quality;
+                }
+                return 0;
+            }
         }
 
-        [Parameter]
-        public bool Colorize
-        {
-            get => _context.Colorize;
-            set => _context.Colorize = value;
-        }
+        [Parameter] public uint? Id { get; set; }
 
-        [Parameter]
-        public string? OverrideText
-        {
-            get => _context.OverrideText;
-            set => _context.OverrideText = value;
-        }
+        [Parameter] public bool Bracketize { get; set; }
+
+        [Parameter] public bool Colorize { get; set; }
+
+        [Parameter] public string? PlaceholderText { get; set; }
 
         [Parameter] public bool LinkEnabled { get; set; }
 
-        [Parameter] public RenderFragment? ChildContent { get; set; }
-
-        [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+        [CascadingParameter] public ItemLinkContext? Context { get; set; }
 
         [Inject] public ItemProvider Items { get; set; } = null!;
 
         protected override async Task OnParametersSetAsync()
         {
-            _context.Item = null;
-            _context.Failed = false;
-            if (Id > 0)
+            if (Context is null)
             {
-                try
+                _loading = true;
+                _failed = false;
+                if (Id > 0)
                 {
-                    _context.Item = await Items.GetItemAsync(Id.Value);
+                    try
+                    {
+                        _item = await Items.GetItemAsync(Id.Value);
+                    }
+                    catch
+                    {
+                        _failed = true;
+                    }
                 }
-                catch
+                else
                 {
-                    _context.Item = null;
+                    _failed = true;
                 }
-                _context.Failed = _context.Item is null;
+                _loading = false;
+            }
+            else
+            {
+                _item = Context.Item;
             }
         }
     }

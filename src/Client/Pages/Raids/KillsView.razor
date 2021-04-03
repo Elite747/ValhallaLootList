@@ -25,15 +25,15 @@
                 <MudDivider />
                 <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
                     <div class="d-flex">
-                        <MudAvatar Class="mr-5" Rounded="true">
-                            <ItemIcon ItemId="drop.ItemId" Size="IconSize.Medium" width="40" height="40" />
-                        </MudAvatar>
-                        <div class="mr-auto">
-                            <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true" OverrideText="@drop.ItemName">
-                                <ItemLinkText />
-                            </ItemLink>
-                            <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
-                        </div>
+                        <CascadingItemContext Id="drop.ItemId">
+                            <MudAvatar Class="mr-5" Rounded="true">
+                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                            </MudAvatar>
+                            <div class="mr-auto">
+                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@drop.ItemName" />
+                                <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
+                            </div>
+                        </CascadingItemContext>
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
                         {
                             <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">

@@ -34,16 +34,16 @@
             <TitleContent>
                 <div class="d-flex align-center">
                     <MudAvatar Class="mr-2">
-                        <RaceIcon Race="member.Character.Race" Gender="member.Character.Gender" Size="IconSize.Medium" width="40" height="40" />
+                        <RaceIcon Race="member.Character.Race" Gender="member.Character.Gender" Size="IconSize.Medium" Width="40" Height="40" />
                     </MudAvatar>
                     <MudAvatar Class="mr-5">
                         @if (phaseLootList is not null)
                         {
-                            <SpecIcon Size="IconSize.Medium" Spec="phaseLootList.MainSpec" width="40" height="40" />
+                            <SpecIcon Size="IconSize.Medium" Spec="phaseLootList.MainSpec" Width="40" Height="40" />
                         }
                         else
                         {
-                            <ClassIcon Size="IconSize.Medium" PlayerClass="member.Character.Class" width="40" height="40" />
+                            <ClassIcon Size="IconSize.Medium" PlayerClass="member.Character.Class" Width="40" Height="40" />
                         }
                     </MudAvatar>
                     <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>

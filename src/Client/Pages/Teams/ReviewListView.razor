@@ -53,36 +53,25 @@
                     @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
                     {
                         <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize">
-                            <ItemLink Id="item.Id"
-                                      LinkEnabled="true"
-                                      Colorize="true"
-                                      Bracketize="true"
-                                      OverrideText="@item.Name"
-                                      class="d-flex align-center">
-                                @if (entry.Rank != 0)
-                                {
-                                    <MudBadge Content="entry.Rank" Color="Color.Info" Overlap="true">
+                            <div class="d-flex align-center">
+                                <CascadingItemContext Id="item.Id">
+                                    @if (entry.Won)
+                                    {
+                                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                                            <MudAvatar Rounded="true" Class="mr-2">
+                                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                            </MudAvatar>
+                                        </MudBadge>
+                                    }
+                                    else
+                                    {
                                         <MudAvatar Rounded="true" Class="mr-2">
-                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                                         </MudAvatar>
-                                    </MudBadge>
-                                }
-                                else if (entry.Won)
-                                {
-                                    <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                                        <MudAvatar Rounded="true" Class="mr-2">
-                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                        </MudAvatar>
-                                    </MudBadge>
-                                }
-                                else
-                                {
-                                    <MudAvatar Rounded="true" Class="mr-2">
-                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                    </MudAvatar>
-                                }
-                                <ItemLinkText />
-                            </ItemLink>
+                                    }
+                                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
+                                </CascadingItemContext>
+                            </div>
                             <ul>
                                 @foreach (var restriction in GetRestrictions(item, entry.Rank))
                                 {

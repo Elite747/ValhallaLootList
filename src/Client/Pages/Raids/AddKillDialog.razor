@@ -26,22 +26,22 @@
                     {
                         var localItemId = itemId;
                         <div class="d-flex align-center py-1">
-                            <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
-                                <ItemIcon ItemId="itemId" Size="IconSize.Large" width="56" height="56" />
-                            </MudAvatar>
-                            <div class="mr-auto">
-                                <div>
-                                    <ItemLink Id="itemId">
-                                        <ItemLinkText Colorize="true" />
-                                    </ItemLink>
+                            <CascadingItemContext Id="itemId">
+                                <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
+                                    <ItemIcon Size="IconSize.Large" Width="56" Height="56" />
+                                </MudAvatar>
+                                <div class="mr-auto">
+                                    <div>
+                                        <ItemLink Colorize="true" />
+                                    </div>
+                                    <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId] = ((int?)chip?.Tag) ?? 0">
+                                        <MudChip Tag="@(0)" Default="true">0</MudChip>
+                                        <MudChip Tag="@(1)">1</MudChip>
+                                        <MudChip Tag="@(2)">2</MudChip>
+                                        <MudChip Tag="@(3)">3</MudChip>
+                                    </MudChipSet>
                                 </div>
-                                <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId] = ((int?)chip?.Tag) ?? 0">
-                                    <MudChip Tag="@(0)" Default="true">0</MudChip>
-                                    <MudChip Tag="@(1)">1</MudChip>
-                                    <MudChip Tag="@(2)">2</MudChip>
-                                    <MudChip Tag="@(3)">3</MudChip>
-                                </MudChipSet>
-                            </div>
+                            </CascadingItemContext>
                         </div>
                     }
                 </MudItem>

@@ -10,5 +10,7 @@ namespace ValhallaLootList.Client.Shared
         [Parameter] public string IconId { get; set; } = string.Empty;
 
         protected override string GetIconId() => IconId;
+
+        protected override bool IconReady() => IconId?.Length > 0;
     }
 }

@@ -8,7 +8,10 @@
         <MudListItem>
             <div class="d-flex">
                 <div class="mr-3">
-                    <ItemLink Id="itemId" LinkEnabled="true" Bracketize="true" Colorize="true" IconSize="IconSize.Small" />
+                    <CascadingItemContext Id="itemId">
+                        <ItemIcon Size="IconSize.Small" />
+                        <ItemLink LinkEnabled="true" Bracketize="true" Colorize="true" />
+                    </CascadingItemContext>
                 </div>
                 <div class="mr-auto">
                     @if (Standings.TryGetValue(itemId, out var itemStandings))

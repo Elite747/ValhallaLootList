@@ -5,14 +5,11 @@ using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client.Shared
 {
-    public class ItemLinkContext
+    public record ItemLinkContext
     {
         public uint? Id { get; set; }
         public Item? Item { get; set; }
-        public IconSize? IconSize { get; set; }
-        public bool Bracketize { get; set; }
-        public bool Colorize { get; set; }
         public bool Failed { get; set; }
-        public string? OverrideText { get; set; }
+        public bool Loading { get; set; }
     }
 }

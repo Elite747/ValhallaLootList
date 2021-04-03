@@ -40,19 +40,19 @@
                             @if (id > 0)
                             {
                                 <div class="d-flex align-center py-1">
-                                    <MudAvatar Class="mr-2" Rounded="true" Size="Size.Medium">
-                                        <ItemIcon ItemId="id" Size="IconSize.Medium" width="40" height="40" />
-                                    </MudAvatar>
-                                    <div class="mr-auto">
-                                        <div>
-                                            <ItemLink Id="id" LinkEnabled="true">
-                                                <ItemLinkText Colorize="true" OverrideText="@item?.Name" Bracketize="true" />
-                                            </ItemLink>
+                                    <CascadingItemContext Id="id">
+                                        <MudAvatar Class="mr-2" Rounded="true" Size="Size.Medium">
+                                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                                        </MudAvatar>
+                                        <div class="mr-auto">
+                                            <div>
+                                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item?.Name" />
+                                            </div>
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => InvokeSelectionAsync(column, row.Key)">
+                                                Change Item
+                                            </MudButton>
                                         </div>
-                                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => InvokeSelectionAsync(column, row.Key)">
-                                            Change Item
-                                        </MudButton>
-                                    </div>
+                                    </CascadingItemContext>
                                 </div>
                             }
                             else

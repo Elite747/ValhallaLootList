@@ -40,7 +40,7 @@
                         <MudSelectItem T="PlayerRace?" Value="@race">
                             <div class="d-flex align-center">
                                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
-                                    <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Small" width="24" height="24" />
+                                    <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Medium" Width="24" Height="24" />
                                 </MudAvatar>
                                 <span>@race.GetDisplayName()</span>
                             </div>
@@ -58,7 +58,7 @@
                         <MudSelectItem T="Classes?" Value="@playerClass">
                             <div class="d-flex align-center">
                                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
-                                    <ClassIcon PlayerClass="playerClass" Size="IconSize.Small" width="24" height="24" />
+                                    <ClassIcon PlayerClass="playerClass" Size="IconSize.Medium" Width="24" Height="24" />
                                 </MudAvatar>
                                 <span>@playerClass.GetDisplayName()</span>
                             </div>

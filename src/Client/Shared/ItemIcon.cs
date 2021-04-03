@@ -9,23 +9,36 @@ namespace ValhallaLootList.Client.Shared
 {
     public class ItemIcon : WowIcon
     {
-        [Parameter] public string? Class { get; set; }
-        [Parameter] public uint? ItemId { get; set; }
+        private Item? _item;
+
+        [Parameter] public uint? Id { get; set; }
         [Inject] public ItemProvider Items { get; set; } = null!;
+        [CascadingParameter] public ItemLinkContext? Context { get; set; }
 
-        protected Item? Item { get; set; }
+        protected override string GetIconId() => (Context?.Item ?? _item)?.Icon ?? string.Empty;
 
-        protected override string GetIconId() => Item?.Icon ?? string.Empty;
+        protected override string GetAltText() => (Context?.Item ?? _item)?.Name ?? string.Empty;
 
-        protected override string GetAltText() => Item?.Name ?? string.Empty;
-
-        protected override bool IconReady() => Item is not null;
+        protected override bool IconReady() => (Context?.Item ?? _item) is not null;
 
         protected override async Task OnParametersSetAsync()
         {
-            if (ItemId.HasValue)
+            if (Context is null)
             {
-                Item = await Items.GetItemAsync(ItemId.Value);
+                if (Id > 0)
+                {
+                    try
+                    {
+                        _item = await Items.GetItemAsync(Id.Value);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            else
+            {
+                _item = Context.Item;
             }
         }
     }

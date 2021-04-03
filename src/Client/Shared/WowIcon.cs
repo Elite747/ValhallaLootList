@@ -2,16 +2,17 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using MudBlazor;
 
 namespace ValhallaLootList.Client.Shared
 {
-    public abstract class WowIcon : ComponentBase
+    public abstract class WowIcon : MudComponentBase
     {
         [Parameter] public IconSize Size { get; set; }
-        [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+        [Parameter] public int? Width { get; set; }
+        [Parameter] public int? Height { get; set; }
 
         protected abstract string GetIconId();
 
@@ -29,7 +30,11 @@ namespace ValhallaLootList.Client.Shared
             }
 
             builder.AddAttribute(3, "alt", GetAltText());
-            builder.AddMultipleAttributes(4, AdditionalAttributes);
+            builder.AddAttribute(4, "class", Class);
+            builder.AddAttribute(5, "style", Style);
+            builder.AddAttribute(6, "width", Width);
+            builder.AddAttribute(7, "height", Height);
+            builder.AddMultipleAttributes(8, UserAttributes);
             builder.CloseElement();
         }
 

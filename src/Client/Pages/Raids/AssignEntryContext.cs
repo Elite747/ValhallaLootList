@@ -31,21 +31,14 @@ namespace ValhallaLootList.Client.Pages.Raids
                     }
                 }
 
-                if (!entry.Locked)
+                (Color, Message) = entry.Status switch
                 {
-                    Color = Color.Error;
-                    Message = "Loot List is not locked!";
-                }
-                else if (!entry.Approved)
-                {
-                    Color = Color.Error;
-                    Message = "Loot List has not been approved!";
-                }
-                else
-                {
-                    Color = Color.Success;
-                    Message = string.Empty;
-                }
+                    LootListStatus.Editing => (Color.Error, "Loot List has not been submitted!"),
+                    LootListStatus.Submitted => (Color.Error, "Loot List has not been approved!"),
+                    LootListStatus.Approved => (Color.Error, "Loot List is not locked!"),
+                    LootListStatus.Locked => (Color.Success, string.Empty),
+                    _ => (Color.Error, "Unknown Loot List status!")
+                };
             }
             else
             {

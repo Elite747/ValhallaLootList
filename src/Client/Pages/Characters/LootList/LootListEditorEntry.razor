@@ -1,0 +1,149 @@
+﻿@inject ApiClient Api  
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudItem xs="12" md="9 / ItemsInRow" lg="10 / ItemsInRow">
+    @{ 
+        var item = Entry.ItemId.HasValue ? Items.FirstOrDefault(item => item.Id == Entry.ItemId.Value) : null;
+    }
+    @if (item is not null)
+    {
+        var restrictions = item.Restrictions.Where(r => (r.Specs & Editor.LootList.MainSpec) != 0);
+
+        if (Entry.BracketAllowsOffspec && Editor.LootList.OffSpec != Editor.LootList.MainSpec)
+        {
+            var offspecRestrictions = item.Restrictions.Where(r => (r.Specs & Editor.LootList.OffSpec) != 0);
+
+            if (restrictions.Any() ^ offspecRestrictions.Any())
+            {
+                restrictions = Array.Empty<RestrictionDto>();
+            }
+        }
+        <div class="d-flex align-center py-1">
+            <CascadingItemContext Id="item.Id">
+                <MudAvatar Class="mr-2" Rounded="true" Size="Size.Medium">
+                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                </MudAvatar>
+                <div class="mr-auto">
+                    <div>
+                        <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
+                    </div>
+                    @if (!Entry.Won)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+                            Change Item
+                        </MudButton>
+                    }
+                </div>
+            </CascadingItemContext>
+        </div>
+        <ul>
+            @foreach (var restriction in restrictions)
+            {
+                <li>
+                    <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                        @restriction.Reason
+                    </MudText>
+                </li>
+            }
+        </ul>
+    }
+    else if (!Entry.Won)
+    {
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+            Select Item
+        </MudButton>
+    }
+</MudItem>
+
+@code {
+    [Parameter] public int ItemsInRow { get; set; }
+    [Parameter] public LootListEntryDto Entry { get; set; } = null!;
+    [CascadingParameter] public IList<ItemDto> Items { get; set; } = null!;
+    [CascadingParameter] public LootListEditor Editor { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Entry is null) throw new ArgumentNullException(nameof(Entry));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (Editor is null) throw new ArgumentNullException(nameof(Editor));
+    }
+
+    private async Task SelectAsync()
+    {
+        var groupsInBracket = new HashSet<ItemGroup>();
+
+        if (!Entry.BracketAllowsTypeDuplicates)
+        {
+            foreach (var entry in Editor.LootList.Entries)
+            {
+                if (entry.Id != Entry.Id && entry.Bracket == Entry.Bracket && entry.ItemId.HasValue)
+                {
+                    var item = Items.FirstOrDefault(item => item.Id == entry.ItemId.Value);
+
+                    if (item is not null)
+                    {
+                        groupsInBracket.Add(new ItemGroup(item.Type, item.Slot));
+                    }
+                }
+            }
+        }
+
+        var spec = Editor.LootList.MainSpec | Editor.LootList.OffSpec;
+
+        var contextItems = Items.Where(item => !item.Restrictions.Any(r => r.Level == ItemRestrictionLevel.Unequippable && (r.Specs & spec) != 0));
+
+        var selectedId = await DialogService.ShowAsync<SelectItemDialog, uint?>(
+            "Select Item",
+            new()
+            {
+                [nameof(SelectItemDialog.GroupsInBracket)] = groupsInBracket,
+                [nameof(SelectItemDialog.Items)] = contextItems,
+                [nameof(SelectItemDialog.MainSpec)] = Editor.LootList.MainSpec,
+                [nameof(SelectItemDialog.OffSpec)] = Editor.LootList.MainSpec == Editor.LootList.OffSpec ? null : Editor.LootList.OffSpec,
+            },
+            new()
+            {
+                FullWidth = true,
+                MaxWidth = MudBlazor.MaxWidth.Medium
+            });
+
+        if (selectedId.HasValue)
+        {
+            if (selectedId == 0U)
+            {
+                selectedId = null;
+            }
+
+            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId };
+            if (selectedId.HasValue)
+            {
+                var swapEntry = Editor.LootList.Entries.Find(e => e.Id != Entry.Id && e.ItemId == selectedId);
+
+                if (swapEntry is not null)
+                {
+                    dto.SwapEntryId = swapEntry.Id;
+                }
+            }
+
+            await Api.LootListEntries.Submit(Entry.Id, dto)
+                .OnSuccess(HandleSuccess)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private void HandleSuccess(LootListEntryUpdateDto update)
+    {
+        Entry.ItemId = update.ItemId;
+        if (update.SwapEntryId.HasValue)
+        {
+            var entry = Editor.LootList.Entries.Find(e => e.Id == update.SwapEntryId);
+            if (entry is not null)
+            {
+                entry.ItemId = update.SwapItemId;
+                Editor.NotifyStateChanged();
+            }
+        }
+    }
+}

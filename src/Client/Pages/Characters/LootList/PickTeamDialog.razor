@@ -1,0 +1,37 @@
+﻿@inject ApiClient Api  
+@inject TeamsSource Teams
+
+<MudDialog>
+    <TitleContent>
+        Select Team
+    </TitleContent>
+    <DialogContent>
+        <MudSelect Label="Team"
+                   T="TeamNameDto"
+                   @bind-Value="@_selectedTeam"
+                   ToStringFunc="team => team?.Name"
+                   Variant="Variant.Filled"
+                   Class="mb-2">
+            @foreach (var team in Teams.Teams)
+            {
+                <MudSelectItem T="TeamNameDto" Value="team">@team.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_selectedTeam))" Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedTeam is null">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private TeamNameDto? _selectedTeam;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        return Teams.EnsureStartedAsync(Api).AsTask();
+    }
+}

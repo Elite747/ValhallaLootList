@@ -1,0 +1,59 @@
+﻿<MudCard Elevation="3" Class="my-4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Bracket @(Bracket + 1)</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <ul>
+            <li>
+                Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank allowed
+            </li>
+            @if (AllowOffSpec)
+            {
+                <li>Offspec items allowed</li>
+            }
+            else
+            {
+                <li>No offspec items</li>
+            }
+            @if (!AllowTypeDuplicates)
+            {
+                <li>Only one item per category allowed</li>
+            }
+        </ul>
+    </MudCardContent>
+    <MudList Dense="true">
+        @foreach (var row in _rankGroups)
+        {
+            <MudDivider />
+            <MudListItem>
+                <LootListEditorRank Rank="row.Key" Entries="row" />
+            </MudListItem>
+        }
+    </MudList>
+</MudCard>
+
+@code {
+    private readonly List<IGrouping<int, LootListEntryDto>> _rankGroups = new();
+    private int _maxItemsPerRank;
+
+    [Parameter] public int Bracket { get; set; }
+    [Parameter] public bool AllowOffSpec { get; set; }
+    [Parameter] public bool AllowTypeDuplicates { get; set; }
+    [Parameter] public IEnumerable<LootListEntryDto> BracketEntries { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (BracketEntries is null) throw new ArgumentNullException(nameof(BracketEntries));
+
+        _rankGroups.Clear();
+        _maxItemsPerRank = 1;
+
+        foreach (var group in BracketEntries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
+        {
+            _maxItemsPerRank = Math.Max(_maxItemsPerRank, group.Count());
+            _rankGroups.Add(group);
+        }
+    }
+}

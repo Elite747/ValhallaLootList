@@ -13,9 +13,7 @@ namespace ValhallaLootList.DataTransfer
 
         public string CharacterName { get; set; } = string.Empty;
 
-        public bool Locked { get; set; }
-
-        public bool Approved { get; set; }
+        public LootListStatus Status { get; set; }
 
         public int Rank { get; set; }
 

@@ -1,0 +1,79 @@
+﻿@inject ApiClient Api
+
+<EditForm OnValidSubmit="OnSubmitAsync" Model="_model">
+    <DataAnnotationsValidator />
+    <ProblemValidator @ref="_problemValidator" />
+    <MudDialog>
+        <TitleContent>
+            Select Your Specialization
+        </TitleContent>
+        <DialogContent>
+            <MudSelect Label="Main Spec"
+                       For="() => _model.MainSpec"
+                       @bind-Value="@_model.MainSpec"
+                       ToStringFunc="spec => spec.HasValue ? spec.Value.GetDisplayName() : string.Empty"
+                       Variant="Variant.Filled"
+                       Class="mb-2">
+                @foreach (var spec in Specializations)
+                {
+                    <MudSelectItem T="Specializations?" Value="spec">@spec.GetDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect Label="Off Spec"
+                       For="() => _model.OffSpec"
+                       @bind-Value="@_model.OffSpec"
+                       ToStringFunc="spec => spec.HasValue ? spec.Value.GetDisplayName() : string.Empty"
+                       Variant="Variant.Filled"
+                       Disabled="Specializations.Count == 1"
+                       HelperText="@(Specializations.Count == 1 ? "Off spec disabled. Your class only has one role." : null)">
+                @foreach (var spec in Specializations)
+                {
+                    <MudSelectItem T="Specializations?" Value="spec">@spec.GetDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Save</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+
+@code {
+    private readonly LootListSubmissionDto _model = new();
+    private ProblemValidator? _problemValidator;
+
+    [Parameter] public long CharacterId { get; set; }
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public bool UpdateExisting { get; set; }
+    [Parameter] public IList<Specializations> Specializations { get; set; } = null!;
+    [Parameter] public Specializations? DefaultMainSpec { get; set; }
+    [Parameter] public Specializations? DefaultOffSpec { get; set; }
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Specializations is null) throw new ArgumentNullException(nameof(Specializations));
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+
+        _model.MainSpec = DefaultMainSpec;
+        _model.OffSpec = DefaultOffSpec;
+    }
+
+    private Task OnSubmitAsync()
+    {
+        if (UpdateExisting)
+        {
+            return Api.LootLists.SetSpec(CharacterId, Phase, _model)
+                .OnSuccess(_ => Dialog.Close(DialogResult.Ok(_model)))
+                .ValidateWith(_problemValidator)
+                .ExecuteAsync();
+        }
+
+        return Api.LootLists.Create(CharacterId, Phase, _model)
+            .OnSuccess(lootList => Dialog.Close(DialogResult.Ok(lootList)))
+            .ValidateWith(_problemValidator)
+            .ExecuteAsync();
+    }
+}

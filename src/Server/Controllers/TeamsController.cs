@@ -99,7 +99,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.IsFemale,
                     c.MemberStatus,
                     Verified = c.VerifiedById.HasValue,
-                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList(),
+                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Status, l.Phase }).ToList(),
                     DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
                     DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount),
                     Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == team.Id)
@@ -138,7 +138,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     var lootListDto = new MemberLootListDto
                     {
-                        Locked = lootList.Locked,
+                        Status = lootList.Status,
                         MainSpec = lootList.MainSpec,
                         Phase = lootList.Phase
                     };
@@ -371,12 +371,12 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(l => l.CharacterId == character.Id)
                 .OrderBy(l => l.Phase)
-                .Select(l => new { l.MainSpec, l.Locked, l.ApprovedBy, l.Phase })
+                .Select(l => new { l.MainSpec, l.Status, l.ApprovedBy, l.Phase })
                 .AsAsyncEnumerable())
             {
                 var lootListDto = new MemberLootListDto
                 {
-                    Locked = lootList.Locked,
+                    Status = lootList.Status,
                     MainSpec = lootList.MainSpec,
                     Phase = lootList.Phase
                 };

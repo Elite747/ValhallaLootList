@@ -3,16 +3,10 @@
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class MemberLootListDto
+    public class SetLootListStatusDto
     {
-        public byte Phase { get; set; }
-
         public LootListStatus Status { get; set; }
 
-        public Specializations MainSpec { get; set; }
-
-        public bool? Approved { get; set; }
-
-        public GuildMemberDto? ApprovedBy { get; set; }
+        public long? SubmitTo { get; set; }
     }
 }

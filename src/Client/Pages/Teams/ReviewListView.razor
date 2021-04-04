@@ -1,42 +1,47 @@
 ﻿@inject ApiClient Api
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService 
 
 <MudList Dense="true" Class="flex-grow-1">
     <MudListSubheader>
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
-        @if (LootList.ApprovedBy.HasValue)
+        @if (LootList.Status == LootListStatus.Locked)
         {
             <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings from non-leaders.">
-                    <MudButton OnClick="RevokeApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
+                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                         Revoke Approval
                     </MudButton>
                 </MudTooltip>
-            </AuthorizeView>
-        }
-        else
-        {
-            <MudTooltip Text="Approving a loot list will prevent it from being modified, but will not allow non-leaders to see rankings.">
-                <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
-                    Approve Loot List
-                </MudButton>
-            </MudTooltip>
-        }
-
-        @if (LootList.Locked)
-        {
-            <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, the list must also have its approval revoked.">
-                    <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, use the Revoke Approval action instead.">
+                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                 </MudTooltip>
             </AuthorizeView>
         }
-        else
+        else if (LootList.Status == LootListStatus.Submitted)
         {
+            <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team, but will not allow non-leaders to see rankings.">
+                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                    Approve Loot List
+                </MudButton>
+            </MudTooltip>
+            <MudTooltip Text="Denying a loot list will allow it to be edited by the owner.">
+                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                    Deny Loot List
+                </MudButton>
+            </MudTooltip>
+        }
+        else if (LootList.Status == LootListStatus.Approved)
+        {
+            <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
+                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                    Revoke Approval
+                </MudButton>
+            </MudTooltip>
             <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
-                <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
+                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Locked)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
             </MudTooltip>
         }
     </MudListSubheader>
@@ -73,7 +78,7 @@
                                 </CascadingItemContext>
                             </div>
                             <ul>
-                                @foreach (var restriction in GetRestrictions(item, entry.Rank))
+                                @foreach (var restriction in GetRestrictions(item, entry))
                                 {
                                     <li>
                                         <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
@@ -98,7 +103,6 @@
 
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public IList<ItemDto> Items { get; set; } = null!;
-    [Parameter] public List<BracketDto> Brackets { get; set; } = null!;
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
 
@@ -106,53 +110,29 @@
     {
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
-        if (Brackets is null) throw new ArgumentNullException(nameof(Brackets));
         if (User is null) throw new ArgumentNullException(nameof(User));
         _rows = LootList.Entries.GroupBy(e => e.Rank);
         _rowSize = _rows.Select(row => row.Count()).Max();
-
-        if (LootList.Locked)
-        {
-            if (LootList.ApprovedBy.HasValue)
-            {
-                _message = "Loot list is locked and approved!";
-                _messageColor = Color.Success;
-            }
-            else
-            {
-                _message = "Loot list is locked, but needs approval.";
-                _messageColor = Color.Warning;
-            }
-        }
-        else if (LootList.ApprovedBy.HasValue)
-        {
-            _message = "Loot list is approved, but not yet locked.";
-            _messageColor = Color.Warning;
-        }
-        else
-        {
-            _message = "Loot list has not yet been reviewed or locked.";
-            _messageColor = Color.Warning;
-        }
+        SetMessage();
     }
 
-    private BracketDto? GetBracket(int rank)
+    private void SetMessage()
     {
-        foreach (var bracket in Brackets)
+        (_message, _messageColor) = LootList.Status switch
         {
-            if (rank <= bracket.MaxRank && rank >= bracket.MinRank)
-            {
-                return bracket;
-            }
-        }
-        return null;
+            LootListStatus.Editing => ("Loot List is still being edited.", Color.Error),
+            LootListStatus.Submitted => ("Loot List is submitted but awaiting approval.", Color.Warning),
+            LootListStatus.Approved => ("Loot List has been approved, but still needs to be locked.", Color.Warning),
+            LootListStatus.Locked => ("Loot List has been approved and locked!", Color.Success),
+            _ => ("Unrecognized status!", Color.Error)
+        };
     }
 
-    private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, int rank)
+    private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, LootListEntryDto entry)
     {
         var restrictions = item.Restrictions.Where(r => (r.Specs & LootList.MainSpec) != 0);
 
-        if (GetBracket(rank)?.AllowOffSpec == true && LootList.OffSpec != LootList.MainSpec)
+        if (entry.BracketAllowsOffspec && LootList.OffSpec != LootList.MainSpec)
         {
             if (restrictions.Any() ^ item.Restrictions.Any(r => (r.Specs & LootList.OffSpec) != 0))
             {
@@ -163,44 +143,21 @@
         return restrictions.OrderBy(r => r.Level);
     }
 
-    private Task ApproveAsync()
+    private Task ChangeStatusAsync(LootListStatus status)
     {
-        return Api.LootLists.Approve(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.ApprovedBy = User.GetDiscordIdFromClient())
-            .OnSuccess(InvokeStatusUpdatedAsync)
+        return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = status })
+            .OnSuccess((_, _) =>
+            {
+                LootList.Status = status;
+                if (status == LootListStatus.Approved)
+                {
+                    LootList.ApprovedBy = User.GetDiscordIdFromClient();
+                    DialogService.ShowMessageBox("Approved", "Loot list has been approved! Don't forget to add this character to the roster if you haven't already.");
+                }
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
-    }
-
-    private Task RevokeApproveAsync()
-    {
-        return Api.LootLists.RevokeApproval(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.ApprovedBy = null)
-            .OnSuccess(InvokeStatusUpdatedAsync)
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
-    private Task LockAsync()
-    {
-        return Api.LootLists.Lock(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.Locked = true)
-            .OnSuccess(InvokeStatusUpdatedAsync)
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
-    private Task UnlockAsync()
-    {
-        return Api.LootLists.Unlock(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.Locked = false)
-            .OnSuccess(InvokeStatusUpdatedAsync)
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
-    private Task InvokeStatusUpdatedAsync(System.Net.HttpStatusCode _, System.Threading.CancellationToken __)
-    {
-        return StatusUpdated.InvokeAsync(LootList);
     }
 }

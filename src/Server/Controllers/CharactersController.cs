@@ -11,7 +11,6 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
@@ -388,6 +387,35 @@ namespace ValhallaLootList.Server.Controllers
             TrackTelemetry("CharacterDeleted", character);
 
             return Ok();
+        }
+
+        [HttpGet("{id:long}/Specs")]
+        public async Task<ActionResult<IEnumerable<Specializations>>> GetSpecs(long id)
+        {
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Select(c => new { c.Class })
+                .FirstOrDefaultAsync();
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            return character.Class switch
+            {
+                Classes.Druid => new[] { Specializations.BalanceDruid, Specializations.BearDruid, Specializations.CatDruid, Specializations.RestoDruid },
+                Classes.Hunter => new[] { Specializations.Hunter },
+                Classes.Mage => new[] { Specializations.Mage },
+                Classes.Paladin => new[] { Specializations.HolyPaladin, Specializations.ProtPaladin, Specializations.RetPaladin },
+                Classes.Priest => new[] { Specializations.HealerPriest, Specializations.ShadowPriest },
+                Classes.Rogue => new[] { Specializations.Rogue },
+                Classes.Shaman => new[] { Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman },
+                Classes.Warlock => new[] { Specializations.Warlock },
+                Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
+                _ => Array.Empty<Specializations>()
+            };
         }
 
         private static string NormalizeName(string name)

@@ -21,6 +21,12 @@ namespace ValhallaLootList.DataTransfer
 
         public bool Won { get; set; }
 
+        public int Bracket { get; set; }
+
+        public bool BracketAllowsOffspec { get; set; }
+
+        public bool BracketAllowsTypeDuplicates { get; set; }
+
         public List<PriorityBonusDto> Bonuses
         {
             get => _bonuses ??= new();

@@ -3,42 +3,44 @@
 <MudDialogScrollFix FixedFooter="true" />
 <MudDialog DisableSidePadding="true">
     <DialogContent>
-        @if (Context.Items is not null)
-        {
-            <MudList Clickable="true" Dense="true">
-                @foreach (var itemTypeGroup in Context.Items.Where(item => !DisallowedItems.Contains(item.Id)).GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
-                {
-                    <MudDivider />
-                    <MudListSubheader Class="pb-1"><b>@itemTypeGroup.Key.Name</b></MudListSubheader>
-                    @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
+        <MudList Clickable="true" Dense="true">
+            @foreach (var itemTypeGroup in Items.GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+            {
+                bool bracketContainsGroup = GroupsInBracket.Contains(itemTypeGroup.Key);
+                <MudDivider />
+                <MudListSubheader Class="pb-1">
+                    <MudText Typo="Typo.h6">
+                        @itemTypeGroup.Key.Name
+                    </MudText>
+                    @if (bracketContainsGroup)
                     {
-                        var id = item.Id;
-                        <MudListItem OnClick="() => LinkClickedAsync(id)">
-                            <div class="d-flex align-center">
-                                <CascadingItemContext Id="item.Id">
-                                    <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
-                                        <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
-                                    </MudAvatar>
-                                    <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" Class="mr-auto" />
-                                </CascadingItemContext>
-                                @if (LootList.MainSpec.HasValue)
-                                {
-                                    <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.MainSpec.Value) != 0)"
-                                                       SpecPrefix="@(LootList.OffSpec.HasValue ? "MS" : null)" />
-                                }
-
-                                @if (LootList.OffSpec.HasValue)
-                                {
-                                    <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & LootList.OffSpec.Value) != 0)"
-                                                       SpecPrefix="OS" />
-                                }
-                            </div>
-                        </MudListItem>
+                        <MudText Typo="Typo.caption" Color="Color.Error">An item of this type is already in the bracket.</MudText>
                     }
-                }
+                </MudListSubheader>
+                @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
+                {
+                    var id = item.Id;
+                    <MudListItem OnClick="() => LinkClickedAsync(id)" Disabled="bracketContainsGroup">
+                        <div class="d-flex align-center">
+                            <CascadingItemContext Id="item.Id">
+                                <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
+                                    <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
+                                </MudAvatar>
+                                <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" Class="mr-auto" />
+                            </CascadingItemContext>
+                            <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)"
+                                                SpecPrefix="@(OffSpec.HasValue ? "MS" : null)" />
 
-            </MudList>
-        }
+                            @if (OffSpec.HasValue)
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec.Value) != 0)"
+                                                    SpecPrefix="OS" />
+                            }
+                        </div>
+                    </MudListItem>
+                }
+            }
+        </MudList>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
@@ -49,18 +51,19 @@
 @code {
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
-    [Parameter] public ItemSelectionContext Context { get; set; } = null!;
+    [Parameter] public IEnumerable<ItemDto> Items { get; set; } = null!;
 
-    [Parameter] public LootListSubmissionModel LootList { get; set; } = null!;
+    [Parameter] public Specializations MainSpec { get; set; }
 
-    [Parameter] public HashSet<uint> DisallowedItems { get; set; } = null!;
+    [Parameter] public Specializations? OffSpec { get; set; }
+
+    [Parameter] public HashSet<ItemGroup> GroupsInBracket { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
-        if (Context is null) throw new ArgumentNullException(nameof(Context));
-        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
-        if (DisallowedItems is null) throw new ArgumentNullException(nameof(DisallowedItems));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (GroupsInBracket is null) throw new ArgumentNullException(nameof(GroupsInBracket));
     }
 
     private async Task LinkClickedAsync(uint itemId)

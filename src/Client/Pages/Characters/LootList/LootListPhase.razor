@@ -1,0 +1,136 @@
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (_lootList?.Status == LootListStatus.Editing)
+{
+    <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
+}
+else
+{
+    <MudList Dense="true">
+        @if (_lootList is null)
+        {
+            <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
+                <MudListSubheader>
+                    <MudButton OnClick="CreateListAsync" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+                </MudListSubheader>
+            </AuthorizeView>
+            <MudListSubheader>
+                <p>@Character.Name does not have a loot list for Phase @Phase.</p>
+            </MudListSubheader>
+        }
+        else
+        {
+            <MudListSubheader>
+                <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
+            </MudListSubheader>
+            <MudListSubheader>
+                @if (_lootList.Status == LootListStatus.Submitted)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" /> Loot List has been submitted awaiting approval.</MudText>
+                }
+                else if (_lootList.Status == LootListStatus.Approved)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Custom.Uncategorized.AlertSuccess" Size="Size.Small" /> Loot List has been approved!</MudText>
+                }
+                else if (_lootList.Status == LootListStatus.Locked)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
+                }
+            </MudListSubheader>
+
+            @if (_lootList.Status == LootListStatus.Locked || _lootList.Entries.Any(e => e.Rank > 0))
+            {
+                <PrioListView LootList="_lootList" />
+            }
+            else
+            {
+                <NoPrioListView LootList="_lootList" />
+            }
+        }
+    </MudList>
+}
+
+@code {
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
+    private LootListDto? _lootList;
+
+    public Task RefreshAsync()
+    {
+        return Api.LootLists.GetForCharacter(Character.Id, Phase)
+            .OnSuccess(lists => ChangeListRef(lists.SingleOrDefault()))
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+        _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase);
+    }
+
+    private void OnLootListCreated(LootListDto lootList)
+    {
+        ChangeListRef(lootList);
+    }
+
+    private void ChangeListRef(LootListDto? lootList)
+    {
+        if (_lootList is not null)
+        {
+            LootLists.Remove(_lootList);
+        }
+        if (lootList is not null)
+        {
+            LootLists.Add(lootList);
+        }
+        _lootList = lootList;
+        StateHasChanged();
+    }
+
+    private Task CreateListAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootList is null);
+
+        return Api.Characters.GetSpecs(Character.Id)
+            .OnSuccess(async (specs, _) =>
+            {
+                if (specs.Count == 1)
+                {
+                    await Api.LootLists.Create(Character.Id, Phase, new() { MainSpec = specs[0] })
+                        .OnSuccess(response =>
+                        {
+                            LootLists.Add(response);
+                            _lootList = response;
+                            StateHasChanged();
+                        })
+                        .SendErrorTo(Snackbar)
+                        .ExecuteAsync();
+                }
+                else
+                {
+                    var response = await DialogService.ShowAsync<CreateListDialog, LootListDto?>(
+                        string.Empty,
+                        new()
+                        {
+                            [nameof(CreateListDialog.CharacterId)] = Character.Id,
+                            [nameof(CreateListDialog.Phase)] = Phase,
+                            [nameof(CreateListDialog.Specializations)] = specs,
+                        });
+
+                    if (response is not null)
+                    {
+                        LootLists.Add(response);
+                        _lootList = response;
+                        StateHasChanged();
+                    }
+                }
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+}

@@ -20,13 +20,17 @@ namespace ValhallaLootList.DataTransfer
 
         public string? TeamName { get; set; }
 
+        public long? SubmittedToId { get; set; }
+
+        public string? SubmittedToName { get; set; }
+
         public Specializations MainSpec { get; set; }
 
         public Specializations OffSpec { get; set; }
 
         public byte Phase { get; set; }
 
-        public bool Locked { get; set; }
+        public LootListStatus Status { get; set; }
 
         public long? ApprovedBy { get; set; }
 

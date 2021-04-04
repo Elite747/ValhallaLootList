@@ -26,7 +26,7 @@
                     var selectedPhase = selectedInstance?.Phase ?? phaseConfig.CurrentPhase;
                 }
                 <MudList Clickable="true">
-                    @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
+                    @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
                     {
                         <MudListItem InitiallyExpanded="phase == selectedPhase">
                             <ChildContent>

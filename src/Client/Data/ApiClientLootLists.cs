@@ -42,29 +42,19 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation<LootListDto> Recreate(long characterId, byte phase, LootListSubmissionDto submission)
+        public IApiClientOperation<LootListDto> Reset(long characterId, byte phase)
+        {
+            return Client.CreateRequest<LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/reset");
+        }
+
+        public IApiClientOperation SetSpec(long characterId, byte phase, LootListSubmissionDto submission)
         {
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation Lock(long characterId, byte phase)
+        public IApiClientOperation SetStatus(long characterId, byte phase, SetLootListStatusDto dto)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/lock");
-        }
-
-        public IApiClientOperation Unlock(long characterId, byte phase)
-        {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/unlock");
-        }
-
-        public IApiClientOperation Approve(long characterId, byte phase)
-        {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/approve");
-        }
-
-        public IApiClientOperation RevokeApproval(long characterId, byte phase)
-        {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/revoke");
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/status", dto);
         }
     }
 }

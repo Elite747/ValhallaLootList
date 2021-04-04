@@ -1,8 +1,9 @@
 ﻿@page "/Characters/{character}"
+@using ValhallaLootList.Client.Pages.Characters.LootList; 
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject NavigationManager Nav 
-@inject ISnackbar Snackbar 
+@inject ISnackbar Snackbar
 
 <ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
     <div class="d-flex align-center mb-3">
@@ -35,10 +36,10 @@
         <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4" @ref="_tabs" @bind-ActivePanelIndex="ActivePanelIndex">
                 @{ var index = 0;  }
-                @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
+                @foreach (var phase in config.Phases.OrderBy(p => p))
                 {
                     <MudTabPanel Text="@($"Phase {phase}")">
-                        <LootListView Character="character" Phase="phase" LootLists="lootLists" />
+                        <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />
                     </MudTabPanel>
                     @if (phase == config.CurrentPhase)
                     {

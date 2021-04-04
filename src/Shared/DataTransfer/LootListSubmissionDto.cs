@@ -6,14 +6,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class LootListSubmissionDto
+    public class LootListSubmissionDto : IValidatableObject
     {
         [Required]
         public Specializations? MainSpec { get; set; }
 
         public Specializations? OffSpec { get; set; }
 
-        [Required]
-        public Dictionary<int, uint[]>? Items { get; set; }
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (MainSpec.HasValue && MainSpec == OffSpec)
+            {
+                yield return new ValidationResult("Off Spec cannot be the same as Main Spec.", new[] { nameof(OffSpec) });
+            }
+        }
     }
 }

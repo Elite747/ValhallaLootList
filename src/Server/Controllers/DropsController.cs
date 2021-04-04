@@ -104,8 +104,7 @@ namespace ValhallaLootList.Server.Controllers
                         {
                             e.Id,
                             e.Rank,
-                            e.LootList.Locked,
-                            Approved = e.LootList.ApprovedBy.HasValue,
+                            e.LootList.Status,
                             Passes = e.LootList.Character.Passes.Count(p => !p.WonEntryId.HasValue && p.Drop.ItemId == (e.Item!.RewardFromId ?? e.ItemId))
                         })
                         .FirstOrDefault()
@@ -294,8 +293,7 @@ namespace ValhallaLootList.Server.Controllers
                         {
                             e.Id,
                             e.Rank,
-                            e.LootList.Locked,
-                            Approved = e.LootList.ApprovedBy.HasValue,
+                            e.LootList.Status,
                             Passes = e.LootList.Character.Passes.Count(p => !p.WonEntryId.HasValue && p.Drop.ItemId == (e.Item!.RewardFromId ?? e.ItemId))
                         })
                         .FirstOrDefault()
@@ -311,8 +309,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     CharacterId = killer.Id,
                     CharacterName = killer.Name,
-                    Approved = killer.Entry.Approved,
-                    Locked = killer.Entry.Locked,
+                    Status = killer.Entry.Status,
                     Rank = killer.Entry.Rank,
                 };
 

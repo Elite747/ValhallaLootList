@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -22,26 +23,18 @@ namespace ValhallaLootList.Server.Controllers
         [HttpGet("phases")]
         public async Task<ActionResult<PhaseConfigDto>> GetPhaseConfig()
         {
-            var dto = new PhaseConfigDto
-            {
-                CurrentPhase = await _context.GetCurrentPhaseAsync()
-            };
+            var dto = new PhaseConfigDto();
+            var now = DateTimeOffset.UtcNow;
+            bool currentPhaseFound = false;
 
-            await foreach (var bracket in _context.Brackets.AsNoTracking().OrderBy(b => b.Phase).ThenByDescending(b => b.MaxRank).AsAsyncEnumerable())
+            await foreach (var phase in _context.PhaseDetails.AsNoTracking().OrderByDescending(p => p.Id).AsAsyncEnumerable())
             {
-                if (!dto.Brackets.TryGetValue(bracket.Phase, out var brackets))
+                if (!currentPhaseFound && phase.StartsAt <= now)
                 {
-                    dto.Brackets[bracket.Phase] = brackets = new();
+                    dto.CurrentPhase = phase.Id;
+                    currentPhaseFound = true;
                 }
-
-                brackets.Add(new BracketDto
-                {
-                    AllowOffSpec = bracket.AllowOffspec,
-                    AllowTypeDuplicates = bracket.AllowTypeDuplicates,
-                    MaxItems = bracket.MaxItems,
-                    MaxRank = bracket.MaxRank,
-                    MinRank = bracket.MinRank
-                });
+                dto.Phases.Add(phase.Id);
             }
 
             return dto;

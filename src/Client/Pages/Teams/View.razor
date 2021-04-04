@@ -23,7 +23,7 @@
                        Class="ml-5"
                        Dense="true"
                        ToStringFunc="@(phase => $"Phase {phase}")">
-                @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
+                @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
                 {
                     <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
                 }
@@ -49,7 +49,7 @@
                 {
                     <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
                         <Review Phase="_phase ?? phaseConfig.CurrentPhase"
-                                TeamId="team.Id"
+                                Team="team"
                                 OnSwitchViewClicked="() => _reviewMode = false"
                                 User="context.User"
                                 StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)" />
@@ -144,7 +144,7 @@
 
         if (lootList is not null)
         {
-            lootList.Locked = arg.Locked;
+            lootList.Status = arg.Status;
 
             if (arg.ApprovedBy.HasValue)
             {

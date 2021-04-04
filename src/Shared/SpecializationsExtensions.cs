@@ -36,5 +36,28 @@ namespace ValhallaLootList
 
             return (spec & playerClass.ToSpecializations()) != 0;
         }
+
+        public static string GetDisplayName(this Specializations spec)
+        {
+            return spec switch
+            {
+                Specializations.Hunter => "Beast Mastery / Marksmanship / Survival",
+                Specializations.Mage => "Arcane / Fire / Frost",
+                Specializations.HolyPaladin => "Holy",
+                Specializations.ProtPaladin => "Protection",
+                Specializations.RetPaladin => "Retribution",
+                Specializations.HealerPriest => "Discipline / Holy",
+                Specializations.ShadowPriest => "Shadow",
+                Specializations.Rogue => "Assassination / Combat / Subtlety",
+                Specializations.EleShaman => "Elemental",
+                Specializations.EnhanceShaman => "Enhancement",
+                Specializations.RestoShaman => "Restoration",
+                Specializations.Warlock => "Affliction / Demonology / Destruction",
+                Specializations.ArmsWarrior => "Arms",
+                Specializations.FuryWarrior => "Fury",
+                Specializations.ProtWarrior => "Protection",
+                _ => throw new ArgumentOutOfRangeException(nameof(spec))
+            };
+        }
     }
 }

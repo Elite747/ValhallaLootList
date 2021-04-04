@@ -73,7 +73,6 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             Debug.Assert(dto.MainSpec.HasValue);
-            Debug.Assert(dto.Items is not null);
 
             var character = await _context.Characters.FindAsync(characterId);
 
@@ -104,138 +103,38 @@ namespace ValhallaLootList.Server.Controllers
                 CharacterId = character.Id,
                 Character = character,
                 Entries = new List<LootListEntry>(28),
-                Locked = false,
+                Status = LootListStatus.Editing,
                 MainSpec = dto.MainSpec.Value,
                 OffSpec = dto.OffSpec ?? dto.MainSpec.Value,
                 Phase = phase
             };
 
-            var allItemIds = new HashSet<uint>();
+            var entries = new List<LootListEntry>();
 
-            foreach (var (rank, itemIds) in dto.Items)
-            {
-                var bracketTemplate = bracketTemplates.Find(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
-
-                if (bracketTemplate is null)
-                {
-                    ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} is not allowed.");
-                }
-                else if (itemIds?.Length > 0)
-                {
-                    if (itemIds.Length > bracketTemplate.MaxItems)
-                    {
-                        ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} can only have up to {bracketTemplate.MaxItems} items.");
-                    }
-                    else
-                    {
-                        for (int col = 0; col < itemIds.Length; col++)
-                        {
-                            uint itemId = itemIds[col];
-                            if (itemId > 0 && !allItemIds.Add(itemId))
-                            {
-                                ModelState.AddModelError($"Items[{rank}][{col}]", "Duplicate items are not allowed.");
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem();
-            }
-
-            await foreach (var wonItem in _context.Drops.AsNoTracking()
-                .Where(drop => drop.WinnerId == character.Id || drop.WinningEntry.LootList.CharacterId == character.Id)
-                .Select(drop => new { drop.ItemId, drop.Item.Name })
-                .AsAsyncEnumerable())
-            {
-                if (allItemIds.Contains(wonItem.ItemId))
-                {
-                    foreach (var (rank, itemIds) in dto.Items)
-                    {
-                        var col = Array.IndexOf(itemIds, wonItem.ItemId);
-                        if (col >= 0)
-                        {
-                            ModelState.AddModelError($"Items[{rank}][{col}]", $"You have already won {wonItem.Name} and may not put it on a new loot list.");
-                        }
-                    }
-
-                    Debug.Assert(!ModelState.IsValid);
-
-                    return ValidationProblem();
-                }
-            }
-
-            var items = await _context.Items
+            var brackets = await _context.Brackets
                 .AsNoTracking()
-                .Where(item => allItemIds.Contains(item.Id))
-                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, item.Phase })
-                .ToDictionaryAsync(item => item.Id);
+                .Where(b => b.Phase == phase)
+                .OrderBy(b => b.Index)
+                .ToListAsync();
 
-            var bothSpecs = dto.OffSpec.HasValue ? (dto.MainSpec.Value | dto.OffSpec.Value) : dto.MainSpec.Value;
-
-            var restrictions = (await _context.ItemRestrictions
-                .AsNoTracking()
-                .Where(r => allItemIds.Contains(r.ItemId) && r.RestrictionLevel == ItemRestrictionLevel.Unequippable && (r.Specializations & bothSpecs) != 0)
-                .ToListAsync())
-                .ToLookup(r => r.ItemId);
-
-            var bracketItemGroups = new HashSet<ItemGroup>();
-
-            foreach (var (rank, itemIds) in dto.Items)
+            foreach (var bracket in brackets)
             {
-                if (itemIds?.Length > 0)
+                for (byte rank = bracket.MinRank; rank <= bracket.MaxRank; rank++)
                 {
-                    var bracketTemplate = bracketTemplates.First(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
-                    var bracketSpec = bracketTemplate.AllowOffspec ? bothSpecs : dto.MainSpec.Value;
-
-                    for (int col = 0; col < itemIds.Length; col++)
+                    for (int col = 0; col < bracket.MaxItems; col++)
                     {
-                        uint itemId = itemIds[col];
-                        if (itemId > 0)
+                        var entry = new LootListEntry(idGenerator.CreateId())
                         {
-                            if (items.TryGetValue(itemId, out var item))
-                            {
-                                if (phase != item.Phase)
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"{item.Name} is not in the same content phase as the specified loot list phase.");
-                                }
-
-                                if (!bracketTemplate.AllowTypeDuplicates && !bracketItemGroups.Add(new ItemGroup(item.Type, item.Slot)))
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot have multiple items of the same type in Bracket {bracketTemplates.IndexOf(bracketTemplate) + 1}.");
-                                }
-
-                                foreach (var restriction in restrictions[itemId].Where(r => (r.Specializations & bracketSpec) != 0))
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot add {item.Name}: {restriction.Reason}");
-                                }
-
-                                list.Entries.Add(new LootListEntry(idGenerator.CreateId())
-                                {
-                                    ItemId = itemId,
-                                    LootList = list,
-                                    Rank = (byte)rank
-                                });
-                            }
-                            else
-                            {
-                                ModelState.AddModelError($"Items[{rank}][{col}]", "Item does not exist.");
-                            }
-                        }
+                            LootList = list,
+                            Rank = rank
+                        };
+                        _context.LootListEntries.Add(entry);
+                        entries.Add(entry);
                     }
                 }
-
-                bracketItemGroups.Clear();
             }
 
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem();
-            }
-
-            _context.Add(list);
+            _context.CharacterLootLists.Add(list);
 
             await _context.SaveChangesAsync();
 
@@ -246,14 +145,73 @@ namespace ValhallaLootList.Server.Controllers
                 props["Phase"] = list.Phase.ToString();
             });
 
-            var dtos = await CreateDtosAsync(character.Id, null, phase);
-            Debug.Assert(dtos?.Count == 1);
+            var scope = PrioCalculator.Scope;
+            var attendance = await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
+                .Select(x => x.Raid.StartedAt.Date)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .Take(scope.ObservedAttendances)
+                .CountAsync();
 
-            return CreatedAtAction(nameof(Get), new { characterId = character.Id, phase }, dtos[0]);
+            var now = _serverTimeZoneInfo.TimeZoneNow();
+
+            var donations = await _context.Donations
+                .AsNoTracking()
+                .Where(d => d.CharacterId == character.Id && d.Month == now.Month && d.Year == now.Year)
+                .SumAsync(d => (long)d.CopperAmount);
+
+            var returnDto = new LootListDto
+            {
+                ApprovedBy = null,
+                Bonuses = PrioCalculator.GetListBonuses(PrioCalculator.Scope, attendance, character.MemberStatus, donations).ToList(),
+                CharacterId = character.Id,
+                CharacterMemberStatus = character.MemberStatus,
+                CharacterName = character.Name,
+                MainSpec = list.MainSpec,
+                OffSpec = list.OffSpec,
+                Phase = list.Phase,
+                Status = list.Status,
+                TeamId = character.TeamId,
+                SubmittedToId = list.SubmittedToId
+            };
+
+            if (returnDto.TeamId.HasValue)
+            {
+                returnDto.TeamName = await _context.RaidTeams.AsNoTracking().Where(t => t.Id == returnDto.TeamId).Select(t => t.Name).FirstOrDefaultAsync();
+            }
+            if (returnDto.SubmittedToId.HasValue)
+            {
+                if (returnDto.SubmittedToId == returnDto.TeamId)
+                {
+                    returnDto.SubmittedToName = returnDto.TeamName;
+                }
+                else
+                {
+                    returnDto.SubmittedToName = await _context.RaidTeams.AsNoTracking().Where(t => t.Id == returnDto.SubmittedToId).Select(t => t.Name).FirstOrDefaultAsync();
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                var bracket = brackets.Find(b => entry.Rank >= b.MinRank && entry.Rank <= b.MaxRank);
+                Debug.Assert(bracket is not null);
+                returnDto.Entries.Add(new LootListEntryDto
+                {
+                    Bracket = bracket.Index,
+                    BracketAllowsOffspec = bracket.AllowOffspec,
+                    BracketAllowsTypeDuplicates = bracket.AllowTypeDuplicates,
+                    Id = entry.Id,
+                    Rank = entry.Rank
+                });
+            }
+
+            return CreatedAtAction(nameof(Get), new { characterId = character.Id, phase }, returnDto);
         }
 
-        [HttpPut("Phase{phase:int}/{characterId:long}")]
-        public async Task<ActionResult<LootListDto>> PutLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        [HttpPost("Phase{phase:int}/{characterId:long}/Reset")]
+        public async Task<ActionResult<LootListDto>> ResetLootList(long characterId, byte phase, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
@@ -268,16 +226,6 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
-
-            if (bracketTemplates.Count == 0)
-            {
-                return NotFound();
-            }
-
-            Debug.Assert(dto.MainSpec.HasValue);
-            Debug.Assert(dto.Items is not null);
-
             var character = await _context.Characters.FindAsync(characterId);
 
             if (character is null)
@@ -285,14 +233,94 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (list.Locked)
+            var entriesToRemove = await _context.LootListEntries
+                .AsTracking()
+                .Where(e => e.LootList == list)
+                .ToListAsync();
+
+            var entries = new List<LootListEntry>();
+
+            var brackets = await _context.Brackets
+                .AsNoTracking()
+                .Where(b => b.Phase == phase)
+                .OrderBy(b => b.Index)
+                .ToListAsync();
+
+            foreach (var bracket in brackets)
             {
-                return Problem("The loot list is locked and may not be edited.");
+                for (byte rank = bracket.MinRank; rank <= bracket.MaxRank; rank++)
+                {
+                    int processed = 0;
+
+                    foreach (var entry in entriesToRemove.Where(e => e.Rank == rank))
+                    {
+                        if (entry.DropId.HasValue)
+                        {
+                            entries.Add(entry);
+                            processed++;
+                        }
+                        else if (processed < bracket.MaxItems)
+                        {
+                            entry.ItemId = null;
+                            entries.Add(entry);
+                            processed++;
+                        }
+                    }
+
+                    for (; processed < bracket.MaxItems; processed++)
+                    {
+                        var entry = new LootListEntry(idGenerator.CreateId())
+                        {
+                            LootList = list,
+                            Rank = rank
+                        };
+                        _context.LootListEntries.Add(entry);
+                        entries.Add(entry);
+                    }
+                }
             }
 
-            if (list.ApprovedBy.HasValue)
+            entriesToRemove.RemoveAll(entries.Contains);
+
+            _context.LootListEntries.RemoveRange(entriesToRemove);
+
+            await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("LootListReset", User, props =>
             {
-                return Problem("Loot list has already been approved by a raid leader. Have an officer revoke the approval before trying to re-submit a new list.");
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["Phase"] = list.Phase.ToString();
+            });
+
+            var lootLists = await CreateDtosAsync(characterId, null, phase);
+            Debug.Assert(lootLists?.Count == 1);
+            return lootLists[0];
+        }
+
+        [HttpPut("Phase{phase:int}/{characterId:long}")]
+        public async Task<ActionResult> PostSpec(long characterId, byte phase, [FromBody] LootListSubmissionDto dto)
+        {
+            Debug.Assert(dto.MainSpec.HasValue);
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
+            {
+                return NotFound();
+            }
+
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
             }
 
             if (!dto.MainSpec.Value.IsClass(character.Class))
@@ -310,315 +338,194 @@ namespace ValhallaLootList.Server.Controllers
             list.MainSpec = dto.MainSpec.Value;
             list.OffSpec = dto.OffSpec ?? dto.MainSpec.Value;
 
-            await _context.Entry(list).Collection(ll => ll.Entries).LoadAsync();
+            await _context.SaveChangesAsync();
 
-            foreach (var existingEntry in list.Entries.ToList())
+            return Ok();
+        }
+
+        [HttpPost("Phase{phase:int}/{characterId:long}/Status")]
+        public async Task<ActionResult> PostStatus(long characterId, byte phase, [FromBody] SetLootListStatusDto dto)
+        {
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
             {
-                if (!existingEntry.DropId.HasValue)
-                {
-                    list.Entries.Remove(existingEntry);
-                    _context.LootListEntries.Remove(existingEntry);
-                }
+                return NotFound();
             }
 
-            var allItemIds = new HashSet<uint>();
-
-            foreach (var (rank, itemIds) in dto.Items)
+            if (list.Status == dto.Status)
             {
-                var bracketTemplate = bracketTemplates.Find(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
+                return Problem($"Loot list is already in the {dto.Status} state.");
+            }
 
-                if (bracketTemplate is null)
+            var result = dto.Status switch
+            {
+                LootListStatus.Editing => await SetStatusToEditingAsync(list),
+                LootListStatus.Submitted => await SetStatusToSubmittedAsync(list, dto.SubmitTo),
+                LootListStatus.Approved => await SetStatusToApprovedAsync(list),
+                LootListStatus.Locked => await SetStatusToLockedAsync(list),
+                _ => Problem("Status is not valid."),
+            };
+
+            if (result is OkResult)
+            {
+                _telemetry.TrackEvent("LootListStatusChanged", User, props =>
                 {
-                    ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} is not allowed.");
-                }
-                else if (itemIds?.Length > 0)
+                    props["CharacterId"] = list.CharacterId.ToString();
+                    props["Phase"] = list.Phase.ToString();
+                    props["Status"] = list.Status.ToString();
+                });
+            }
+
+            return result;
+        }
+
+        private async Task<ActionResult> SetStatusToEditingAsync(CharacterLootList list)
+        {
+            AuthorizationResult auth;
+            if (list.Status == LootListStatus.Submitted)
+            {
+                auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
+
+                if (!auth.Succeeded)
                 {
-                    var adjustedMaxItems = bracketTemplate.MaxItems - list.Entries.Count(entry => entry.Rank == rank);
-                    if (itemIds.Length > adjustedMaxItems)
+                    if (list.SubmittedToId.HasValue)
                     {
-                        ModelState.AddModelError($"Items[{rank}]", $"Rank {rank} can only have up to {adjustedMaxItems} items.");
+                        auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId, AppPolicies.RaidLeaderOrAdmin);
+
+                        if (!auth.Succeeded)
+                        {
+                            return Unauthorized();
+                        }
                     }
                     else
                     {
-                        for (int col = 0; col < itemIds.Length; col++)
-                        {
-                            uint itemId = itemIds[col];
-                            if (itemId > 0 && !allItemIds.Add(itemId))
-                            {
-                                ModelState.AddModelError($"Items[{rank}][{col}]", "Duplicate items are not allowed.");
-                            }
-                        }
+                        return Unauthorized();
                     }
                 }
             }
-
-            if (!ModelState.IsValid)
+            else if (list.Status == LootListStatus.Approved && list.SubmittedToId.HasValue)
             {
-                return ValidationProblem();
+                auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId, AppPolicies.RaidLeaderOrAdmin);
+
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
+            }
+            else
+            {
+                auth = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
+
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
             }
 
-            await foreach (var wonItem in _context.Drops.AsNoTracking()
-                .Where(drop => drop.WinnerId == character.Id || drop.WinningEntry.LootList.CharacterId == character.Id)
-                .Select(drop => new { drop.ItemId, drop.Item.Name })
-                .AsAsyncEnumerable())
+            list.ApprovedBy = null;
+            list.SubmittedToId = null;
+            list.Status = LootListStatus.Editing;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        private async Task<ActionResult> SetStatusToSubmittedAsync(CharacterLootList list, long? submitTo)
+        {
+            if (list.Status == LootListStatus.Editing)
             {
-                if (allItemIds.Contains(wonItem.ItemId))
+                if (!submitTo.HasValue)
                 {
-                    foreach (var (rank, itemIds) in dto.Items)
-                    {
-                        var col = Array.IndexOf(itemIds, wonItem.ItemId);
-                        if (col >= 0)
-                        {
-                            ModelState.AddModelError($"Items[{rank}][{col}]", $"You have already won {wonItem.Name} and may not put it on a new loot list.");
-                        }
-                    }
-
-                    Debug.Assert(!ModelState.IsValid);
-
+                    ModelState.AddModelError(nameof(SetLootListStatusDto.SubmitTo), "Loot List must be submitted to a raid team.");
                     return ValidationProblem();
                 }
-            }
 
-            var items = await _context.Items
-                .AsNoTracking()
-                .Where(item => allItemIds.Contains(item.Id))
-                .Select(item => new { item.Id, item.Name, item.Slot, item.Type, item.Phase })
-                .ToDictionaryAsync(item => item.Id);
+                var team = await _context.RaidTeams.FindAsync(submitTo.Value);
 
-            var bothSpecs = dto.OffSpec.HasValue ? (dto.MainSpec.Value | dto.OffSpec.Value) : dto.MainSpec.Value;
-
-            var restrictions = (await _context.ItemRestrictions
-                .AsNoTracking()
-                .Where(r => allItemIds.Contains(r.ItemId) && r.RestrictionLevel == ItemRestrictionLevel.Unequippable && (r.Specializations & bothSpecs) != 0)
-                .ToListAsync())
-                .ToLookup(r => r.ItemId);
-
-            var bracketItemGroups = new HashSet<ItemGroup>();
-
-            foreach (var (rank, itemIds) in dto.Items)
-            {
-                if (itemIds?.Length > 0)
+                if (team is null)
                 {
-                    var bracketTemplate = bracketTemplates.First(bt => rank >= bt.MinRank && rank <= bt.MaxRank);
-                    var bracketSpec = bracketTemplate.AllowOffspec ? bothSpecs : dto.MainSpec.Value;
-
-                    for (int col = 0; col < itemIds.Length; col++)
-                    {
-                        uint itemId = itemIds[col];
-                        if (itemId > 0)
-                        {
-                            if (items.TryGetValue(itemId, out var item))
-                            {
-                                if (phase != item.Phase)
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"{item.Name} is not in the same content phase as the specified loot list phase.");
-                                }
-
-                                if (!bracketTemplate.AllowTypeDuplicates && !bracketItemGroups.Add(new ItemGroup(item.Type, item.Slot)))
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot have multiple items of the same type in Bracket {bracketTemplates.IndexOf(bracketTemplate) + 1}.");
-                                }
-
-                                foreach (var restriction in restrictions[itemId].Where(r => (r.Specializations & bracketSpec) != 0))
-                                {
-                                    ModelState.AddModelError($"Items[{rank}][{col}]", $"Cannot add {item.Name}: {restriction.Reason}");
-                                }
-
-                                list.Entries.Add(new LootListEntry(idGenerator.CreateId())
-                                {
-                                    ItemId = itemId,
-                                    LootList = list,
-                                    Rank = (byte)rank
-                                });
-                            }
-                            else
-                            {
-                                ModelState.AddModelError($"Items[{rank}][{col}]", "Item does not exist.");
-                            }
-                        }
-                    }
+                    ModelState.AddModelError(nameof(SetLootListStatusDto.SubmitTo), "Raid team does not exist.");
+                    return ValidationProblem();
                 }
 
-                bracketItemGroups.Clear();
+                var auth = await _authorizationService.AuthorizeAsync(User, submitTo.Value, AppPolicies.RaidLeaderOrAdmin);
+
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
+
+                list.SubmittedToId = submitTo;
+                list.ApprovedBy = null;
+                list.Status = LootListStatus.Submitted;
+                await _context.SaveChangesAsync();
+                return Ok();
             }
-
-            if (!ModelState.IsValid)
+            else
             {
-                return ValidationProblem();
+                return Problem("Can't set the status to submitted while the list is not in the editing state.");
             }
-
-            await _context.SaveChangesAsync();
-
-            _telemetry.TrackEvent("LootListUpdated", User, props =>
-            {
-                props["CharacterId"] = character.Id.ToString();
-                props["CharacterName"] = character.Name;
-                props["Phase"] = list.Phase.ToString();
-            });
-
-            var dtos = await CreateDtosAsync(character.Id, null, phase);
-            Debug.Assert(dtos?.Count == 1);
-
-            return Ok(dtos[0]);
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<ActionResult> PostLock(long characterId, byte phase)
+        private async Task<ActionResult> SetStatusToApprovedAsync(CharacterLootList list)
         {
-            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
-
-            if (list is null)
+            if (list.Status == LootListStatus.Submitted)
             {
-                return NotFound();
-            }
+                if (!list.SubmittedToId.HasValue)
+                {
+                    return Problem("Loot List is not assigned to a raid team.");
+                }
 
-            var character = await _context.Characters.FindAsync(characterId);
+                var auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId.Value, AppPolicies.RaidLeaderOrAdmin);
 
-            if (character is null)
-            {
-                return NotFound();
-            }
-
-            if (!User.IsAdmin())
-            {
-                if (!character.TeamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, character.TeamId.Value.ToString()))
+                if (!auth.Succeeded)
                 {
                     return Unauthorized();
                 }
             }
-
-            if (list.Locked)
+            else if (list.Status == LootListStatus.Locked)
             {
-                return Problem("Loot list is already locked.");
-            }
+                var auth = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
 
-            list.Locked = true;
-
-            await _context.SaveChangesAsync();
-
-            _telemetry.TrackEvent("LootListLocked", User, props =>
-            {
-                props["CharacterId"] = character.Id.ToString();
-                props["CharacterName"] = character.Name;
-                props["Phase"] = list.Phase.ToString();
-            });
-
-            return Ok();
-        }
-
-        [HttpPost("Phase{phase:int}/{characterId:long}/Unlock"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult> PostUnlock(long characterId, byte phase)
-        {
-            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
-
-            if (list is null)
-            {
-                return NotFound();
-            }
-
-            if (!list.Locked)
-            {
-                return Problem("Loot list is already unlocked.");
-            }
-
-            list.Locked = false;
-            list.ApprovedBy = null;
-
-            await _context.SaveChangesAsync();
-
-            var characterName = await _context.Characters
-                .AsNoTracking()
-                .Where(c => c.Id == characterId)
-                .Select(c => c.Name)
-                .FirstOrDefaultAsync();
-
-            _telemetry.TrackEvent("LootListUnlocked", User, props =>
-            {
-                props["CharacterId"] = list.CharacterId.ToString();
-                props["CharacterName"] = characterName;
-                props["Phase"] = list.Phase.ToString();
-            });
-
-            return Ok();
-        }
-
-        [HttpPost("Phase{phase:int}/{characterId:long}/Approve"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<ActionResult> PostApprove(long characterId, byte phase)
-        {
-            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
-
-            if (list is null)
-            {
-                return NotFound();
-            }
-
-            if (!User.IsAdmin())
-            {
-                var teamId = await _context.Characters.Where(c => c.Id == characterId).Select(c => c.TeamId).FirstAsync();
-
-                if (!teamId.HasValue || !User.HasClaim(AppClaimTypes.RaidLeader, teamId.Value.ToString()))
+                if (!auth.Succeeded)
                 {
                     return Unauthorized();
                 }
             }
-
-            if (list.ApprovedBy.HasValue)
+            else
             {
-                return Problem("Loot list is already approved.");
+                return Problem($"Can't set the status to approved while the list is in the {list.Status} state.");
             }
 
             list.ApprovedBy = User.GetDiscordId();
-
+            list.Status = LootListStatus.Approved;
             await _context.SaveChangesAsync();
-
-            var characterName = await _context.Characters
-                .AsNoTracking()
-                .Where(c => c.Id == characterId)
-                .Select(c => c.Name)
-                .FirstOrDefaultAsync();
-
-            _telemetry.TrackEvent("LootListApproved", User, props =>
-            {
-                props["CharacterId"] = list.CharacterId.ToString();
-                props["CharacterName"] = characterName;
-                props["Phase"] = list.Phase.ToString();
-            });
-
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Revoke"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult> PostRevoke(long characterId, byte phase)
+        private async Task<ActionResult> SetStatusToLockedAsync(CharacterLootList list)
         {
-            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
-
-            if (list is null)
+            if (list.Status == LootListStatus.Approved)
             {
-                return NotFound();
+                if (!list.SubmittedToId.HasValue)
+                {
+                    return Problem("Loot List is not assigned to a raid team.");
+                }
+
+                var auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId.Value, AppPolicies.RaidLeaderOrAdmin);
+
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
+            }
+            else
+            {
+                return Problem($"Can't set the status to locked while the list is in the {list.Status} state.");
             }
 
-            if (!list.Locked)
-            {
-                return Problem("Loot list is already unapproved.");
-            }
-
-            list.ApprovedBy = null;
-
+            list.Status = LootListStatus.Locked;
             await _context.SaveChangesAsync();
-
-            var characterName = await _context.Characters
-                .AsNoTracking()
-                .Where(c => c.Id == characterId)
-                .Select(c => c.Name)
-                .FirstOrDefaultAsync();
-
-            _telemetry.TrackEvent("LootListRevoked", User, props =>
-            {
-                props["CharacterId"] = list.CharacterId.ToString();
-                props["CharacterName"] = characterName;
-                props["Phase"] = list.Phase.ToString();
-            });
-
             return Ok();
         }
 
@@ -665,9 +572,9 @@ namespace ValhallaLootList.Server.Controllers
                     return null;
                 }
 
-                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId);
+                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.SubmittedToId == teamId);
+                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.SubmittedToId == teamId);
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
-                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
                 donationQuery = donationQuery.Where(d => d.TeamId == teamId);
             }
@@ -691,7 +598,9 @@ namespace ValhallaLootList.Server.Controllers
                     CharacterMemberStatus = ll.Character.MemberStatus,
                     TeamId = ll.Character.TeamId,
                     TeamName = ll.Character.Team!.Name,
-                    Locked = ll.Locked,
+                    SubmittedToId = ll.SubmittedToId,
+                    SubmittedToName = ll.SubmittedTo!.Name,
+                    Status = ll.Status,
                     MainSpec = ll.MainSpec,
                     OffSpec = ll.OffSpec,
                     Phase = ll.Phase
@@ -719,6 +628,11 @@ namespace ValhallaLootList.Server.Controllers
                 dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, donated));
             }
 
+            var brackets = await _context.Brackets
+                .AsNoTracking()
+                .OrderBy(b => b.Index)
+                .ToListAsync();
+
             await foreach (var entry in entryQuery
                 .OrderByDescending(e => e.Rank)
                 .Select(e => new
@@ -745,6 +659,8 @@ namespace ValhallaLootList.Server.Controllers
                         bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.ItemId == rewardFromId && p.CharacterId == entry.CharacterId)));
                     }
 
+                    var bracket = brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank);
+
                     dto.Entries.Add(new LootListEntryDto
                     {
                         Bonuses = bonuses,
@@ -752,8 +668,11 @@ namespace ValhallaLootList.Server.Controllers
                         ItemId = entry.ItemId,
                         RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
-                        Rank = dto.Locked || authorizationResult.Succeeded ? entry.Rank : 0,
-                        Won = entry.Won
+                        Rank = dto.Status == LootListStatus.Locked || authorizationResult.Succeeded ? entry.Rank : 0,
+                        Won = entry.Won,
+                        Bracket = bracket?.Index ?? 0,
+                        BracketAllowsOffspec = bracket?.AllowOffspec ?? false,
+                        BracketAllowsTypeDuplicates = bracket?.AllowTypeDuplicates ?? false
                     });
                 }
             }

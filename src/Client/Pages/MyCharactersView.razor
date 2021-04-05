@@ -19,12 +19,11 @@
         {
             <MudListItem Href="@("characters/" + character.Name)">
                 <div class="d-flex">
-                    <MudAvatar Class="mr-1" Size="Size.Small">
-                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" Width="24" Height="24" />
-                    </MudAvatar>
-                    <MudAvatar Class="mr-1" Size="Size.Small">
-                        <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" Width="24" Height="24" />
-                    </MudAvatar>
+                    <PlayerIcon Race="character.Race"
+                                Gender="character.Gender"
+                                PlayerClass="character.Class"
+                                Size="Size.Small"
+                                Class="mr-1" />
                     <MudText Inline="false">@character.Name</MudText>
                 </div>
             </MudListItem>

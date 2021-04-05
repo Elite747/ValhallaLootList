@@ -35,6 +35,20 @@ namespace ValhallaLootList
             _ => throw new ArgumentOutOfRangeException(nameof(classes))
         };
 
+        public static string GetClassColor(this Classes classes) => classes switch
+        {
+            Classes.Warrior => "#C69B6D",
+            Classes.Paladin => "#F48CBA",
+            Classes.Hunter => "#AAD372",
+            Classes.Rogue => "#FFF468",
+            Classes.Priest => "#FFFFFF",
+            Classes.Shaman => "#0070DD",
+            Classes.Mage => "#3FC7EB",
+            Classes.Warlock => "#8788EE",
+            Classes.Druid => "#FF7C0A",
+            _ => throw new ArgumentOutOfRangeException(nameof(classes))
+        };
+
         public static bool IsSingleClass(this Classes playerClass) => playerClass switch
         {
             Classes.Warrior => true,

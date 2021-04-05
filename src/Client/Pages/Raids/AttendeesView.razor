@@ -16,19 +16,11 @@
             <MudDivider />
             <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
                 <div class="d-flex">
-                    <MudAvatar Class="mr-2">
-                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" Width="40" Height="40" />
-                    </MudAvatar>
-                    <MudAvatar Class="mr-5">
-                        @if (attendance.MainSpec.HasValue)
-                        {
-                            <SpecIcon Spec="attendance.MainSpec.Value" Size="IconSize.Medium" Width="40" Height="40" />
-                        }
-                        else
-                        {
-                            <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" Width="40" Height="40" />
-                        }
-                    </MudAvatar>
+                    <PlayerIcon Race="character.Race"
+                                Gender="character.Gender"
+                                PlayerClass="character.Class"
+                                Spec="attendance.MainSpec ?? Specializations.None"
+                                Class="mr-5" />
                     <div class="mr-auto">
                         <MudText Inline="false">@character.Name</MudText>
                         @if (attendance.IgnoreAttendance)

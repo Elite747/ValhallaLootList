@@ -33,19 +33,11 @@
         <MudExpansionPanel IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null">
             <TitleContent>
                 <div class="d-flex align-center">
-                    <MudAvatar Class="mr-2">
-                        <RaceIcon Race="member.Character.Race" Gender="member.Character.Gender" Size="IconSize.Medium" Width="40" Height="40" />
-                    </MudAvatar>
-                    <MudAvatar Class="mr-5">
-                        @if (phaseLootList is not null)
-                        {
-                            <SpecIcon Size="IconSize.Medium" Spec="phaseLootList.MainSpec" Width="40" Height="40" />
-                        }
-                        else
-                        {
-                            <ClassIcon Size="IconSize.Medium" PlayerClass="member.Character.Class" Width="40" Height="40" />
-                        }
-                    </MudAvatar>
+                    <PlayerIcon Race="member.Character.Race"
+                                Gender="member.Character.Gender"
+                                PlayerClass="member.Character.Class"
+                                Spec="phaseLootList?.MainSpec ?? Specializations.None"
+                                Class="mr-5" />
                     <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
                     @if (phaseLootList is null || phaseLootList.Approved == false || member.Verified == false)
                     {

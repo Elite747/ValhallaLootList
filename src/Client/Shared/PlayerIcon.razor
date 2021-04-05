@@ -1,0 +1,67 @@
+﻿@if (_roleIcon?.Length > 0)
+{
+    <span class="mud-badge @Class">
+        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@($"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}")">
+            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
+        </MudAvatar>
+        <span class="mud-badge-wrapper">
+            <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important">
+                <MudIcon Icon="@_roleIcon" Class="mud-icon-badge" />
+            </span>
+        </span>
+    </span>
+}
+else
+{
+    <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@($"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}")" Class="@Class">
+        <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
+    </MudAvatar>
+}
+
+@code {
+    private string? _roleIcon, _roleColor;
+    private IconSize _iconSize;
+    private int _renderSize;
+
+    [Parameter] public Gender Gender { get; set; }
+    [Parameter] public PlayerRace Race { get; set; }
+    [Parameter] public Classes PlayerClass { get; set; }
+    [Parameter] public Specializations Spec { get; set; }
+    [Parameter] public Size Size { get; set; } = Size.Medium;
+    [Parameter] public bool Rounded { get; set; }
+    [Parameter] public bool Square { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Spec == Specializations.None)
+        {
+            _roleIcon = null;
+            _roleColor = null;
+        }
+        else if ((Spec & Specializations.Healer) != 0)
+        {
+            _roleIcon = CustomIcons.Cross;
+            _roleColor = "#084D42";
+        }
+        else if ((Spec & Specializations.Tank) != 0)
+        {
+            _roleIcon = Icons.Material.Filled.Shield;
+            _roleColor = "#001C52";
+        }
+        else
+        {
+            // TODO: split melee and ranged
+            _roleIcon = CustomIcons.Sword;
+            _roleColor = "#6D0A0B";
+        }
+
+        (_iconSize, _renderSize) = Size switch
+        {
+            Size.Small => (IconSize.Medium, 24),
+            Size.Medium => (IconSize.Large, 40),
+            Size.Large => (IconSize.Large, 56),
+            _ => throw new ArgumentOutOfRangeException(nameof(Size))
+        };
+    }
+}

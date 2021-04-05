@@ -10,5 +10,7 @@ namespace ValhallaLootList.DataTransfer
         public uint? ItemId { get; set; }
 
         public long? SwapEntryId { get; set; }
+
+        public bool RemoveIfInvalid { get; set; }
     }
 }

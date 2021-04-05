@@ -159,7 +159,7 @@
                 selectedId = null;
             }
 
-            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId };
+            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId, RemoveIfInvalid = true };
             if (selectedId.HasValue)
             {
                 var swapEntry = Editor.LootList.Entries.Find(e => e.Id != Entry.Id && e.ItemId == selectedId);

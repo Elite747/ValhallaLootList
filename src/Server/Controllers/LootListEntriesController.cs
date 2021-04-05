@@ -93,12 +93,7 @@ namespace ValhallaLootList.Server.Controllers
                 entry.ItemId = dto.ItemId;
                 swapEntry.ItemId = oldItemId;
 
-                if (swapEntry.DropId.HasValue)
-                {
-                    swapEntry.ItemId = null;
-                }
-
-                (allowed, reason) = await CheckAllowedAsync(entry, swapEntry);
+                (allowed, reason) = await CheckAllowedAsync(entry, swapEntry, dto.RemoveIfInvalid);
 
                 if (!allowed)
                 {
@@ -111,7 +106,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 entry.ItemId = dto.ItemId;
 
-                (allowed, reason) = await CheckAllowedAsync(entry, null);
+                (allowed, reason) = await CheckAllowedAsync(entry, null, dto.RemoveIfInvalid);
 
                 if (!allowed)
                 {
@@ -200,7 +195,7 @@ namespace ValhallaLootList.Server.Controllers
             return (true, null);
         }
 
-        private async Task<(bool allowed, string? reason)> CheckAllowedAsync(LootListEntry entry, LootListEntry? swapEntry)
+        private async Task<(bool allowed, string? reason)> CheckAllowedAsync(LootListEntry entry, LootListEntry? swapEntry, bool removeIfInvalid)
         {
             var bracket = await _context.Brackets
                 .AsNoTracking()
@@ -228,7 +223,14 @@ namespace ValhallaLootList.Server.Controllers
 
                     if (!swapBracket.AllowTypeDuplicates && swapEntry.ItemId.HasValue && await BracketHasTypeAsync(swapBracket, swapEntry))
                     {
-                        swapEntry.ItemId = null;
+                        if (removeIfInvalid)
+                        {
+                            swapEntry.ItemId = null;
+                        }
+                        else
+                        {
+                            return (false, "Bracket already has an item of that type.");
+                        }
                     }
                 }
 

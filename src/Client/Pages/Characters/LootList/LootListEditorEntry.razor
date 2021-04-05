@@ -3,7 +3,7 @@
 @inject ISnackbar Snackbar
 
 <MudItem xs="12" md="9 / ItemsInRow" lg="10 / ItemsInRow">
-    @{ 
+    @{
         var item = Entry.ItemId.HasValue ? Items.FirstOrDefault(item => item.Id == Entry.ItemId.Value) : null;
     }
     @if (item is not null)
@@ -21,8 +21,26 @@
         }
         <div class="d-flex align-center py-1">
             <CascadingItemContext Id="item.Id">
-                <MudAvatar Class="mr-2" Rounded="true" Size="Size.Medium">
-                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                <MudAvatar Rounded="true"
+                           Size="Size.Medium"
+                           Class="mr-2"
+                           draggable="true"
+                           ondragover="event.preventDefault();"
+                           @ondragstart="OnDragStart"
+                           @ondragend="OnDragEnd"
+                           @ondrop="OnDropAsync"
+                           @ondragenter="OnDragEnter"
+                           @ondragleave="OnDragLeave"
+                           Color="_over ? Color.Success : Color.Dark"
+                           Style="cursor: move">
+                    @if (_over && Editor.DraggingEntry != Entry)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Style="pointer-events: none" />
+                    }
+                    else
+                    {
+                        <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                    }
                 </MudAvatar>
                 <div class="mr-auto">
                     <div>
@@ -32,6 +50,9 @@
                     {
                         <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
                             Change Item
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="ClearAsync" Style="min-width: unset">
+                            🗙
                         </MudButton>
                     }
                 </div>
@@ -50,13 +71,27 @@
     }
     else if (!Entry.Won)
     {
-        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
-            Select Item
-        </MudButton>
+        <div class="d-flex align-center py-1">
+            <MudAvatar Rounded="true"
+                       Size="Size.Medium"
+                       Class="mr-2"
+                       ondragover="event.preventDefault();"
+                       @ondrop="OnDropAsync"
+                       @ondragenter="OnDragEnter"
+                       @ondragleave="OnDragLeave"
+                       Color="_over ? Color.Success : Color.Dark">
+                <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
+            </MudAvatar>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+                Select Item
+            </MudButton>
+        </div>
     }
 </MudItem>
 
 @code {
+    private bool _over;
+
     [Parameter] public int ItemsInRow { get; set; }
     [Parameter] public LootListEntryDto Entry { get; set; } = null!;
     [CascadingParameter] public IList<ItemDto> Items { get; set; } = null!;
@@ -145,5 +180,57 @@
                 Editor.NotifyStateChanged();
             }
         }
+    }
+
+    private void OnDragStart(DragEventArgs args)
+    {
+        Editor.DraggingEntry = Entry;
+        args.DataTransfer.EffectAllowed = "move";
+    }
+
+    private void OnDragEnd()
+    {
+        Editor.DraggingEntry = null;
+    }
+
+    private void OnDragEnter(DragEventArgs args)
+    {
+        if (Editor.DraggingEntry is not null && Editor.DraggingEntry != Entry)
+        {
+            _over = true;
+            args.DataTransfer.DropEffect = "move";
+        }
+        else
+        {
+            args.DataTransfer.DropEffect = "none";
+        }
+    }
+
+    private void OnDragLeave()
+    {
+        _over = false;
+    }
+
+    private Task OnDropAsync()
+    {
+        _over = false;
+
+        if (Editor.DraggingEntry is not null && Editor.DraggingEntry != Entry)
+        {
+            return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = Editor.DraggingEntry.ItemId, SwapEntryId = Editor.DraggingEntry.Id })
+                .OnSuccess(HandleSuccess)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task ClearAsync()
+    {
+        return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = null })
+            .OnSuccess(HandleSuccess)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 }

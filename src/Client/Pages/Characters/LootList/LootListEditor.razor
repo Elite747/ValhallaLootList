@@ -40,6 +40,8 @@
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public EventCallback OnSubmit { get; set; }
 
+    public LootListEntryDto? DraggingEntry { get; set; }
+
     public void NotifyStateChanged() => StateHasChanged();
 
     protected override void OnParametersSet()

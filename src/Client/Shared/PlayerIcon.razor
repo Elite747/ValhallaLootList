@@ -1,19 +1,19 @@
 ﻿@if (_roleIcon?.Length > 0)
 {
     <span class="mud-badge @Class">
-        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@($"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}")">
+        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()">
             <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
         </MudAvatar>
         <span class="mud-badge-wrapper">
-            <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important">
-                <MudIcon Icon="@_roleIcon" Class="mud-icon-badge" />
+            <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important; color: white">
+                <MudIcon Icon="@_roleIcon" ViewBox="@(_roleIcon == CustomIcons.Cross ? "6 6 12 12" : "0 0 24 24")" Class="mud-icon-badge" />
             </span>
         </span>
     </span>
 }
 else
 {
-    <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@($"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}")" Class="@Class">
+    <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()" Class="@Class">
         <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
     </MudAvatar>
 }
@@ -63,5 +63,10 @@ else
             Size.Large => (IconSize.Large, 56),
             _ => throw new ArgumentOutOfRangeException(nameof(Size))
         };
+    }
+
+    private string GetStyle()
+    {
+        return $"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}";
     }
 }

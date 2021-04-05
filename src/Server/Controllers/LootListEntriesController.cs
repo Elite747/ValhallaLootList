@@ -68,7 +68,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (!allowed)
             {
-                return Problem("Entry is not valid: " + reason);
+                return Problem(reason);
             }
 
             var returnDto = new LootListEntryUpdateDto { EntryId = entryId, ItemId = dto.ItemId, SwapEntryId = dto.SwapEntryId };
@@ -109,7 +109,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 if (!allowed)
                 {
-                    return Problem("Selected item is not allowed: " + reason);
+                    return Problem(reason);
                 }
 
                 returnDto.SwapItemId = swapEntry.ItemId;
@@ -122,7 +122,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 if (!allowed)
                 {
-                    return Problem("Selected item is not allowed: " + reason);
+                    return Problem(reason);
                 }
             }
 
@@ -184,11 +184,11 @@ namespace ValhallaLootList.Server.Controllers
 
             if (entry.ItemId > 0)
             {
-                if (swapEntry?.ItemId > 0)
+                if (swapEntry is not null)
                 {
                     var swapBracket = await _context.Brackets
                         .AsNoTracking()
-                        .Where(b => b.Phase == entry.LootList.Phase && entry.Rank >= b.MinRank && entry.Rank <= b.MaxRank)
+                        .Where(b => b.Phase == swapEntry.LootList.Phase && swapEntry.Rank >= b.MinRank && swapEntry.Rank <= b.MaxRank)
                         .FirstOrDefaultAsync();
 
                     if (swapBracket.Index == bracket.Index)
@@ -196,7 +196,7 @@ namespace ValhallaLootList.Server.Controllers
                         return (true, null);
                     }
 
-                    if (!swapBracket.AllowTypeDuplicates && await BracketHasTypeAsync(swapBracket, swapEntry))
+                    if (!swapBracket.AllowTypeDuplicates && swapEntry.ItemId.HasValue && await BracketHasTypeAsync(swapBracket, swapEntry))
                     {
                         swapEntry.ItemId = null;
                     }

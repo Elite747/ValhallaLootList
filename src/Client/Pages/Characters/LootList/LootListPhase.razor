@@ -24,6 +24,12 @@ else
         {
             <MudListSubheader>
                 <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
+                @if (_lootList.Status == LootListStatus.Submitted)
+                {
+                    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="_lootList.CharacterId">
+                        <MudButton OnClick="RevokeAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error" Class="mr-2">Revoke Submission</MudButton>
+                    </AuthorizeView>
+                }
             </MudListSubheader>
             <MudListSubheader>
                 @if (_lootList.Status == LootListStatus.Submitted)
@@ -71,6 +77,20 @@ else
         if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
         if (Character is null) throw new ArgumentNullException(nameof(Character));
         _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase);
+    }
+
+    private Task RevokeAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootList?.Status == LootListStatus.Submitted);
+        return Api.LootLists.SetStatus(_lootList.CharacterId, _lootList.Phase, new() { Status = LootListStatus.Editing })
+            .OnSuccess(_ =>
+            {
+                _lootList.Status = LootListStatus.Editing;
+                _lootList.SubmittedToId = null;
+                _lootList.SubmittedToName = null;
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 
     private void OnLootListCreated(LootListDto lootList)

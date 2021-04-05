@@ -64,21 +64,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Entry is already set to the specified item.");
             }
 
-            var (allowed, reason) = await CheckValidAsync(entry);
-
-            if (!allowed)
-            {
-                return Problem(reason);
-            }
-
             var returnDto = new LootListEntryUpdateDto { EntryId = entryId, ItemId = dto.ItemId, SwapEntryId = dto.SwapEntryId };
-
-            long excludeId = dto.SwapEntryId ?? dto.EntryId;
-
-            if (dto.ItemId.HasValue && await _context.LootListEntries.AnyAsync(e => e.Id != excludeId && e.ItemId == dto.ItemId && e.LootList.Phase == entry.LootList.Phase && e.LootList.CharacterId == entry.LootList.CharacterId))
-            {
-                return Problem("Item is already on this loot list.");
-            }
+            bool allowed;
+            string? reason;
 
             if (dto.SwapEntryId.HasValue)
             {
@@ -126,6 +114,13 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
+            (allowed, reason) = await CheckValidAsync(entry, dto);
+
+            if (!allowed)
+            {
+                return Problem(reason);
+            }
+
             await _context.SaveChangesAsync();
 
             _telemetry.TrackEvent("LootListEntryUpdated", User, props =>
@@ -138,7 +133,7 @@ namespace ValhallaLootList.Server.Controllers
             return returnDto;
         }
 
-        private async Task<(bool allowed, string? reason)> CheckValidAsync(LootListEntry entry)
+        private async Task<(bool allowed, string? reason)> CheckValidAsync(LootListEntry entry, LootListEntrySubmissionDto dto)
         {
             if (entry.ItemId.HasValue)
             {
@@ -164,6 +159,36 @@ namespace ValhallaLootList.Server.Controllers
                 if (restriction is not null)
                 {
                     return (false, restriction.Reason);
+                }
+
+                long excludeId = dto.SwapEntryId ?? dto.EntryId;
+
+                var existingItemMutexQuery = _context.LootListEntries
+                    .AsNoTracking()
+                    .Where(e => e.Id != excludeId && e.LootList.Phase == entry.LootList.Phase && e.LootList.CharacterId == entry.LootList.CharacterId);
+
+                if (item.RewardFromId is 32385 or 32405) // TODO: add this info to database
+                {
+                    var firstConflict = await existingItemMutexQuery
+                        .Where(e => e.ItemId == entry.ItemId || e.Item!.RewardFromId == item.RewardFromId)
+                        .Select(e => new { e.Item!.Id, e.Item!.Name })
+                        .FirstOrDefaultAsync();
+
+                    if (firstConflict is not null)
+                    {
+                        if (firstConflict.Id == item.Id)
+                        {
+                            return (false, "Item is already on this loot list.");
+                        }
+                        else
+                        {
+                            return (false, $"Item comes from a quest reward that also gives {firstConflict.Name}. Only one of these items may be on your list.");
+                        }
+                    }
+                }
+                else if (await existingItemMutexQuery.Where(e => e.ItemId == dto.ItemId).AnyAsync())
+                {
+                    return (false, "Item is already on this loot list.");
                 }
             }
 

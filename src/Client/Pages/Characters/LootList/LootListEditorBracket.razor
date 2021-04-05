@@ -6,8 +6,9 @@
     </MudCardHeader>
     <MudCardContent>
         <ul>
+            <li>Bracket Rules:</li>
             <li>
-                Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank allowed
+                Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank
             </li>
             @if (AllowOffSpec)
             {
@@ -19,7 +20,35 @@
             }
             @if (!AllowTypeDuplicates)
             {
-                <li>Only one item per category allowed</li>
+                <li>
+                    Only one item per category
+                    <MudTooltip>
+                        <ChildContent>
+                            <MudIcon Style="font-size: 1rem" Icon="@Icons.Material.Filled.InfoOutline" />
+                        </ChildContent>
+                        <TooltipContent>
+                            <div style="text-align: start">
+                                <p><b>Categories:</b></p>
+                                <ul>
+                                    <li>Head Armor</li>
+                                    <li>Shoulder Armor</li>
+                                    <li>Chest Armor</li>
+                                    <li>Waist Armor</li>
+                                    <li>Leg Armor</li>
+                                    <li>Foot Armor</li>
+                                    <li>Wrist Armor</li>
+                                    <li>Hand Armor</li>
+                                    <li>Rings & Necklaces</li>
+                                    <li>Trinkets</li>
+                                    <li>Cloaks</li>
+                                    <li>Weapons, Shields & Offhands</li>
+                                    <li>Wands & Relics</li>
+                                    <li>Unknown</li>
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </MudTooltip>
+                </li>
             }
         </ul>
     </MudCardContent>

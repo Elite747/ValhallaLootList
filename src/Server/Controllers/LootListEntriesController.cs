@@ -84,6 +84,11 @@ namespace ValhallaLootList.Server.Controllers
                     return Problem("Swap entry is not part of the same list as the target entry.");
                 }
 
+                if (swapEntry.DropId.HasValue)
+                {
+                    return Problem("Loot List entry has already been won and may not be changed.");
+                }
+
                 var oldItemId = entry.ItemId;
                 entry.ItemId = dto.ItemId;
                 swapEntry.ItemId = oldItemId;

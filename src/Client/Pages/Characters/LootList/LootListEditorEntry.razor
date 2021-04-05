@@ -24,18 +24,18 @@
                 <MudAvatar Rounded="true"
                            Size="Size.Medium"
                            Class="mr-2"
-                           draggable="true"
+                           draggable="@(!Entry.Won)"
                            ondragover="event.preventDefault();"
                            @ondragstart="OnDragStart"
                            @ondragend="OnDragEnd"
                            @ondrop="OnDropAsync"
                            @ondragenter="OnDragEnter"
                            @ondragleave="OnDragLeave"
-                           Color="_over ? Color.Success : Color.Dark"
-                           Style="cursor: move">
+                           Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark"
+                           Style="@(Entry.Won ? null : "cursor: move")">
                     @if (_over && Editor.DraggingEntry != Entry)
                     {
-                        <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Style="pointer-events: none" />
+                        <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
                     }
                     else
                     {
@@ -53,6 +53,12 @@
                         </MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="ClearAsync" Style="min-width: unset">
                             🗙
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Disabled="true">
+                            Can't change
                         </MudButton>
                     }
                 </div>
@@ -79,12 +85,15 @@
                        @ondrop="OnDropAsync"
                        @ondragenter="OnDragEnter"
                        @ondragleave="OnDragLeave"
-                       Color="_over ? Color.Success : Color.Dark">
-                <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
+                       Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark">
+                <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
             </MudAvatar>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
-                Select Item
-            </MudButton>
+            <div class="mr-auto">
+                <div><span>&nbsp;</span></div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+                    Select Item
+                </MudButton>
+            </div>
         </div>
     }
 </MudItem>
@@ -215,7 +224,7 @@
     {
         _over = false;
 
-        if (Editor.DraggingEntry is not null && Editor.DraggingEntry != Entry)
+        if (!Entry.Won && Editor.DraggingEntry is not null && Editor.DraggingEntry != Entry)
         {
             return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = Editor.DraggingEntry.ItemId, SwapEntryId = Editor.DraggingEntry.Id })
                 .OnSuccess(HandleSuccess)

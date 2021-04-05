@@ -3,16 +3,15 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using MudBlazor.Utilities;
 using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client.Shared
 {
-    public partial class ItemLink : MudComponentBase
+    public partial class ItemLink
     {
         private Item? _item;
-        private bool _loading, _failed;
+        private bool _loading, _failed, _disposed;
 
         protected string? Classname => new CssBuilder()
             .AddClass($"q{Quality}", Colorize)
@@ -116,6 +115,16 @@ namespace ValhallaLootList.Client.Shared
             {
                 _item = Context.Item;
             }
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                return WH.HideTooltipAsync();
+            }
+            return default;
         }
     }
 }

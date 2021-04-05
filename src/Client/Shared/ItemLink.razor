@@ -1,4 +1,6 @@
 ﻿@inherits MudComponentBase
+@implements IAsyncDisposable
+@inject WowheadInterop WH
 
 <a data-wowhead="@DataWowhead" href="@Href" target="@Target" class="@Classname" style="@CompleteStyle" @attributes="UserAttributes">
     @if (Context?.Item is not null)

@@ -1,6 +1,4 @@
-﻿@inject WowheadInterop WH
-
-<MudDialogScrollFix FixedFooter="true" />
+﻿<MudDialogScrollFix FixedFooter="true" />
 <MudDialog DisableSidePadding="true">
     <DialogContent>
         <MudList Clickable="true" Dense="true">
@@ -20,7 +18,7 @@
                 @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
                 {
                     var id = item.Id;
-                    <MudListItem OnClick="() => LinkClickedAsync(id)" Disabled="bracketContainsGroup">
+                    <MudListItem OnClick="() => LinkClicked(id)" Disabled="bracketContainsGroup">
                         <div class="d-flex align-center">
                             <CascadingItemContext Id="item.Id">
                                 <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
@@ -66,9 +64,8 @@
         if (GroupsInBracket is null) throw new ArgumentNullException(nameof(GroupsInBracket));
     }
 
-    private async Task LinkClickedAsync(uint itemId)
+    private void LinkClicked(uint itemId)
     {
         Dialog.Close(DialogResult.Ok(itemId));
-        await WH.HideTooltipAsync();
     }
 }

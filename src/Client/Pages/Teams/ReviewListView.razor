@@ -16,7 +16,7 @@
                     </MudButton>
                 </MudTooltip>
                 <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, use the Revoke Approval action instead.">
-                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved, true)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                 </MudTooltip>
             </AuthorizeView>
         }
@@ -143,19 +143,19 @@
         return restrictions.OrderBy(r => r.Level);
     }
 
-    private Task ChangeStatusAsync(LootListStatus status)
+    private Task ChangeStatusAsync(LootListStatus status, bool suppressMessage = false)
     {
         return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = status })
-            .OnSuccess((_, _) =>
+            .OnSuccess(async (_, _) =>
             {
                 LootList.Status = status;
-                if (status == LootListStatus.Approved)
+                if (!suppressMessage && status == LootListStatus.Approved)
                 {
                     LootList.ApprovedBy = User.GetDiscordIdFromClient();
-                    DialogService.ShowMessageBox("Approved", "Loot list has been approved! Don't forget to add this character to the roster if you haven't already.");
+                    await DialogService.ShowMessageBox("Approved", "Loot list has been approved! Don't forget to add this character to the roster if you haven't already.");
                 }
                 SetMessage();
-                return StatusUpdated.InvokeAsync(LootList);
+                await StatusUpdated.InvokeAsync(LootList);
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();

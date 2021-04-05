@@ -43,7 +43,12 @@
                     <MudDivider Vertical="true" FlexItem="true" />
                     @if (lootLists.FirstOrDefault(list => _characterId == list.CharacterId) is LootListDto selectedList)
                     {
-                        <ReviewListView LootList="selectedList" Items="items" User="User" StatusUpdated="l => OnStatusUpdatedAsync(l, lootLists)" />
+                        <ReviewListView Team="Team"
+                                        LootList="selectedList"
+                                        Items="items"
+                                        User="User"
+                                        StatusUpdated="l => OnStatusUpdatedAsync(l, lootLists)"
+                                        RosterChanged="RosterChanged" />
                     }
                 </ApiExecutor>
             </ApiExecutor>
@@ -60,6 +65,7 @@
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
     [Parameter] public EventCallback OnSwitchViewClicked { get; set; }
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
 
     protected override void OnParametersSet()
     {

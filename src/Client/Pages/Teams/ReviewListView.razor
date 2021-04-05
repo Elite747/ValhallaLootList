@@ -16,14 +16,14 @@
                     </MudButton>
                 </MudTooltip>
                 <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, use the Revoke Approval action instead.">
-                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved, true)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                 </MudTooltip>
             </AuthorizeView>
         }
         else if (LootList.Status == LootListStatus.Submitted)
         {
             <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team, but will not allow non-leaders to see rankings.">
-                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
                     Approve Loot List
                 </MudButton>
             </MudTooltip>
@@ -101,13 +101,16 @@
     private Color _messageColor;
     private string? _message;
 
+    [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public IList<ItemDto> Items { get; set; } = null!;
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
 
     protected override void OnParametersSet()
     {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
         if (User is null) throw new ArgumentNullException(nameof(User));
@@ -143,19 +146,41 @@
         return restrictions.OrderBy(r => r.Level);
     }
 
-    private Task ChangeStatusAsync(LootListStatus status, bool suppressMessage = false)
+    private Task ChangeStatusAsync(LootListStatus status)
     {
         return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = status })
-            .OnSuccess(async (_, _) =>
+            .OnSuccess((_, _) =>
             {
                 LootList.Status = status;
-                if (!suppressMessage && status == LootListStatus.Approved)
-                {
-                    LootList.ApprovedBy = User.GetDiscordIdFromClient();
-                    await DialogService.ShowMessageBox("Approved", "Loot list has been approved! Don't forget to add this character to the roster if you haven't already.");
-                }
                 SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task ApproveAndAddToRosterAsync()
+    {
+        return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = LootListStatus.Approved })
+            .OnSuccess(async (_, _) =>
+            {
+                LootList.Status = LootListStatus.Approved;
+                SetMessage();
+                StateHasChanged();
                 await StatusUpdated.InvokeAsync(LootList);
+
+
+                if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId))
+                {
+                    await Api.Teams.AddMember(Team.Id, new() { CharacterId = LootList.CharacterId, MemberStatus = RaidMemberStatus.FullTrial })
+                        .OnSuccess((member, _) =>
+                        {
+                            Team.Roster.Add(member);
+                            return RosterChanged.InvokeAsync();
+                        })
+                        .SendErrorTo(Snackbar)
+                        .ExecuteAsync();
+                }
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();

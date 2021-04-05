@@ -38,6 +38,10 @@
             {
                 <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
             }
+            @if (!LootList.Entries.Any(e => e.Rank > 0))
+            {
+                <MudText Typo="Typo.body1">Rankings will not be shown until the loot list has been locked.</MudText>
+            }
         </MudListSubheader>
 
         @if (LootList.Status == LootListStatus.Locked || LootList.Entries.Any(e => e.Rank > 0))

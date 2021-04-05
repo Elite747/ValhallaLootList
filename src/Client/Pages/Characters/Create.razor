@@ -35,9 +35,9 @@
                            Value="@_character.Race"
                            For="() => _character.Race"
                            ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty">
-                    @foreach (var race in _classRaces)
+                    @foreach (var race in _allRaces)
                     {
-                        <MudSelectItem T="PlayerRace?" Value="@race">
+                        <MudSelectItem T="PlayerRace?" Value="@race" Disabled="!_classRaces.Contains(race)">
                             <div class="d-flex align-center">
                                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                                     <RaceIcon Race="race" Gender="_character.Gender ?? Gender.Male" Size="IconSize.Medium" Width="24" Height="24" />
@@ -53,9 +53,9 @@
                            For="() => _character.Class"
                            Disabled="EditingCharacter is not null"
                            ToStringFunc="pc => pc.HasValue ? pc.Value.GetDisplayName() : string.Empty">
-                    @foreach (var playerClass in _raceClasses)
+                    @foreach (var playerClass in _allClasses)
                     {
-                        <MudSelectItem T="Classes?" Value="@playerClass">
+                        <MudSelectItem T="Classes?" Value="@playerClass" Disabled="!_raceClasses.Contains(playerClass)">
                             <div class="d-flex align-center">
                                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                                     <ClassIcon PlayerClass="playerClass" Size="IconSize.Medium" Width="24" Height="24" />

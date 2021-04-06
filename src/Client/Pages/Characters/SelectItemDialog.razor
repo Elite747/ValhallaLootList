@@ -18,21 +18,26 @@
                 @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
                 {
                     var id = item.Id;
+                    <MudDivider Class="d-flex d-sm-none" />
                     <MudListItem OnClick="() => LinkClicked(id)" Disabled="bracketContainsGroup">
-                        <div class="d-flex align-center">
+                        <div class="d-flex align-start flex-column flex-sm-row">
                             <CascadingItemContext Id="item.Id">
-                                <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
-                                    <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
-                                </MudAvatar>
-                                <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" Class="mr-auto" />
+                                <div class="d-flex align-center align-self-stretch mr-auto">
+                                    <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
+                                        <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
+                                    </MudAvatar>
+                                    <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" />
+                                </div>
                             </CascadingItemContext>
-                            <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)"
-                                                SpecPrefix="@(OffSpec.HasValue ? "MS" : null)" />
 
                             @if (OffSpec.HasValue)
                             {
-                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec.Value) != 0)"
-                                                    SpecPrefix="OS" />
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" SpecPrefix="MS" />
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec.Value) != 0)" SpecPrefix="OS" />
+                            }
+                            else
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" />
                             }
                         </div>
                     </MudListItem>

@@ -1,4 +1,6 @@
-﻿<MudChip DisableRipple="true" Size="Size.Small" Color="_color" Text="@_text" />
+﻿<MudChip DisableRipple="true" Size="Size.Small" Color="_color">
+    <pre>@_text</pre>
+</MudChip>
 
 @code {
     private Color _color;
@@ -23,8 +25,8 @@
 
         (_color, _text) = level switch
         {
-            ItemRestrictionLevel.ManualReview => (Color.Warning, "Manual Review"),
-            null => (Color.Success, "Allowed"),
+            ItemRestrictionLevel.ManualReview => (Color.Warning, "Review    "),
+            null => (Color.Success, "Allowed   "),
             _ => (Color.Error, "Restricted")
         };
 

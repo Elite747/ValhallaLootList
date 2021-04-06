@@ -37,6 +37,7 @@
                                 Gender="member.Character.Gender"
                                 PlayerClass="member.Character.Class"
                                 Spec="phaseLootList?.MainSpec ?? Specializations.None"
+                                ShowTooltip="true"
                                 Class="mr-5" />
                     <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
                     @if (phaseLootList is null || phaseLootList.Approved == false || member.Verified == false)

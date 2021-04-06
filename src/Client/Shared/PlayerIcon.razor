@@ -1,25 +1,27 @@
-﻿@if (_roleIcon?.Length > 0)
-{
-    <span class="mud-badge @Class">
-        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()">
-            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
-        </MudAvatar>
-        <span class="mud-badge-wrapper">
-            <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important; color: white">
-                <MudIcon Icon="@_roleIcon" ViewBox="@(_roleIcon == CustomIcons.Cross ? "6 6 12 12" : "0 0 24 24")" Class="mud-icon-badge" />
+﻿<MudTooltip Text="@_tooltipText">
+    @if (_roleIcon?.Length > 0)
+    {
+        <span class="mud-badge @Class">
+            <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()">
+                <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
+            </MudAvatar>
+            <span class="mud-badge-wrapper">
+                <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important; color: white">
+                    <MudIcon Icon="@_roleIcon" ViewBox="@(_roleIcon == CustomIcons.Cross ? "6 6 12 12" : "0 0 24 24")" Class="mud-icon-badge" />
+                </span>
             </span>
         </span>
-    </span>
-}
-else
-{
-    <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()" Class="@Class">
-        <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
-    </MudAvatar>
-}
+    }
+    else
+    {
+        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()" Class="@Class">
+            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
+        </MudAvatar>
+    }
+</MudTooltip>
 
 @code {
-    private string? _roleIcon, _roleColor;
+    private string? _roleIcon, _roleColor, _tooltipText;
     private IconSize _iconSize;
     private int _renderSize;
 
@@ -31,8 +33,27 @@ else
     [Parameter] public bool Rounded { get; set; }
     [Parameter] public bool Square { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter] public bool ShowTooltip { get; set; }
 
     protected override void OnParametersSet()
+    {
+        SetIconSize();
+        SetRoleIcon();
+        SetTooltipText();
+    }
+
+    private void SetIconSize()
+    {
+        (_iconSize, _renderSize) = Size switch
+        {
+            Size.Small => (IconSize.Medium, 24),
+            Size.Medium => (IconSize.Large, 40),
+            Size.Large => (IconSize.Large, 56),
+            _ => throw new ArgumentOutOfRangeException(nameof(Size))
+        };
+    }
+
+    private void SetRoleIcon()
     {
         if (Spec == Specializations.None)
         {
@@ -55,13 +76,40 @@ else
             _roleIcon = CustomIcons.Sword;
             _roleColor = "#6D0A0B";
         }
+    }
 
-        (_iconSize, _renderSize) = Size switch
+    private void SetTooltipText()
+    {
+        if (!ShowTooltip)
         {
-            Size.Small => (IconSize.Medium, 24),
-            Size.Medium => (IconSize.Large, 40),
-            Size.Large => (IconSize.Large, 56),
-            _ => throw new ArgumentOutOfRangeException(nameof(Size))
+            _tooltipText = null;
+            return;
+        }
+
+        _tooltipText = Race.GetDisplayName() + " ";
+
+        _tooltipText += Spec switch
+        {
+            Specializations.BalanceDruid => "Balance Druid",
+            Specializations.BearDruid => "Guardian Druid",
+            Specializations.CatDruid => "Feral Druid",
+            Specializations.RestoDruid => "Restoration Druid",
+            Specializations.Hunter => "Hunter",
+            Specializations.Mage => "Mage",
+            Specializations.HolyPaladin => "Holy Paladin",
+            Specializations.ProtPaladin => "Protection Paladin",
+            Specializations.RetPaladin => "Retribution Paladin",
+            Specializations.HealerPriest => "Healer Priest",
+            Specializations.ShadowPriest => "Shadow Priest",
+            Specializations.Rogue => "Rogue",
+            Specializations.EleShaman => "Elemental Shaman",
+            Specializations.EnhanceShaman => "Enhancement Shaman",
+            Specializations.RestoShaman => "Restoration Shaman",
+            Specializations.Warlock => "Warlock",
+            Specializations.ArmsWarrior => "Arms Warrior",
+            Specializations.FuryWarrior => "Fury Warrior",
+            Specializations.ProtWarrior => "Protection Warrior",
+            _ => PlayerClass.GetDisplayName()
         };
     }
 

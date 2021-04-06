@@ -41,6 +41,10 @@ namespace ValhallaLootList
         {
             return spec switch
             {
+                Specializations.BalanceDruid => "Balance",
+                Specializations.BearDruid => "Guardian",
+                Specializations.CatDruid => "Feral",
+                Specializations.RestoDruid => "Restoration",
                 Specializations.Hunter => "Beast Mastery / Marksmanship / Survival",
                 Specializations.Mage => "Arcane / Fire / Frost",
                 Specializations.HolyPaladin => "Holy",

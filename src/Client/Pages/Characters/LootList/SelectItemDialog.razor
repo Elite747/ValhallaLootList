@@ -27,6 +27,10 @@
                                         <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
                                     </MudAvatar>
                                     <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" />
+                                    @if (AlreadySelectedItems.Contains(id))
+                                    {
+                                        <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Class="ml-1" />
+                                    }
                                 </div>
                             </CascadingItemContext>
 
@@ -62,11 +66,14 @@
 
     [Parameter] public HashSet<ItemGroup> GroupsInBracket { get; set; } = null!;
 
+    [Parameter] public HashSet<uint> AlreadySelectedItems { get; set; } = null!;
+
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
         if (GroupsInBracket is null) throw new ArgumentNullException(nameof(GroupsInBracket));
+        if (AlreadySelectedItems is null) throw new ArgumentNullException(nameof(AlreadySelectedItems));
     }
 
     private void LinkClicked(uint itemId)

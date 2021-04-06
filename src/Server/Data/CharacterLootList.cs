@@ -26,6 +26,7 @@ namespace ValhallaLootList.Server.Data
 
         public LootListStatus Status { get; set; }
 
+        [Obsolete("Use Submissions instead.")]
         public long? SubmittedToId { get; set; }
 
         public long? ApprovedBy { get; set; }
@@ -33,8 +34,11 @@ namespace ValhallaLootList.Server.Data
         [Timestamp]
         public byte[] Timestamp { get; set; } = Array.Empty<byte>();
 
+        [Obsolete("Use Submissions instead.")]
         public RaidTeam? SubmittedTo { get; set; }
 
         public virtual ICollection<LootListEntry> Entries { get; set; } = new HashSet<LootListEntry>();
+
+        public virtual ICollection<LootListTeamSubmission> Submissions { get; set; } = new HashSet<LootListTeamSubmission>();
     }
 }

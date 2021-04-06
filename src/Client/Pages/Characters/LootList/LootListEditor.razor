@@ -51,15 +51,13 @@
 
     private async Task SubmitAsync()
     {
-        var team = await DialogService.ShowAsync<PickTeamDialog, TeamNameDto?>(string.Empty);
+        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(string.Empty);
 
-        if (team is not null)
+        if (teams is not null)
         {
-            await Api.LootLists.SetStatus(LootList, LootListStatus.Submitted, team.Id)
+            await Api.LootLists.Submit(LootList, teams)
                 .OnSuccess((_, _) =>
                 {
-                    LootList.SubmittedToId = team.Id;
-                    LootList.SubmittedToName = team.Name;
                     return OnSubmit.InvokeAsync();
                 })
                 .SendErrorTo(Snackbar)

@@ -41,6 +41,7 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<Character> Characters { get; set; } = null!;
         public virtual DbSet<CharacterLootList> CharacterLootLists { get; set; } = null!;
         public virtual DbSet<LootListEntry> LootListEntries { get; set; } = null!;
+        public virtual DbSet<LootListTeamSubmission> LootListTeamSubmissions { get; set; } = null!;
         public virtual DbSet<Drop> Drops { get; set; } = null!;
         public virtual DbSet<DropPass> DropPasses { get; set; } = null!;
         public virtual DbSet<Instance> Instances { get; set; } = null!;
@@ -97,6 +98,8 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<Instance>().Property(instance => instance.Id).ValueGeneratedNever();
 
             builder.Entity<Item>().Property(item => item.Id).ValueGeneratedNever();
+
+            builder.Entity<LootListTeamSubmission>().HasKey(e => new { e.LootListCharacterId, e.LootListPhase, e.TeamId });
 
             builder.Entity<RaidAttendee>().HasKey(attendee => new { attendee.CharacterId, attendee.RaidId });
 

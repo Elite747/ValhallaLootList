@@ -10,6 +10,7 @@ namespace ValhallaLootList.DataTransfer
     {
         private List<LootListEntryDto>? _entries;
         private List<PriorityBonusDto>? _bonuses;
+        private List<long>? _submittedTo;
 
         public long CharacterId { get; set; }
 
@@ -20,10 +21,6 @@ namespace ValhallaLootList.DataTransfer
         public long? TeamId { get; set; }
 
         public string? TeamName { get; set; }
-
-        public long? SubmittedToId { get; set; }
-
-        public string? SubmittedToName { get; set; }
 
         public Specializations MainSpec { get; set; }
 
@@ -47,6 +44,12 @@ namespace ValhallaLootList.DataTransfer
         {
             get => _bonuses ??= new();
             set => _bonuses = value;
+        }
+
+        public List<long> SubmittedTo
+        {
+            get => _submittedTo ??= new();
+            set => _submittedTo = value;
         }
     }
 }

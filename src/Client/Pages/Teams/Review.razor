@@ -77,7 +77,7 @@
     {
         StateHasChanged();
 
-        if (lootList.Status == LootListStatus.Editing && !Team.Roster.Any(m => m.Character.Id == lootList.CharacterId))
+        if ((lootList.Status == LootListStatus.Editing || (lootList.Status == LootListStatus.Submitted && !lootList.SubmittedTo.Contains(Team.Id))) && !Team.Roster.Any(m => m.Character.Id == lootList.CharacterId))
         {
             lootLists.Remove(lootList);
         }
@@ -101,7 +101,7 @@
         {
             if (list.Status == LootListStatus.Approved)
             {
-                tasks.Add(Api.LootLists.SetStatus(list, LootListStatus.Locked)
+                tasks.Add(Api.LootLists.Lock(list)
                     .OnSuccess(_ => StateHasChanged())
                     .SendErrorTo(Snackbar)
                     .ExecuteAsync());

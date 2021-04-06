@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -174,24 +175,12 @@ namespace ValhallaLootList.Server.Controllers
                 Phase = list.Phase,
                 Status = list.Status,
                 TeamId = character.TeamId,
-                SubmittedToId = list.SubmittedToId,
                 Timestamp = list.Timestamp
             };
 
             if (returnDto.TeamId.HasValue)
             {
                 returnDto.TeamName = await _context.RaidTeams.AsNoTracking().Where(t => t.Id == returnDto.TeamId).Select(t => t.Name).FirstOrDefaultAsync();
-            }
-            if (returnDto.SubmittedToId.HasValue)
-            {
-                if (returnDto.SubmittedToId == returnDto.TeamId)
-                {
-                    returnDto.SubmittedToName = returnDto.TeamName;
-                }
-                else
-                {
-                    returnDto.SubmittedToName = await _context.RaidTeams.AsNoTracking().Where(t => t.Id == returnDto.SubmittedToId).Select(t => t.Name).FirstOrDefaultAsync();
-                }
             }
 
             foreach (var entry in entries)
@@ -225,6 +214,11 @@ namespace ValhallaLootList.Server.Controllers
             if (list is null)
             {
                 return NotFound();
+            }
+
+            if (list.Status != LootListStatus.Editing)
+            {
+                return Problem("Loot list is not editable.");
             }
 
             var character = await _context.Characters.FindAsync(characterId);
@@ -349,8 +343,8 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        [HttpPost("Phase{phase:int}/{characterId:long}/Status")]
-        public async Task<ActionResult<byte[]>> PostStatus(long characterId, byte phase, [FromBody] SetLootListStatusDto dto)
+        [HttpPost("Phase{phase:int}/{characterId:long}/SetEditable")]
+        public async Task<ActionResult<TimestampDto>> PostSetEditable(long characterId, byte phase, [FromBody] TimestampDto dto)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
@@ -359,203 +353,324 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (list.Status == dto.Status)
-            {
-                return Problem($"Loot list is already in the {dto.Status} state.");
-            }
-
-            if (!TimestampsEqual(list.Timestamp, dto.Timestamp))
-            {
-                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
-            }
-
-            var result = dto.Status switch
-            {
-                LootListStatus.Editing => await SetStatusToEditingAsync(list),
-                LootListStatus.Submitted => await SetStatusToSubmittedAsync(list, dto.SubmitTo),
-                LootListStatus.Approved => await SetStatusToApprovedAsync(list),
-                LootListStatus.Locked => await SetStatusToLockedAsync(list),
-                _ => Problem("Status is not valid."),
-            };
-
-            if (result.Result is OkResult)
-            {
-                _telemetry.TrackEvent("LootListStatusChanged", User, props =>
-                {
-                    props["CharacterId"] = list.CharacterId.ToString();
-                    props["Phase"] = list.Phase.ToString();
-                    props["Status"] = list.Status.ToString();
-                });
-            }
-
-            return result;
-
-            static bool TimestampsEqual(byte[] left, byte[] right)
-            {
-                if (left.Length != right.Length)
-                {
-                    return false;
-                }
-
-                for (int i = 0; i < left.Length; i++)
-                {
-                    if (left[i] != right[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-        }
-
-        private async Task<ActionResult<byte[]>> SetStatusToEditingAsync(CharacterLootList list)
-        {
             AuthorizationResult auth;
             if (list.Status == LootListStatus.Submitted)
             {
                 auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
-
-                if (!auth.Succeeded)
-                {
-                    if (list.SubmittedToId.HasValue)
-                    {
-                        auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId, AppPolicies.RaidLeaderOrAdmin);
-
-                        if (!auth.Succeeded)
-                        {
-                            return Unauthorized();
-                        }
-                    }
-                    else
-                    {
-                        return Unauthorized();
-                    }
-                }
-            }
-            else if (list.Status == LootListStatus.Approved && list.SubmittedToId.HasValue)
-            {
-                auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId, AppPolicies.RaidLeaderOrAdmin);
-
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
-                }
             }
             else
             {
                 auth = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
+            }
 
-                if (!auth.Succeeded)
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            if (!ValidateTimestamp(list, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
+            if (list.Status == LootListStatus.Editing)
+            {
+                return Problem("Loot list is already editable.");
+            }
+
+            var submissions = await _context.LootListTeamSubmissions
+                .AsTracking()
+                .Where(s => s.LootListCharacterId == list.CharacterId && s.LootListPhase == list.Phase)
+                .ToListAsync();
+
+            _context.LootListTeamSubmissions.RemoveRange(submissions);
+
+            list.ApprovedBy = null;
+            list.Status = LootListStatus.Editing;
+            await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("LootListStatusChanged", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["Phase"] = list.Phase.ToString();
+                props["Status"] = list.Status.ToString();
+                props["Method"] = "SetEditable";
+            });
+
+            return new TimestampDto { Timestamp = list.Timestamp };
+        }
+
+        [HttpPost("Phase{phase:int}/{characterId:long}/Submit")]
+        public async Task<ActionResult<TimestampDto>> PostSubmit(long characterId, byte phase, [FromBody] SubmitLootListDto dto)
+        {
+            if (dto.SubmitTo.Count == 0)
+            {
+                ModelState.AddModelError(nameof(dto.SubmitTo), "Loot List must be submitted to at least one raid team.");
+                return ValidationProblem();
+            }
+
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
+            {
+                return NotFound();
+            }
+
+            var auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
+
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            if (!ValidateTimestamp(list, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
+            if (list.Status != LootListStatus.Editing)
+            {
+                return Problem("Can't submit a list that is not editable.");
+            }
+
+            var count = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => dto.SubmitTo.Contains(t.Id))
+                .CountAsync();
+
+            if (count != dto.SubmitTo.Count)
+            {
+                return Problem("One or more raid teams specified do not exist.");
+            }
+
+            foreach (var id in dto.SubmitTo)
+            {
+                _context.LootListTeamSubmissions.Add(new()
                 {
-                    return Unauthorized();
-                }
+                    LootListCharacterId = list.CharacterId,
+                    LootListPhase = list.Phase,
+                    TeamId = id
+                });
             }
 
             list.ApprovedBy = null;
-            list.SubmittedToId = null;
-            list.Status = LootListStatus.Editing;
+            list.Status = LootListStatus.Submitted;
             await _context.SaveChangesAsync();
-            return list.Timestamp;
+
+            _telemetry.TrackEvent("LootListStatusChanged", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["Phase"] = list.Phase.ToString();
+                props["Status"] = list.Status.ToString();
+                props["Method"] = "Submit";
+            });
+
+            return new TimestampDto { Timestamp = list.Timestamp };
         }
 
-        private async Task<ActionResult<byte[]>> SetStatusToSubmittedAsync(CharacterLootList list, long? submitTo)
+        [HttpPost("Phase{phase:int}/{characterId:long}/ApproveOrReject"), Authorize(AppPolicies.RaidLeaderOrAdmin)]
+        public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto, [FromServices] DiscordService discordService)
         {
-            if (list.Status == LootListStatus.Editing)
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
             {
-                if (!submitTo.HasValue)
+                return NotFound();
+            }
+
+            var team = await _context.RaidTeams.FindAsync(dto.TeamId);
+
+            if (team is null)
+            {
+                ModelState.AddModelError(nameof(dto.TeamId), "Team does not exist.");
+                return ValidationProblem();
+            }
+
+            var auth = await _authorizationService.AuthorizeAsync(User, team.Id, AppPolicies.RaidLeaderOrAdmin);
+
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            if (!ValidateTimestamp(list, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
+            if (list.Status != LootListStatus.Submitted)
+            {
+                return Problem("Can't approve or reject a list that isn't in the submitted state.");
+            }
+
+            var submissions = await _context.LootListTeamSubmissions
+                .AsTracking()
+                .Where(s => s.LootListCharacterId == list.CharacterId && s.LootListPhase == list.Phase)
+                .ToListAsync();
+
+            var teamSubmission = submissions.Find(s => s.TeamId == dto.TeamId);
+
+            if (teamSubmission is null)
+            {
+                return Unauthorized();
+            }
+
+            MemberDto? member = null;
+
+            if (dto.Approved)
+            {
+                _context.LootListTeamSubmissions.RemoveRange(submissions);
+
+                var character = await _context.Characters.FindAsync(list.CharacterId);
+                Debug.Assert(character is not null);
+
+                if (character.TeamId.HasValue)
                 {
-                    ModelState.AddModelError(nameof(SetLootListStatusDto.SubmitTo), "Loot List must be submitted to a raid team.");
-                    return ValidationProblem();
+                    if (character.TeamId != dto.TeamId)
+                    {
+                        return Problem("That character is not assigned to the specified raid team.");
+                    }
+                }
+                else
+                {
+                    character.TeamId = dto.TeamId;
+                    character.MemberStatus = RaidMemberStatus.FullTrial;
                 }
 
-                var team = await _context.RaidTeams.FindAsync(submitTo.Value);
+                list.ApprovedBy = User.GetDiscordId();
+                list.Status = LootListStatus.Approved;
+                var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
 
-                if (team is null)
+                await foreach (var m in HelperQueries.GetMembersAsync(discordService, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
                 {
-                    ModelState.AddModelError(nameof(SetLootListStatusDto.SubmitTo), "Raid team does not exist.");
-                    return ValidationProblem();
+                    member = m;
+                    break;
                 }
-
-                var auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
-
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
-                }
-
-                list.SubmittedToId = submitTo;
-                list.ApprovedBy = null;
-                list.Status = LootListStatus.Submitted;
-                await _context.SaveChangesAsync();
-                return list.Timestamp;
             }
             else
             {
-                return Problem("Can't set the status to submitted while the list is not in the editing state.");
-            }
-        }
+                _context.LootListTeamSubmissions.Remove(teamSubmission);
 
-        private async Task<ActionResult<byte[]>> SetStatusToApprovedAsync(CharacterLootList list)
-        {
-            if (list.Status == LootListStatus.Submitted)
-            {
-                if (!list.SubmittedToId.HasValue)
+                if (submissions.Count == 1)
                 {
-                    return Problem("Loot List is not assigned to a raid team.");
-                }
-
-                var auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId.Value, AppPolicies.RaidLeaderOrAdmin);
-
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
+                    list.Status = LootListStatus.Editing;
+                    list.ApprovedBy = null;
                 }
             }
-            else if (list.Status == LootListStatus.Locked)
-            {
-                var auth = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
 
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
-                }
-            }
-            else
-            {
-                return Problem($"Can't set the status to approved while the list is in the {list.Status} state.");
-            }
-
-            list.ApprovedBy = User.GetDiscordId();
-            list.Status = LootListStatus.Approved;
             await _context.SaveChangesAsync();
-            return list.Timestamp;
+
+            _telemetry.TrackEvent("LootListStatusChanged", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["Phase"] = list.Phase.ToString();
+                props["Status"] = list.Status.ToString();
+                props["Method"] = "ApproveOrReject";
+            });
+
+            return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member };
         }
 
-        private async Task<ActionResult<byte[]>> SetStatusToLockedAsync(CharacterLootList list)
+        [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppPolicies.RaidLeaderOrAdmin)]
+        public async Task<ActionResult<TimestampDto>> PostLock(long characterId, byte phase, [FromBody] TimestampDto dto)
         {
-            if (list.Status == LootListStatus.Approved)
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
             {
-                if (!list.SubmittedToId.HasValue)
-                {
-                    return Problem("Loot List is not assigned to a raid team.");
-                }
-
-                var auth = await _authorizationService.AuthorizeAsync(User, list.SubmittedToId.Value, AppPolicies.RaidLeaderOrAdmin);
-
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
-                }
+                return NotFound();
             }
-            else
+
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
             {
-                return Problem($"Can't set the status to locked while the list is in the {list.Status} state.");
+                return NotFound();
+            }
+
+            var auth = await _authorizationService.AuthorizeAsync(User, character.TeamId, AppPolicies.RaidLeaderOrAdmin);
+
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            if (!ValidateTimestamp(list, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
+            if (list.Status != LootListStatus.Approved)
+            {
+                return Problem("Loot list must be approved before locking.");
             }
 
             list.Status = LootListStatus.Locked;
+
             await _context.SaveChangesAsync();
-            return list.Timestamp;
+
+            _telemetry.TrackEvent("LootListStatusChanged", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["Phase"] = list.Phase.ToString();
+                props["Status"] = list.Status.ToString();
+                props["Method"] = "Lock";
+            });
+
+            return new TimestampDto { Timestamp = list.Timestamp };
+        }
+
+        [HttpPost("Phase{phase:int}/{characterId:long}/Unlock"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<TimestampDto>> PostUnlock(long characterId, byte phase, [FromBody] TimestampDto dto)
+        {
+            var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+
+            if (list is null)
+            {
+                return NotFound();
+            }
+
+            if (!ValidateTimestamp(list, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
+            if (list.Status != LootListStatus.Locked)
+            {
+                return Problem("Loot list is already unlocked.");
+            }
+
+            list.Status = LootListStatus.Approved;
+
+            await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("LootListStatusChanged", User, props =>
+            {
+                props["CharacterId"] = list.CharacterId.ToString();
+                props["Phase"] = list.Phase.ToString();
+                props["Status"] = list.Status.ToString();
+                props["Method"] = "Unlock";
+            });
+
+            return new TimestampDto { Timestamp = list.Timestamp };
+        }
+
+        private static bool ValidateTimestamp(CharacterLootList list, byte[] timestamp)
+        {
+            if (list.Timestamp.Length != timestamp.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < timestamp.Length; i++)
+            {
+                if (list.Timestamp[i] != timestamp[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
@@ -601,8 +716,8 @@ namespace ValhallaLootList.Server.Controllers
                     return null;
                 }
 
-                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.SubmittedToId == teamId);
-                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.SubmittedToId == teamId);
+                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.Submissions.Any(s => s.TeamId == teamId));
+                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.Submissions.Any(s => s.TeamId == teamId));
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
                 donationQuery = donationQuery.Where(d => d.TeamId == teamId);
@@ -627,14 +742,14 @@ namespace ValhallaLootList.Server.Controllers
                     CharacterMemberStatus = ll.Character.MemberStatus,
                     TeamId = ll.Character.TeamId,
                     TeamName = ll.Character.Team!.Name,
-                    SubmittedToId = ll.SubmittedToId,
-                    SubmittedToName = ll.SubmittedTo!.Name,
                     Status = ll.Status,
                     MainSpec = ll.MainSpec,
                     OffSpec = ll.OffSpec,
                     Phase = ll.Phase,
-                    Timestamp = ll.Timestamp
+                    Timestamp = ll.Timestamp,
+                    SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList()
                 })
+                .AsSingleQuery()
                 .ToListAsync();
 
             var passes = await passQuery

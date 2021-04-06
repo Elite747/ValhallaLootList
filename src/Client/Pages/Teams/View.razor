@@ -52,7 +52,8 @@
                                 Team="team"
                                 OnSwitchViewClicked="() => _reviewMode = false"
                                 User="context.User"
-                                StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)" />
+                                StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
+                                RosterChanged="StateHasChanged" />
                     </AuthorizeView>
                 }
                 else

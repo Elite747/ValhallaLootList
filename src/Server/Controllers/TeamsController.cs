@@ -81,85 +81,12 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             bool isLeader = await _context.IsLeaderOf(User, team.Id);
-
             var scope = PrioCalculator.Scope;
-            var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
+            var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-            await foreach (var character in _context.Characters
-                .AsNoTracking()
-                .Where(c => c.TeamId == team.Id)
-                .Select(c => new
-                {
-                    c.Class,
-                    c.Id,
-                    c.Name,
-                    c.Race,
-                    c.IsFemale,
-                    c.MemberStatus,
-                    Verified = c.VerifiedById.HasValue,
-                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Status, l.Phase }).ToList(),
-                    DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
-                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount),
-                    Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == team.Id)
-                        .Select(x => x.Raid.StartedAt.Date)
-                        .Distinct()
-                        .OrderByDescending(x => x)
-                        .Take(scope.ObservedAttendances)
-                        .Count()
-                })
-                .AsSingleQuery()
-                .AsAsyncEnumerable())
+            await foreach (var member in HelperQueries.GetMembersAsync(_discordService, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
             {
-                var memberDto = new MemberDto
-                {
-                    Character = new()
-                    {
-                        Class = character.Class,
-                        Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                        Id = character.Id,
-                        Name = character.Name,
-                        Race = character.Race,
-                        TeamId = team.Id,
-                        TeamName = team.Name
-                    },
-                    Status = character.MemberStatus,
-                    Verified = character.Verified,
-                    DonatedThisMonth = character.DonatedThisMonth,
-                    DonatedNextMonth = character.DonatedNextMonth,
-                    ThisMonthRequiredDonations = scope.RequiredDonationCopper,
-                    NextMonthRequiredDonations = scope.RequiredDonationCopper,
-                    Attendance = character.Attendance,
-                    AttendanceMax = scope.ObservedAttendances
-                };
-
-                foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
-                {
-                    var lootListDto = new MemberLootListDto
-                    {
-                        Status = lootList.Status,
-                        MainSpec = lootList.MainSpec,
-                        Phase = lootList.Phase
-                    };
-
-                    if (isLeader)
-                    {
-                        if (lootList.ApprovedBy.HasValue)
-                        {
-                            lootListDto.Approved = true;
-                            lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
-                        }
-                        else
-                        {
-                            lootListDto.Approved = false;
-                        }
-                    }
-
-                    memberDto.LootLists.Add(lootListDto);
-                }
-
-                team.Roster.Add(memberDto);
+                team.Roster.Add(member);
             }
 
             return team;

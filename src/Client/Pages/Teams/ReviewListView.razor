@@ -11,12 +11,12 @@
         {
             <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
-                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                    <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                         Revoke Approval
                     </MudButton>
                 </MudTooltip>
                 <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, use the Revoke Approval action instead.">
-                    <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Approved)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                 </MudTooltip>
             </AuthorizeView>
         }
@@ -27,8 +27,8 @@
                     Approve Loot List
                 </MudButton>
             </MudTooltip>
-            <MudTooltip Text="Denying a loot list will allow it to be edited by the owner.">
-                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+            <MudTooltip Text="Denying a loot list may allow it to be edited by the owner.">
+                <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                     Deny Loot List
                 </MudButton>
             </MudTooltip>
@@ -36,12 +36,12 @@
         else if (LootList.Status == LootListStatus.Approved)
         {
             <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
-                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Editing)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                     Revoke Approval
                 </MudButton>
             </MudTooltip>
             <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
-                <MudButton OnClick="() => ChangeStatusAsync(LootListStatus.Locked)" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
+                <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
             </MudTooltip>
         }
     </MudListSubheader>
@@ -146,9 +146,33 @@
         return restrictions.OrderBy(r => r.Level);
     }
 
-    private Task ChangeStatusAsync(LootListStatus status)
+    private Task SetEditableAsync()
     {
-        return Api.LootLists.SetStatus(LootList, status)
+        return Api.LootLists.SetEditable(LootList)
+            .OnSuccess((_, _) =>
+            {
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task LockAsync()
+    {
+        return Api.LootLists.Lock(LootList)
+            .OnSuccess((_, _) =>
+            {
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task UnlockAsync()
+    {
+        return Api.LootLists.Unlock(LootList)
             .OnSuccess((_, _) =>
             {
                 SetMessage();
@@ -160,26 +184,33 @@
 
     private Task ApproveAndAddToRosterAsync()
     {
-        return Api.LootLists.SetStatus(LootList, LootListStatus.Approved)
-            .OnSuccess(async (_, _) =>
+        return Api.LootLists.Approve(LootList, Team.Id)
+            .OnSuccess(async (response, _) =>
             {
                 SetMessage();
                 StateHasChanged();
                 await StatusUpdated.InvokeAsync(LootList);
 
-                if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId))
+                if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
                 {
-                    await Api.Teams.AddMember(Team.Id, new() { CharacterId = LootList.CharacterId, MemberStatus = RaidMemberStatus.FullTrial })
-                        .OnSuccess((member, _) =>
-                        {
-                            Team.Roster.Add(member);
-                            return RosterChanged.InvokeAsync();
-                        })
-                        .SendErrorTo(Snackbar)
-                        .ExecuteAsync();
+                    Team.Roster.Add(response.Member);
+                    await RosterChanged.InvokeAsync();
                 }
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
+    }
+
+    private Task DenyAsync()
+    {
+        return Api.LootLists.Reject(LootList, Team.Id)
+            .OnSuccess((_, _) =>
+            {
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+
     }
 }

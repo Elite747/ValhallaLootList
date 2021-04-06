@@ -28,7 +28,17 @@
         <MudListSubheader>
             @if (LootList.Status == LootListStatus.Submitted)
             {
-                <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" /> Loot List has been submitted awaiting approval.</MudText>
+                if (LootList.SubmittedTo.Count == 0)
+                {
+                    <MudText Typo="Typo.body1" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Clear" Size="Size.Small" /> Loot List has been rejected.</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1">
+                        <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" /> 
+                        Loot List has been submitted to @(LootList.SubmittedTo.Count == 1 ? "1 team" : $"{LootList.SubmittedTo.Count:N0} teams") awaiting approval.
+                    </MudText>
+                }
             }
             else if (LootList.Status == LootListStatus.Approved)
             {
@@ -100,11 +110,9 @@
     private Task RevokeAsync()
     {
         System.Diagnostics.Debug.Assert(LootList?.Status == LootListStatus.Submitted);
-        return Api.LootLists.SetStatus(LootList, LootListStatus.Editing)
+        return Api.LootLists.SetEditable(LootList)
             .OnSuccess((_, _) =>
             {
-                LootList.SubmittedToId = null;
-                LootList.SubmittedToName = null;
                 return OnListUpdated.InvokeAsync(LootList);
             })
             .SendErrorTo(Snackbar)

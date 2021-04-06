@@ -55,10 +55,9 @@
 
         if (team is not null)
         {
-            await Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = LootListStatus.Submitted, SubmitTo = team.Id })
+            await Api.LootLists.SetStatus(LootList, LootListStatus.Submitted, team.Id)
                 .OnSuccess((_, _) =>
                 {
-                    LootList.Status = LootListStatus.Submitted;
                     LootList.SubmittedToId = team.Id;
                     LootList.SubmittedToName = team.Name;
                     return OnSubmit.InvokeAsync();

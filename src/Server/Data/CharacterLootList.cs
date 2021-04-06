@@ -30,6 +30,9 @@ namespace ValhallaLootList.Server.Data
 
         public long? ApprovedBy { get; set; }
 
+        [Timestamp]
+        public byte[] Timestamp { get; set; } = Array.Empty<byte>();
+
         public RaidTeam? SubmittedTo { get; set; }
 
         public virtual ICollection<LootListEntry> Entries { get; set; } = new HashSet<LootListEntry>();

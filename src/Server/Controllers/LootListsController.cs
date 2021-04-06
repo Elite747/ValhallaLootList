@@ -174,7 +174,8 @@ namespace ValhallaLootList.Server.Controllers
                 Phase = list.Phase,
                 Status = list.Status,
                 TeamId = character.TeamId,
-                SubmittedToId = list.SubmittedToId
+                SubmittedToId = list.SubmittedToId,
+                Timestamp = list.Timestamp
             };
 
             if (returnDto.TeamId.HasValue)
@@ -316,6 +317,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (list.Status != LootListStatus.Editing)
+            {
+                return Problem("Loot List cannot be edited.");
+            }
+
             var character = await _context.Characters.FindAsync(characterId);
 
             if (character is null)
@@ -344,7 +350,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("Phase{phase:int}/{characterId:long}/Status")]
-        public async Task<ActionResult> PostStatus(long characterId, byte phase, [FromBody] SetLootListStatusDto dto)
+        public async Task<ActionResult<byte[]>> PostStatus(long characterId, byte phase, [FromBody] SetLootListStatusDto dto)
         {
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
@@ -358,6 +364,11 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem($"Loot list is already in the {dto.Status} state.");
             }
 
+            if (!TimestampsEqual(list.Timestamp, dto.Timestamp))
+            {
+                return Problem("Loot list has been changed. Refresh before trying to update the status again.");
+            }
+
             var result = dto.Status switch
             {
                 LootListStatus.Editing => await SetStatusToEditingAsync(list),
@@ -367,7 +378,7 @@ namespace ValhallaLootList.Server.Controllers
                 _ => Problem("Status is not valid."),
             };
 
-            if (result is OkResult)
+            if (result.Result is OkResult)
             {
                 _telemetry.TrackEvent("LootListStatusChanged", User, props =>
                 {
@@ -378,9 +389,27 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return result;
+
+            static bool TimestampsEqual(byte[] left, byte[] right)
+            {
+                if (left.Length != right.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < left.Length; i++)
+                {
+                    if (left[i] != right[i])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
         }
 
-        private async Task<ActionResult> SetStatusToEditingAsync(CharacterLootList list)
+        private async Task<ActionResult<byte[]>> SetStatusToEditingAsync(CharacterLootList list)
         {
             AuthorizationResult auth;
             if (list.Status == LootListStatus.Submitted)
@@ -427,10 +456,10 @@ namespace ValhallaLootList.Server.Controllers
             list.SubmittedToId = null;
             list.Status = LootListStatus.Editing;
             await _context.SaveChangesAsync();
-            return Ok();
+            return list.Timestamp;
         }
 
-        private async Task<ActionResult> SetStatusToSubmittedAsync(CharacterLootList list, long? submitTo)
+        private async Task<ActionResult<byte[]>> SetStatusToSubmittedAsync(CharacterLootList list, long? submitTo)
         {
             if (list.Status == LootListStatus.Editing)
             {
@@ -448,7 +477,7 @@ namespace ValhallaLootList.Server.Controllers
                     return ValidationProblem();
                 }
 
-                var auth = await _authorizationService.AuthorizeAsync(User, submitTo.Value, AppPolicies.RaidLeaderOrAdmin);
+                var auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
 
                 if (!auth.Succeeded)
                 {
@@ -459,7 +488,7 @@ namespace ValhallaLootList.Server.Controllers
                 list.ApprovedBy = null;
                 list.Status = LootListStatus.Submitted;
                 await _context.SaveChangesAsync();
-                return Ok();
+                return list.Timestamp;
             }
             else
             {
@@ -467,7 +496,7 @@ namespace ValhallaLootList.Server.Controllers
             }
         }
 
-        private async Task<ActionResult> SetStatusToApprovedAsync(CharacterLootList list)
+        private async Task<ActionResult<byte[]>> SetStatusToApprovedAsync(CharacterLootList list)
         {
             if (list.Status == LootListStatus.Submitted)
             {
@@ -500,10 +529,10 @@ namespace ValhallaLootList.Server.Controllers
             list.ApprovedBy = User.GetDiscordId();
             list.Status = LootListStatus.Approved;
             await _context.SaveChangesAsync();
-            return Ok();
+            return list.Timestamp;
         }
 
-        private async Task<ActionResult> SetStatusToLockedAsync(CharacterLootList list)
+        private async Task<ActionResult<byte[]>> SetStatusToLockedAsync(CharacterLootList list)
         {
             if (list.Status == LootListStatus.Approved)
             {
@@ -526,7 +555,7 @@ namespace ValhallaLootList.Server.Controllers
 
             list.Status = LootListStatus.Locked;
             await _context.SaveChangesAsync();
-            return Ok();
+            return list.Timestamp;
         }
 
         private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
@@ -603,7 +632,8 @@ namespace ValhallaLootList.Server.Controllers
                     Status = ll.Status,
                     MainSpec = ll.MainSpec,
                     OffSpec = ll.OffSpec,
-                    Phase = ll.Phase
+                    Phase = ll.Phase,
+                    Timestamp = ll.Timestamp
                 })
                 .ToListAsync();
 

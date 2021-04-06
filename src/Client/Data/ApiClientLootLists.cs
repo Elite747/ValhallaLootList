@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using ValhallaLootList.DataTransfer;
 
@@ -52,9 +53,16 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation SetStatus(long characterId, byte phase, SetLootListStatusDto dto)
+        public IApiClientOperation<byte[]> SetStatus(long characterId, byte phase, SetLootListStatusDto dto)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/status", dto);
+            return Client.CreateRequest<SetLootListStatusDto, byte[]>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/status", dto);
+        }
+
+        public IApiClientOperation SetStatus(LootListDto lootList, LootListStatus status, long? submitTo = null)
+        {
+            return SetStatus(lootList.CharacterId, lootList.Phase, new(status, lootList.Timestamp, submitTo))
+                .OnSuccess(timestamp => lootList.Timestamp = timestamp)
+                .OnSuccess((HttpStatusCode _) => lootList.Status = status);
         }
     }
 }

@@ -100,10 +100,9 @@
     private Task RevokeAsync()
     {
         System.Diagnostics.Debug.Assert(LootList?.Status == LootListStatus.Submitted);
-        return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = LootListStatus.Editing })
+        return Api.LootLists.SetStatus(LootList, LootListStatus.Editing)
             .OnSuccess((_, _) =>
             {
-                LootList.Status = LootListStatus.Editing;
                 LootList.SubmittedToId = null;
                 LootList.SubmittedToName = null;
                 return OnListUpdated.InvokeAsync(LootList);

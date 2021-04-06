@@ -101,8 +101,8 @@
         {
             if (list.Status == LootListStatus.Approved)
             {
-                tasks.Add(Api.LootLists.SetStatus(list.CharacterId, list.Phase, new() { Status = LootListStatus.Locked })
-                    .OnSuccess(_ => { list.Status = LootListStatus.Locked; StateHasChanged(); })
+                tasks.Add(Api.LootLists.SetStatus(list, LootListStatus.Locked)
+                    .OnSuccess(_ => StateHasChanged())
                     .SendErrorTo(Snackbar)
                     .ExecuteAsync());
             }

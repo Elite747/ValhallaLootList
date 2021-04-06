@@ -148,10 +148,9 @@
 
     private Task ChangeStatusAsync(LootListStatus status)
     {
-        return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = status })
+        return Api.LootLists.SetStatus(LootList, status)
             .OnSuccess((_, _) =>
             {
-                LootList.Status = status;
                 SetMessage();
                 return StatusUpdated.InvokeAsync(LootList);
             })
@@ -161,14 +160,12 @@
 
     private Task ApproveAndAddToRosterAsync()
     {
-        return Api.LootLists.SetStatus(LootList.CharacterId, LootList.Phase, new() { Status = LootListStatus.Approved })
+        return Api.LootLists.SetStatus(LootList, LootListStatus.Approved)
             .OnSuccess(async (_, _) =>
             {
-                LootList.Status = LootListStatus.Approved;
                 SetMessage();
                 StateHasChanged();
                 await StatusUpdated.InvokeAsync(LootList);
-
 
                 if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId))
                 {

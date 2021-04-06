@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System;
 using System.Collections.Generic;
 
 namespace ValhallaLootList.DataTransfer
@@ -33,6 +34,8 @@ namespace ValhallaLootList.DataTransfer
         public LootListStatus Status { get; set; }
 
         public long? ApprovedBy { get; set; }
+
+        public byte[] Timestamp { get; set; } = Array.Empty<byte>();
 
         public List<LootListEntryDto> Entries
         {

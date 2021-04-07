@@ -115,7 +115,12 @@ namespace ValhallaLootList.Client.Data
 
                 _executed = true;
 
-                if (_createCacheEntryOptions is not null && _memoryCache.TryGetValue(_request.RequestUri, out TResult? result) && result is not null)
+                var cacheKey = _request.RequestUri?.OriginalString;
+
+                if (_createCacheEntryOptions is not null &&
+                    cacheKey is not null &&
+                    _memoryCache.TryGetValue(cacheKey, out TResult? result) &&
+                    result is not null)
                 {
                     await InvokeHeaderSuccessAsync(HttpStatusCode.OK, cancellationToken);
                     await InvokeSuccessAsync(result, cancellationToken);
@@ -140,9 +145,9 @@ namespace ValhallaLootList.Client.Data
                                 throw new Exception($"No valid result of type {typeof(TResult)} could be read from the response.");
                             }
 
-                            if (_createCacheEntryOptions is not null)
+                            if (_createCacheEntryOptions is not null && cacheKey is not null)
                             {
-                                _memoryCache.Set(_request.RequestUri, result, _createCacheEntryOptions.Invoke());
+                                _memoryCache.Set(cacheKey, result, _createCacheEntryOptions.Invoke());
                             }
 
                             await InvokeSuccessAsync(result, cancellationToken);

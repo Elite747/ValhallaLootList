@@ -1,29 +1,20 @@
-﻿<MudTooltip Text="@_tooltipText">
-    @if (_roleIcon?.Length > 0)
-    {
-        <span class="mud-badge @Class">
-            <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()">
-                <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
-            </MudAvatar>
-            <span class="mud-badge-wrapper">
-                <span class="mud-badge-badge mud-badge-icon mud-badge-bottom mud-badge-right mud-badge-overlap" style="background-color: @_roleColor !important; color: white">
-                    <MudIcon Icon="@_roleIcon" ViewBox="@(_roleIcon == CustomIcons.Cross ? "6 6 12 12" : "0 0 24 24")" Class="mud-icon-badge" />
-                </span>
+﻿@using MudBlazor.Extensions;
+ 
+<MudTooltip Text="@_tooltipText">
+    <span class="@Class">
+        <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
+        @if (_role?.Length > 0)
+        {
+            <span class="player-icon-role @_role">
+                <MudIcon Icon="@_roleIcon" />
             </span>
-        </span>
-    }
-    else
-    {
-        <MudAvatar Size="Size" Rounded="Rounded" Square="Square" Style="@GetStyle()" Class="@Class">
-            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Width="_renderSize" Height="_renderSize" />
-        </MudAvatar>
-    }
+        }
+    </span>
 </MudTooltip>
 
 @code {
-    private string? _roleIcon, _roleColor, _tooltipText;
+    private string? _roleIcon, _role, _tooltipText;
     private IconSize _iconSize;
-    private int _renderSize;
 
     [Parameter] public Gender Gender { get; set; }
     [Parameter] public PlayerRace Race { get; set; }
@@ -35,6 +26,11 @@
     [Parameter] public string? Class { get; set; }
     [Parameter] public bool ShowTooltip { get; set; }
 
+    private string IconClass => new MudBlazor.Utilities.CssBuilder("player-icon")
+        .AddClass(Size.ToDescriptionString())
+        .AddClass(PlayerClass.GetLowercaseName())
+        .Build();
+
     protected override void OnParametersSet()
     {
         SetIconSize();
@@ -44,11 +40,11 @@
 
     private void SetIconSize()
     {
-        (_iconSize, _renderSize) = Size switch
+        _iconSize = Size switch
         {
-            Size.Small => (IconSize.Medium, 24),
-            Size.Medium => (IconSize.Large, 40),
-            Size.Large => (IconSize.Large, 56),
+            Size.Small => IconSize.Medium,
+            Size.Medium => IconSize.Large,
+            Size.Large => IconSize.Large,
             _ => throw new ArgumentOutOfRangeException(nameof(Size))
         };
     }
@@ -58,23 +54,23 @@
         if (Spec == Specializations.None)
         {
             _roleIcon = null;
-            _roleColor = null;
+            _role = null;
         }
         else if ((Spec & Specializations.Healer) != 0)
         {
             _roleIcon = CustomIcons.Cross;
-            _roleColor = "#084D42";
+            _role = "healer";
         }
         else if ((Spec & Specializations.Tank) != 0)
         {
             _roleIcon = Icons.Material.Filled.Shield;
-            _roleColor = "#001C52";
+            _role = "tank";
         }
         else
         {
             // TODO: split melee and ranged
             _roleIcon = CustomIcons.Sword;
-            _roleColor = "#6D0A0B";
+            _role = "dps";
         }
     }
 
@@ -111,10 +107,5 @@
             Specializations.ProtWarrior => "Protection Warrior",
             _ => PlayerClass.GetDisplayName()
         };
-    }
-
-    private string GetStyle()
-    {
-        return $"border: {(Size == Size.Large ? "3.5" : Size == Size.Small ? "2" : "3")}px solid {PlayerClass.GetClassColor()}";
     }
 }

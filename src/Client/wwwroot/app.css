@@ -62,3 +62,109 @@
 .text-bracket::after {
     content: "]";
 }
+
+.player-icon {
+    border-radius: 50%;
+    border-style: solid;
+    overflow: hidden;
+}
+
+    .player-icon.small {
+        width: 24px;
+        height: 24px;
+        border-width: 2px;
+    }
+
+    .player-icon.medium {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+    }
+
+    .player-icon.large {
+        width: 56px;
+        height: 56px;
+        border-width: 3.5px;
+    }
+
+    .player-icon.druid {
+        border-color: #FF7C0A;
+        background-color: #FF7C0A;
+    }
+
+    .player-icon.hunter {
+        border-color: #AAD372;
+        background-color: #AAD372;
+    }
+
+    .player-icon.mage {
+        border-color: #3FC7EB;
+        background-color: #3FC7EB;
+    }
+
+    .player-icon.paladin {
+        border-color: #F48CBA;
+        background-color: #F48CBA;
+    }
+
+    .player-icon.priest {
+        border-color: #FFFFFF;
+        background-color: #FFFFFF;
+    }
+
+    .player-icon.rogue {
+        border-color: #FFF468;
+        background-color: #FFF468;
+    }
+
+    .player-icon.shaman {
+        border-color: #0070DD;
+        background-color: #0070DD;
+    }
+
+    .player-icon.warrior {
+        border-color: #C69B6D;
+        background-color: #C69B6D;
+    }
+
+    .player-icon.warlock {
+        border-color: #8788EE;
+        background-color: #8788EE;
+    }
+
+.player-icon-role {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    left: 70%;
+    top: 70%;
+    color: white;
+}
+
+    .player-icon-role.tank {
+        background-color: #001C52;
+    }
+
+        .player-icon-role.tank svg {
+            font-size: 12px;
+        }
+
+    .player-icon-role.healer {
+        background-color: #084D42;
+    }
+
+        .player-icon-role.healer svg {
+            font-size: 20px;
+        }
+
+    .player-icon-role.dps {
+        background-color: #6D0A0B;
+    }
+
+        .player-icon-role.dps svg {
+            font-size: 16px;
+        }

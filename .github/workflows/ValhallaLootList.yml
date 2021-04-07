@@ -21,16 +21,14 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
-    - name: Restore Migrator
-      run: dotnet restore "${{ env.MIGRATE_DIRECTORY }}"
-    - name: Seed and Migrate
-      run: dotnet run "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: Restore
-      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+      run: dotnet restore
     - name: Build
-      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: Test
-      run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build
+      run: dotnet test --no-build
+    - name: Seed and Migrate
+      run: dotnet run -p "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore --no-build
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
     - name: Deploy to Azure WebApp

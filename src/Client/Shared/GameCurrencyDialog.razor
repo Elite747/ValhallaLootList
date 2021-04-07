@@ -35,11 +35,11 @@
 
     private class InputModel
     {
-        [System.ComponentModel.DataAnnotations.Range(-10000, 10000)]
+        [System.ComponentModel.DataAnnotations.Range(0, 10000)]
         public int? Gold { get; set; }
-        [System.ComponentModel.DataAnnotations.Range(-99, 99)]
+        [System.ComponentModel.DataAnnotations.Range(0, 99)]
         public int? Silver { get; set; }
-        [System.ComponentModel.DataAnnotations.Range(-99, 99)]
+        [System.ComponentModel.DataAnnotations.Range(0, 99)]
         public int? Copper { get; set; }
 
         public int GetAmount()

@@ -1,15 +1,15 @@
-﻿<div>
+﻿<div class="d-flex align-center">
     <MudTooltip Text="This was what was donated last month for priority in the current month.">
         <MudText Inline="false">
             This month's donations: <GameCurrencyDisplay Amount="Member.DonatedThisMonth" />
-            @if (Member.DonatedThisMonth >= Member.ThisMonthRequiredDonations)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-            }
         </MudText>
     </MudTooltip>
+    @if (Member.DonatedThisMonth >= Member.ThisMonthRequiredDonations)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
+    }
 </div>
-<div>
+<div class="d-flex align-center">
     <MudTooltip>
         <TooltipContent>
             <p>This is what has been donated so far for next month.</p>
@@ -18,17 +18,19 @@
         <ChildContent>
             <MudText Inline="false">
                 Next month's donations: <GameCurrencyDisplay Amount="Member.DonatedNextMonth" />
-                @if (Member.DonatedNextMonth >= Member.ThisMonthRequiredDonations)
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-                }
             </MudText>
         </ChildContent>
     </MudTooltip>
+    @if (Member.DonatedNextMonth >= Member.ThisMonthRequiredDonations)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
+    }
+    @ChildContent
 </div>
 
 @code {
     [Parameter] public MemberDto Member { get; set; } = null!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
 
     protected override void OnParametersSet()
     {

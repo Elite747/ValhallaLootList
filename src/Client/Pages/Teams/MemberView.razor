@@ -55,11 +55,20 @@
             </MudText>
         }
 
-        <DonationSummary Member="Member" />
+        <DonationSummary Member="Member">
+            <MudIconButton OnClick="() => AddDonationAsync(false)"
+                           Icon="@Icons.Material.Filled.AddCircle"
+                           Size="Size.Small"
+                           Color="Color.Success"
+                           Class="mx-2" />
+            <MudIconButton OnClick="() => AddDonationAsync(true)"
+                           Icon="@Icons.Material.Filled.RemoveCircle"
+                           Size="Size.Small"
+                           Color="Color.Error" />
+        </DonationSummary>
         <AttendanceSummary Member="Member" />
 
         <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
-        <MudButton OnClick="AddDonationAsync" Color="Color.Primary" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachMoney">Add Donation</MudButton>
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
@@ -118,15 +127,22 @@
         }
     }
 
-    private async Task AddDonationAsync()
+    private async Task AddDonationAsync(bool isRemove)
     {
-        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"Add Donation ({Member.Character.Name})");
+        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})");
         if (amount.HasValue)
         {
-            await Api.Donations.Add(new(){ CopperAmount = amount.Value, CharacterId = Member.Character.Id })
+            var actualAmount = amount.Value;
+
+            if (isRemove)
+            {
+                actualAmount = -actualAmount;
+            }
+
+            await Api.Donations.Add(new(){ CopperAmount = actualAmount, CharacterId = Member.Character.Id })
                 .OnSuccess(_ =>
                 {
-                    Member.DonatedNextMonth += amount.Value;
+                    Member.DonatedNextMonth += actualAmount;
                     StateHasChanged();
                 })
                 .SendErrorTo(Snackbar)

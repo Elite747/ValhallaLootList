@@ -1,5 +1,6 @@
 ﻿@inject ApiClient Api  
 @inject TeamsSource Teams
+@using ValhallaLootList.Client.Pages.Teams;
 
 <MudDialog DisableSidePadding="true">
     <TitleContent>
@@ -10,7 +11,11 @@
             @foreach (var team in Teams.Teams)
             {
                 <MudListItem Icon="@(_selectedTeams.Contains(team.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" OnClick="() => Toggle(team.Id)">
-                    @team.Name
+                    <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>
+                    @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
+                    {
+                        <ScheduleDisplay Schedule="schedule" Typo="Typo.caption" />
+                    }
                 </MudListItem>
             }
         </MudList>

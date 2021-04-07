@@ -22,7 +22,13 @@
         </MudListSubheader>
         @foreach (var team in TeamsSource.Teams)
         {
-            <MudListItem Href="@("teams/" + team.Name)">@team.Name</MudListItem>
+            <MudListItem Href="@("teams/" + team.Name)">
+                <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>
+                @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
+                {
+                    <ScheduleDisplay Schedule="schedule" Typo="Typo.caption" />
+                }
+            </MudListItem>
         }
     </MudList>
 </MudPaper>

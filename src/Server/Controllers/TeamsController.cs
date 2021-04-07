@@ -39,8 +39,19 @@ namespace ValhallaLootList.Server.Controllers
         {
             return _context.RaidTeams
                 .AsNoTracking()
-                .OrderBy(c => c.Name)
-                .Select(c => new TeamNameDto { Id = c.Id, Name = c.Name })
+                .OrderBy(team => team.Name)
+                .Select(team => new TeamNameDto
+                {
+                    Id = team.Id,
+                    Name = team.Name,
+                    Schedules = team.Schedules.Select(s => new ScheduleDto
+                    {
+                        Day = s.Day,
+                        RealmTimeStart = s.RealmTimeStart,
+                        Duration = s.Duration
+                    }).ToList()
+                })
+                .AsSingleQuery()
                 .AsAsyncEnumerable();
         }
 

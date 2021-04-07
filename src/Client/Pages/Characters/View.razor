@@ -1,11 +1,13 @@
-﻿@page "/Characters/{character}"
-@using ValhallaLootList.Client.Pages.Characters.LootList; 
+﻿@page "/Characters/{characterName}"
+@page "/Characters/{characterName}/{tab}"
+@page "/Characters/{characterName}/{tab}/{phase:int}"
+@using ValhallaLootList.Client.Pages.Characters.LootList;
 @inject ApiClient Api
 @inject IDialogService DialogService
-@inject NavigationManager Nav 
+@inject NavigationManager Nav
 @inject ISnackbar Snackbar
 
-<ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
+<ApiExecutor Operation="() => Api.Characters.Get(CharacterName)" Context="character" @ref="_executor">
     <div class="d-flex align-center mb-3">
         <PlayerIcon Race="character.Race"
                     Gender="character.Gender"
@@ -32,44 +34,63 @@
         <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 
-    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
-        <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4" @ref="_tabs" @bind-ActivePanelIndex="ActivePanelIndex">
-                @{ var index = 0;  }
-                @foreach (var phase in config.Phases.OrderBy(p => p))
-                {
-                    <MudTabPanel Text="@($"Phase {phase}")">
-                        <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />
-                    </MudTabPanel>
-                    @if (phase == config.CurrentPhase)
-                    {
-                        _defaultActivePanelIndex = index;
-                    }
-                    index++;
-                }
-                <MudTabPanel Text="Won Items">
-                    <WonItemsView Character="character" />
+    <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
+        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" ActivePanelIndexChanged="OnTabChanged" @ref="_tabs">
+            @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderBy(p => p))
+            {
+                <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
+                    <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />
                 </MudTabPanel>
-                <MudTabPanel Text="Attendance">
-                    <AttendanceView Character="character" />
-                </MudTabPanel>
-            </MudTabs>
-        </ApiExecutor>
+            }
+            <MudTabPanel Text="Won Items" ID="_wonId">
+                <WonItemsView Character="character" />
+            </MudTabPanel>
+            <MudTabPanel Text="Attendance" ID="_attendanceId">
+                <AttendanceView Character="character" />
+            </MudTabPanel>
+        </MudTabs>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
+    private IApiExecutor? _executor;
     private MudTabs? _tabs;
-    private int? _activePanelIndex;
-    private int _defaultActivePanelIndex;
+    private PhaseConfigDto? _phaseConfig;
+    private bool _characterChanged;
+    private string _characterName = string.Empty;
+    private object _wonId = new(), _attendanceId = new();
 
-    private int ActivePanelIndex
+    [Parameter] public string CharacterName
     {
-        get => _activePanelIndex ?? _defaultActivePanelIndex;
-        set => _activePanelIndex = value;
+        get => _characterName;
+        set
+        {
+            if (_characterName != value)
+            {
+                _characterName = value;
+                _characterChanged = true;
+            }
+        }
     }
 
-    [Parameter] public string Character { get; set; } = string.Empty;
+    [Parameter] public string? Tab { get; set; }
+    [Parameter] public int? Phase { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_characterChanged && _executor is not null)
+        {
+            _characterChanged = false;
+            await _executor.RestartAsync();
+        }
+
+        _tabs?.ActivatePanel(GetPanelId());
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return Api.GetPhaseConfiguration().OnSuccess(config => _phaseConfig = config).ExecuteAsync();
+    }
 
     private async Task EditAsync(CharacterDto character)
     {
@@ -98,5 +119,54 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
+
+    private object? GetPanelId()
+    {
+        if (string.Equals(Tab, "Won", StringComparison.OrdinalIgnoreCase))
+        {
+            return _wonId;
+        }
+        if (string.Equals(Tab, "Attendance", StringComparison.OrdinalIgnoreCase))
+        {
+            return _attendanceId;
+        }
+        if (string.Equals(Tab, "Phase", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!Phase.HasValue || Phase < byte.MinValue || Phase > byte.MaxValue)
+            {
+                return _phaseConfig?.CurrentPhase;
+            }
+            return Phase.Value;
+        }
+        return _phaseConfig?.CurrentPhase;
+    }
+
+    private void OnTabChanged(int index)
+    {
+        var panel = _tabs?.Panels.ElementAt(index);
+        string? tab = null;
+        byte? phase = null;
+
+        if (panel is not null)
+        {
+            if (panel.ID == _wonId)
+            {
+                tab = "won";
+            }
+            else if (panel.ID == _attendanceId)
+            {
+                tab = "attendance";
+            }
+            else if (panel.ID is byte b)
+            {
+                tab = "phase";
+                phase = b;
+            }
+        }
+
+        string format = phase.HasValue ? "characters/{0}/{1}/{2}" : "characters/{0}/{1}";
+
+        Nav.NavigateTo(string.Format(format, CharacterName, tab, phase));
     }
 }

@@ -57,8 +57,8 @@
         <DonationSummary Member="Member" />
         <AttendanceSummary Member="Member" />
 
+        <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
         <MudButton OnClick="AddDonationAsync" Color="Color.Primary" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachMoney">Add Donation</MudButton>
-
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
@@ -68,6 +68,8 @@
         }
         <DonationSummary Member="Member" />
         <AttendanceSummary Member="Member" />
+
+        <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
     </NotAuthorized>
 </AuthorizeView>
 

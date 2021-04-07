@@ -62,11 +62,9 @@
 
             <MudItem xs="12" Class="mb-5" />
 
-            <AuthorizeView Policy="@AppPolicies.Administrator" Context="auth">
-                <MudItem xs="12">
-                    <AdminView Team="team" User="auth.User" />
-                </MudItem>
-            </AuthorizeView>
+            <MudItem xs="12">
+                <LeadersView Team="team" />
+            </MudItem>
 
             <MudItem xs="12" md="_reviewMode ? 12 : 6">
                 @if (_reviewMode)

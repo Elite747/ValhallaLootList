@@ -445,7 +445,7 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpGet("{id:long}/leaders"), Authorize(AppPolicies.Administrator)]
+        [HttpGet("{id:long}/leaders")]
         public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
         {
             await foreach (var userId in _context.UserClaims

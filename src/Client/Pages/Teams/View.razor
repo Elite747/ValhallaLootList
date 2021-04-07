@@ -13,21 +13,6 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
                 </MudTooltip>
             </AuthorizeView>
-            <MudSelect T="byte"
-                       Value="_phase ?? phaseConfig.CurrentPhase"
-                       ValueChanged="OnPhaseChanged"
-                       Label="Phase"
-                       Variant="Variant.Outlined"
-                       OffsetX="false"
-                       OffsetY="false"
-                       Class="ml-5"
-                       Dense="true"
-                       ToStringFunc="@(phase => $"Phase {phase}")">
-                @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
-                {
-                    <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
-                }
-            </MudSelect>
         </div>
 
         @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
@@ -35,12 +20,54 @@
             <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
         }
 
-        <MudGrid Class="mt-5">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                    <Success>
+                        <MudSelect T="byte"
+                                   Value="_phase ?? phaseConfig.CurrentPhase"
+                                   ValueChanged="OnPhaseChanged"
+                                   Label="Phase"
+                                   Variant="Variant.Filled"
+                                   OffsetX="false"
+                                   OffsetY="false"
+                                   Dense="true"
+                                   ToStringFunc="@(phase => $"Phase {phase} ({string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name))})")">
+                            @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
+                            {
+                                <MudSelectItem T="byte" Value="phase">
+                                    Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </Success>
+                    <Failure>
+                        <MudSelect T="byte"
+                                   Value="_phase ?? phaseConfig.CurrentPhase"
+                                   ValueChanged="OnPhaseChanged"
+                                   Label="Phase"
+                                   Variant="Variant.Filled"
+                                   OffsetX="false"
+                                   OffsetY="false"
+                                   Dense="true"
+                                   ToStringFunc="@(phase => $"Phase {phase}")">
+                            @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
+                            {
+                                <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </Failure>
+                </ApiExecutor>
+            </MudItem>
+
+            <MudItem xs="12" Class="mb-5" />
+
             <AuthorizeView Policy="@AppPolicies.Administrator" Context="auth">
                 <MudItem xs="12">
                     <AdminView Team="team" User="auth.User" />
                 </MudItem>
             </AuthorizeView>
+
             <MudItem xs="12" md="_reviewMode ? 12 : 6">
                 @if (_reviewMode)
                 {
@@ -62,9 +89,11 @@
                                  OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
                 }
             </MudItem>
+
             <MudItem xs="12" md="_reviewMode ? 12 : 6">
                 <TeamRaids Team="team" />
             </MudItem>
+
             <MudItem xs="12">
                 <ValhallaLootList.Client.Pages.Teams.Standings.Standings ShowExternalLink="true" Team="team" />
             </MudItem>

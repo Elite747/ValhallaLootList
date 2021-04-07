@@ -5,21 +5,22 @@
 @inject TeamsSource TeamsSource
 @implements IDisposable
 
-<h1>Raid Teams</h1>
+<div class="d-flex align-center mb-3">
+    <MudText Typo="Typo.h4" GutterBottom="false">Raid Teams</MudText>
 
-<MudPaper>
+    <AuthorizeView Policy="@AppPolicies.Administrator">
+        <MudTooltip Text="Add Team">
+            <MudIconButton OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+        </MudTooltip>
+    </AuthorizeView>
+
+    <MudTooltip Text="Refresh">
+        <MudIconButton OnClick="() => TeamsSource.RefreshAsync(Api)" Icon="@Icons.Material.Filled.Refresh" />
+    </MudTooltip>
+</div>
+
+<MudPaper Elevation="5">
     <MudList Clickable="true">
-        <MudListSubheader Class="d-flex align-baseline">
-            <MudTooltip Text="Refresh Teams">
-                <MudIconButton OnClick="() => TeamsSource.RefreshAsync(Api)" Icon="@Icons.Material.Filled.Refresh" />
-            </MudTooltip>
-
-            <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Add Team">
-                    <MudFab OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
-                </MudTooltip>
-            </AuthorizeView>
-        </MudListSubheader>
         @foreach (var team in TeamsSource.Teams)
         {
             <MudListItem Href="@("teams/" + team.Name)">
@@ -32,6 +33,7 @@
         }
     </MudList>
 </MudPaper>
+
 
 @code {
     private async Task CreateClicked()

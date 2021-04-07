@@ -3,28 +3,32 @@
 @inject NavigationManager Nav
 @inject IDialogService DialogService
 
-<h1>Characters</h1>
+<div class="d-flex align-center mb-3">
+    <MudText Typo="Typo.h4" GutterBottom="false">Characters</MudText>
 
-<MudPaper>
-    <ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
+    <AuthorizeView Context="auth">
+        <MudTooltip Text="Add Character">
+            <MudIconButton OnClick="() => CreateClickedAsync(auth)" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+        </MudTooltip>
+    </AuthorizeView>
+
+    <MudTooltip Text="Refresh">
+        <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
+    </MudTooltip>
+</div>
+
+
+<ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
+    <MudPaper Elevation="5">
         <MudList Clickable="true">
-            <MudListSubheader Class="d-flex align-baseline">
+            <MudListSubheader Class="d-flex align-center">
                 <MudTextField @bind-Value="_searchText"
                               Immediate="true"
                               Label="Find Character"
-                              Variant="Variant.Text"
+                              Variant="Variant.Filled"
                               Adornment="Adornment.End"
                               AdornmentIcon="@Icons.Filled.Search" />
 
-                <MudTooltip Text="Refresh Characters">
-                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-                </MudTooltip>
-
-                <AuthorizeView Context="auth">
-                    <MudTooltip Text="Add Character">
-                        <MudFab OnClick="() => CreateClickedAsync(auth)" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
-                    </MudTooltip>
-                </AuthorizeView>
             </MudListSubheader>
             @foreach (var ch in EnumerateCharacters(characters))
             {
@@ -40,8 +44,8 @@
                 </MudListItem>
             }
         </MudList>
-    </ApiExecutor>
-</MudPaper>
+    </MudPaper>
+</ApiExecutor>
 
 @code {
     private ApiExecutor<IList<CharacterDto>>? _executor;

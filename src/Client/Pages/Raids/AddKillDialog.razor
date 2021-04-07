@@ -34,12 +34,21 @@
                                     <div>
                                         <ItemLink Colorize="true" />
                                     </div>
-                                    <MudChipSet SelectedChipChanged="chip => Input.Drops[localItemId] = ((int?)chip?.Tag) ?? 0">
-                                        <MudChip Tag="@(0)" Default="true">0</MudChip>
-                                        <MudChip Tag="@(1)">1</MudChip>
-                                        <MudChip Tag="@(2)">2</MudChip>
-                                        <MudChip Tag="@(3)">3</MudChip>
-                                    </MudChipSet>
+                                    <div class="d-flex align-center">
+                                        <MudIconButton OnClick="() => Input.Drops[localItemId] = Math.Max(0, Input.Drops[localItemId] - 1)"
+                                                       Disabled="Input.Drops[localItemId] <= 0"
+                                                       Icon="@Icons.Material.Filled.RemoveCircle"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error" />
+
+                                        <MudText Typo="Typo.h6" Class="mx-2">@Input.Drops[localItemId]</MudText>
+
+                                        <MudIconButton OnClick="() => Input.Drops[localItemId] = Math.Min(3, Input.Drops[localItemId] + 1)"
+                                                       Disabled="Input.Drops[localItemId] >= 3"
+                                                       Icon="@Icons.Material.Filled.AddCircle"
+                                                       Size="Size.Small"
+                                                       Color="Color.Success" />
+                                    </div>
                                 </div>
                             </CascadingItemContext>
                         </div>

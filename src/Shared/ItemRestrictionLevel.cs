@@ -4,9 +4,9 @@
 namespace ValhallaLootList
 {
     public enum ItemRestrictionLevel
-	{
-		Unequippable,
-		Restricted,
-		ManualReview
-	}
+    {
+        Unequippable,
+        Restricted,
+        ManualReview
+    }
 }

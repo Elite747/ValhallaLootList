@@ -49,7 +49,7 @@ namespace ValhallaLootList.Server.Discord
 
         public async Task<GuildMemberDto?> GetGuildMemberDtoAsync(long? id, CancellationToken cancellationToken = default)
         {
-            if (!id.HasValue)  return null;
+            if (!id.HasValue) return null;
             var member = await GetMemberAsync(id.Value, cancellationToken);
             if (member?.User is null) return null;
 

@@ -4,27 +4,27 @@
 namespace ValhallaLootList
 {
     public enum ItemType
-	{
-		Other,
-		Cloth,
-		Leather,
-		Mail,
-		Plate,
-		Shield,
-		Libram,
-		Idol,
-		Totem,
-		Bow,
-		Crossbow,
-		Dagger,
-		Gun,
-		Fist,
-		Axe,
-		Mace,
-		Sword,
-		Polearm,
-		Stave,
-		Thrown,
-		Wand
+    {
+        Other,
+        Cloth,
+        Leather,
+        Mail,
+        Plate,
+        Shield,
+        Libram,
+        Idol,
+        Totem,
+        Bow,
+        Crossbow,
+        Dagger,
+        Gun,
+        Fist,
+        Axe,
+        Mace,
+        Sword,
+        Polearm,
+        Stave,
+        Thrown,
+        Wand
     }
 }

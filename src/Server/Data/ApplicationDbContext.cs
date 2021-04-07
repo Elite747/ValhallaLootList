@@ -17,7 +17,7 @@ using Microsoft.Extensions.Options;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long>,  long>, IPersistedGrantDbContext
+    public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long>, long>, IPersistedGrantDbContext
     {
         private readonly OperationalStoreOptions _operationalStoreOptions;
 

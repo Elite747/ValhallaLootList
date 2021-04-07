@@ -10,5 +10,5 @@ namespace ValhallaLootList
         NightElf,
         Gnome,
         Draenei
-	}
+    }
 }

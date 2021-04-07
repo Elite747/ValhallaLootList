@@ -22,15 +22,15 @@ namespace ValhallaLootList.Server.Data
 
         public uint ItemId { get; set; }
 
-		public virtual Item Item { get; set; } = null!;
+        public virtual Item Item { get; set; } = null!;
 
-		public Specializations Specializations { get; set; }
+        public Specializations Specializations { get; set; }
 
-		public ItemRestrictionLevel RestrictionLevel { get; set; }
+        public ItemRestrictionLevel RestrictionLevel { get; set; }
 
-		[Required, StringLength(256, MinimumLength = 1)]
-		public string Reason { get; set; } = null!;
+        [Required, StringLength(256, MinimumLength = 1)]
+        public string Reason { get; set; } = null!;
 
-		public bool Automated { get; set; }
+        public bool Automated { get; set; }
     }
 }

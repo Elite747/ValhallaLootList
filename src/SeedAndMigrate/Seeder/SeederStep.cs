@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ValhallaLootList.Server.Data;
-using ValhallaLootList.Server.Data.Seeding;
 
 namespace ValhallaLootList.SeedAndMigrate.Seeder
 {

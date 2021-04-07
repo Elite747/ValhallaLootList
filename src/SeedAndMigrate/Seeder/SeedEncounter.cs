@@ -3,22 +3,22 @@
 
 using System.Collections.Generic;
 
-namespace ValhallaLootList.Server.Data.Seeding
+namespace ValhallaLootList.SeedAndMigrate.Seeder
 {
-    public class SeedInstance
+    public class SeedEncounter
     {
-        private List<SeedEncounter>? _encounters;
+        private List<uint>? _items;
 
         public string Id { get; set; } = string.Empty;
 
         public string Name { get; set; } = string.Empty;
 
-        public byte Phase { get; set; }
+        public sbyte Index { get; set; }
 
-        public List<SeedEncounter> Encounters
+        public List<uint> Items
         {
-            get => _encounters ??= new();
-            set => _encounters = value;
+            get => _items ??= new();
+            set => _items = value;
         }
     }
 }

@@ -103,20 +103,6 @@
         return Task.CompletedTask;
     }
 
-    private async Task UpdateAsync()
-    {
-        var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
-            "Update Member",
-            new() { [nameof(UpdateMemberDialog.Team)] = Team, [nameof(UpdateMemberDialog.Member)] = Member },
-            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-
-        if (result.HasValue)
-        {
-            Member.Status = result.Value;
-            await MemberUpdated.InvokeAsync();
-        }
-    }
-
     private async Task RemoveAsync()
     {
         if (await DialogService.ShowAsync<RemoveMemberDialog, bool>("Remove Member", new() { [nameof(RemoveMemberDialog.CharacterName)] = Member.Character.Name }))

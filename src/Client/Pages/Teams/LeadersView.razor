@@ -16,6 +16,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="() => AddLeaderAsync(leaders, context)" />
                         </MudTooltip>
                     </AuthorizeView>
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
                 </CardHeaderActions>
             </MudCardHeader>
             <MudList Dense="true">

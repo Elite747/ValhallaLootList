@@ -13,6 +13,11 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Default" Link="@($"teams/{Team.Name}/standings/{SelectedEncounterId}")" />
                 </MudTooltip>
             }
+            <MudTooltip Text="@(_showWon ? "Hide Won Items" : "Show Won Items")">
+                <MudToggleIconButton @bind-Toggled="_showWon"
+                                     Icon="@Icons.Material.Filled.RemoveRedEye"
+                                     ToggledIcon="@CustomIcons.EyeOff" />
+            </MudTooltip>
             <MudTooltip Text="Refresh">
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="RefreshAsync" />
             </MudTooltip>
@@ -55,7 +60,7 @@
                 <MudDivider Vertical="true" FlexItem="true" />
                 @if (selectedEncounter is not null)
                 {
-                    <EncounterView Standings="_standings" Encounter="selectedEncounter" />
+                    <EncounterView Standings="_standings" Encounter="selectedEncounter" ShowWon="_showWon" />
                 }
             </ApiExecutor>
         </ApiExecutor>
@@ -64,7 +69,7 @@
 
 @code {
     private readonly Dictionary<uint, List<StandingContext>> _standings = new();
-    private bool _teamChanged;
+    private bool _teamChanged, _showWon;
     private TeamDto? _team;
 
     [Parameter] public TeamDto Team

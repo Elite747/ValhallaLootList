@@ -4,19 +4,19 @@
     </MudListSubheader>
     @foreach (var itemId in Encounter.Items)
     {
-        <MudDivider />
-        <MudListItem>
-            <div class="d-flex">
-                <div class="mr-3">
-                    <CascadingItemContext Id="itemId">
-                        <ItemIcon Size="IconSize.Small" />
-                        <ItemLink LinkEnabled="true" Bracketize="true" Colorize="true" />
-                    </CascadingItemContext>
-                </div>
-                <div class="mr-auto">
-                    @if (Standings.TryGetValue(itemId, out var itemStandings))
-                    {
-                        foreach (var entry in itemStandings.OrderByDescending(e => e.Prio).ThenBy(e => e.CharacterName))
+        if (Standings.TryGetValue(itemId, out var itemStandings) && itemStandings.Count != 0 && (ShowWon || itemStandings.Any(s => !s.Entry.Won)))
+        {
+            <MudDivider />
+            <MudListItem>
+                <div class="d-flex">
+                    <div class="mr-3">
+                        <CascadingItemContext Id="itemId">
+                            <ItemIcon Size="IconSize.Small" />
+                            <ItemLink LinkEnabled="true" Bracketize="true" Colorize="true" />
+                        </CascadingItemContext>
+                    </div>
+                    <div class="mr-auto">
+                        @foreach (var entry in itemStandings.Where(e => ShowWon || !e.Entry.Won).OrderByDescending(e => e.Prio).ThenBy(e => e.CharacterName))
                         {
                             <MudText Color="entry.Entry.Won ? Color.Success : Color.Default">
                                 @if (entry.Prio.HasValue && !entry.Entry.Won)
@@ -44,16 +44,17 @@
                                 }
                             </MudText>
                         }
-                    }
+                    </div>
                 </div>
-            </div>
-        </MudListItem>
+            </MudListItem>
+        }
     }
 </MudList>
 
 @code {
     [Parameter] public EncounterDto Encounter { get; set; } = null!;
     [Parameter] public Dictionary<uint, List<StandingContext>> Standings { get; set; } = null!;
+    [Parameter] public bool ShowWon { get; set; }
 
     protected override void OnParametersSet()
     {

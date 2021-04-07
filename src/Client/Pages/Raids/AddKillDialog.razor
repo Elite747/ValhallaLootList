@@ -7,8 +7,9 @@
     <MudDialog>
         <DialogContent>
             <MudSelect Label="Encounter"
-                        @bind-Value="Input.EncounterId"
-                        For="() => Input.EncounterId">
+                       @bind-Value="Input.EncounterId"
+                       For="() => Input.EncounterId"
+                       Variant="Variant.Filled">
                 @foreach (var instance in Input.Instances)
                 {
                     <MudText Typo="Typo.h6">@instance.Name</MudText>

@@ -5,27 +5,26 @@
     <ProblemValidator @ref="_problemValidator" />
     <MudDialog>
         <DialogContent>
-            <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters" @ref="_executor">
-                <div class="d-flex align-baseline">
-                    <MudAutocomplete Label="Character"
-                                     T="CharacterDto"
-                                     SearchFunc="text => Search(text, characters)"
-                                     Value="characters.FirstOrDefault(c => c.Id == _model.CharacterId)"
-                                     ValueChanged="c => _model.CharacterId = c?.Id"
-                                     ResetValueOnEmptyText="true"
-                                     ToStringFunc="c => c.Name"
-                                     CoerceText="true">
-                        <ItemTemplate Context="character">
-                            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
-                        </ItemTemplate>
-                    </MudAutocomplete>
-                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-                </div>
+            <ApiExecutor Operation="Api.Characters.GetUnrostered" Context="characters">
+                <MudAutocomplete Label="Character"
+                                 T="CharacterDto"
+                                 SearchFunc="text => Search(text, characters)"
+                                 Value="characters.FirstOrDefault(c => c.Id == _model.CharacterId)"
+                                 ValueChanged="c => _model.CharacterId = c?.Id"
+                                 ResetValueOnEmptyText="true"
+                                 ToStringFunc="c => c.Name"
+                                 CoerceText="true"
+                                 Variant="Variant.Filled">
+                    <ItemTemplate Context="character">
+                        <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+                    </ItemTemplate>
+                </MudAutocomplete>
             </ApiExecutor>
 
             <MudSelect @bind-Value="_model.MemberStatus"
                        For="() => _model.MemberStatus"
-                       Label="Member Status">
+                       Label="Member Status"
+                       Variant="Variant.Filled">
                 <MudSelectItem Value="RaidMemberStatus.FullTrial">Full Trial (-18 prio)</MudSelectItem>
                 <MudSelectItem Value="RaidMemberStatus.HalfTrial">Half Trial (-9 prio)</MudSelectItem>
                 <MudSelectItem Value="RaidMemberStatus.Member">Member (no penalty)</MudSelectItem>
@@ -43,7 +42,6 @@
 
 @code {
     private readonly AddTeamMemberDto _model = new() { MemberStatus = RaidMemberStatus.FullTrial };
-    private IApiExecutor? _executor;
     private ProblemValidator? _problemValidator;
 
     [Parameter] public TeamDto Team { get; set; } = null!;

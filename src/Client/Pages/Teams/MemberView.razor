@@ -9,7 +9,8 @@
                    ValueChanged="OnStatusChangedAsync"
                    Label="Status"
                    ToStringFunc="GetDisplayString"
-                   FullWidth="true">
+                   FullWidth="true"
+                   Variant="Variant.Filled">
             <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
             <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
             <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>

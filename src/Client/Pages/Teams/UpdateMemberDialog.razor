@@ -10,7 +10,8 @@
         <DialogContent>
             <MudSelect @bind-Value="_model.MemberStatus"
                        For="() => _model.MemberStatus"
-                       Label="Member Status">
+                       Label="Member Status"
+                       Variant="Variant.Filled">
                 <MudSelectItem Value="RaidMemberStatus.FullTrial">Full Trial (-18 prio)</MudSelectItem>
                 <MudSelectItem Value="RaidMemberStatus.HalfTrial">Half Trial (-9 prio)</MudSelectItem>
                 <MudSelectItem Value="RaidMemberStatus.Member">Member (no penalty)</MudSelectItem>

@@ -7,14 +7,14 @@
 
     <MudDialog>
         <DialogContent>
-            <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" />
+            <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" Variant="Variant.Filled" />
 
             @for (int i = 0; i < _team.Schedules.Count; i++)
             {
                 var dayIndex = i;
                 <MudGrid>
                     <MudItem xs="12" sm="3">
-                        <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day">
+                        <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day" Variant="Variant.Text">
                             @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
                             {
                                 <MudSelectItem T="DayOfWeek?" Value="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</MudSelectItem>

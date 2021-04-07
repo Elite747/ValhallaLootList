@@ -26,6 +26,21 @@
             }
         </MudListSubheader>
         <MudListSubheader>
+            <MudText Typo="Typo.h6">
+                Main Spec:
+                <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
+                @LootList.MainSpec.GetDisplayName()
+            </MudText>
+            @if (LootList.OffSpec != LootList.MainSpec)
+            {
+                <MudText Typo="Typo.h6">
+                    Off Spec:
+                    <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
+                    @LootList.OffSpec.GetDisplayName()
+                </MudText>
+            }
+        </MudListSubheader>
+        <MudListSubheader>
             @if (LootList.Status == LootListStatus.Submitted)
             {
                 if (LootList.SubmittedTo.Count == 0)

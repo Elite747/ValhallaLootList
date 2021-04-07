@@ -16,7 +16,14 @@
                        Class="mb-2">
                 @foreach (var spec in Specializations)
                 {
-                    <MudSelectItem T="Specializations?" Value="spec">@spec.GetDisplayName()</MudSelectItem>
+                    <MudSelectItem T="Specializations?" Value="spec">
+                        <div class="d-flex align-center">
+                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                <SpecIcon Spec="spec" Size="IconSize.Medium" Width="24" Height="24" />
+                            </MudAvatar>
+                            <span>@spec.GetDisplayName()</span>
+                        </div>
+                    </MudSelectItem>
                 }
             </MudSelect>
             <MudSelect Label="Off Spec"
@@ -28,7 +35,14 @@
                        HelperText="@(Specializations.Count == 1 ? "Off spec disabled. Your class only has one role." : null)">
                 @foreach (var spec in Specializations)
                 {
-                    <MudSelectItem T="Specializations?" Value="spec">@spec.GetDisplayName()</MudSelectItem>
+                    <MudSelectItem T="Specializations?" Value="spec">
+                        <div class="d-flex align-center">
+                            <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                <SpecIcon Spec="spec" Size="IconSize.Medium" Width="24" Height="24" />
+                            </MudAvatar>
+                            <span>@spec.GetDisplayName()</span>
+                        </div>
+                    </MudSelectItem>
                 }
             </MudSelect>
         </DialogContent>

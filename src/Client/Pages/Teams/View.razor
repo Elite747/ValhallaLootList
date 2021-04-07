@@ -30,12 +30,9 @@
             </MudSelect>
         </div>
 
-        @foreach (var schedule in team.Schedules)
+        @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
         {
-            var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
-            <MudText Typo="Typo.h6">
-                @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture)) (server time)
-            </MudText>
+            <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
         }
 
         <MudGrid Class="mt-5">

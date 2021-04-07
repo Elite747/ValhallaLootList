@@ -1,7 +1,7 @@
 ﻿@using MudBlazor.Extensions;
- 
-<MudTooltip Text="@_tooltipText">
-    <span class="@Class">
+
+<span class="@Class">
+    <MudTooltip Text="@_tooltipText">
         <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
         @if (_role?.Length > 0)
         {
@@ -9,8 +9,8 @@
                 <MudIcon Icon="@_roleIcon" />
             </span>
         }
-    </span>
-</MudTooltip>
+    </MudTooltip>
+</span>
 
 @code {
     private string? _roleIcon, _role, _tooltipText;

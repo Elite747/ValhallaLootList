@@ -21,14 +21,51 @@
 <ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
     <MudPaper Elevation="5">
         <MudList Clickable="true">
-            <MudListSubheader Class="d-flex align-center">
-                <MudTextField @bind-Value="_searchText"
-                              Immediate="true"
-                              Label="Find Character"
-                              Variant="Variant.Filled"
-                              Adornment="Adornment.End"
-                              AdornmentIcon="@Icons.Filled.Search" />
+            <MudListSubheader>
+                <MudGrid>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="_searchText"
+                                      Immediate="true"
+                                      Label="Find Character"
+                                      Variant="Variant.Filled"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@Icons.Filled.Search" />
 
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-SelectedValues="_searchClasses"
+                                   MultiSelection="true"
+                                   Variant="Variant.Filled"
+                                   Label="Class"
+                                   ToStringFunc="ClassesExtensions.GetDisplayName"
+                                   T="Classes">
+                            @foreach (var c in _allClasses)
+                            {
+                                <MudSelectItem T="Classes" Value="@c">
+                                    <div class="d-flex align-center">
+                                        <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                            <ClassIcon PlayerClass="c" Size="IconSize.Medium" Width="24" Height="24" />
+                                        </MudAvatar>
+                                        <span>@c.GetDisplayName()</span>
+                                    </div>
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-SelectedValues="_searchTeams"
+                                   MultiSelection="true"
+                                   Variant="Variant.Filled"
+                                   Label="Team"
+                                   T="string">
+                            @foreach (var team in characters.Select(c => c.TeamName).Distinct().Where(str => str?.Length > 0).OrderBy(str => str))
+                            {
+                                <MudSelectItem T="string" Value="@team">@team</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
             </MudListSubheader>
             @foreach (var ch in EnumerateCharacters(characters))
             {
@@ -50,13 +87,43 @@
 @code {
     private ApiExecutor<IList<CharacterDto>>? _executor;
     private string _searchText = string.Empty;
+    private HashSet<Classes> _searchClasses = new();
+    private HashSet<string> _searchTeams = new();
+    private static readonly Classes[] _allClasses = new[] {
+        Classes.Druid,
+        Classes.Hunter,
+        Classes.Mage,
+        Classes.Paladin,
+        Classes.Priest,
+        Classes.Rogue,
+        Classes.Shaman,
+        Classes.Warlock,
+        Classes.Warrior
+    };
 
     private IEnumerable<CharacterDto> EnumerateCharacters(IList<CharacterDto> characters)
     {
-        if (characters.Count > 0 && _searchText?.Length > 0)
+        if (characters.Count > 0)
         {
-            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
-            return characters.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+            IEnumerable<CharacterDto> en = characters;
+
+            if (_searchText?.Length > 0)
+            {
+                const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+                en = en.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+            }
+
+            if (_searchClasses?.Count > 0)
+            {
+                en = en.Where(ch => _searchClasses.Contains(ch.Class));
+            }
+
+            if (_searchTeams?.Count > 0)
+            {
+                en = en.Where(ch => ch.TeamName?.Length > 0 && _searchTeams.Contains(ch.TeamName));
+            }
+
+            return en;
         }
         return characters;
     }

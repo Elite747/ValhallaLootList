@@ -1,0 +1,125 @@
+﻿@page "/about"
+
+<MudText Typo="Typo.h4" GutterBottom="true">About Valhalla Loot List</MudText>
+
+<MudText GutterBottom="true">
+    Valhalla Loot List is a loot system designed to speed up the looting process and reduce
+    loot related drama by putting control of loot expectations in the hands of the raiders.
+    Rather than a loot council determining who gets what item on the spot, raiders are tasked
+    with assigning each item they want a value. This list of values (your Loot List) is used
+    to calculate your priority for winning an item that drops. Raiders are in control of what
+    items they get and in what order.
+</MudText>
+
+<MudText Typo="Typo.h4" GutterBottom="true">FAQ</MudText>
+
+<MudText Typo="Typo.h6">How do I get onto a raid team?</MudText>
+<MudText GutterBottom="true">
+    Create a loot list by going to your character page, and submit your list to all raid teams you'd like to apply for.
+    If a team has a spot for you, they will either accept your list and add you to the roster, or contact you about
+    any issues with your list. Acceptance of a loot list is acceptance as a trial member to a raid team.
+</MudText>
+
+<MudText Typo="Typo.h6">What can I put on my loot list?</MudText>
+<MudText GutterBottom="true">
+    For every phase of content, you may create a loot list containing gear that drops from the 25-man raids.
+    For each spec of every class, items are categorized as either <span class="mud-success-text">Allowed</span>,
+    <span class="mud-warning-text">Review</span>, or <span class="mud-error-text">Restricted</span>. While you may
+    list any equippable item on your loot list, putting <span class="mud-error-text">restricted</span> items on
+    your list are very likely to get it rejected. <span class="mud-warning-text">Review</span> items may or may not
+    be accepted depending on the raid leader's discression. Be prepared to justify any
+    non-<span class="mud-success-text">allowed</span> items on your list.
+</MudText>
+
+<MudText Typo="Typo.h6">Do I make a Loot List for 10-man raids?</MudText>
+<MudText GutterBottom="true">
+    No. Loot Lists are only for 25 man raids. Karazhan and Zul'Aman are not part of any official raid
+    team's schedule.
+</MudText>
+
+<MudText Typo="Typo.h6">How do I win an item?</MudText>
+<MudText GutterBottom="true">
+    The person with the highest priority when an item drops wins it. Priority is calculated by taking the rank
+    you gave an item and adding up all of the various bonuses you've acquired to it. The possible bonuses are:
+
+    <MudSimpleTable Elevation="4" Dense="true" Class="my-2">
+        <tbody>
+            <tr>
+                <td>Attendance</td>
+                <td>+1 for every 4 raids attended in the past 8 raid nights. Max +2.</td>
+            </tr>
+            <tr>
+                <td>Donations</td>
+                <td>+1 if the player donated at least 50 gold to the team the previous month.</td>
+            </tr>
+            <tr>
+                <td>Losses &amp; Passes</td>
+                <td>+1 each time the player does not win an item that drops while present.</td>
+            </tr>
+            <tr>
+                <td>Trial</td>
+                <td>-18 penalty for trial members the first week. Penalty reduced to -9 the second week.</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+</MudText>
+
+<MudText Typo="Typo.h6">What happens if two or more people have the same priority?</MudText>
+<MudText GutterBottom="true">
+    If there's a tie for highest priority, then it goes to a <code>/roll</code> between those players. The highest
+    roll gets the item, and everyone else gets their loss bonus.
+</MudText>
+
+<MudText Typo="Typo.h6">Do I have to take an item if I have highest priority?</MudText>
+<MudText GutterBottom="true">
+    No. Players may choose to pass to the next highest person or forego a tiebreaker roll, though there is no benefit
+    to doing this. You still gain your loss bonus as normal.
+</MudText>
+
+<MudText Typo="Typo.h6">What happens if an item drops and nobody has it on their list?</MudText>
+<MudText GutterBottom="true">
+    Any item with no loot list competition, be it that everyone who listed it already has it or nobody in the entire
+    raid listed it, the item goes to an open <code>/roll</code> that anyone (even non-members) may roll for. The only
+    restriction to this roll is the item must be equippable by the winner.
+</MudText>
+
+<MudText Typo="Typo.h6">I won an item but I sold/destroyed/disenchanted it! Can I win it again?</MudText>
+<MudText GutterBottom="true">
+    No. All wins are recorded and will prevent you from competing for it again. You may win a second copy of an item
+    only if it goes to an open roll.
+</MudText>
+
+<MudText Typo="Typo.h6">Can I change my loot list?</MudText>
+<MudText GutterBottom="true">
+    If you've made a mistake on your loot list, you can revoke your submission and edit it. Once you've been accepted
+    onto a team, however, your loot list is locked and cannot be changed.
+</MudText>
+
+<MudText Typo="Typo.h6">What if I want to change my main spec?</MudText>
+<MudText GutterBottom="true">
+    Changing your main spec is at the discression of your raid leader. If you do decide to change specs, you will
+    get the opportunity to edit your list to fit your new spec, however this may only be done one time per character
+    and your membership on the team is not guaranteed. Any items won by your old list cannot be changed. That is,
+    if you ranked a DPS item at rank 18 and won it, you may not fill that rank 18 slot with a new tank item.
+</MudText>
+
+<MudText Typo="Typo.h6">What happens when new raids are released?</MudText>
+<MudText GutterBottom="true">
+    Your loot list you made for each phase stays with you forever. When a new raid tier releases, you will need
+    to submit a new list for that tier. Your old list will still be used if and when your raid team runs older
+    raids.
+</MudText>
+
+<MudText Typo="Typo.h6">Can I change raid teams?</MudText>
+<MudText GutterBottom="true">
+    Changing teams is possible, but comes with some penalties. You will join that team as a trial member,
+    and lose any bonuses you've gained from running with your previous team. Be sure that the team you apply
+    for works for you in the long-run!
+</MudText>
+
+<MudText Typo="Typo.h6">Can I raid even if I don't have a loot list made?</MudText>
+<MudText GutterBottom="true">
+    Yes. You won't have priority on winning loot over anyone with a loot list (regardless of trial status),
+    but if an item goes to open roll you are allowed to roll for it. Any items you do win will not be
+    available for selection when you do make your loot list.
+</MudText>

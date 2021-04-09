@@ -1,15 +1,12 @@
-﻿<MudList Dense="true" Class="flex-grow-1">
-    <MudListSubheader>
-        <MudText Typo="Typo.h6">@Encounter.Name</MudText>
-    </MudListSubheader>
-    @foreach (var itemId in Encounter.Items)
+﻿<MudList Dense="true">
+    @foreach (var itemId in Items)
     {
         if (Standings.TryGetValue(itemId, out var itemStandings) && itemStandings.Count != 0 && (ShowWon || itemStandings.Any(s => !s.Entry.Won)))
         {
             <MudDivider />
             <MudListItem>
                 <div class="d-flex">
-                    <div class="mr-3">
+                    <div class="mr-3 d-flex align-center">
                         <CascadingItemContext Id="itemId">
                             <ItemIcon Size="IconSize.Small" />
                             <ItemLink LinkEnabled="true" Bracketize="true" Colorize="true" />
@@ -52,13 +49,13 @@
 </MudList>
 
 @code {
-    [Parameter] public EncounterDto Encounter { get; set; } = null!;
+    [Parameter] public IEnumerable<uint> Items { get; set; } = null!;
     [Parameter] public Dictionary<uint, List<StandingContext>> Standings { get; set; } = null!;
     [Parameter] public bool ShowWon { get; set; }
 
     protected override void OnParametersSet()
     {
-        if (Encounter is null) throw new ArgumentNullException(nameof(Encounter));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
         if (Standings is null) throw new ArgumentNullException(nameof(Standings));
     }
 }

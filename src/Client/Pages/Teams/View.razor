@@ -92,8 +92,8 @@
                 <TeamRaids Team="team" />
             </MudItem>
 
-            <MudItem xs="12">
-                <ValhallaLootList.Client.Pages.Teams.Standings.Standings ShowExternalLink="true" Team="team" />
+            <MudItem xs="12" md="6">
+                <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="_phase ?? phaseConfig.CurrentPhase" Team="team" ShowExternalLink="true" />
             </MudItem>
         </MudGrid>
     </ApiExecutor>

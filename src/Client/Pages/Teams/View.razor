@@ -20,7 +20,7 @@
             <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
         }
 
-        <MudGrid>
+        <MudGrid Class="mb-5">
             <MudItem xs="12" md="6">
                 <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
                     <Success>
@@ -62,39 +62,33 @@
 
             <MudItem xs="12" Class="mb-5" />
 
-            <MudItem xs="12">
-                <LeadersView Team="team" />
-            </MudItem>
-
-            <MudItem xs="12" md="_reviewMode ? 12 : 6">
-                @if (_reviewMode)
-                {
-                    <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
-                        <Review Phase="_phase ?? phaseConfig.CurrentPhase"
-                                Team="team"
-                                OnSwitchViewClicked="() => _reviewMode = false"
-                                User="context.User"
-                                StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
-                                RosterChanged="StateHasChanged" />
-                    </AuthorizeView>
-                }
-                else
-                {
-                    <TeamMembers Team="team"
-                                 SelectedPhase="_phase"
-                                 CurrentPhase="phaseConfig.CurrentPhase"
-                                 OnSwitchViewClicked="() => _reviewMode = true"
-                                 OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-                }
-            </MudItem>
-
-            <MudItem xs="12" md="_reviewMode ? 12 : 6">
-                <TeamRaids Team="team" />
+            <MudItem xs="12" md="6">
+                <div class="mb-5">
+                    <LeadersView Team="team" />
+                </div>
+                <TeamMembers Team="team"
+                             SelectedPhase="_phase"
+                             CurrentPhase="phaseConfig.CurrentPhase"
+                             OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
             </MudItem>
 
             <MudItem xs="12" md="6">
-                <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="_phase ?? phaseConfig.CurrentPhase" Team="team" ShowExternalLink="true" />
+                <div class="mb-5">
+                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="_phase ?? phaseConfig.CurrentPhase" Team="team" ShowExternalLink="true" />
+                </div>
+                <TeamRaids Team="team" />
             </MudItem>
+
+            
+            <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
+                <MudItem xs="12">
+                    <Review Phase="_phase ?? phaseConfig.CurrentPhase"
+                            Team="team"
+                            User="context.User"
+                            StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
+                            RosterChanged="StateHasChanged" />
+                </MudItem>
+            </AuthorizeView>
         </MudGrid>
     </ApiExecutor>
 </ApiExecutor>
@@ -102,7 +96,7 @@
 @code {
     private IApiExecutor? _executor;
     private string? _teamName;
-    private bool _teamChanged, _reviewMode;
+    private bool _teamChanged;
     private byte? _phase;
 
     [Parameter]

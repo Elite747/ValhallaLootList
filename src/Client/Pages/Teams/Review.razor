@@ -8,9 +8,6 @@
             <MudText Typo="Typo.h6">Loot Lists</MudText> 
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudTooltip Text="Switch to roster view">
-                <MudIconButton Icon="@Icons.Material.Filled.ViewList" Color="Color.Default" OnClick="OnSwitchViewClicked" />
-            </MudTooltip>
             <MudTooltip Text="Refresh">
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
             </MudTooltip>
@@ -63,7 +60,6 @@
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
-    [Parameter] public EventCallback OnSwitchViewClicked { get; set; }
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
     [Parameter] public EventCallback RosterChanged { get; set; }
 

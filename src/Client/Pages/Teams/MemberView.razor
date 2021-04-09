@@ -33,18 +33,14 @@
         {
             if (lootList.Approved == true)
             {
-                <MudText Color="Color.Success">Loot list for phase @Phase was approved!</MudText>
-                @if (lootList.ApprovedBy is not null)
-                {
-                    <MudText>
-                        Approved by <GuildMemberDisplay Member="lootList.ApprovedBy" />
-                    </MudText>
-                }
+                <MudText Color="Color.Success">
+                    Loot list for phase @Phase was approved!
+                </MudText>
             }
             else
             {
                 <MudText Color="Color.Warning">
-                    Loot list for phase @Phase has not been approved yet! Switch to the loot list view by clicking the <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.ListAlt" /> button above to review and approve loot lists.
+                    Loot list for phase @Phase has not been approved yet!
                 </MudText>
             }
         }

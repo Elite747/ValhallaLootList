@@ -7,7 +7,13 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class SpellPowerDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid | Specializations.Hunter | Specializations.Rogue | Specializations.Warrior;
+        protected override Specializations ApplicableSpecs() => Specializations.BearDruid |
+            Specializations.CatDruid |
+            Specializations.Hunter |
+            Specializations.Rogue |
+            Specializations.Warrior |
+            Specializations.EnhanceShaman |
+            Specializations.RetPaladin;
 
         protected override int GetStat(Item item) => item.SpellPower;
 

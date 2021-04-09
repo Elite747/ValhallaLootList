@@ -5,6 +5,19 @@
 <MudList Dense="true" Class="flex-grow-1">
     <MudListSubheader>
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
+        <MudText Typo="Typo.h6">
+            Main Spec:
+            <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
+            @LootList.MainSpec.GetDisplayName()
+        </MudText>
+        @if (LootList.OffSpec != LootList.MainSpec)
+        {
+            <MudText Typo="Typo.h6">
+                Off Spec:
+                <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
+                @LootList.OffSpec.GetDisplayName()
+            </MudText>
+        }
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
         @if (LootList.Status == LootListStatus.Locked)

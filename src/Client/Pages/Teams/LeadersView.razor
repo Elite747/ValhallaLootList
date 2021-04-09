@@ -86,10 +86,13 @@
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
 
-        if (_teamChanged && _executor is not null)
+        if (_teamChanged)
         {
             _teamChanged = false;
-            return _executor.RestartAsync();
+            if (_executor is not null)
+            {
+                return _executor.RestartAsync();
+            }
         }
 
         return Task.CompletedTask;

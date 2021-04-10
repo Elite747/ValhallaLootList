@@ -18,6 +18,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters");
         }
 
+        public IApiClientOperation<IList<CharacterDto>> GetMine()
+        {
+            return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters/@mine");
+        }
+
         public IApiClientOperation<IList<CharacterDto>> GetByTeam(long team)
         {
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?team=" + team);

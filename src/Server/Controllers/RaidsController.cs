@@ -52,6 +52,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return query
+                .OrderByDescending(r => r.StartedAt)
                 .Select(r => new RaidDto
                 {
                     Id = r.Id,
@@ -61,6 +62,43 @@ namespace ValhallaLootList.Server.Controllers
                     TeamName = r.RaidTeam.Name
                 })
                 .AsAsyncEnumerable();
+        }
+
+        [HttpGet("@mine")]
+        public async Task<ActionResult<IEnumerable<RaidDto>>> GetMine()
+        {
+            var userId = User.GetDiscordId();
+            var characterIds = await _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
+                .Select(claim => claim.ClaimValue)
+                .ToListAsync();
+
+            var ids = new HashSet<long>();
+
+            foreach (var characterIdString in characterIds)
+            {
+                if (long.TryParse(characterIdString, out var characterId))
+                {
+                    ids.Add(characterId);
+                }
+            }
+
+            DateTimeOffset end = DateTimeOffset.UtcNow, start = end.AddMonths(-1);
+
+            return await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.StartedAt >= start && r.StartedAt < end && r.Attendees.Any(a => ids.Contains(a.CharacterId)))
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => new RaidDto
+                {
+                    Id = r.Id,
+                    Phase = r.Phase,
+                    StartedAt = r.StartedAt,
+                    TeamId = r.RaidTeamId,
+                    TeamName = r.RaidTeam.Name
+                })
+                .ToListAsync();
         }
 
         [HttpGet("{id:long}")]

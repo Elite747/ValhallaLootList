@@ -31,15 +31,9 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
+        public IAsyncEnumerable<CharacterDto> Get(string? team = null)
         {
             var query = _context.Characters.AsNoTracking();
-
-            if (owned)
-            {
-                //TODO
-                throw new NotSupportedException();
-            }
 
             if (team?.Length > 0)
             {
@@ -79,9 +73,46 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("ByName/{name}")]
-        public Task<ActionResult<CharacterDto>> Get(string name)
+        public Task<ActionResult<CharacterDto>> GetByName(string name)
         {
             return GetAsync(c => c.Name == name);
+        }
+
+        [HttpGet("@mine")]
+        public async Task<ActionResult<IEnumerable<CharacterDto>>> GetMine()
+        {
+            var userId = User.GetDiscordId();
+            var characterIds = await _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
+                .Select(claim => claim.ClaimValue)
+                .ToListAsync();
+
+            var ids = new HashSet<long>();
+
+            foreach (var characterIdString in characterIds)
+            {
+                if (long.TryParse(characterIdString, out var characterId))
+                {
+                    ids.Add(characterId);
+                }
+            }
+
+            return await _context.Characters
+                .AsNoTracking()
+                .Where(c => ids.Contains(c.Id))
+                .OrderBy(c => c.Name)
+                .Select(c => new CharacterDto
+                {
+                    Class = c.Class,
+                    Id = c.Id,
+                    Name = c.Name,
+                    Race = c.Race,
+                    TeamId = c.TeamId,
+                    TeamName = c.Team!.Name,
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                })
+                .ToListAsync();
         }
 
         private async Task<ActionResult<CharacterDto>> GetAsync(Expression<Func<Character, bool>> match)

@@ -2,8 +2,9 @@
 
 <AuthorizeView>
     <Authorized>
-        <h1>Hello, @context.User.Identity?.Name!</h1>
+        <MudText Typo="Typo.h4">Hello, @context.User.Identity?.Name</MudText>
         <MyCharactersView User="context.User" />
+        <MyRaidsView />
     </Authorized>
     <NotAuthorized>
         <MudButton Link="authentication/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large">Log in</MudButton>

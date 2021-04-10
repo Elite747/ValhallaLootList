@@ -18,6 +18,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, "api/v1/raids");
         }
 
+        public IApiClientOperation<IList<RaidDto>> GetMine()
+        {
+            return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, "api/v1/raids/@mine");
+        }
+
         public IApiClientOperation<IList<RaidDto>> GetRecentForTeam(long teamId)
         {
             return Client.CreateRequest<IList<RaidDto>>(HttpMethod.Get, $"api/v1/raids?team={teamId}");

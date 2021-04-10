@@ -1,0 +1,19 @@
+﻿@inject ApiClient Api
+
+<MudCard Class="my-5" Elevation="5">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">My Recent Raids</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <ApiExecutor Operation="Api.Raids.GetMine" Context="myRaids">
+        <MudList Dense="true" Clickable="true">
+            @foreach (var raid in myRaids)
+            {
+                <MudListItem Href="@("raids/" + raid.Id)">
+                    @raid.TeamName Phase @raid.Phase Raid (<DateTimeDisplay Date="raid.StartedAt" Format="D" />)
+                </MudListItem>
+            }
+        </MudList>
+    </ApiExecutor>
+</MudCard>

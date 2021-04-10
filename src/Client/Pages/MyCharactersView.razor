@@ -1,9 +1,8 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject NavigationManager Nav
-@inject PermissionManager Permissions 
 
-<MudCard Class="ma-5" Elevation="5">
+<MudCard Class="my-5" Elevation="5">
     <MudCardHeader>
         <CardHeaderContent>
             <MudText Typo="Typo.h6">My Characters</MudText>
@@ -14,49 +13,31 @@
                             OnClick="CreateClickedAsync" />
         </CardHeaderActions>
     </MudCardHeader>
-    <MudList Dense="true" Clickable="true">
-        @foreach (var character in _characters.OrderBy(c => c.Name))
-        {
-            <MudListItem Href="@("characters/" + character.Name)">
-                <div class="d-flex">
-                    <PlayerIcon Race="character.Race"
-                                Gender="character.Gender"
-                                PlayerClass="character.Class"
-                                Size="Size.Small"
-                                Class="mr-1" />
-                    <MudText Inline="false">@character.Name</MudText>
-                </div>
-            </MudListItem>
-        }
-    </MudList>
+    <ApiExecutor Operation="Api.Characters.GetMine" Context="myCharacters">
+        <MudList Dense="true" Clickable="true">
+            @foreach (var character in myCharacters)
+            {
+                <MudListItem Href="@("characters/" + character.Name)">
+                    <div class="d-flex">
+                        <PlayerIcon Race="character.Race"
+                                    Gender="character.Gender"
+                                    PlayerClass="character.Class"
+                                    Size="Size.Small"
+                                    Class="mr-1" />
+                        <MudText Inline="false">@character.Name</MudText>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    </ApiExecutor>
 </MudCard>
 
 @code {
-    private readonly List<CharacterDto> _characters = new();
-
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (User is null) throw new ArgumentNullException(nameof(User));
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var tasks = new List<Task>();
-
-        foreach (var characterId in await Permissions.GetOwnedCharacterIdsAsync())
-        {
-            tasks.Add(Api.Characters.Get(characterId)
-                .OnSuccess(character =>
-                {
-                    _characters.Add(character);
-                    StateHasChanged();
-                })
-                .ExecuteAsync());
-        }
-
-        await Task.WhenAll(tasks);
     }
 
     private async Task CreateClickedAsync()

@@ -1,8 +1,49 @@
 ﻿<MudDialogScrollFix FixedFooter="true" />
 <MudDialog DisableSidePadding="true">
+    <TitleContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6">Select Item</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="_searchText"
+                              Immediate="true"
+                              Label="Find Item"
+                              Variant="Variant.Filled"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Filled.Search" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-SelectedValues="_searchGroups"
+                           MultiSelection="true"
+                           Variant="Variant.Filled"
+                           Label="Item Group"
+                           ToStringFunc="group => group.Name"
+                           T="ItemGroup">
+                    @foreach (var group in ItemGroup.All)
+                    {
+                        <MudSelectItem T="ItemGroup" Value="group">@group.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="_msLevel"
+                           Variant="Variant.Filled"
+                           Label="Restriction Level"
+                           ToStringFunc='r => r switch { null => "Allowed", ItemRestrictionLevel.Restricted => "All Items", _ => "Allowed & Review" }'
+                           T="ItemRestrictionLevel?">
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@null">Allowed</MudSelectItem>
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@ItemRestrictionLevel.ManualReview" Class="mud-success-text">
+                        Allowed &amp; Review
+                    </MudSelectItem>
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@ItemRestrictionLevel.Restricted" Class="mud-success-text">All Items</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </TitleContent>
     <DialogContent>
         <MudList Clickable="true" Dense="true">
-            @foreach (var itemTypeGroup in Items.GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+            @foreach (var itemTypeGroup in EnumerateItems().GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
             {
                 bool bracketContainsGroup = GroupsInBracket.Contains(itemTypeGroup.Key);
                 <MudDivider />
@@ -34,7 +75,7 @@
                                 </div>
                             </CascadingItemContext>
 
-                            @if (OffSpec.HasValue)
+                            @if (AllowOffspec && OffSpec.HasValue)
                             {
                                 <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" SpecPrefix="MS" />
                                 <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec.Value) != 0)" SpecPrefix="OS" />
@@ -49,13 +90,13 @@
             }
         </MudList>
     </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Dialog.Close(DialogResult.Ok(0U))">Clear Selection</MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {
+    private string? _searchText;
+    private HashSet<ItemGroup> _searchGroups = new();
+    private ItemRestrictionLevel? _msLevel;
+
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
     [Parameter] public IEnumerable<ItemDto> Items { get; set; } = null!;
@@ -68,6 +109,8 @@
 
     [Parameter] public HashSet<uint> AlreadySelectedItems { get; set; } = null!;
 
+    [Parameter] public bool AllowOffspec { get; set; }
+
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
@@ -79,5 +122,50 @@
     private void LinkClicked(uint itemId)
     {
         Dialog.Close(DialogResult.Ok(itemId));
+    }
+
+    private IEnumerable<ItemDto> EnumerateItems()
+    {
+        var items = Items;
+
+        if (_searchText?.Length > 0)
+        {
+            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+            items = items.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+        }
+
+        if (_searchGroups?.Count > 0)
+        {
+            items = items.Where(item => _searchGroups.Contains(new ItemGroup(item.Type, item.Slot)));
+        }
+
+        if (_msLevel != ItemRestrictionLevel.Restricted)
+        {
+            if (AllowOffspec && OffSpec.HasValue)
+            {
+                if (_msLevel == ItemRestrictionLevel.ManualReview)
+                {
+                    items = items.Where(item =>
+                        !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted) ||
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec.Value) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+                }
+                else
+                {
+                    items = items.Where(item =>
+                        !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0) ||
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec.Value) != 0));
+                }
+            }
+            else if (_msLevel == ItemRestrictionLevel.ManualReview)
+            {
+                items = items.Where(item => !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+            }
+            else
+            {
+                items = items.Where(item => !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0));
+            }
+        }
+
+        return items;
     }
 }

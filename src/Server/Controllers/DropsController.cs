@@ -105,7 +105,7 @@ namespace ValhallaLootList.Server.Controllers
                             e.Id,
                             e.Rank,
                             e.LootList.Status,
-                            Passes = e.LootList.Character.Passes.Count(p => !p.WonEntryId.HasValue && p.Drop.ItemId == (e.Item!.RewardFromId ?? e.ItemId))
+                            Passes = e.Passes.Count
                         })
                         .FirstOrDefault()
                 })
@@ -132,7 +132,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     var passes = await _context.DropPasses
                         .AsTracking()
-                        .Where(p => p.CharacterId == winner.Id && !p.WonEntryId.HasValue && p.Drop.ItemId == drop.ItemId)
+                        .Where(p => p.LootListEntryId == winner.Entry.Id)
                         .ToListAsync();
 
                     Debug.Assert(passes.Count == winner.Entry.Passes);
@@ -170,7 +170,8 @@ namespace ValhallaLootList.Server.Controllers
                             Drop = drop,
                             DropId = drop.Id,
                             CharacterId = killer.Id,
-                            RelativePriority = thisPrio - (winnerPrio ?? 0)
+                            RelativePriority = thisPrio - (winnerPrio ?? 0),
+                            LootListEntryId = killer.Entry.Id
                         });
                     }
                 }
@@ -294,7 +295,7 @@ namespace ValhallaLootList.Server.Controllers
                             e.Id,
                             e.Rank,
                             e.LootList.Status,
-                            Passes = e.LootList.Character.Passes.Count(p => !p.WonEntryId.HasValue && p.Drop.ItemId == (e.Item!.RewardFromId ?? e.ItemId))
+                            Passes = e.Passes.Count
                         })
                         .FirstOrDefault()
                 })

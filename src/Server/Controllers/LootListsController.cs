@@ -753,7 +753,7 @@ namespace ValhallaLootList.Server.Controllers
                 .ToListAsync();
 
             var passes = await passQuery
-                .Select(pass => new { pass.CharacterId, pass.Drop.ItemId, pass.RelativePriority })
+                .Select(pass => new { pass.CharacterId, pass.RelativePriority, pass.LootListEntryId })
                 .ToListAsync();
 
             var attendances = await attendanceQuery
@@ -801,7 +801,7 @@ namespace ValhallaLootList.Server.Controllers
                     if (entry.ItemId.HasValue && !entry.Won)
                     {
                         var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                        bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.ItemId == rewardFromId && p.CharacterId == entry.CharacterId)));
+                        bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.LootListEntryId == entry.Id)));
                     }
 
                     var bracket = brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank);

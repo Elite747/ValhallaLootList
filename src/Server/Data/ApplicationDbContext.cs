@@ -77,33 +77,84 @@ namespace ValhallaLootList.Server.Data
             {
                 e.HasIndex(character => character.Name).IsUnique();
                 e.Property(character => character.Id).ValueGeneratedNever();
+                e.HasOne(character => character.Team).WithMany(team => team!.Roster).OnDelete(DeleteBehavior.SetNull);
             });
 
-            builder.Entity<CharacterEncounterKill>()
-                .ToTable("CharacterEncounterKill")
-                .HasKey(e => new { e.EncounterKillRaidId, e.EncounterKillEncounterId, e.CharacterId });
+            builder.Entity<CharacterEncounterKill>(e =>
+            {
+                e.ToTable("CharacterEncounterKill");
+                e.HasKey(cek => new { cek.EncounterKillRaidId, cek.EncounterKillEncounterId, cek.CharacterId });
+                e.HasOne(cek => cek.Character).WithMany(c => c.EncounterKills).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(cek => cek.EncounterKill).WithMany(ek => ek.Characters).OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<CharacterLootList>().HasKey(e => new { e.CharacterId, e.Phase });
+            builder.Entity<CharacterLootList>(e =>
+            {
+                e.HasKey(ll => new { ll.CharacterId, ll.Phase });
+                e.HasOne(ll => ll.Character).WithMany(c => c.CharacterLootLists).OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<Drop>().Property(drop => drop.Id).ValueGeneratedNever();
+            builder.Entity<Drop>(e =>
+            {
+                e.Property(drop => drop.Id).ValueGeneratedNever();
+                e.HasOne(drop => drop.EncounterKill).WithMany(ek => ek.Drops).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(drop => drop.Item).WithMany(item => item.Drops).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(drop => drop.Winner).WithMany().OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(drop => drop.WinningEntry).WithOne(entry => entry!.Drop!).HasForeignKey<LootListEntry>(entry => entry.DropId).OnDelete(DeleteBehavior.Restrict);
+            });
 
-            builder.Entity<Donation>().Property(donation => donation.Id).ValueGeneratedNever();
+            builder.Entity<Donation>(e =>
+            {
+                e.Property(donation => donation.Id).ValueGeneratedNever();
+                e.HasOne(donation => donation.Character).WithMany(c => c.Donations).OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<DropPass>().HasKey(e => new { e.DropId, e.CharacterId });
+            builder.Entity<DropPass>(e =>
+            {
+                e.HasKey(e => new { e.DropId, e.CharacterId });
+#pragma warning disable CS0618 // Type or member is obsolete
+                e.HasOne(dp => dp.Character).WithMany(c => c.Passes).OnDelete(DeleteBehavior.Cascade);
+#pragma warning restore CS0618 // Type or member is obsolete
+                e.HasOne(dp => dp.Drop).WithMany(d => d.Passes).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(dp => dp.LootListEntry).WithMany(lle => lle!.Passes).OnDelete(DeleteBehavior.Restrict);
+            });
 
-            builder.Entity<Encounter>().Property(encounter => encounter.Id).ValueGeneratedNever();
+            builder.Entity<Encounter>(e =>
+            {
+                e.Property(encounter => encounter.Id).ValueGeneratedNever();
+                e.HasOne(encounter => encounter.Instance).WithMany(i => i.Encounters).OnDelete(DeleteBehavior.Restrict);
+            });
 
-            builder.Entity<EncounterKill>().HasKey(kill => new { kill.EncounterId, kill.RaidId });
+            builder.Entity<EncounterKill>(e =>
+            {
+                e.HasKey(kill => new { kill.EncounterId, kill.RaidId });
+                e.HasOne(ek => ek.Encounter).WithMany().OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(ek => ek.Raid).WithMany(r => r.Kills).OnDelete(DeleteBehavior.Cascade);
+            });
 
             builder.Entity<Instance>().Property(instance => instance.Id).ValueGeneratedNever();
 
             builder.Entity<Item>().Property(item => item.Id).ValueGeneratedNever();
 
-            builder.Entity<LootListTeamSubmission>().HasKey(e => new { e.LootListCharacterId, e.LootListPhase, e.TeamId });
+            builder.Entity<LootListTeamSubmission>(e =>
+            {
+                e.HasKey(sub => new { sub.LootListCharacterId, sub.LootListPhase, sub.TeamId });
+                e.HasOne(sub => sub.LootList).WithMany(ll => ll.Submissions).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(sub => sub.Team).WithMany(team => team.Submissions).OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<RaidAttendee>().HasKey(attendee => new { attendee.CharacterId, attendee.RaidId });
+            builder.Entity<RaidAttendee>(e =>
+            {
+                e.HasKey(attendee => new { attendee.CharacterId, attendee.RaidId });
+                e.HasOne(a => a.Character).WithMany(c => c.Attendances).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(a => a.Raid).WithMany(r => r.Attendees).OnDelete(DeleteBehavior.Cascade);
+            });
 
-            builder.Entity<Raid>().Property(raid => raid.Id).ValueGeneratedNever();
+            builder.Entity<Raid>(e =>
+            {
+                e.Property(raid => raid.Id).ValueGeneratedNever();
+                e.HasOne(r => r.RaidTeam).WithMany(t => t.Raids).OnDelete(DeleteBehavior.Restrict);
+            });
 
             builder.Entity<RaidTeam>(e =>
             {
@@ -111,15 +162,24 @@ namespace ValhallaLootList.Server.Data
                 e.Property(team => team.Id).ValueGeneratedNever();
             });
 
-            builder.Entity<RaidTeamSchedule>().Property(schedule => schedule.Id).ValueGeneratedNever();
+            builder.Entity<RaidTeamSchedule>(e =>
+            {
+                e.Property(schedule => schedule.Id).ValueGeneratedNever();
+                e.HasOne(schedule => schedule.RaidTeam).WithMany(team => team.Schedules).OnDelete(DeleteBehavior.Cascade);
+            });
 
             builder.Entity<ItemRestriction>(e =>
             {
                 e.Property(restriction => restriction.Id).ValueGeneratedNever();
                 e.HasIndex(restriction => new { restriction.RestrictionLevel, restriction.Specializations });
+                e.HasOne(restriction => restriction.Item).WithMany(item => item.Restrictions).OnDelete(DeleteBehavior.Cascade);
             });
 
-            builder.Entity<LootListEntry>().Property(entry => entry.Id).ValueGeneratedNever();
+            builder.Entity<LootListEntry>(e =>
+            {
+                e.Property(entry => entry.Id).ValueGeneratedNever();
+                e.HasOne(entry => entry.LootList).WithMany(ll => ll.Entries).OnDelete(DeleteBehavior.Restrict);
+            });
 
             builder.Entity<Bracket>(e =>
             {

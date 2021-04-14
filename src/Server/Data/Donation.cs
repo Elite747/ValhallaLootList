@@ -26,8 +26,10 @@ namespace ValhallaLootList.Server.Data
 
         public int CopperAmount { get; set; }
 
+        [Obsolete("Use DonatedAt instead.")]
         public byte Month { get; set; }
 
+        [Obsolete("Use DonatedAt instead.")]
         public short Year { get; set; }
 
         [Required]

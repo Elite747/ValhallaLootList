@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
@@ -157,11 +158,8 @@ namespace ValhallaLootList.Server.Controllers
                 .CountAsync();
 
             var now = _serverTimeZoneInfo.TimeZoneNow();
-
-            var donations = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && d.Month == now.Month && d.Year == now.Year && d.RemovalId == null)
-                .SumAsync(d => (long)d.CopperAmount);
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == characterId);
+            var donations = donationMatrix.GetCreditForMonth(characterId, now);
 
             var returnDto = new LootListDto
             {
@@ -541,7 +539,7 @@ namespace ValhallaLootList.Server.Controllers
                 list.Status = LootListStatus.Approved;
                 var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
 
-                await foreach (var m in HelperQueries.GetMembersAsync(discordService, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
+                foreach (var m in await HelperQueries.GetMembersAsync(_context, discordService, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
                 {
                     member = m;
                     break;
@@ -681,12 +679,15 @@ namespace ValhallaLootList.Server.Controllers
             var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance && x.RemovalId == null);
 
             var now = _serverTimeZoneInfo.TimeZoneNow();
+            var lastMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0).AddMonths(-1);
 
-            var donationQuery = _context.Donations
-                .AsNoTracking()
-                .Where(d => d.Month == now.Month && d.Year == now.Year && d.RemovalId == null)
-                .GroupBy(d => new { d.CharacterId, d.Character.TeamId })
-                .Select(g => new { g.Key.CharacterId, g.Key.TeamId, Donated = g.Sum(d => (long)d.CopperAmount) });
+            Expression<Func<Donation, bool>> donationPredicate;
+
+            //var donationQuery = _context.Donations
+            //    .AsNoTracking()
+            //    .Where(d => d.Month == now.Month && d.Year == now.Year && d.RemovalId == null)
+            //    .GroupBy(d => new { d.CharacterId, d.Character.TeamId })
+            //    .Select(g => new { g.Key.CharacterId, g.Key.TeamId, Donated = g.Sum(d => (long)d.CopperAmount) });
 
             if (characterId.HasValue)
             {
@@ -706,7 +707,7 @@ namespace ValhallaLootList.Server.Controllers
                 passQuery = passQuery.Where(p => p.CharacterId == characterId);
                 entryQuery = entryQuery.Where(e => e.LootList.CharacterId == characterId);
                 attendanceQuery = attendanceQuery.Where(a => a.CharacterId == characterId);
-                donationQuery = donationQuery.Where(d => d.CharacterId == characterId);
+                donationPredicate = d => d.CharacterId == characterId;
                 teamId = character.TeamId;
             }
             else if (teamId.HasValue)
@@ -720,7 +721,7 @@ namespace ValhallaLootList.Server.Controllers
                 entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.Submissions.Any(s => s.TeamId == teamId));
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
-                donationQuery = donationQuery.Where(d => d.TeamId == teamId);
+                donationPredicate = d => d.Character.TeamId == teamId;
             }
             else
             {
@@ -764,13 +765,13 @@ namespace ValhallaLootList.Server.Controllers
 
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
 
-            var donations = await donationQuery.ToDictionaryAsync(d => d.CharacterId, d => d.Donated);
+            var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate);
 
             foreach (var dto in dtos)
             {
                 attendances.TryGetValue(dto.CharacterId, out int attended);
-                donations.TryGetValue(dto.CharacterId, out long donated);
-                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, donated));
+                var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
+                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, characterDonations));
             }
 
             var brackets = await _context.Brackets

@@ -49,8 +49,10 @@ namespace ValhallaLootList.Server.Controllers
                 Character = character,
                 CharacterId = character.Id,
                 EnteredById = User.GetDiscordId().GetValueOrDefault(),
+#pragma warning disable CS0618 // Type or member is obsolete
                 Month = (byte)nextMonth.Month,
                 Year = (short)nextMonth.Year
+#pragma warning restore CS0618 // Type or member is obsolete
             });
 
             await _context.SaveChangesAsync();

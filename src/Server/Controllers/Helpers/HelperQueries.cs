@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
@@ -14,11 +15,13 @@ namespace ValhallaLootList.Server.Controllers
 {
     public static class HelperQueries
     {
-        public static async IAsyncEnumerable<MemberDto> GetMembersAsync(DiscordService discordService, TimeZoneInfo timeZone, IQueryable<Character> characterQuery, PriorityScope scope, long teamId, string teamName, bool isLeader)
+        public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo timeZone, IQueryable<Character> characterQuery, PriorityScope scope, long teamId, string teamName, bool isLeader)
         {
             var now = timeZone.TimeZoneNow();
             var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
+            var lastMonth = thisMonth.AddMonths(-1);
+
+            var members = new List<MemberDto>();
 
             await foreach (var character in characterQuery
                 .Select(c => new
@@ -31,8 +34,6 @@ namespace ValhallaLootList.Server.Controllers
                     c.MemberStatus,
                     Verified = c.VerifiedById.HasValue,
                     LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Status, l.Phase }).ToList(),
-                    DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
-                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount),
                     Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId)
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
@@ -57,8 +58,6 @@ namespace ValhallaLootList.Server.Controllers
                     },
                     Status = character.MemberStatus,
                     Verified = character.Verified,
-                    DonatedThisMonth = character.DonatedThisMonth,
-                    DonatedNextMonth = character.DonatedNextMonth,
                     ThisMonthRequiredDonations = scope.RequiredDonationCopper,
                     NextMonthRequiredDonations = scope.RequiredDonationCopper,
                     Attendance = character.Attendance,
@@ -90,8 +89,24 @@ namespace ValhallaLootList.Server.Controllers
                     memberDto.LootLists.Add(lootListDto);
                 }
 
-                yield return memberDto;
+                members.Add(memberDto);
             }
+
+            var memberIds = members.ConvertAll(m => m.Character.Id);
+            var donationMatrix = await context.GetDonationMatrixAsync(d => memberIds.Contains(d.CharacterId));
+
+            foreach (var member in members)
+            {
+                member.DonatedThisMonth = donationMatrix.GetCreditForMonth(member.Character.Id, now);
+                member.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(member.Character.Id, now);
+
+                if (member.DonatedThisMonth > scope.RequiredDonationCopper)
+                {
+                    member.DonatedNextMonth += member.DonatedThisMonth - scope.RequiredDonationCopper;
+                }
+            }
+
+            return members;
         }
     }
 }

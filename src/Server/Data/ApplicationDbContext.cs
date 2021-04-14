@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,6 +67,28 @@ namespace ValhallaLootList.Server.Data
             var userId = user.GetDiscordId();
             var teamIdString = teamId.ToString();
             return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamIdString) > 0;
+        }
+
+        public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            var results = await Donations
+                .AsNoTracking()
+                .Where(d => d.RemovalId == null)
+                .Where(predicate)
+                .Select(d => new { d.DonatedAt.Year, d.DonatedAt.Month, d.CharacterId, d.CopperAmount })
+                .GroupBy(d => new { d.Year, d.Month, d.CharacterId })
+                .Select(g => new MonthDonations
+                {
+                    CharacterId = g.Key.CharacterId,
+                    Donated = g.Sum(d => d.CopperAmount),
+                    Month = g.Key.Month,
+                    Year = g.Key.Year,
+                })
+                .OrderBy(md => md.CharacterId)
+                .ThenBy(md => md.Year)
+                .ThenBy(md => md.Month)
+                .ToListAsync(cancellationToken);
+            return new(results, PrioCalculator.Scope);
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

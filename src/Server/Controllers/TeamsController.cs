@@ -95,7 +95,7 @@ namespace ValhallaLootList.Server.Controllers
             var scope = PrioCalculator.Scope;
             var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-            await foreach (var member in HelperQueries.GetMembersAsync(_discordService, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
+            foreach (var member in await HelperQueries.GetMembersAsync(_context, _discordService, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
             {
                 team.Roster.Add(member);
             }
@@ -333,18 +333,15 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == character.Id);
 
-            returnDto.DonatedThisMonth = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && d.Month == thisMonth.Month && d.Year == thisMonth.Year)
-                .SumAsync(d => (long)d.CopperAmount);
+            returnDto.DonatedThisMonth = donationMatrix.GetCreditForMonth(returnDto.Character.Id, now);
+            returnDto.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(returnDto.Character.Id, now);
 
-            returnDto.DonatedNextMonth = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && nextMonth.Month == now.Month && d.Year == nextMonth.Year)
-                .SumAsync(d => (long)d.CopperAmount);
+            if (returnDto.DonatedThisMonth > scope.RequiredDonationCopper)
+            {
+                returnDto.DonatedNextMonth += returnDto.DonatedThisMonth - scope.RequiredDonationCopper;
+            }
 
             return returnDto;
         }

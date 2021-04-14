@@ -149,7 +149,7 @@ namespace ValhallaLootList.Server.Controllers
             var scope = PrioCalculator.Scope;
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
-                .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
+                .Where(x => !x.IgnoreAttendance && x.RemovalId == null && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
                 .Select(x => x.Raid.StartedAt.Date)
                 .Distinct()
                 .OrderByDescending(x => x)
@@ -160,7 +160,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var donations = await _context.Donations
                 .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && d.Month == now.Month && d.Year == now.Year)
+                .Where(d => d.CharacterId == character.Id && d.Month == now.Month && d.Year == now.Year && d.RemovalId == null)
                 .SumAsync(d => (long)d.CopperAmount);
 
             var returnDto = new LootListDto
@@ -676,15 +676,15 @@ namespace ValhallaLootList.Server.Controllers
         private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
         {
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
-            var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue);
+            var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null);
             var entryQuery = _context.LootListEntries.AsNoTracking();
-            var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance);
+            var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance && x.RemovalId == null);
 
             var now = _serverTimeZoneInfo.TimeZoneNow();
 
             var donationQuery = _context.Donations
                 .AsNoTracking()
-                .Where(d => d.Month == now.Month && d.Year == now.Year)
+                .Where(d => d.Month == now.Month && d.Year == now.Year && d.RemovalId == null)
                 .GroupBy(d => new { d.CharacterId, d.Character.TeamId })
                 .Select(g => new { g.Key.CharacterId, g.Key.TeamId, Donated = g.Sum(d => (long)d.CopperAmount) });
 

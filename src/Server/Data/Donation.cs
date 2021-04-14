@@ -35,5 +35,9 @@ namespace ValhallaLootList.Server.Data
 
         [Required]
         public virtual Character Character { get; set; } = null!;
+
+        public long? RemovalId { get; set; }
+
+        public virtual TeamRemoval? Removal { get; set; }
     }
 }

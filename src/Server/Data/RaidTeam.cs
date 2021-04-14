@@ -31,5 +31,7 @@ namespace ValhallaLootList.Server.Data
         public virtual ICollection<Raid> Raids { get; set; } = new HashSet<Raid>();
 
         public virtual ICollection<LootListTeamSubmission> Submissions { get; set; } = new HashSet<LootListTeamSubmission>();
+
+        public virtual ICollection<TeamRemoval> Removals { get; set; } = new HashSet<TeamRemoval>();
     }
 }

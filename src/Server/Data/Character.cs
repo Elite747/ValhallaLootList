@@ -48,5 +48,7 @@ namespace ValhallaLootList.Server.Data
         public virtual ICollection<CharacterEncounterKill> EncounterKills { get; set; } = new HashSet<CharacterEncounterKill>();
 
         public virtual ICollection<Donation> Donations { get; set; } = new HashSet<Donation>();
+
+        public virtual ICollection<TeamRemoval> Removals { get; set; } = new HashSet<TeamRemoval>();
     }
 }

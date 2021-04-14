@@ -51,6 +51,7 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<RaidAttendee> RaidAttendees { get; set; } = null!;
         public virtual DbSet<RaidTeam> RaidTeams { get; set; } = null!;
         public virtual DbSet<RaidTeamSchedule> RaidTeamSchedules { get; set; } = null!;
+        public virtual DbSet<TeamRemoval> TeamRemovals { get; set; } = null!;
         public virtual DbSet<Bracket> Brackets { get; set; } = null!;
         public virtual DbSet<PhaseDetails> PhaseDetails { get; set; } = null!;
 
@@ -107,6 +108,7 @@ namespace ValhallaLootList.Server.Data
             {
                 e.Property(donation => donation.Id).ValueGeneratedNever();
                 e.HasOne(donation => donation.Character).WithMany(c => c.Donations).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(donation => donation.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<DropPass>(e =>
@@ -117,6 +119,7 @@ namespace ValhallaLootList.Server.Data
 #pragma warning restore CS0618 // Type or member is obsolete
                 e.HasOne(dp => dp.Drop).WithMany(d => d.Passes).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(dp => dp.LootListEntry).WithMany(lle => lle!.Passes).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(dp => dp.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<Encounter>(e =>
@@ -148,6 +151,7 @@ namespace ValhallaLootList.Server.Data
                 e.HasKey(attendee => new { attendee.CharacterId, attendee.RaidId });
                 e.HasOne(a => a.Character).WithMany(c => c.Attendances).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(a => a.Raid).WithMany(r => r.Attendees).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(a => a.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<Raid>(e =>
@@ -179,6 +183,13 @@ namespace ValhallaLootList.Server.Data
             {
                 e.Property(entry => entry.Id).ValueGeneratedNever();
                 e.HasOne(entry => entry.LootList).WithMany(ll => ll.Entries).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<TeamRemoval>(e =>
+            {
+                e.Property(removal => removal.Id).ValueGeneratedNever();
+                e.HasOne(removal => removal.Team).WithMany(team => team.Removals).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(removal => removal.Character).WithMany(character => character.Removals).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Bracket>(e =>

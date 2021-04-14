@@ -398,7 +398,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<IActionResult> DeleteMember(long id, long characterId)
+        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
             if (!await _context.IsLeaderOf(User, id))
             {
@@ -425,11 +425,35 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             character.TeamId = null;
+            character.MemberStatus = RaidMemberStatus.FullTrial;
 
-            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance).AsAsyncEnumerable())
+            var removal = new TeamRemoval(idGenerator.CreateId())
+            {
+                Character = character,
+                CharacterId = character.Id,
+                RemovedAt = _serverTimeZone.TimeZoneNow(),
+                Team = team,
+                TeamId = team.Id
+            };
+
+            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
             {
                 attendance.IgnoreAttendance = true;
                 attendance.IgnoreReason = "Character was removed from the raid team.";
+                attendance.Removal = removal;
+                attendance.RemovalId = removal.Id;
+            }
+
+            await foreach (var donation in _context.Donations.AsTracking().Where(d => d.CharacterId == character.Id && d.RemovalId == null).AsAsyncEnumerable())
+            {
+                donation.Removal = removal;
+                donation.RemovalId = removal.Id;
+            }
+
+            await foreach (var pass in _context.DropPasses.AsTracking().Where(p => p.CharacterId == character.Id && p.WonEntryId == null && p.RemovalId == null).AsAsyncEnumerable())
+            {
+                pass.Removal = removal;
+                pass.RemovalId = removal.Id;
             }
 
             await _context.SaveChangesAsync();
@@ -440,6 +464,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["TeamName"] = team.Name;
                 props["CharacterId"] = character.Id.ToString();
                 props["CharacterName"] = character.Name;
+                props["RemovalId"] = removal.Id.ToString();
             });
 
             return Accepted();

@@ -262,7 +262,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Owner"), Authorize(AppPolicies.Administrator)]
+        [HttpGet("{id:long}/Owner"), Authorize(AppPolicies.Administrator), Obsolete("Use Admin instead.")]
         public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
         {
             var character = await _context.Characters
@@ -288,6 +288,88 @@ namespace ValhallaLootList.Server.Controllers
                 Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
                 VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
             };
+        }
+
+        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordService discordService)
+        {
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Select(c => new { c.VerifiedById })
+                .FirstOrDefaultAsync();
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            var idString = id.ToString();
+
+            var claim = await _context.UserClaims.AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
+                .Select(c => new { c.UserId })
+                .FirstOrDefaultAsync();
+
+            var removals = await _context.TeamRemovals
+                .AsNoTracking()
+                .Where(r => r.CharacterId == id)
+                .OrderByDescending(r => r.RemovedAt)
+                .Select(r => new TeamRemovalDto
+                {
+                    Id = r.Id,
+                    RemovedAt = r.RemovedAt,
+                    TeamId = r.TeamId,
+                    TeamName = r.Team.Name
+                })
+                .ToListAsync();
+
+            return new CharacterAdminDto
+            {
+                TeamRemovals = removals,
+                Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
+                VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
+            };
+        }
+
+        [HttpDelete("{id:long}/Removals/{removalId:long}"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult> DeleteRemoval(long id, long removalId)
+        {
+            var character = await _context.Characters.FindAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            var removal = await _context.TeamRemovals.FindAsync(removalId);
+
+            if (removal is null)
+            {
+                return NotFound();
+            }
+
+            if (removal.CharacterId != character.Id)
+            {
+                return Problem("Removal is not for the specified character.");
+            }
+
+            // Other removal relationships will be set to null on save. Attendances need to also have their ignore fields cleared.
+            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.RemovalId == removal.Id).AsAsyncEnumerable())
+            {
+                attendance.IgnoreAttendance = false;
+                attendance.IgnoreReason = null;
+                attendance.Removal = null;
+                attendance.RemovalId = null;
+            }
+
+            _context.TeamRemovals.Remove(removal);
+
+            await _context.SaveChangesAsync();
+
+            TrackTelemetry("RemovalUndone", character);
+
+            return Ok();
         }
 
         [HttpPost("{id:long}/Verify"), Authorize(AppPolicies.Administrator)]

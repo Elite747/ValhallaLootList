@@ -493,6 +493,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 attendee.IgnoreAttendance = false;
                 attendee.IgnoreReason = null;
+                attendee.RemovalId = null;
             }
 
             await _context.SaveChangesAsync();

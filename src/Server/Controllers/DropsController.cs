@@ -91,8 +91,8 @@ namespace ValhallaLootList.Server.Controllers
                     Id = c.CharacterId,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
-                    Donated = c.Character.Donations.Where(d => d.Month == now.Month && d.Year == now.Year).Sum(d => (long)d.CopperAmount),
-                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId)
+                    Donated = c.Character.Donations.Where(d => d.Month == now.Month && d.Year == now.Year && d.RemovalId == null).Sum(d => (long)d.CopperAmount),
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId && x.RemovalId == null)
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
@@ -105,7 +105,7 @@ namespace ValhallaLootList.Server.Controllers
                             e.Id,
                             e.Rank,
                             e.LootList.Status,
-                            Passes = e.Passes.Count
+                            Passes = e.Passes.Count(p => p.RemovalId == null)
                         })
                         .FirstOrDefault()
                 })
@@ -132,7 +132,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     var passes = await _context.DropPasses
                         .AsTracking()
-                        .Where(p => p.LootListEntryId == winner.Entry.Id)
+                        .Where(p => p.LootListEntryId == winner.Entry.Id && p.RemovalId == null)
                         .ToListAsync();
 
                     Debug.Assert(passes.Count == winner.Entry.Passes);
@@ -281,8 +281,8 @@ namespace ValhallaLootList.Server.Controllers
                     c.Character.Name,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
-                    Donated = c.Character.Donations.Where(d => d.Month == now.Month && d.Year == now.Year).Sum(d => (long)d.CopperAmount),
-                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId)
+                    Donated = c.Character.Donations.Where(d => d.Month == now.Month && d.Year == now.Year && d.RemovalId == null).Sum(d => (long)d.CopperAmount),
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId && x.RemovalId == null)
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
@@ -295,7 +295,7 @@ namespace ValhallaLootList.Server.Controllers
                             e.Id,
                             e.Rank,
                             e.LootList.Status,
-                            Passes = e.Passes.Count
+                            Passes = e.Passes.Count(p => p.RemovalId == null)
                         })
                         .FirstOrDefault()
                 })

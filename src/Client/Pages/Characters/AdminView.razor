@@ -3,32 +3,43 @@
 @inject ISnackbar Snackbar
 @inject PermissionManager Permissions
 
-<ApiExecutor Operation="() => Api.Characters.GetOwner(Character.Id)" Context="owner" @ref="_executor">
+<ApiExecutor Operation="() => Api.Characters.GetAdminInfo(Character.Id)" Context="adminInfo" @ref="_executor">
     <MudCard Class="mb-3">
         <MudCardContent>
-            @if (owner.Owner is null)
+            @if (adminInfo.Owner is null)
             {
                 <MudText Color="Color.Error">Unclaimed!</MudText>
             }
             else
             {
-                <div>Owner: <GuildMemberDisplay Member="owner.Owner" /></div>
-                @if (owner.VerifiedBy is null)
+                <div>Owner: <GuildMemberDisplay Member="adminInfo.Owner" /></div>
+                @if (adminInfo.VerifiedBy is null)
                 {
                     <MudText Color="Color.Error">Unverified!</MudText>
                 }
                 else
                 {
-                    <div>Verified By: <GuildMemberDisplay Member="owner.VerifiedBy" /></div>
+                    <div>Verified By: <GuildMemberDisplay Member="adminInfo.VerifiedBy" /></div>
                 }
+            }
+
+            <MudDivider DividerType="DividerType.Middle" Class="my-2" />
+
+            @foreach (var r in adminInfo.TeamRemovals)
+            {
+                var removal = r;
+                <MudText>
+                    Removed from @removal.TeamName on <DateTimeDisplay Date="removal.RemovedAt" Format="F" />
+                    <MudIconButton OnClick="() => DeleteRemovalAsync(adminInfo, removal)" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" Size="Size.Small" />
+                </MudText>
             }
         </MudCardContent>
         <MudCardActions>
-            <MudButton OnClick="() => SetOwnerAsync(owner.Owner)" Color="Color.Primary">@(owner.Owner is null ? "Set" : "Change") Owner</MudButton>
+            <MudButton OnClick="() => SetOwnerAsync(adminInfo.Owner)" Color="Color.Primary">@(adminInfo.Owner is null ? "Set" : "Change") Owner</MudButton>
 
-            @if (owner.VerifiedBy is null && owner.Owner is not null)
+            @if (adminInfo.VerifiedBy is null && adminInfo.Owner is not null)
             {
-                <MudButton OnClick="() => VerifyOwnerAsync(owner.Owner)" Color="Color.Primary">Verify Owner</MudButton>
+                <MudButton OnClick="() => VerifyOwnerAsync(adminInfo.Owner)" Color="Color.Primary">Verify Owner</MudButton>
             }
         </MudCardActions>
     </MudCard>
@@ -93,6 +104,21 @@
             {
                 await _executor.RestartAsync();
             }
+        }
+    }
+
+    private async Task DeleteRemovalAsync(CharacterAdminDto adminInfo, TeamRemovalDto removal)
+    {
+        if (await DialogService.ShowAsync<UndoTeamRemovalDialog, bool>(string.Empty, parameters: new()
+        {
+            [nameof(UndoTeamRemovalDialog.Character)] = Character,
+            [nameof(UndoTeamRemovalDialog.Removal)] = removal
+        }))
+        {
+            await Api.Characters.DeleteRemoval(Character.Id, removal.Id)
+                .OnSuccess(_ => adminInfo.TeamRemovals.Remove(removal))
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
         }
     }
 }

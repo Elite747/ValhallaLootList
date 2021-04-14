@@ -1,0 +1,29 @@
+﻿<MudDialog>
+    <TitleContent>
+        Undo Team @Removal.TeamName removal on <DateTimeDisplay Date="Removal.RemovedAt" Format="d" />
+    </TitleContent>
+    <DialogContent>
+        <MudText>
+            Undoing this removal will re-instate all donation, attendance, and loss bonuses that were revoked from this team removal.
+            Note that attendance bonuses still only apply to the team that ran the raid. Are you sure you want to re-instate
+            @Character.Name's bonuses?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Dialog.Close(DialogResult.Ok(true))">Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public TeamRemovalDto Removal { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+        if (Removal is null) throw new ArgumentNullException(nameof(Removal));
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+}

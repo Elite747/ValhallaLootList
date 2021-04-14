@@ -53,9 +53,14 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest(HttpMethod.Delete, "api/v1/characters/" + id);
         }
 
-        public IApiClientOperation<CharacterOwnerDto> GetOwner(long id)
+        public IApiClientOperation<CharacterAdminDto> GetAdminInfo(long id)
         {
-            return Client.CreateRequest<CharacterOwnerDto>(HttpMethod.Get, "api/v1/characters/" + id + "/owner");
+            return Client.CreateRequest<CharacterAdminDto>(HttpMethod.Get, "api/v1/characters/" + id + "/admin");
+        }
+
+        public IApiClientOperation DeleteRemoval(long id, long removalId)
+        {
+            return Client.CreateRequest(HttpMethod.Delete, $"api/v1/characters/{id}/removals/{removalId}");
         }
 
         public IApiClientOperation SetOwner(long id, long ownerId)

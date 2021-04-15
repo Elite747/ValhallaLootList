@@ -21,7 +21,7 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
-        [Required]
+        [Required, StringLength(24, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
 
         public virtual ICollection<Character> Roster { get; set; } = new HashSet<Character>();

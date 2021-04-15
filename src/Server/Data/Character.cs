@@ -21,7 +21,7 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
-        [Required, StringLength(16, MinimumLength = 2)]
+        [Required, StringLength(12, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
 
         public PlayerRace Race { get; set; }

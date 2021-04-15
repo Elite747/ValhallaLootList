@@ -21,7 +21,7 @@ namespace ValhallaLootList.Server.Data
         [Key]
         public uint Id { get; }
 
-        [Required]
+        [Required, StringLength(56)]
         public string Name { get; set; } = null!;
 
         public uint? RewardFromId { get; set; }

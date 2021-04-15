@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
@@ -152,7 +153,7 @@ namespace ValhallaLootList.Server.Controllers
             Debug.Assert(dto.Class.HasValue);
             Debug.Assert(dto.Race.HasValue);
 
-            var normalizedName = NormalizeName(dto.Name);
+            var normalizedName = NameHelpers.NormalizeName(dto.Name);
 
             if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
             {
@@ -529,19 +530,6 @@ namespace ValhallaLootList.Server.Controllers
                 Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
                 _ => Array.Empty<Specializations>()
             };
-        }
-
-        private static string NormalizeName(string name)
-        {
-            return string.Create(name.Length, name, (span, name) =>
-            {
-                span[0] = char.ToUpperInvariant(name[0]);
-
-                for (int i = 1; i < span.Length; i++)
-                {
-                    span[i] = char.ToLowerInvariant(name[i]);
-                }
-            });
         }
 
         private void TrackTelemetry(string name, Character character)

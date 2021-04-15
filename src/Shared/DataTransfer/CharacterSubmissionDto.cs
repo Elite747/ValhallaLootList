@@ -2,12 +2,13 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.ComponentModel.DataAnnotations;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.DataTransfer
 {
     public class CharacterSubmissionDto
     {
-        [Required, StringLength(16, MinimumLength = 2)]
+        [Required, CharacterName]
         public string? Name { get; set; }
 
         [Required]

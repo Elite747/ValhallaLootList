@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.Server.Data
 {
@@ -21,7 +22,7 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
-        [Required, StringLength(24, MinimumLength = 2)]
+        [Required, StringLength(24, MinimumLength = 2), GuildName]
         public string Name { get; set; } = string.Empty;
 
         public virtual ICollection<Character> Roster { get; set; } = new HashSet<Character>();

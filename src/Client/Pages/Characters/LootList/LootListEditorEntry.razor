@@ -8,17 +8,6 @@
     }
     @if (item is not null)
     {
-        var restrictions = item.Restrictions.Where(r => (r.Specs & Editor.LootList.MainSpec) != 0);
-
-        if (Entry.BracketAllowsOffspec && Editor.LootList.OffSpec != Editor.LootList.MainSpec)
-        {
-            var offspecRestrictions = item.Restrictions.Where(r => (r.Specs & Editor.LootList.OffSpec) != 0);
-
-            if (restrictions.Any() ^ offspecRestrictions.Any())
-            {
-                restrictions = Array.Empty<RestrictionDto>();
-            }
-        }
         <div class="d-flex align-center py-1">
             <CascadingItemContext Id="item.Id">
                 <MudAvatar Rounded="true"
@@ -65,7 +54,7 @@
             </CascadingItemContext>
         </div>
         <ul>
-            @foreach (var restriction in restrictions)
+            @foreach (var restriction in item.GetRestrictions(Editor.LootList.MainSpec, Editor.LootList.OffSpec, Entry.BracketAllowsOffspec))
             {
                 <li>
                     <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
@@ -74,6 +63,12 @@
                 </li>
             }
         </ul>
+        @if (Entry.Justification?.Length > 0)
+        {
+            <div>
+                Justification: @Entry.Justification
+            </div>
+        }
     }
     else if (!Entry.Won)
     {
@@ -156,12 +151,34 @@
 
         if (selectedId.HasValue)
         {
+            string? justification = null;
             if (selectedId == 0U)
             {
                 selectedId = null;
             }
+            else
+            {
+                var item = Items.First(i => i.Id == selectedId);
+                var restrictions = item.GetRestrictions(Editor.LootList.MainSpec, Editor.LootList.OffSpec, Entry.BracketAllowsOffspec).ToList();
 
-            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId, RemoveIfInvalid = true };
+                if (restrictions.Count != 0)
+                {
+                    justification = await DialogService.ShowAsync<JustifyDialog, string?>(
+                        string.Empty,
+                        new()
+                        {
+                            [nameof(JustifyDialog.Restrictions)] = restrictions,
+                            [nameof(JustifyDialog.Item)] = item
+                        });
+
+                    if (string.IsNullOrWhiteSpace(justification))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId, Justification = justification, RemoveIfInvalid = true };
             if (selectedId.HasValue)
             {
                 var swapEntry = Editor.LootList.Entries.Find(e => e.Id != Entry.Id && e.ItemId == selectedId);
@@ -182,12 +199,14 @@
     private void HandleSuccess(LootListEntryUpdateDto update)
     {
         Entry.ItemId = update.ItemId;
+        Entry.Justification = update.EntryJustification;
         if (update.SwapEntryId.HasValue)
         {
             var entry = Editor.LootList.Entries.Find(e => e.Id == update.SwapEntryId);
             if (entry is not null)
             {
                 entry.ItemId = update.SwapItemId;
+                entry.Justification = update.SwapEntryJustification;
                 Editor.NotifyStateChanged();
             }
         }
@@ -228,7 +247,15 @@
 
         if (!Entry.Won && Editor.DraggingEntry is not null && Editor.DraggingEntry != Entry)
         {
-            return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = Editor.DraggingEntry.ItemId, SwapEntryId = Editor.DraggingEntry.Id })
+            return Api.LootListEntries.Submit(
+                Entry.Id,
+                new()
+                {
+                    EntryId = Entry.Id,
+                    ItemId = Editor.DraggingEntry.ItemId,
+                    Justification = Editor.DraggingEntry.Justification,
+                    SwapEntryId = Editor.DraggingEntry.Id
+                })
                 .OnSuccess(HandleSuccess)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
@@ -239,7 +266,7 @@
 
     private Task ClearAsync()
     {
-        return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = null })
+        return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = null, Justification = null })
             .OnSuccess(HandleSuccess)
             .SendErrorTo(Snackbar)
             .ExecuteAsync();

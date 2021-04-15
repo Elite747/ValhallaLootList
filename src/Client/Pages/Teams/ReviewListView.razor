@@ -100,6 +100,12 @@
                                     </li>
                                 }
                             </ul>
+                            @if (entry.Justification?.Length > 0)
+                            {
+                                <div>
+                                    Justification: @entry.Justification
+                                </div>
+                            }
                         </MudItem>
                     }
                 }
@@ -146,17 +152,7 @@
 
     private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, LootListEntryDto entry)
     {
-        var restrictions = item.Restrictions.Where(r => (r.Specs & LootList.MainSpec) != 0);
-
-        if (entry.BracketAllowsOffspec && LootList.OffSpec != LootList.MainSpec)
-        {
-            if (restrictions.Any() ^ item.Restrictions.Any(r => (r.Specs & LootList.OffSpec) != 0))
-            {
-                return Array.Empty<RestrictionDto>();
-            }
-        }
-
-        return restrictions.OrderBy(r => r.Level);
+        return item.GetRestrictions(LootList.MainSpec, LootList.OffSpec, entry.BracketAllowsOffspec);
     }
 
     private Task SetEditableAsync()

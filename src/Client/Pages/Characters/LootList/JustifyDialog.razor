@@ -1,0 +1,77 @@
+﻿<MudDialog>
+    <TitleContent>
+        @if (Restrictions.Any(r => r.Level == ItemRestrictionLevel.Restricted))
+        {
+            <span class="mud-error-text">Restricted</span> <span>Item</span>
+        }
+        else
+        {
+            <span class="mud-warning-text">Review</span> <span>Item</span>
+        }
+    </TitleContent>
+    <DialogContent>
+        <MudText>
+            <ItemLink Id="Item.Id" PlaceholderText="@Item.Name" Colorize="true" Bracketize="true" LinkEnabled="true" />
+            has the following restrictions:
+        </MudText>
+        <ul>
+            @foreach (var restriction in Restrictions)
+            {
+
+                <li>
+                    <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                        @restriction.Reason
+                    </MudText>
+                </li>
+            }
+        </ul>
+
+        <MudText Class="mb-3">
+            Please enter a justification for this item to be on your list.
+        </MudText>
+
+        <MudTextField Label="Justification"
+                      @bind-Value="_justification"
+                      Immediate="true"
+                      Validation="(Func<string?, string?>)Validate"
+                      Variant="Variant.Filled"
+                      Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_justification?.Trim()))"
+                   Disabled="Validate(_justification) is not null"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled">
+            Submit
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? _justification;
+
+    [Parameter] public ItemDto Item { get; set; } = null!;
+    [Parameter] public List<RestrictionDto> Restrictions { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Item is null) throw new ArgumentNullException(nameof(Item));
+        if (Restrictions is null) throw new ArgumentNullException(nameof(Restrictions));
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+
+    private string? Validate(string? justification)
+    {
+        if (string.IsNullOrWhiteSpace(justification))
+        {
+            return "Justification is required.";
+        }
+        else if (justification.Length > 256)
+        {
+            return "Justification is too long.";
+        }
+        return null;
+    }
+}

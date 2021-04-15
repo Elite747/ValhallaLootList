@@ -9,8 +9,12 @@ namespace ValhallaLootList.DataTransfer
 
         public uint? ItemId { get; set; }
 
+        public string? EntryJustification { get; set; }
+
         public long? SwapEntryId { get; set; }
 
         public uint? SwapItemId { get; set; }
+
+        public string? SwapEntryJustification { get; set; }
     }
 }

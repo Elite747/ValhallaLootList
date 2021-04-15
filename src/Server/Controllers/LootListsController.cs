@@ -255,6 +255,7 @@ namespace ValhallaLootList.Server.Controllers
                         else if (processed < bracket.MaxItems)
                         {
                             entry.ItemId = null;
+                            entry.Justification = null;
                             entries.Add(entry);
                             processed++;
                         }
@@ -763,7 +764,9 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(g => new { CharacterId = g.Key, Count = g.Select(a => a.Date).Distinct().Count() })
                 .ToDictionaryAsync(g => g.CharacterId, g => g.Count);
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
+            var characterAuthorizationLookup = new Dictionary<long, bool>();
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.RaidLeaderOrAdmin);
 
             var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate);
 
@@ -772,6 +775,16 @@ namespace ValhallaLootList.Server.Controllers
                 attendances.TryGetValue(dto.CharacterId, out int attended);
                 var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
                 dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, characterDonations));
+
+                if (authorizationResult.Succeeded)
+                {
+                    characterAuthorizationLookup[dto.CharacterId] = true;
+                }
+                else if (!characterAuthorizationLookup.ContainsKey(dto.CharacterId))
+                {
+                    var ownerAuthResult = await _authorizationService.AuthorizeAsync(User, dto.CharacterId, AppPolicies.CharacterOwner);
+                    characterAuthorizationLookup[dto.CharacterId] = ownerAuthResult.Succeeded;
+                }
             }
 
             var brackets = await _context.Brackets
@@ -789,6 +802,7 @@ namespace ValhallaLootList.Server.Controllers
                     ItemName = (string?)e.Item!.Name,
                     Won = e.DropId != null,
                     e.Rank,
+                    e.Justification,
                     e.LootList.Phase,
                     e.LootList.CharacterId
                 })
@@ -807,6 +821,8 @@ namespace ValhallaLootList.Server.Controllers
 
                     var bracket = brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank);
 
+                    characterAuthorizationLookup.TryGetValue(dto.CharacterId, out var hasRankPrivilege);
+
                     dto.Entries.Add(new LootListEntryDto
                     {
                         Bonuses = bonuses,
@@ -814,11 +830,12 @@ namespace ValhallaLootList.Server.Controllers
                         ItemId = entry.ItemId,
                         RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
-                        Rank = dto.Status == LootListStatus.Locked || authorizationResult.Succeeded ? entry.Rank : 0,
+                        Justification = hasRankPrivilege ? entry.Justification : null,
+                        Rank = dto.Status == LootListStatus.Locked || hasRankPrivilege ? entry.Rank : 0,
                         Won = entry.Won,
-                        Bracket = bracket?.Index ?? 0,
-                        BracketAllowsOffspec = bracket?.AllowOffspec ?? false,
-                        BracketAllowsTypeDuplicates = bracket?.AllowTypeDuplicates ?? false
+                        Bracket = hasRankPrivilege && bracket is not null ? bracket.Index : 0,
+                        BracketAllowsOffspec = hasRankPrivilege && (bracket?.AllowOffspec ?? false),
+                        BracketAllowsTypeDuplicates = hasRankPrivilege && (bracket?.AllowTypeDuplicates ?? false)
                     });
                 }
             }

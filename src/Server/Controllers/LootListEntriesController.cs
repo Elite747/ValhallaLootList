@@ -64,7 +64,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Entry is already set to the specified item.");
             }
 
-            var returnDto = new LootListEntryUpdateDto { EntryId = entryId, ItemId = dto.ItemId, SwapEntryId = dto.SwapEntryId };
+            var returnDto = new LootListEntryUpdateDto { EntryId = entryId, ItemId = dto.ItemId, EntryJustification = dto.Justification, SwapEntryId = dto.SwapEntryId };
             bool allowed;
             string? reason;
 
@@ -90,8 +90,11 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 var oldItemId = entry.ItemId;
+                var oldJustification = entry.Justification;
                 entry.ItemId = dto.ItemId;
+                entry.Justification = dto.Justification;
                 swapEntry.ItemId = oldItemId;
+                swapEntry.Justification = oldJustification;
 
                 (allowed, reason) = await CheckAllowedAsync(entry, swapEntry, dto.RemoveIfInvalid);
 
@@ -101,10 +104,12 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 returnDto.SwapItemId = swapEntry.ItemId;
+                returnDto.SwapEntryJustification = swapEntry.Justification;
             }
             else
             {
                 entry.ItemId = dto.ItemId;
+                entry.Justification = dto.Justification;
 
                 (allowed, reason) = await CheckAllowedAsync(entry, null, dto.RemoveIfInvalid);
 
@@ -226,6 +231,7 @@ namespace ValhallaLootList.Server.Controllers
                         if (removeIfInvalid)
                         {
                             swapEntry.ItemId = null;
+                            swapEntry.Justification = null;
                         }
                         else
                         {

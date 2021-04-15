@@ -19,6 +19,8 @@ namespace ValhallaLootList.DataTransfer
 
         public string? ItemName { get; set; }
 
+        public string? Justification { get; set; }
+
         public bool Won { get; set; }
 
         public int Bracket { get; set; }

@@ -34,6 +34,9 @@ namespace ValhallaLootList.Server.Data
 
         public Drop? Drop { get; set; }
 
+        [StringLength(256)]
+        public string? Justification { get; set; }
+
         public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
     }
 }

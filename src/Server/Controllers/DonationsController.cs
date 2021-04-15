@@ -38,21 +38,13 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
-
             _context.Donations.Add(new Donation(_idGenerator.CreateId())
             {
                 CopperAmount = dto.CopperAmount,
-                DonatedAt = now,
+                DonatedAt = _serverTimeZone.TimeZoneNow(),
                 Character = character,
                 CharacterId = character.Id,
-                EnteredById = User.GetDiscordId().GetValueOrDefault(),
-#pragma warning disable CS0618 // Type or member is obsolete
-                Month = (byte)nextMonth.Month,
-                Year = (short)nextMonth.Year
-#pragma warning restore CS0618 // Type or member is obsolete
+                EnteredById = User.GetDiscordId().GetValueOrDefault()
             });
 
             await _context.SaveChangesAsync();

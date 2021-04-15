@@ -263,34 +263,6 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Owner"), Authorize(AppPolicies.Administrator), Obsolete("Use Admin instead.")]
-        public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
-        {
-            var character = await _context.Characters
-                .AsNoTracking()
-                .Where(c => c.Id == id)
-                .Select(c => new { c.VerifiedById })
-                .FirstOrDefaultAsync();
-
-            if (character is null)
-            {
-                return NotFound();
-            }
-
-            var idString = id.ToString();
-
-            var claim = await _context.UserClaims.AsNoTracking()
-                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
-                .Select(c => new { c.UserId })
-                .FirstOrDefaultAsync();
-
-            return new CharacterOwnerDto
-            {
-                Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
-                VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
-            };
-        }
-
         [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordService discordService)
         {

@@ -21,21 +21,12 @@ namespace ValhallaLootList.Server.Data
 
         public byte Phase { get; set; }
 
-        [Obsolete("Use Status instead")]
-        public bool Locked { get; set; }
-
         public LootListStatus Status { get; set; }
-
-        [Obsolete("Use Submissions instead.")]
-        public long? SubmittedToId { get; set; }
 
         public long? ApprovedBy { get; set; }
 
         [Timestamp]
         public byte[] Timestamp { get; set; } = Array.Empty<byte>();
-
-        [Obsolete("Use Submissions instead.")]
-        public RaidTeam? SubmittedTo { get; set; }
 
         public virtual ICollection<LootListEntry> Entries { get; set; } = new HashSet<LootListEntry>();
 

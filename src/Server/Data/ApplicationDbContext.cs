@@ -137,9 +137,6 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<DropPass>(e =>
             {
                 e.HasKey(e => new { e.DropId, e.CharacterId });
-#pragma warning disable CS0618 // Type or member is obsolete
-                e.HasOne(dp => dp.Character).WithMany(c => c.Passes).OnDelete(DeleteBehavior.Cascade);
-#pragma warning restore CS0618 // Type or member is obsolete
                 e.HasOne(dp => dp.Drop).WithMany(d => d.Passes).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(dp => dp.LootListEntry).WithMany(lle => lle!.Passes).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(dp => dp.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);

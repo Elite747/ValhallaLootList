@@ -1,4 +1,6 @@
-﻿@if (Member?.Nickname?.Length > 0)
+﻿@namespace ValhallaLootList.Client.Shared
+
+@if (Member?.Nickname?.Length > 0)
 {
     <span>@Member.Nickname <span class="mud-text-secondary">(@Member.Username#@Member.Discriminator)</span></span>
 }

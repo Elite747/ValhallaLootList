@@ -35,7 +35,7 @@
     </AuthorizeView>
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" ActivePanelIndex="_tabIndex" ActivePanelIndexChanged="OnTabChanged" @ref="_tabs">
+        <MudTabsEx Elevation="5" Rounded="true" ApplyEffectsToContainer="true" InitialTabId="GetPanelId()" ActivePanelIndexChanged="OnTabChanged" @ref="_tabs">
             @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderBy(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
@@ -48,7 +48,7 @@
             <MudTabPanel Text="Attendance" ID="_attendanceId">
                 <AttendanceView Character="character" />
             </MudTabPanel>
-        </MudTabs>
+        </MudTabsEx>
     </ApiExecutor>
 </ApiExecutor>
 
@@ -59,7 +59,6 @@
     private bool _characterChanged;
     private string _characterName = string.Empty;
     private object _wonId = new(), _attendanceId = new();
-    private int _tabIndex;
 
     [Parameter] public string CharacterName
     {
@@ -148,7 +147,6 @@
 
     private void OnTabChanged(int index)
     {
-        _tabIndex = index;
         var panel = _tabs?.Panels.ElementAt(index);
         string? tab = null;
         byte? phase = null;

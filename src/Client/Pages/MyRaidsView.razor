@@ -10,7 +10,7 @@
         <MudList Dense="true" Clickable="true">
             @foreach (var raid in myRaids)
             {
-                <MudListItem Href="@("raids/" + raid.Id)">
+                <MudListItem Href="@("raids/" + raid.Id)" @key="raid.Id">
                     @raid.TeamName Phase @raid.Phase Raid (<DateTimeDisplay Date="raid.StartedAt" Format="D" />)
                 </MudListItem>
             }

@@ -22,7 +22,7 @@
             <MudList Dense="true">
                 @foreach (var leader in leaders)
                 {
-                    <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+                    <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="leader.Id">
                         <div class="d-flex align-center">
                             <MudAvatar Class="mr-2">
                                 <GuildMemberAvatar Member="leader" Size="40" />

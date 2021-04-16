@@ -61,7 +61,7 @@
                                    T="string">
                             @foreach (var team in characters.Select(c => c.TeamName).Distinct().Where(str => str?.Length > 0).OrderBy(str => str))
                             {
-                                <MudSelectItem T="string" Value="@team">@team</MudSelectItem>
+                                <MudSelectItem T="string" Value="@team" @key="team">@team</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
@@ -69,7 +69,7 @@
             </MudListSubheader>
             @foreach (var ch in EnumerateCharacters(characters))
             {
-                <MudListItem Href="@("characters/" + ch.Name)">
+                <MudListItem Href="@("characters/" + ch.Name)" @key="ch.Id">
                     <div class="d-flex">
                         <PlayerIcon Race="ch.Race"
                                     Gender="ch.Gender"

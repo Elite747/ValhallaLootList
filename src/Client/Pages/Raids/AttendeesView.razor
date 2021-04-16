@@ -14,7 +14,7 @@
             var character = attendance.Character;
             System.Diagnostics.Debug.Assert(character is not null);
             <MudDivider />
-            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="character.Id">
                 <div class="d-flex">
                     <PlayerIcon Race="character.Race"
                                 Gender="character.Gender"

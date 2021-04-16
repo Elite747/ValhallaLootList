@@ -26,7 +26,7 @@
                     @foreach (var itemId in Input.Drops.Keys)
                     {
                         var localItemId = itemId;
-                        <div class="d-flex align-center py-1">
+                        <div class="d-flex align-center py-1" @key="itemId">
                             <CascadingItemContext Id="itemId">
                                 <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
                                     <ItemIcon Size="IconSize.Large" Width="56" Height="56" />
@@ -63,7 +63,8 @@
                             var id = character.Id;
                             <MudListItem Icon="@(Input.Attendees.Contains(id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
                                          OnClick="() => Input.ToggleAttendee(id)"
-                                         Text="@character.Name" />
+                                         Text="@character.Name"
+                                         @key="id" />
                         }
                     </MudList>
                 </MudItem>

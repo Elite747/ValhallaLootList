@@ -17,7 +17,7 @@
         <MudList Dense="true" Clickable="true">
             @foreach (var character in myCharacters)
             {
-                <MudListItem Href="@("characters/" + character.Name)">
+                <MudListItem Href="@("characters/" + character.Name)" @key="character.Id">
                     <div class="d-flex">
                         <PlayerIcon Race="character.Race"
                                     Gender="character.Gender"

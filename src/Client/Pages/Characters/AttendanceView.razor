@@ -19,7 +19,8 @@
                     <MudDivider />
                     <MudListItem Href="@("raids/" + attendance.RaidId)"
                                  IconColor="Color.Error"
-                                 Icon="@(attendance.IgnoreAttendance ? Icons.Material.Filled.Error : null)">
+                                 Icon="@(attendance.IgnoreAttendance ? Icons.Material.Filled.Error : null)"
+                                 @key="attendance.RaidId">
                         <MudText Typo="Typo.h6">@attendance.TeamName</MudText>
                         <MudText Typo="Typo.caption"><DateTimeDisplay Date="attendance.StartedAt" Format="f" /></MudText>
                         <MudText Typo="Typo.body1" Color="Color.Error">@attendance.IgnoreReason</MudText>

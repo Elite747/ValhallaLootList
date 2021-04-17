@@ -24,6 +24,13 @@
 
     private void SignIn()
     {
-        Navigation.NavigateTo("authentication/login?returnUrl=" + Navigation.Uri);
+        if (!Navigation.Uri.Contains("logged-out"))
+        {
+            Navigation.NavigateTo("authentication/login?returnUrl=" + Navigation.Uri);
+        }
+        else
+        {
+            Navigation.NavigateTo("authentication/login");
+        }
     }
 }

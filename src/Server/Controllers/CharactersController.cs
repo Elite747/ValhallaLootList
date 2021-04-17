@@ -233,9 +233,17 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (dto.Name?.Length > 0)
+            if (dto.Name?.Length > 0 && character.Name != dto.Name)
             {
-                character.Name = dto.Name;
+                var normalizedName = NameHelpers.NormalizeName(dto.Name);
+
+                if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
+                {
+                    ModelState.AddModelError(nameof(dto.Name), "A character with that name already exists.");
+                    return ValidationProblem();
+                }
+
+                character.Name = normalizedName;
             }
 
             if (dto.Race.HasValue)

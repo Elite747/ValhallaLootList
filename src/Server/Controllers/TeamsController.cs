@@ -394,12 +394,18 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        [HttpDelete("{id:long}/members/{characterId:long}")]
+        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService authService)
         {
-            if (!await _context.IsLeaderOf(User, id))
+            var auth = await authService.AuthorizeAsync(User, id, AppPolicies.RaidLeader);
+
+            if (auth.Succeeded)
             {
-                return Unauthorized();
+                auth = await authService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwner);
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
             }
 
             var team = await _context.RaidTeams.FindAsync(id);

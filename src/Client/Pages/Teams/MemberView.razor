@@ -76,6 +76,10 @@
         <AttendanceSummary Member="Member" />
 
         <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
+
+        <AuthorizeView Policy="@AppPolicies.CharacterOwner" Resource="Member.Character.Id" Context="_">
+            <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
+        </AuthorizeView>
     </NotAuthorized>
 </AuthorizeView>
 

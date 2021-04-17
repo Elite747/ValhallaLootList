@@ -10,11 +10,6 @@
                     <MudText Typo="Typo.h6">Roster</MudText>
                 </div>
                 <div class="mud-card-header-actions">
-                    <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="@Team.Id">
-                        <MudTooltip Text="Add Member">
-                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="AddMemberAsync" />
-                        </MudTooltip>
-                    </AuthorizeView>
                     <MudTooltip Text="Refresh">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="OnRefreshClicked" />
                     </MudTooltip>
@@ -68,18 +63,5 @@
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
         _phase = SelectedPhase ?? CurrentPhase;
-    }
-
-    private async Task AddMemberAsync()
-    {
-        var result = await DialogService.ShowAsync<MemberAdder, MemberDto>(
-            "Add Member",
-            new() { [nameof(MemberAdder.Team)] = Team },
-            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-
-        if (result is not null)
-        {
-            Team.Roster.Add(result);
-        }
     }
 }

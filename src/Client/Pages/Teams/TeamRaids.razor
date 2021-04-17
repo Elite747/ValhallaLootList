@@ -39,6 +39,6 @@
 
     private void StartRaid()
     {
-        DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = Team });
+        DialogService.Show<StartRaidWizard>("Start Raid", parameters: new() { [nameof(StartRaidWizard.Team)] = Team });
     }
 }

@@ -1,0 +1,120 @@
+﻿@inject ApiClient Api
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService  
+  
+<WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
+    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
+        @{ State.Phase = phaseConfig.CurrentPhase; }
+        <WizardSection Name="Select Phase" CanLeave="() => phaseConfig.Phases.Contains(State.Phase)">
+            <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                <MudList Clickable="true" Dense="true">
+                    @foreach (var p in phaseConfig.Phases)
+                    {
+                        var phase = p;
+                        <MudListItem Icon="@(phase == State.Phase ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                     OnClick="() => State.Phase = phase">
+                            Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
+                        </MudListItem>
+                    }
+                </MudList>
+            </ApiExecutor>
+        </WizardSection>
+        <WizardSection Name="Roster">
+            <MudList Clickable="true" Dense="true">
+                @foreach (var member in Team.Roster)
+                {
+                    <MudListItem Icon="@(State.Attendees.ContainsKey(member.Character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
+                                 OnClick="() => ToggleAttendee(member.Character)"
+                                 @key="member.Character.Id">
+                        <PlayerIcon Gender="member.Character.Gender"
+                                    PlayerClass="member.Character.Class"
+                                    Race="member.Character.Race"
+                                    Spec="member.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec ?? Specializations.None"
+                                    Size="Size.Small" />
+                        <span class="ml-2">@member.Character.Name</span>
+                    </MudListItem>
+                }
+            </MudList>
+        </WizardSection>
+        <WizardSection Name="Additional Attendees">
+            <ApiExecutor Operation="Api.Characters.GetAll" Context="characters">
+                <MudList Dense="true">
+                    @foreach (var c in characters.Where(c => c.TeamId != Team.Id && State.Attendees.ContainsKey(c.Id)).OrderBy(c => c.Name))
+                    {
+                        <MudListItem @key="c.Id">
+                            <div class="d-flex align-center">
+                                <PlayerIcon Gender="c.Gender" PlayerClass="c.Class" Race="c.Race" Size="Size.Small" />
+                                <span class="ml-2 mr-auto">@c.Name</span>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="() => ToggleAttendee(c)" />
+                            </div>
+                        </MudListItem>
+                        <MudDivider />
+                    }
+                </MudList>
+                <MudButton OnClick="AddAttendeeAsync" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
+            </ApiExecutor>
+        </WizardSection>
+    </ApiExecutor>
+</WizardDialog>
+
+@code {
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    private StartRaidState State { get; } = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+        foreach (var attendee in Team.Roster)
+        {
+            State.Attendees[attendee.Character.Id] = attendee.Character;
+        }
+    }
+
+    private void ToggleAttendee(CharacterDto character)
+    {
+        if (State.Attendees.ContainsKey(character.Id))
+        {
+            State.Attendees.Remove(character.Id);
+        }
+        else
+        {
+            State.Attendees.Add(character.Id, character);
+        }
+    }
+
+    private Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    {
+        var dto = new RaidSubmissionDto
+        {
+            Attendees = State.Attendees.Values.Select(a => a.Id).ToList(),
+            Phase = State.Phase,
+            TeamId = Team.Id
+        };
+        return Api.Raids.Create(dto)
+            .OnSuccess(raid => Nav.NavigateTo("/raids/" + raid.Id))
+            .OnFailure(_ => arg.Cancel = true)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private async Task AddAttendeeAsync()
+    {
+        var character = await DialogService.ShowAsync<Raids.PickCharacterDialog, CharacterDto>(
+            string.Empty,
+            new() {
+                [nameof(Raids.PickCharacterDialog.Operation)] = (Func<IApiClientOperation<IList<CharacterDto>>>)Api.Characters.GetAll,
+                [nameof(Raids.PickCharacterDialog.Filter)] = (Func<CharacterDto, bool>)(c => c.TeamId != Team.Id),
+                [nameof(Raids.PickCharacterDialog.ShowAdd)] = true
+            },
+            new() { NoHeader = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+
+        if (character is not null)
+        {
+            State.Attendees[character.Id] = character;
+        }
+    }
+}

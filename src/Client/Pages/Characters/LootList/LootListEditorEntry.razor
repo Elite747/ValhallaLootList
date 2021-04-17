@@ -40,9 +40,7 @@
                         <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
                             Change Item
                         </MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="ClearAsync" Style="min-width: unset">
-                            🗙
-                        </MudButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Error" Size="Size.Small" OnClick="ClearAsync" />
                     }
                     else
                     {

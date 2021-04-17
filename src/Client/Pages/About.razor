@@ -1,0 +1,155 @@
+﻿@page "/about"
+
+<MudText Typo="Typo.h4" GutterBottom="true">About Valhalla Loot List</MudText>
+
+<MudText GutterBottom="true" Class="mb-5">
+    Valhalla Loot List is a loot system designed to speed up the looting process and reduce
+    loot related drama by putting control of loot expectations in the hands of the raiders.
+    Rather than a loot council determining who gets what item on the spot, raiders are tasked
+    with assigning each item they want a value. This list of values (your Loot List) is used
+    to calculate your priority for winning an item that drops. Raiders are in control of what
+    items they get and in what order.
+</MudText>
+
+<MudText Typo="Typo.h4" GutterBottom="true">FAQ</MudText>
+
+<AboutQA Question="How do I get onto a raid team?">
+    Create a loot list by going to your character page and submit your list to all raid teams you'd like to apply for.
+    If a team has a spot for you, they will either accept your list and add you to the roster, or contact you about
+    any issues with your list. Acceptance of a loot list is acceptance as a trial member to a raid team.
+</AboutQA>
+
+<AboutQA Question="What can I put on my loot list?">
+    For every phase of content, you may create a loot list containing gear that drops from the 25-man raids.
+    For each spec of every class, items are categorized as either <span class="mud-success-text">Allowed</span>,
+    <span class="mud-warning-text">Review</span>, or <span class="mud-error-text">Restricted</span>. While you may
+    list any equippable item on your loot list, putting restricted items on your list are very likely to get it rejected.
+    Review items may or may not be accepted depending on the raid leader's discretion. Be prepared to justify any
+    non-allowed items on your list.
+</AboutQA>
+
+<AboutQA Question="What are loot brackets?">
+    Loot Lists are divided into brackets to force loot to be spread out throughout the list and thus help ensure
+    items are distributed fairly amongst the raid. Each bracket has a set of rules dictating what items may be in them.
+    In most cases, a bracket will only allow one item of a category. So if you put a chestpiece in bracket 1 for example,
+    you may not put another chestpiece in the same bracket. The item categories are:
+    <ul style="list-style: disc; padding-inline-start: 40px">
+        <li>Head Armor</li>
+        <li>Shoulder Armor</li>
+        <li>Chest Armor</li>
+        <li>Waist Armor</li>
+        <li>Leg Armor</li>
+        <li>Foot Armor</li>
+        <li>Wrist Armor</li>
+        <li>Hand Armor</li>
+        <li>Rings & Necklaces</li>
+        <li>Trinkets</li>
+        <li>Cloaks</li>
+        <li>Weapons, Shields & Offhands</li>
+        <li>Wands & Relics</li>
+    </ul>
+</AboutQA>
+
+<AboutQA Question="Can I put off-spec items on my loot list?">
+    Yes. When you make your list you may specify an off-spec. Items that fit your off-spec are allowed in the
+    last bracket of your loot list.
+</AboutQA>
+
+<AboutQA Question="Can I put recipes, gems, or other non-gear items on my loot list?">
+    All items that are not available to be selected on loot lists are distributed via loot council by the raid leadership.
+</AboutQA>
+
+<AboutQA Question="Can I put a legendary on my loot list?">
+    Legendaries are distributed via loot council by the raid leadership to dedicated and top performing players.
+    <ItemLink Id="32458" PlaceholderText="Ashes of Al'ar" Colorize="true" Bracketize="true" LinkEnabled="true" />
+    falls under this category, as well as
+    <ItemLink Id="32837" PlaceholderText="Warglaive of Azzinoth" Colorize="true" Bracketize="true" LinkEnabled="true" />
+    (both halves) and
+    <ItemLink Id="34334" PlaceholderText="Thori'dal, the Stars' Fury" Colorize="true" Bracketize="true" LinkEnabled="true" />.
+</AboutQA>
+
+<AboutQA Question="Do I make a Loot List for 10-man raids?">
+    No. Loot Lists are only for 25 man raids. Karazhan and Zul'Aman are not part of any official raid
+    team's schedule.
+</AboutQA>
+
+<AboutQA Question="Can other players see my loot list?">
+    Your loot list ranks will be hidden until your list is approved and locked. Until then, other players can still view your list
+    but will not be able to see the exact rank you listed each item at. You can share your loot list with others if you wish
+    but it is not recommended unless requesting help from others. The raid leaders will always be able to see your rankings.
+</AboutQA>
+
+<AboutQA Question="How do I win an item?">
+    The person with the highest priority when an item drops wins it. Priority is calculated by taking the rank
+    you gave an item and adding up all of the various bonuses you've acquired to it. The possible bonuses are:
+
+    <MudSimpleTable Elevation="4" Dense="true" Class="my-2">
+        <tbody>
+            <tr>
+                <td>Attendance</td>
+                <td>+1 for every 4 raids attended in the past 8 raid nights. Max +2.</td>
+            </tr>
+            <tr>
+                <td>Donations</td>
+                <td>+1 if the player donated at least 50 gold to the team the previous month.</td>
+            </tr>
+            <tr>
+                <td>Losses &amp; Passes</td>
+                <td>+1 each time the player does not win an item that drops while present.</td>
+            </tr>
+            <tr>
+                <td>Trial</td>
+                <td>-18 penalty for trial members the first week. Penalty reduced to -9 the second week.</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+</AboutQA>
+
+<AboutQA Question="What happens if someone has the same priority as me?">
+    If there's a tie for highest priority, then it goes to a <code>/roll</code> between those players. The highest
+    roll gets the item and everyone else gets their loss bonus.
+</AboutQA>
+
+<AboutQA Question="Do I have to take an item if I have highest priority?">
+    No. Players may choose to pass to the next highest person or forego a tiebreaker roll, though there is no
+    personal benefit to doing this. You still gain your loss bonus as normal.
+</AboutQA>
+
+<AboutQA Question="What happens if an item drops and nobody has it on their list?">
+    Any item with no loot list competition goes to an open <code>/roll</code> that anyone, even non-members, may roll for.
+    The only restriction to this roll is the item must be equipped by the winner.
+</AboutQA>
+
+<AboutQA Question="I won an item but I sold/destroyed/disenchanted it! Can I win it again?">
+    No. All wins are recorded and will prevent you from competing for it again. You may win a second copy of an item
+    only if it goes to an open roll.
+</AboutQA>
+
+<AboutQA Question="Can I change my loot list?">
+    Until a raid leader has accepted your loot list and added you onto a team, you may revoke your submission and
+    edit your loot list. After you've been accepted onto a raid team, your loot list becomes locked and cannot
+    be changed.
+</AboutQA>
+
+<AboutQA Question="What if I want to change my main spec?">
+    Changing your main spec is at the discretion of your raid leader. If you do decide to change specs, you will
+    get the opportunity to edit your list to fit your new spec. Any items won by your old list cannot be changed.
+    That is, if you ranked a DPS item at rank 18 and won it, you may not fill that rank 18 slot with a new tank item.
+</AboutQA>
+
+<AboutQA Question="What happens when new raids are released?">
+    Your loot list you made for each phase stays with you indefinitely. When a new raid tier releases, you will need
+    to submit a new list for that tier. Your old list will still be used if and when your raid team runs older
+    raids.
+</AboutQA>
+
+<AboutQA Question="Can I change raid teams?">
+    Changing teams is possible but comes with some penalties and is not a guarantee that you will be on a team.
+    If accepted, you will join that team as a trial member and lose any bonuses you've gained from running with your
+    previous team. Be sure that the team you first apply for works for you in the long-run!
+</AboutQA>
+
+<AboutQA Question="Can I raid even if I don't have a loot list made?">
+    Yes. You won't have priority on winning loot over anyone with a loot list, but if an item goes to open roll you are
+    allowed to roll for it. Any items you do win will not be available for selection when you do make your loot list.
+</AboutQA>

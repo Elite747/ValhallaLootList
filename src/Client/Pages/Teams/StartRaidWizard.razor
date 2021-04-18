@@ -2,7 +2,8 @@
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService  
-  
+
+<MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
         @{ State.Phase = phaseConfig.CurrentPhase; }

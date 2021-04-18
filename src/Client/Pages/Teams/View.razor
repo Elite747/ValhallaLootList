@@ -131,7 +131,7 @@
             _teamChanged = false;
             if (_executor is not null)
             {
-                return _executor.RestartAsync();
+                return _executor.RestartAsync(false);
             }
         }
         return Task.CompletedTask;

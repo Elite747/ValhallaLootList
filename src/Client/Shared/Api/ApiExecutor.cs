@@ -40,9 +40,9 @@ namespace ValhallaLootList.Client.Shared
             return Task;
         }
 
-        public Task RestartAsync()
+        public Task RestartAsync(bool? backgroundRefresh = null)
         {
-            if (BackgroundRefresh && Task?.Status == TaskStatus.RanToCompletion && Value is not null)
+            if ((backgroundRefresh ?? BackgroundRefresh) && Task?.Status == TaskStatus.RanToCompletion && Value is not null)
             {
                 return BackgroundRestartAsync();
             }

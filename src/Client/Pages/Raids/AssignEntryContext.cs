@@ -85,7 +85,7 @@ namespace ValhallaLootList.Client.Pages.Raids
         {
             if (!Disabled)
             {
-                Color = Color.Warning;
+                Color = Color.Secondary;
                 Message = "Tied Priority!";
             }
         }

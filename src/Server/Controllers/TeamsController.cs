@@ -399,7 +399,7 @@ namespace ValhallaLootList.Server.Controllers
         {
             var auth = await authService.AuthorizeAsync(User, id, AppPolicies.RaidLeader);
 
-            if (auth.Succeeded)
+            if (!auth.Succeeded)
             {
                 auth = await authService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwner);
                 if (!auth.Succeeded)

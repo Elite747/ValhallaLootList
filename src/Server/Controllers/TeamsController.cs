@@ -262,6 +262,41 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Character is already a part of another team.");
             }
 
+            var idString = character.Id.ToString();
+            var claim = await _context.UserClaims.AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
+                .Select(c => new { c.UserId })
+                .FirstOrDefaultAsync();
+
+            if (claim is not null)
+            {
+                var otherClaims = await _context.UserClaims.AsNoTracking()
+                    .Where(c => c.ClaimType == AppClaimTypes.Character && c.UserId == claim.UserId)
+                    .Select(c => c.ClaimValue)
+                    .ToListAsync();
+
+                var characterIds = new List<long>();
+
+                foreach (var otherClaim in otherClaims)
+                {
+                    if (long.TryParse(otherClaim, out var characterId))
+                    {
+                        characterIds.Add(characterId);
+                    }
+                }
+
+                var existingCharacterName = await _context.Characters
+                    .AsNoTracking()
+                    .Where(c => characterIds.Contains(c.Id) && c.TeamId == id)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync();
+
+                if (existingCharacterName?.Length > 0)
+                {
+                    return Problem($"The owner of this character is already on this team as {existingCharacterName}.");
+                }
+            }
+
             character.TeamId = id;
             character.MemberStatus = dto.MemberStatus;
 

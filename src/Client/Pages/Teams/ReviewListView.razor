@@ -20,7 +20,7 @@
         }
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
-        @if (LootList.Status == LootListStatus.Locked)
+        @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
         {
             <AuthorizeView Policy="@AppPolicies.Administrator">
                 <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
@@ -33,16 +33,16 @@
                 </MudTooltip>
             </AuthorizeView>
         }
-        else if (LootList.Status == LootListStatus.Submitted)
+        else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
         {
             <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team, but will not allow non-leaders to see rankings.">
                 <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
-                    Approve Loot List
+                    Approve
                 </MudButton>
             </MudTooltip>
             <MudTooltip Text="Denying a loot list may allow it to be edited by the owner.">
                 <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                    Deny Loot List
+                    Deny
                 </MudButton>
             </MudTooltip>
         }
@@ -145,6 +145,7 @@
             LootListStatus.Editing => ("Loot List is still being edited.", Color.Error),
             LootListStatus.Submitted => ("Loot List is submitted but awaiting approval.", Color.Warning),
             LootListStatus.Approved => ("Loot List has been approved, but still needs to be locked.", Color.Warning),
+            LootListStatus.Locked when LootList.TeamId is null => ("Loot list is locked, but character is not on this team yet.", Color.Warning),
             LootListStatus.Locked => ("Loot List has been approved and locked!", Color.Success),
             _ => ("Unrecognized status!", Color.Error)
         };
@@ -196,6 +197,8 @@
         return Api.LootLists.Approve(LootList, Team.Id)
             .OnSuccess(async (response, _) =>
             {
+                LootList.TeamId = Team.Id;
+                LootList.TeamName = Team.Name;
                 SetMessage();
                 StateHasChanged();
                 await StatusUpdated.InvokeAsync(LootList);

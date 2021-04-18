@@ -408,6 +408,13 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
             if (list is null)
@@ -427,7 +434,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Loot list has been changed. Refresh before trying to update the status again.");
             }
 
-            if (list.Status != LootListStatus.Editing)
+            if (list.Status != LootListStatus.Editing && character.TeamId.HasValue)
             {
                 return Problem("Can't submit a list that is not editable.");
             }
@@ -442,18 +449,39 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("One or more raid teams specified do not exist.");
             }
 
+            var submissions = await _context.LootListTeamSubmissions
+                .AsTracking()
+                .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == list.Phase)
+                .ToListAsync();
+
             foreach (var id in dto.SubmitTo)
             {
-                _context.LootListTeamSubmissions.Add(new()
+                if (submissions.Find(s => s.TeamId == id) is null)
                 {
-                    LootListCharacterId = list.CharacterId,
-                    LootListPhase = list.Phase,
-                    TeamId = id
-                });
+                    _context.LootListTeamSubmissions.Add(new()
+                    {
+                        LootListCharacterId = list.CharacterId,
+                        LootListPhase = list.Phase,
+                        TeamId = id
+                    });
+                }
+            }
+
+            foreach (var submission in submissions)
+            {
+                if (!dto.SubmitTo.Contains(submission.TeamId))
+                {
+                    _context.LootListTeamSubmissions.Remove(submission);
+                }
             }
 
             list.ApprovedBy = null;
-            list.Status = LootListStatus.Submitted;
+
+            if (list.Status == LootListStatus.Editing)
+            {
+                list.Status = LootListStatus.Submitted;
+            }
+
             await _context.SaveChangesAsync();
 
             _telemetry.TrackEvent("LootListStatusChanged", User, props =>
@@ -470,6 +498,13 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}/ApproveOrReject"), Authorize(AppPolicies.RaidLeaderOrAdmin)]
         public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto, [FromServices] DiscordService discordService)
         {
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
 
             if (list is null)
@@ -497,7 +532,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Loot list has been changed. Refresh before trying to update the status again.");
             }
 
-            if (list.Status != LootListStatus.Submitted)
+            if (list.Status != LootListStatus.Submitted  && character.TeamId.HasValue)
             {
                 return Problem("Can't approve or reject a list that isn't in the submitted state.");
             }
@@ -520,9 +555,6 @@ namespace ValhallaLootList.Server.Controllers
             {
                 _context.LootListTeamSubmissions.RemoveRange(submissions);
 
-                var character = await _context.Characters.FindAsync(list.CharacterId);
-                Debug.Assert(character is not null);
-
                 if (character.TeamId.HasValue)
                 {
                     if (character.TeamId != dto.TeamId)
@@ -537,7 +569,12 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 list.ApprovedBy = User.GetDiscordId();
-                list.Status = LootListStatus.Approved;
+
+                if (list.Status != LootListStatus.Locked)
+                {
+                    list.Status = LootListStatus.Approved;
+                }
+
                 var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
 
                 foreach (var m in await HelperQueries.GetMembersAsync(_context, discordService, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
@@ -550,9 +587,18 @@ namespace ValhallaLootList.Server.Controllers
             {
                 _context.LootListTeamSubmissions.Remove(teamSubmission);
 
+                if (character.TeamId == team.Id)
+                {
+                    character.TeamId = null;
+                }
+
                 if (submissions.Count == 1)
                 {
-                    list.Status = LootListStatus.Editing;
+                    if (list.Status != LootListStatus.Locked)
+                    {
+                        list.Status = LootListStatus.Editing;
+                    }
+
                     list.ApprovedBy = null;
                 }
             }
@@ -567,7 +613,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["Method"] = "ApproveOrReject";
             });
 
-            return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member };
+            return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member, LootListStatus = list.Status };
         }
 
         [HttpPost("Phase{phase:int}/{characterId:long}/Lock"), Authorize(AppPolicies.RaidLeaderOrAdmin)]

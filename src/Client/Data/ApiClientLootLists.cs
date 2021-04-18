@@ -97,7 +97,7 @@ namespace ValhallaLootList.Client.Data
             request.ConfigureSuccess(response =>
             {
                 lootList.Timestamp = response.Timestamp;
-                lootList.Status = LootListStatus.Approved;
+                lootList.Status = response.LootListStatus;
                 lootList.SubmittedTo.Clear();
             });
 
@@ -114,11 +114,8 @@ namespace ValhallaLootList.Client.Data
             request.ConfigureSuccess(response =>
             {
                 lootList.Timestamp = response.Timestamp;
+                lootList.Status = response.LootListStatus;
                 lootList.SubmittedTo.Remove(teamId);
-                if (lootList.SubmittedTo.Count == 0)
-                {
-                    lootList.Status = LootListStatus.Editing;
-                }
             });
 
             return request;

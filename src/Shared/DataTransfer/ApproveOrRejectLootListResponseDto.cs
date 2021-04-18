@@ -6,5 +6,7 @@ namespace ValhallaLootList.DataTransfer
     public class ApproveOrRejectLootListResponseDto : TimestampDto
     {
         public MemberDto? Member { get; set; }
+
+        public LootListStatus LootListStatus { get; set; }
     }
 }

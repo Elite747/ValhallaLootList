@@ -5,7 +5,7 @@
             <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
         </Authorized>
         <NotAuthorized>
-            <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnListUpdated="UpdateLootList" />
+            <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
         </NotAuthorized>
     </AuthorizeView>
 }

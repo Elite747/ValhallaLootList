@@ -18,6 +18,12 @@
     {
         <MudListSubheader>
             <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
+            @if (!Character.TeamId.HasValue)
+            {
+                <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
+                    <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit</MudButton>
+                </AuthorizeView>
+            }
             @if (LootList.Status == LootListStatus.Submitted)
             {
                 <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
@@ -108,6 +114,7 @@
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public LootListDto? LootList { get; set; }
     [Parameter] public EventCallback<LootListDto> OnListUpdated { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
 
     public Task RefreshAsync()
     {
@@ -173,5 +180,27 @@
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
+    }
+
+    private async Task SubmitAsync()
+    {
+        System.Diagnostics.Debug.Assert(LootList is not null);
+        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
+            string.Empty,
+            parameters: new()
+            {
+                [nameof(PickTeamDialog.SelectedTeams)] = LootList.SubmittedTo.ToList()
+            });
+
+        if (teams is not null)
+        {
+            await Api.LootLists.Submit(LootList, teams)
+                .OnSuccess((_, _) =>
+                {
+                    return OnSubmit.InvokeAsync();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 }

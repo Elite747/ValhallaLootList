@@ -10,7 +10,7 @@
         <MudList Dense="true" Clickable="true">
             @foreach (var team in Teams.Teams)
             {
-                <MudListItem Icon="@(_selectedTeams.Contains(team.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" OnClick="() => Toggle(team.Id)">
+                <MudListItem Icon="@(SelectedTeams.Contains(team.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" OnClick="() => Toggle(team.Id)">
                     <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>
                     @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
                     {
@@ -22,26 +22,26 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_selectedTeams))" Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedTeams.Count == 0">Submit</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(SelectedTeams))" Color="Color.Primary" Variant="Variant.Filled" Disabled="SelectedTeams.Count == 0">Submit</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    private readonly List<long> _selectedTeams = new();
-
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public List<long> SelectedTeams { get; set; } = null!;
 
     protected override Task OnParametersSetAsync()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (SelectedTeams is null) throw new ArgumentNullException(nameof(SelectedTeams));
         return Teams.EnsureStartedAsync(Api).AsTask();
     }
 
     private void Toggle(long id)
     {
-        if (!_selectedTeams.Remove(id))
+        if (!SelectedTeams.Remove(id))
         {
-            _selectedTeams.Add(id);
+            SelectedTeams.Add(id);
         }
     }
 }

@@ -24,8 +24,8 @@
                             var characterId = list.CharacterId;
                             <MudListItem Class="@(_characterId == list.CharacterId ? "mud-selected-item" : null)"
                                          OnClick="() => _characterId = characterId"
-                                         Icon="@(list.Status == LootListStatus.Locked ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
-                                         IconColor="@(list.Status == LootListStatus.Locked ? Color.Success : list.Status == LootListStatus.Approved ? Color.Warning : Color.Error)"
+                                         Icon="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
+                                         IconColor="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Color.Success : list.Status == LootListStatus.Approved ? Color.Warning : Color.Error)"
                                          @key="characterId">
                                 @list.CharacterName
                             </MudListItem>

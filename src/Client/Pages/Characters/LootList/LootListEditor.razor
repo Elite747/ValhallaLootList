@@ -55,7 +55,12 @@
 
     private async Task SubmitAsync()
     {
-        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(string.Empty);
+        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
+            string.Empty,
+            parameters: new()
+            {
+                [nameof(PickTeamDialog.SelectedTeams)] = LootList.SubmittedTo.ToList()
+            });
 
         if (teams is not null)
         {

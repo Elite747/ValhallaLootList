@@ -59,7 +59,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Loot List entry has already been won and may not be changed.");
             }
 
-            if (entry.ItemId == dto.ItemId)
+            if (entry.ItemId == dto.ItemId && entry.Justification == dto.Justification)
             {
                 return Problem("Entry is already set to the specified item.");
             }

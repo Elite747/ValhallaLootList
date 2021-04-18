@@ -181,7 +181,6 @@ namespace ValhallaLootList.Server.Controllers
                     d.AwardedAt,
                     AwardedBy = (long?)d.AwardedBy,
                     WinnerId = (long?)d.WinnerId,
-                    WinnerName = (string?)d.Winner!.Name,
                     d.ItemId,
                     ItemName = d.Item.Name
                 })
@@ -194,9 +193,7 @@ namespace ValhallaLootList.Server.Controllers
                     AwardedAt = drop.AwardedAt,
                     AwardedBy = drop.AwardedBy,
                     ItemId = drop.ItemId,
-                    ItemName = drop.ItemName,
-                    WinnerId = drop.WinnerId,
-                    WinnerName = drop.WinnerName
+                    WinnerId = drop.WinnerId
                 });
             }
 
@@ -741,8 +738,7 @@ namespace ValhallaLootList.Server.Controllers
                     AwardedAt = d.AwardedAt,
                     AwardedBy = d.AwardedBy,
                     ItemId = d.ItemId,
-                    WinnerId = d.Winner?.Id,
-                    WinnerName = d.Winner?.Name
+                    WinnerId = d.Winner?.Id
                 }).ToList(),
                 EncounterId = kill.EncounterId,
                 EncounterName = encounter.Name

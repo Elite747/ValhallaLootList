@@ -231,8 +231,7 @@ namespace ValhallaLootList.Server.Controllers
                 AwardedAt = drop.AwardedAt,
                 AwardedBy = drop.AwardedBy,
                 ItemId = drop.ItemId,
-                WinnerId = drop.WinnerId,
-                WinnerName = drop.Winner?.Name
+                WinnerId = drop.WinnerId
             };
         }
 

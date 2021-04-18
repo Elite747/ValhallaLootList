@@ -46,10 +46,19 @@ namespace ValhallaLootList.Client.Pages.Raids
                     options: new() { FullWidth = true, MaxWidth = MudBlazor.MaxWidth.Medium });
         }
 
+        private string GetWinnerName(long? id)
+        {
+            if (id.HasValue)
+            {
+                return Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name ?? "Unknown";
+            }
+            return "nobody";
+        }
+
         private async Task BeginAssignAsync(EncounterDropDto drop)
         {
             var characterId = await DialogService.ShowAsync<AssignLootDialog, long?>(
-                "Assigning " + (drop.ItemName ?? "Item"),
+                string.Empty,
                 parameters: new()
                 {
                     [nameof(AssignLootDialog.Drop)] = drop,
@@ -70,7 +79,6 @@ namespace ValhallaLootList.Client.Pages.Raids
                     drop.AwardedAt = response.AwardedAt;
                     drop.AwardedBy = response.AwardedBy;
                     drop.WinnerId = response.WinnerId;
-                    drop.WinnerName = response.WinnerName;
                     StateHasChanged();
                 })
                 .SendErrorTo(Snackbar)

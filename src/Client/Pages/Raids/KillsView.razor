@@ -30,8 +30,8 @@
                                 <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                             </MudAvatar>
                             <div class="mr-auto">
-                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@drop.ItemName" />
-                                <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
+                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" />
+                                <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @GetWinnerName(drop.WinnerId).</MudText>
                             </div>
                         </CascadingItemContext>
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow)

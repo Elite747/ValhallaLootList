@@ -106,6 +106,10 @@ namespace ValhallaLootList.Server.Data
 
         public bool HasSpecial { get; set; }
 
+        public bool IsUnique { get; set; }
+
+        public uint QuestId { get; set; }
+
         public Classes? UsableClasses { get; set; }
 
         public virtual Encounter? Encounter { get; set; }

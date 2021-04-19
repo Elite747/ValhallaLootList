@@ -41,7 +41,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28775,
@@ -85,7 +86,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28776,
@@ -129,7 +131,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28777,
@@ -173,7 +176,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28778,
@@ -217,7 +221,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28779,
@@ -261,7 +266,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28780,
@@ -305,7 +311,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28781,
@@ -349,7 +356,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28782,
@@ -393,7 +401,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28783,
@@ -437,7 +446,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28789,
@@ -481,7 +491,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28794,
@@ -525,7 +536,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28795,
@@ -569,7 +581,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28796,
@@ -613,7 +626,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28797,
@@ -657,7 +671,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28799,
@@ -701,7 +716,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28800,
@@ -745,7 +761,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28801,
@@ -789,7 +806,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28802,
@@ -833,7 +851,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28803,
@@ -877,7 +896,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28804,
@@ -921,7 +941,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28810,
@@ -965,7 +986,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28822,
@@ -1009,7 +1031,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28823,
@@ -1053,7 +1076,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28824,
@@ -1097,7 +1121,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28825,
@@ -1141,7 +1166,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28826,
@@ -1185,7 +1211,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28827,
@@ -1229,7 +1256,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28828,
@@ -1273,7 +1301,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 28830,
@@ -1317,7 +1346,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29458,
@@ -1361,7 +1391,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29753,
@@ -1405,7 +1436,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 29012,
@@ -1449,7 +1481,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29019,
@@ -1493,7 +1526,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29050,
@@ -1537,7 +1571,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29056,
@@ -1581,7 +1616,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29087,
@@ -1625,7 +1661,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29091,
@@ -1669,7 +1706,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29096,
@@ -1713,7 +1751,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29754,
@@ -1757,7 +1796,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 29029,
@@ -1801,7 +1841,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29033,
@@ -1845,7 +1886,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29038,
@@ -1889,7 +1931,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29045,
@@ -1933,7 +1976,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 29062,
@@ -1977,7 +2021,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29066,
@@ -2021,7 +2066,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29071,
@@ -2065,7 +2111,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29755,
@@ -2109,7 +2156,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 28964,
@@ -2153,7 +2201,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 29077,
@@ -2197,7 +2246,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 29082,
@@ -2241,7 +2291,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 29762,
@@ -2285,7 +2336,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 28967,
@@ -2329,7 +2381,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 29079,
@@ -2373,7 +2426,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 29084,
@@ -2417,7 +2471,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 29763,
@@ -2461,7 +2516,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 29031,
@@ -2505,7 +2561,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29037,
@@ -2549,7 +2606,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29043,
@@ -2593,7 +2651,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29047,
@@ -2637,7 +2696,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 29064,
@@ -2681,7 +2741,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29070,
@@ -2725,7 +2786,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29075,
@@ -2769,7 +2831,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29764,
@@ -2813,7 +2876,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 29016,
@@ -2857,7 +2921,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29023,
@@ -2901,7 +2966,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29054,
@@ -2945,7 +3011,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29060,
@@ -2989,7 +3056,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29089,
@@ -3033,7 +3101,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29095,
@@ -3077,7 +3146,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29100,
@@ -3121,7 +3191,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29765,
@@ -3165,7 +3236,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 28966,
@@ -3209,7 +3281,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 29078,
@@ -3253,7 +3326,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 29083,
@@ -3297,7 +3371,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 29766,
@@ -3341,7 +3416,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 29030,
@@ -3385,7 +3461,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29036,
@@ -3429,7 +3506,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29042,
@@ -3473,7 +3551,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 29046,
@@ -3517,7 +3596,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 29063,
@@ -3561,7 +3641,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29069,
@@ -3605,7 +3686,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29074,
@@ -3649,7 +3731,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 29767,
@@ -3693,7 +3776,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 29015,
@@ -3737,7 +3821,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29022,
@@ -3781,7 +3866,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 29053,
@@ -3825,7 +3911,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29059,
@@ -3869,7 +3956,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 29088,
@@ -3913,7 +4001,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29094,
@@ -3957,7 +4046,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29099,
@@ -4001,7 +4091,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 29918,
@@ -4045,7 +4136,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29920,
@@ -4089,7 +4181,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29921,
@@ -4133,7 +4226,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29922,
@@ -4177,7 +4271,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29923,
@@ -4221,7 +4316,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29924,
@@ -4265,7 +4361,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29925,
@@ -4309,7 +4406,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29947,
@@ -4353,7 +4451,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29948,
@@ -4397,7 +4496,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29949,
@@ -4441,7 +4541,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29950,
@@ -4485,7 +4586,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29951,
@@ -4529,7 +4631,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29962,
@@ -4573,7 +4676,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29965,
@@ -4617,7 +4721,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29966,
@@ -4661,7 +4766,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29972,
@@ -4705,7 +4811,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29976,
@@ -4749,7 +4856,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29977,
@@ -4793,7 +4901,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29981,
@@ -4837,7 +4946,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29982,
@@ -4881,7 +4991,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29983,
@@ -4925,7 +5036,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29984,
@@ -4969,7 +5081,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29985,
@@ -5013,7 +5126,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29986,
@@ -5057,7 +5171,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29987,
@@ -5101,7 +5216,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29988,
@@ -5145,7 +5261,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29989,
@@ -5189,7 +5306,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29990,
@@ -5233,7 +5351,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29991,
@@ -5277,7 +5396,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29992,
@@ -5321,7 +5441,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29993,
@@ -5365,7 +5486,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29994,
@@ -5409,7 +5531,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29995,
@@ -5453,7 +5576,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 29996,
@@ -5497,7 +5621,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29997,
@@ -5541,7 +5666,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 29998,
@@ -5585,7 +5711,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30008,
@@ -5629,7 +5756,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30020,
@@ -5673,7 +5801,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30021,
@@ -5717,7 +5846,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30022,
@@ -5761,7 +5891,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30023,
@@ -5805,7 +5936,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30024,
@@ -5849,7 +5981,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30025,
@@ -5893,7 +6026,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30026,
@@ -5937,7 +6071,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30027,
@@ -5981,7 +6116,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30028,
@@ -6025,7 +6161,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30029,
@@ -6069,7 +6206,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30030,
@@ -6113,7 +6251,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30047,
@@ -6157,7 +6296,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30048,
@@ -6201,7 +6341,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30049,
@@ -6245,7 +6386,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30050,
@@ -6289,7 +6431,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30051,
@@ -6333,7 +6476,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30052,
@@ -6377,7 +6521,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30053,
@@ -6421,7 +6566,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30054,
@@ -6465,7 +6611,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30055,
@@ -6509,7 +6656,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30056,
@@ -6553,7 +6701,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30057,
@@ -6597,7 +6746,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30058,
@@ -6641,7 +6791,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30059,
@@ -6685,7 +6836,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30060,
@@ -6729,7 +6881,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30061,
@@ -6773,7 +6926,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30062,
@@ -6817,7 +6971,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30063,
@@ -6861,7 +7016,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30064,
@@ -6905,7 +7061,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30065,
@@ -6949,7 +7106,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30066,
@@ -6993,7 +7151,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30067,
@@ -7037,7 +7196,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30068,
@@ -7081,7 +7241,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30075,
@@ -7125,7 +7286,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30079,
@@ -7169,7 +7331,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30080,
@@ -7213,7 +7376,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30081,
@@ -7257,7 +7421,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30082,
@@ -7301,7 +7466,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30083,
@@ -7345,7 +7511,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30084,
@@ -7389,7 +7556,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30085,
@@ -7433,7 +7601,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30090,
@@ -7477,7 +7646,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30091,
@@ -7521,7 +7691,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30092,
@@ -7565,7 +7736,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30095,
@@ -7609,7 +7781,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30096,
@@ -7653,7 +7826,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30097,
@@ -7697,7 +7871,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30098,
@@ -7741,7 +7916,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30099,
@@ -7785,7 +7961,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30100,
@@ -7829,7 +8006,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30101,
@@ -7873,7 +8051,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30102,
@@ -7917,7 +8096,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30103,
@@ -7961,7 +8141,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30104,
@@ -8005,7 +8186,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30105,
@@ -8049,7 +8231,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30106,
@@ -8093,7 +8276,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30107,
@@ -8137,7 +8321,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30108,
@@ -8181,7 +8366,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30109,
@@ -8225,7 +8411,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30110,
@@ -8269,7 +8456,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30111,
@@ -8313,7 +8501,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30112,
@@ -8357,7 +8546,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30236,
@@ -8401,7 +8591,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 30123,
@@ -8445,7 +8636,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30129,
@@ -8489,7 +8681,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30134,
@@ -8533,7 +8726,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30144,
@@ -8577,7 +8771,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 30164,
@@ -8621,7 +8816,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30169,
@@ -8665,7 +8861,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30185,
@@ -8709,7 +8906,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30237,
@@ -8753,7 +8951,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 30113,
@@ -8797,7 +8996,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30118,
@@ -8841,7 +9041,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30150,
@@ -8885,7 +9086,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30159,
@@ -8929,7 +9131,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30216,
@@ -8973,7 +9176,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30222,
@@ -9017,7 +9221,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30231,
@@ -9061,7 +9266,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30238,
@@ -9105,7 +9311,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 30139,
@@ -9149,7 +9356,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 30196,
@@ -9193,7 +9401,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 30214,
@@ -9237,7 +9446,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 30239,
@@ -9281,7 +9491,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 30124,
@@ -9325,7 +9536,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30130,
@@ -9369,7 +9581,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30135,
@@ -9413,7 +9626,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30145,
@@ -9457,7 +9671,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 30165,
@@ -9501,7 +9716,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30170,
@@ -9545,7 +9761,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30189,
@@ -9589,7 +9806,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30240,
@@ -9633,7 +9851,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 30114,
@@ -9677,7 +9896,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30119,
@@ -9721,7 +9941,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30151,
@@ -9765,7 +9986,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30160,
@@ -9809,7 +10031,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30217,
@@ -9853,7 +10076,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30223,
@@ -9897,7 +10121,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30232,
@@ -9941,7 +10166,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30241,
@@ -9985,7 +10211,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 30140,
@@ -10029,7 +10256,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 30205,
@@ -10073,7 +10301,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 30211,
@@ -10117,7 +10346,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 30242,
@@ -10161,7 +10391,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 30125,
@@ -10205,7 +10436,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30131,
@@ -10249,7 +10481,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30136,
@@ -10293,7 +10526,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30146,
@@ -10337,7 +10571,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 30166,
@@ -10381,7 +10616,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30171,
@@ -10425,7 +10661,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30190,
@@ -10469,7 +10706,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30243,
@@ -10513,7 +10751,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 30115,
@@ -10557,7 +10796,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30120,
@@ -10601,7 +10841,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30152,
@@ -10645,7 +10886,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30161,
@@ -10689,7 +10931,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30219,
@@ -10733,7 +10976,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30228,
@@ -10777,7 +11021,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30233,
@@ -10821,7 +11066,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30244,
@@ -10865,7 +11111,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 30141,
@@ -10909,7 +11156,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 30206,
@@ -10953,7 +11201,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 30212,
@@ -10997,7 +11246,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 30245,
@@ -11041,7 +11291,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 30126,
@@ -11085,7 +11336,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30132,
@@ -11129,7 +11381,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30137,
@@ -11173,7 +11426,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30148,
@@ -11217,7 +11471,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 30167,
@@ -11261,7 +11516,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30172,
@@ -11305,7 +11561,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30192,
@@ -11349,7 +11606,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30246,
@@ -11393,7 +11651,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 30116,
@@ -11437,7 +11696,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30121,
@@ -11481,7 +11741,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30153,
@@ -11525,7 +11786,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30162,
@@ -11569,7 +11831,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30220,
@@ -11613,7 +11876,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30229,
@@ -11657,7 +11921,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30234,
@@ -11701,7 +11966,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30247,
@@ -11745,7 +12011,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 30142,
@@ -11789,7 +12056,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 30207,
@@ -11833,7 +12101,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 30213,
@@ -11877,7 +12146,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 30248,
@@ -11921,7 +12191,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 74
+    "UsableClasses": 74,
+    "IsUnique": false
   },
   {
     "Id": 30127,
@@ -11965,7 +12236,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30133,
@@ -12009,7 +12281,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30138,
@@ -12053,7 +12326,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30149,
@@ -12097,7 +12371,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 30168,
@@ -12141,7 +12416,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30173,
@@ -12185,7 +12461,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30194,
@@ -12229,7 +12506,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 30249,
@@ -12273,7 +12551,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1041
+    "UsableClasses": 1041,
+    "IsUnique": false
   },
   {
     "Id": 30117,
@@ -12317,7 +12596,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30122,
@@ -12361,7 +12641,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30154,
@@ -12405,7 +12686,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30163,
@@ -12449,7 +12731,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 30221,
@@ -12493,7 +12776,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30230,
@@ -12537,7 +12821,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30235,
@@ -12581,7 +12866,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 30250,
@@ -12625,7 +12911,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 388
+    "UsableClasses": 388,
+    "IsUnique": false
   },
   {
     "Id": 30143,
@@ -12669,7 +12956,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 30210,
@@ -12713,7 +13001,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 30215,
@@ -12757,7 +13046,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 30446,
@@ -12801,7 +13091,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": true
   },
   {
     "Id": 30447,
@@ -12845,7 +13136,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": true
   },
   {
     "Id": 30448,
@@ -12889,7 +13181,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": true
   },
   {
     "Id": 30449,
@@ -12933,7 +13226,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": true
   },
   {
     "Id": 30450,
@@ -12977,7 +13271,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": true
   },
   {
     "Id": 30619,
@@ -13021,7 +13316,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30620,
@@ -13065,7 +13361,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30621,
@@ -13109,7 +13406,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30626,
@@ -13153,7 +13451,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30627,
@@ -13197,7 +13496,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30629,
@@ -13241,7 +13541,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30663,
@@ -13285,7 +13586,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": true
   },
   {
     "Id": 30664,
@@ -13329,7 +13631,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": true
   },
   {
     "Id": 30665,
@@ -13373,7 +13676,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": true
   },
   {
     "Id": 30720,
@@ -13417,7 +13721,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": true
   },
   {
     "Id": 30861,
@@ -13461,7 +13766,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30862,
@@ -13505,7 +13811,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30863,
@@ -13549,7 +13856,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30864,
@@ -13593,7 +13901,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30865,
@@ -13637,7 +13946,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30866,
@@ -13681,7 +13991,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30868,
@@ -13725,7 +14036,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30869,
@@ -13769,7 +14081,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30870,
@@ -13813,7 +14126,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30871,
@@ -13857,7 +14171,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30872,
@@ -13901,7 +14216,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30873,
@@ -13945,7 +14261,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30874,
@@ -13989,7 +14306,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30878,
@@ -14033,7 +14351,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30879,
@@ -14077,7 +14396,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30880,
@@ -14121,7 +14441,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30881,
@@ -14165,7 +14486,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30882,
@@ -14209,7 +14531,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30883,
@@ -14253,7 +14576,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30884,
@@ -14297,7 +14621,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30885,
@@ -14341,7 +14666,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30886,
@@ -14385,7 +14711,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30887,
@@ -14429,7 +14756,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30888,
@@ -14473,7 +14801,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30889,
@@ -14517,7 +14846,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30891,
@@ -14561,7 +14891,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30892,
@@ -14605,7 +14936,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30893,
@@ -14649,7 +14981,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30894,
@@ -14693,7 +15026,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30895,
@@ -14737,7 +15071,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30896,
@@ -14781,7 +15116,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30897,
@@ -14825,7 +15161,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30898,
@@ -14869,7 +15206,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30899,
@@ -14913,7 +15251,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30900,
@@ -14957,7 +15296,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30901,
@@ -15001,7 +15341,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30902,
@@ -15045,7 +15386,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30903,
@@ -15089,7 +15431,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30904,
@@ -15133,7 +15476,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30905,
@@ -15177,7 +15521,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30906,
@@ -15221,7 +15566,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30907,
@@ -15265,7 +15611,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30908,
@@ -15309,7 +15656,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30909,
@@ -15353,7 +15701,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30910,
@@ -15397,7 +15746,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 30911,
@@ -15441,7 +15791,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30912,
@@ -15485,7 +15836,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30913,
@@ -15529,7 +15881,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30914,
@@ -15573,7 +15926,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30915,
@@ -15617,7 +15971,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30916,
@@ -15661,7 +16016,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30917,
@@ -15705,7 +16061,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30918,
@@ -15749,7 +16106,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30919,
@@ -15793,7 +16151,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 31089,
@@ -15837,7 +16196,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 30990,
@@ -15881,7 +16241,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30991,
@@ -15925,7 +16286,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30992,
@@ -15969,7 +16331,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 31052,
@@ -16013,7 +16376,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 31065,
@@ -16057,7 +16421,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31066,
@@ -16101,7 +16466,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31090,
@@ -16145,7 +16511,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 31028,
@@ -16189,7 +16556,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 31041,
@@ -16233,7 +16601,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31042,
@@ -16277,7 +16646,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31043,
@@ -16321,7 +16691,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31057,
@@ -16365,7 +16736,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 31091,
@@ -16409,7 +16781,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 30975,
@@ -16453,7 +16826,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30976,
@@ -16497,7 +16871,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 31004,
@@ -16541,7 +16916,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 31016,
@@ -16585,7 +16961,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31017,
@@ -16629,7 +17006,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31018,
@@ -16673,7 +17051,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31092,
@@ -16717,7 +17096,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 30982,
@@ -16761,7 +17141,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30983,
@@ -16805,7 +17186,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30985,
@@ -16849,7 +17231,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 31050,
@@ -16893,7 +17276,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 31060,
@@ -16937,7 +17321,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31061,
@@ -16981,7 +17366,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31093,
@@ -17025,7 +17411,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 31026,
@@ -17069,7 +17456,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 31032,
@@ -17113,7 +17501,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31034,
@@ -17157,7 +17546,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31035,
@@ -17201,7 +17591,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31055,
@@ -17245,7 +17636,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 31094,
@@ -17289,7 +17681,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 30969,
@@ -17333,7 +17726,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30970,
@@ -17377,7 +17771,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 31001,
@@ -17421,7 +17816,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 31007,
@@ -17465,7 +17861,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31008,
@@ -17509,7 +17906,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31011,
@@ -17553,7 +17951,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31095,
@@ -17597,7 +17996,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 30972,
@@ -17641,7 +18041,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30974,
@@ -17685,7 +18086,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 31003,
@@ -17729,7 +18131,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 31012,
@@ -17773,7 +18176,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31014,
@@ -17817,7 +18221,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31015,
@@ -17861,7 +18266,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31096,
@@ -17905,7 +18311,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 31027,
@@ -17949,7 +18356,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 31037,
@@ -17993,7 +18401,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31039,
@@ -18037,7 +18446,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31040,
@@ -18081,7 +18491,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31056,
@@ -18125,7 +18536,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 31097,
@@ -18169,7 +18581,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 30987,
@@ -18213,7 +18626,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30988,
@@ -18257,7 +18671,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30989,
@@ -18301,7 +18716,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 31051,
@@ -18345,7 +18761,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 31063,
@@ -18389,7 +18806,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31064,
@@ -18433,7 +18851,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31098,
@@ -18477,7 +18896,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 30993,
@@ -18521,7 +18941,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30994,
@@ -18565,7 +18986,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30995,
@@ -18609,7 +19031,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 31053,
@@ -18653,7 +19076,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 31067,
@@ -18697,7 +19121,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31068,
@@ -18741,7 +19166,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31099,
@@ -18785,7 +19211,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 31029,
@@ -18829,7 +19256,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 31044,
@@ -18873,7 +19301,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31045,
@@ -18917,7 +19346,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31046,
@@ -18961,7 +19391,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31058,
@@ -19005,7 +19436,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 31100,
@@ -19049,7 +19481,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 30977,
@@ -19093,7 +19526,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30978,
@@ -19137,7 +19571,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 31005,
@@ -19181,7 +19616,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 31019,
@@ -19225,7 +19661,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31020,
@@ -19269,7 +19706,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31021,
@@ -19313,7 +19751,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31101,
@@ -19357,7 +19796,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 30996,
@@ -19401,7 +19841,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30997,
@@ -19445,7 +19886,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 30998,
@@ -19489,7 +19931,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 31054,
@@ -19533,7 +19976,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 31069,
@@ -19577,7 +20021,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31070,
@@ -19621,7 +20066,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 31102,
@@ -19665,7 +20111,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 31030,
@@ -19709,7 +20156,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 31047,
@@ -19753,7 +20201,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31048,
@@ -19797,7 +20246,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31049,
@@ -19841,7 +20291,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 31059,
@@ -19885,7 +20336,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 31103,
@@ -19929,7 +20381,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 30979,
@@ -19973,7 +20426,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 30980,
@@ -20017,7 +20471,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 31006,
@@ -20061,7 +20516,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 31022,
@@ -20105,7 +20561,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31023,
@@ -20149,7 +20606,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 31024,
@@ -20193,7 +20651,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 32232,
@@ -20237,7 +20696,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32234,
@@ -20281,7 +20741,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32235,
@@ -20325,7 +20786,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32236,
@@ -20369,7 +20831,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32237,
@@ -20413,7 +20876,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32238,
@@ -20457,7 +20921,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32239,
@@ -20501,7 +20966,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32240,
@@ -20545,7 +21011,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32241,
@@ -20589,7 +21056,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32242,
@@ -20633,7 +21101,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32243,
@@ -20677,7 +21146,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32245,
@@ -20721,7 +21191,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32247,
@@ -20765,7 +21236,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32248,
@@ -20809,7 +21281,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32250,
@@ -20853,7 +21326,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32251,
@@ -20897,7 +21371,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32252,
@@ -20941,7 +21416,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32253,
@@ -20985,7 +21461,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32254,
@@ -21029,7 +21506,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32255,
@@ -21073,7 +21551,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32256,
@@ -21117,7 +21596,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32258,
@@ -21161,7 +21641,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32259,
@@ -21205,7 +21686,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32260,
@@ -21249,7 +21731,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32261,
@@ -21293,7 +21776,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32262,
@@ -21337,7 +21821,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32263,
@@ -21381,7 +21866,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32264,
@@ -21425,7 +21911,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32265,
@@ -21469,7 +21956,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32266,
@@ -21513,7 +22001,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32267,
@@ -21557,7 +22046,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32268,
@@ -21601,7 +22091,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32269,
@@ -21645,7 +22136,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32270,
@@ -21689,7 +22181,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32271,
@@ -21733,7 +22226,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32273,
@@ -21777,7 +22271,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32275,
@@ -21821,7 +22316,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32276,
@@ -21865,7 +22361,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32278,
@@ -21909,7 +22406,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32279,
@@ -21953,7 +22451,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32280,
@@ -21997,7 +22496,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32323,
@@ -22041,7 +22541,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32324,
@@ -22085,7 +22586,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32325,
@@ -22129,7 +22631,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32326,
@@ -22173,7 +22676,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32327,
@@ -22217,7 +22721,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32328,
@@ -22261,7 +22766,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32329,
@@ -22305,7 +22811,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32330,
@@ -22349,7 +22856,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32331,
@@ -22393,7 +22901,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32332,
@@ -22437,7 +22946,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32333,
@@ -22481,7 +22991,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32334,
@@ -22525,7 +23036,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32335,
@@ -22569,7 +23081,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32336,
@@ -22613,7 +23126,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32337,
@@ -22657,7 +23171,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32338,
@@ -22701,7 +23216,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32339,
@@ -22745,7 +23261,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32340,
@@ -22789,7 +23306,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32341,
@@ -22833,7 +23351,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32342,
@@ -22877,7 +23396,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32343,
@@ -22921,7 +23441,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32344,
@@ -22965,7 +23486,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32345,
@@ -23009,7 +23531,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32346,
@@ -23053,7 +23576,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32347,
@@ -23097,7 +23621,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32348,
@@ -23141,7 +23666,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32349,
@@ -23185,7 +23711,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32350,
@@ -23229,7 +23756,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32351,
@@ -23273,7 +23801,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32352,
@@ -23317,7 +23846,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32353,
@@ -23361,7 +23891,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32354,
@@ -23405,7 +23936,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32361,
@@ -23449,7 +23981,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32362,
@@ -23493,7 +24026,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32363,
@@ -23537,7 +24071,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32365,
@@ -23581,7 +24116,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32366,
@@ -23625,7 +24161,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32367,
@@ -23669,7 +24206,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32368,
@@ -23713,7 +24251,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32369,
@@ -23757,7 +24296,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32370,
@@ -23801,7 +24341,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32373,
@@ -23845,7 +24386,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32374,
@@ -23889,7 +24431,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32375,
@@ -23933,7 +24476,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32376,
@@ -23977,7 +24521,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32377,
@@ -24021,7 +24566,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32385,
@@ -24065,7 +24611,9 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true,
+    "QuestId": 11002
   },
   {
     "Id": 28792,
@@ -24109,7 +24657,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28793,
@@ -24153,7 +24702,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28790,
@@ -24197,7 +24747,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 28791,
@@ -24241,7 +24792,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32405,
@@ -24285,7 +24837,9 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true,
+    "QuestId": 11007
   },
   {
     "Id": 30015,
@@ -24329,7 +24883,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30007,
@@ -24373,7 +24928,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30018,
@@ -24417,7 +24973,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 30017,
@@ -24461,7 +25018,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32471,
@@ -24505,7 +25063,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32483,
@@ -24549,7 +25108,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32496,
@@ -24593,7 +25153,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32497,
@@ -24637,7 +25198,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32500,
@@ -24681,7 +25243,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32501,
@@ -24725,7 +25288,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32505,
@@ -24769,7 +25333,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 32510,
@@ -24813,7 +25378,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32512,
@@ -24857,7 +25423,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32513,
@@ -24901,7 +25468,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32515,
@@ -24945,7 +25513,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32516,
@@ -24989,7 +25558,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32517,
@@ -25033,7 +25603,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32518,
@@ -25077,7 +25648,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32519,
@@ -25121,7 +25693,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32521,
@@ -25165,7 +25738,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32524,
@@ -25209,7 +25783,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32525,
@@ -25253,7 +25828,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32526,
@@ -25297,7 +25873,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32527,
@@ -25341,7 +25918,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32528,
@@ -25385,7 +25963,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32589,
@@ -25429,7 +26008,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32590,
@@ -25473,7 +26053,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": true,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32591,
@@ -25517,7 +26098,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32592,
@@ -25561,7 +26143,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32593,
@@ -25605,7 +26188,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32606,
@@ -25649,7 +26233,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32608,
@@ -25693,7 +26278,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32609,
@@ -25737,7 +26323,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32943,
@@ -25781,7 +26368,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32944,
@@ -25825,7 +26413,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32945,
@@ -25869,7 +26458,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 32946,
@@ -25913,7 +26503,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 33054,
@@ -25957,7 +26548,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 33055,
@@ -26001,7 +26593,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 33058,
@@ -26045,7 +26638,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34009,
@@ -26089,7 +26683,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34010,
@@ -26133,7 +26728,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34011,
@@ -26177,7 +26773,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34012,
@@ -26221,7 +26818,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34164,
@@ -26265,7 +26863,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34165,
@@ -26309,7 +26908,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34166,
@@ -26353,7 +26953,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34167,
@@ -26397,7 +26998,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34382,
@@ -26441,7 +27043,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34168,
@@ -26485,7 +27088,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34169,
@@ -26529,7 +27133,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34384,
@@ -26573,7 +27178,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34170,
@@ -26617,7 +27223,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34386,
@@ -26661,7 +27268,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34176,
@@ -26705,7 +27313,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34177,
@@ -26749,7 +27358,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34178,
@@ -26793,7 +27403,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34179,
@@ -26837,7 +27448,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34180,
@@ -26881,7 +27493,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34381,
@@ -26925,7 +27538,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34181,
@@ -26969,7 +27583,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34182,
@@ -27013,7 +27628,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34183,
@@ -27057,7 +27673,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34184,
@@ -27101,7 +27718,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34185,
@@ -27145,7 +27763,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34186,
@@ -27189,7 +27808,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34383,
@@ -27233,7 +27853,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34188,
@@ -27277,7 +27898,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34385,
@@ -27321,7 +27943,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34189,
@@ -27365,7 +27988,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34190,
@@ -27409,7 +28033,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34192,
@@ -27453,7 +28078,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34388,
@@ -27497,7 +28123,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34193,
@@ -27541,7 +28168,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34389,
@@ -27585,7 +28213,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34194,
@@ -27629,7 +28258,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34195,
@@ -27673,7 +28303,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34392,
@@ -27717,7 +28348,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34196,
@@ -27761,7 +28393,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34197,
@@ -27805,7 +28438,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34198,
@@ -27849,7 +28483,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34199,
@@ -27893,7 +28528,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34202,
@@ -27937,7 +28573,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34393,
@@ -27981,7 +28618,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34203,
@@ -28025,7 +28663,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34204,
@@ -28069,7 +28708,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34205,
@@ -28113,7 +28753,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34206,
@@ -28157,7 +28798,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34208,
@@ -28201,7 +28843,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34390,
@@ -28245,7 +28888,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34209,
@@ -28289,7 +28933,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34391,
@@ -28333,7 +28978,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34210,
@@ -28377,7 +29023,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34211,
@@ -28421,7 +29068,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34397,
@@ -28465,7 +29113,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34212,
@@ -28509,7 +29158,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34398,
@@ -28553,7 +29203,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34213,
@@ -28597,7 +29248,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34214,
@@ -28641,7 +29293,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34215,
@@ -28685,7 +29338,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34394,
@@ -28729,7 +29383,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34216,
@@ -28773,7 +29428,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34395,
@@ -28817,7 +29473,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34228,
@@ -28861,7 +29518,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34229,
@@ -28905,7 +29563,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34396,
@@ -28949,7 +29608,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34230,
@@ -28993,7 +29653,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34231,
@@ -29037,7 +29698,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34232,
@@ -29081,7 +29743,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34233,
@@ -29125,7 +29788,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34399,
@@ -29169,7 +29833,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34234,
@@ -29213,7 +29878,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34408,
@@ -29257,7 +29923,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34240,
@@ -29301,7 +29968,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34241,
@@ -29345,7 +30013,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34242,
@@ -29389,7 +30058,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34243,
@@ -29433,7 +30103,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34401,
@@ -29477,7 +30148,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34244,
@@ -29521,7 +30193,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34404,
@@ -29565,7 +30238,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34245,
@@ -29609,7 +30283,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34403,
@@ -29653,7 +30328,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34247,
@@ -29697,7 +30373,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34329,
@@ -29741,7 +30418,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34331,
@@ -29785,7 +30463,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34332,
@@ -29829,7 +30508,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34402,
@@ -29873,7 +30553,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34333,
@@ -29917,7 +30598,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34335,
@@ -29961,7 +30643,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34336,
@@ -30005,7 +30688,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34337,
@@ -30049,7 +30733,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34339,
@@ -30093,7 +30778,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34405,
@@ -30137,7 +30823,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34340,
@@ -30181,7 +30868,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34341,
@@ -30225,7 +30913,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34342,
@@ -30269,7 +30958,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34406,
@@ -30313,7 +31003,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34343,
@@ -30357,7 +31048,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34344,
@@ -30401,7 +31093,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34345,
@@ -30445,7 +31138,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34400,
@@ -30489,7 +31183,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34346,
@@ -30533,7 +31228,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34347,
@@ -30577,7 +31273,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34348,
@@ -30621,7 +31318,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34349,
@@ -30665,7 +31363,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34350,
@@ -30709,7 +31408,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34409,
@@ -30753,7 +31453,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34351,
@@ -30797,7 +31498,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34407,
@@ -30841,7 +31543,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34352,
@@ -30885,7 +31588,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   },
   {
     "Id": 34427,
@@ -30929,7 +31633,8 @@
     "HasProc": true,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34428,
@@ -30973,7 +31678,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34429,
@@ -31017,7 +31723,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34430,
@@ -31061,7 +31768,8 @@
     "HasProc": false,
     "HasOnUse": true,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 34848,
@@ -31105,7 +31813,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 34431,
@@ -31149,7 +31858,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34432,
@@ -31193,7 +31903,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34433,
@@ -31237,7 +31948,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34434,
@@ -31281,7 +31993,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34435,
@@ -31325,7 +32038,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34436,
@@ -31369,7 +32083,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 34851,
@@ -31413,7 +32128,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 34437,
@@ -31457,7 +32173,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34438,
@@ -31501,7 +32218,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34439,
@@ -31545,7 +32263,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34441,
@@ -31589,7 +32308,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34442,
@@ -31633,7 +32353,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34443,
@@ -31677,7 +32398,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 34852,
@@ -31721,7 +32443,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 34444,
@@ -31765,7 +32488,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34445,
@@ -31809,7 +32533,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34446,
@@ -31853,7 +32578,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34447,
@@ -31897,7 +32623,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 34448,
@@ -31941,7 +32668,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 34853,
@@ -31985,7 +32713,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 34485,
@@ -32029,7 +32758,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34487,
@@ -32073,7 +32803,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34488,
@@ -32117,7 +32848,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34527,
@@ -32161,7 +32893,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34528,
@@ -32205,7 +32938,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34541,
@@ -32249,7 +32983,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 34854,
@@ -32293,7 +33028,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 34542,
@@ -32337,7 +33073,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34543,
@@ -32381,7 +33118,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34545,
@@ -32425,7 +33163,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34546,
@@ -32469,7 +33208,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34547,
@@ -32513,7 +33253,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34549,
@@ -32557,7 +33298,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 34855,
@@ -32601,7 +33343,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 34554,
@@ -32645,7 +33388,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34555,
@@ -32689,7 +33433,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34556,
@@ -32733,7 +33478,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34557,
@@ -32777,7 +33523,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 34558,
@@ -32821,7 +33568,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 34856,
@@ -32865,7 +33613,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 274
+    "UsableClasses": 274,
+    "IsUnique": false
   },
   {
     "Id": 34559,
@@ -32909,7 +33658,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34560,
@@ -32953,7 +33703,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34561,
@@ -32997,7 +33748,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 2
+    "UsableClasses": 2,
+    "IsUnique": false
   },
   {
     "Id": 34562,
@@ -33041,7 +33793,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34563,
@@ -33085,7 +33838,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 16
+    "UsableClasses": 16,
+    "IsUnique": false
   },
   {
     "Id": 34564,
@@ -33129,7 +33883,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 256
+    "UsableClasses": 256,
+    "IsUnique": false
   },
   {
     "Id": 34857,
@@ -33173,7 +33928,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 69
+    "UsableClasses": 69,
+    "IsUnique": false
   },
   {
     "Id": 34565,
@@ -33217,7 +33973,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34566,
@@ -33261,7 +34018,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34567,
@@ -33305,7 +34063,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 64
+    "UsableClasses": 64,
+    "IsUnique": false
   },
   {
     "Id": 34568,
@@ -33349,7 +34108,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34569,
@@ -33393,7 +34153,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1
+    "UsableClasses": 1,
+    "IsUnique": false
   },
   {
     "Id": 34570,
@@ -33437,7 +34198,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 4
+    "UsableClasses": 4,
+    "IsUnique": false
   },
   {
     "Id": 34858,
@@ -33481,7 +34243,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1160
+    "UsableClasses": 1160,
+    "IsUnique": false
   },
   {
     "Id": 34571,
@@ -33525,7 +34288,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34572,
@@ -33569,7 +34333,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34573,
@@ -33613,7 +34378,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 1024
+    "UsableClasses": 1024,
+    "IsUnique": false
   },
   {
     "Id": 34574,
@@ -33657,7 +34423,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 128
+    "UsableClasses": 128,
+    "IsUnique": false
   },
   {
     "Id": 34575,
@@ -33701,7 +34468,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": 8
+    "UsableClasses": 8,
+    "IsUnique": false
   },
   {
     "Id": 35282,
@@ -33745,7 +34513,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35283,
@@ -33789,7 +34558,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35284,
@@ -33833,7 +34603,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35290,
@@ -33877,7 +34648,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35291,
@@ -33921,7 +34693,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35292,
@@ -33965,7 +34738,8 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": true
   },
   {
     "Id": 35733,
@@ -34009,6 +34783,7 @@
     "HasProc": false,
     "HasOnUse": false,
     "HasSpecial": false,
-    "UsableClasses": null
+    "UsableClasses": null,
+    "IsUnique": false
   }
 ]

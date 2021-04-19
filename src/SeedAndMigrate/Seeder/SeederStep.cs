@@ -87,6 +87,8 @@ namespace ValhallaLootList.SeedAndMigrate.Seeder
                 item.TopEndDamage = seedItem.TopEndDamage;
                 item.Type = seedItem.Type;
                 item.UsableClasses = seedItem.UsableClasses;
+                item.IsUnique = seedItem.IsUnique;
+                item.QuestId = seedItem.QuestId;
             }
 
             foreach (var item in existingItems.Values)

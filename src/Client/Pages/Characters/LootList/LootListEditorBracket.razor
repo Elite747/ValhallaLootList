@@ -2,6 +2,14 @@
     <MudCardHeader>
         <CardHeaderContent>
             <MudText Typo="Typo.h6">Bracket @(Bracket + 1)</MudText>
+            @if (IsHighest)
+            {
+                <MudText Color="Color.Success">Highest Priority</MudText>
+            }
+            else if (IsLowest)
+            {
+                <MudText Color="Color.Error">Lowest Priority</MudText>
+            }
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
@@ -70,6 +78,8 @@
     [Parameter] public bool AllowOffSpec { get; set; }
     [Parameter] public bool AllowTypeDuplicates { get; set; }
     [Parameter] public IEnumerable<LootListEntryDto> BracketEntries { get; set; } = null!;
+    [Parameter] public bool IsHighest { get; set; }
+    [Parameter] public bool IsLowest { get; set; }
 
     protected override void OnParametersSet()
     {

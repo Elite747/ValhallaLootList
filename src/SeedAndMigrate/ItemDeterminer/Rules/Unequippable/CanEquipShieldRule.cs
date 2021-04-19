@@ -15,7 +15,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return (spec & (Specializations.Warrior | Specializations.Paladin | Specializations.Shaman)) == spec;
+            return (spec & (SpecializationGroups.Warrior | SpecializationGroups.Paladin | SpecializationGroups.Shaman)) == spec;
         }
     }
 }

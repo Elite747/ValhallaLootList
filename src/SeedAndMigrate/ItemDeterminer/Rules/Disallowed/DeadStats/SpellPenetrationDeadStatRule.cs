@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class SpellPenetrationDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.PhysicalDps | Specializations.Tank | Specializations.RetPaladin | Specializations.EnhanceShaman;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank | Specializations.RetPaladin | Specializations.EnhanceShaman;
 
         protected override int GetStat(Item item) => item.SpellPenetration;
 

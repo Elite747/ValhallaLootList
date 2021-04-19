@@ -13,7 +13,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSp
 
         protected override bool AppliesTo(Item item) => item.Id == 30619u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.All & ~Specializations.Healer;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Healer;
 
         protected override bool IsAllowed(Item item, Specializations spec) => false;
     }

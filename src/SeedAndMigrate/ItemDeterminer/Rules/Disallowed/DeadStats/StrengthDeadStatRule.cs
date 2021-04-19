@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class StrengthDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.CasterDps | Specializations.Healer | Specializations.Hunter;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.CasterDps | SpecializationGroups.Healer | SpecializationGroups.Hunter;
 
         protected override int GetStat(Item item) => item.Strength;
 

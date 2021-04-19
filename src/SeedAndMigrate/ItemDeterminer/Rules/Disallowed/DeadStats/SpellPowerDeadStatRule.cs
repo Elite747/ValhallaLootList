@@ -9,9 +9,9 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
     {
         protected override Specializations ApplicableSpecs() => Specializations.BearDruid |
             Specializations.CatDruid |
-            Specializations.Hunter |
-            Specializations.Rogue |
-            Specializations.Warrior |
+            SpecializationGroups.Hunter |
+            SpecializationGroups.Rogue |
+            SpecializationGroups.Warrior |
             Specializations.EnhanceShaman |
             Specializations.RetPaladin;
 

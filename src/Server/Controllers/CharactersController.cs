@@ -500,13 +500,13 @@ namespace ValhallaLootList.Server.Controllers
             return character.Class switch
             {
                 Classes.Druid => new[] { Specializations.BalanceDruid, Specializations.BearDruid, Specializations.CatDruid, Specializations.RestoDruid },
-                Classes.Hunter => new[] { Specializations.Hunter },
-                Classes.Mage => new[] { Specializations.Mage },
+                Classes.Hunter => new[] { Specializations.BeastMasterHunter, Specializations.MarksmanHunter, Specializations.SurvivalHunter },
+                Classes.Mage => new[] { Specializations.ArcaneMage, Specializations.FireMage, Specializations.FrostMage },
                 Classes.Paladin => new[] { Specializations.HolyPaladin, Specializations.ProtPaladin, Specializations.RetPaladin },
-                Classes.Priest => new[] { Specializations.HealerPriest, Specializations.ShadowPriest },
-                Classes.Rogue => new[] { Specializations.Rogue },
+                Classes.Priest => new[] { Specializations.DiscPriest, Specializations.HolyPriest, Specializations.ShadowPriest },
+                Classes.Rogue => new[] { Specializations.AssassinationRogue, Specializations.CombatRogue, Specializations.SubtletyRogue },
                 Classes.Shaman => new[] { Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman },
-                Classes.Warlock => new[] { Specializations.Warlock },
+                Classes.Warlock => new[] { Specializations.AfflictionWarlock, Specializations.DemoWarlock, Specializations.DestroWarlock },
                 Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
                 _ => Array.Empty<Specializations>()
             };

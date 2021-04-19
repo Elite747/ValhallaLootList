@@ -8,7 +8,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
     internal class HasteDeadStatRule : DeadStatRule
     {
         // TODO: Is unspecified haste physical haste, melee haste, or all haste?
-        protected override Specializations ApplicableSpecs() => Specializations.Healer | Specializations.CasterDps;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
 
         protected override int GetStat(Item item) => item.Haste;
 

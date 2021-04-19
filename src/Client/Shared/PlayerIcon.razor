@@ -56,12 +56,12 @@
             _roleIcon = null;
             _role = null;
         }
-        else if ((Spec & Specializations.Healer) != 0)
+        else if ((Spec & SpecializationGroups.Healer) != 0)
         {
             _roleIcon = CustomIcons.Cross;
             _role = "healer";
         }
-        else if ((Spec & Specializations.Tank) != 0)
+        else if ((Spec & SpecializationGroups.Tank) != 0)
         {
             _roleIcon = Icons.Material.Filled.Shield;
             _role = "tank";
@@ -84,28 +84,6 @@
 
         _tooltipText = Race.GetDisplayName() + " ";
 
-        _tooltipText += Spec switch
-        {
-            Specializations.BalanceDruid => "Balance Druid",
-            Specializations.BearDruid => "Guardian Druid",
-            Specializations.CatDruid => "Feral Druid",
-            Specializations.RestoDruid => "Restoration Druid",
-            Specializations.Hunter => "Hunter",
-            Specializations.Mage => "Mage",
-            Specializations.HolyPaladin => "Holy Paladin",
-            Specializations.ProtPaladin => "Protection Paladin",
-            Specializations.RetPaladin => "Retribution Paladin",
-            Specializations.HealerPriest => "Healer Priest",
-            Specializations.ShadowPriest => "Shadow Priest",
-            Specializations.Rogue => "Rogue",
-            Specializations.EleShaman => "Elemental Shaman",
-            Specializations.EnhanceShaman => "Enhancement Shaman",
-            Specializations.RestoShaman => "Restoration Shaman",
-            Specializations.Warlock => "Warlock",
-            Specializations.ArmsWarrior => "Arms Warrior",
-            Specializations.FuryWarrior => "Fury Warrior",
-            Specializations.ProtWarrior => "Protection Warrior",
-            _ => PlayerClass.GetDisplayName()
-        };
+        _tooltipText += Spec == Specializations.None ? PlayerClass.GetDisplayName() : Spec.GetDisplayName(includeClassName: true);
     }
 }

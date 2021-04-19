@@ -18,50 +18,37 @@ namespace ValhallaLootList.Client.Shared
                 Specializations.BearDruid => "ability_racial_bearform",
                 Specializations.CatDruid => "ability_druid_catform",
                 Specializations.RestoDruid => "spell_nature_healingtouch",
-                Specializations.Hunter => "class_hunter",
-                Specializations.Mage => "class_mage",
+                Specializations.BeastMasterHunter => "ability_hunter_bestialdiscipline",
+                Specializations.ArcaneMage => "spell_holy_magicalsentry",
                 Specializations.HolyPaladin => "spell_holy_holybolt",
                 Specializations.ProtPaladin => "ability_paladin_shieldofthetemplar",
                 Specializations.RetPaladin => "spell_holy_auraoflight",
-                Specializations.HealerPriest => "spell_holy_guardianspirit",
+                Specializations.DiscPriest => "spell_holy_powerwordshield",
                 Specializations.ShadowPriest => "spell_shadow_shadowwordpain",
-                Specializations.Rogue => "class_rogue",
+                Specializations.AssassinationRogue => "ability_rogue_deadlybrew",
                 Specializations.EleShaman => "spell_nature_lightning",
-                Specializations.EnhanceShaman => "spell_nature_lightningshield",
+                Specializations.EnhanceShaman => "spell_shaman_improvedstormstrike",
                 Specializations.RestoShaman => "spell_nature_magicimmunity",
-                Specializations.Warlock => "class_warlock",
+                Specializations.AfflictionWarlock => "spell_shadow_deathcoil",
                 Specializations.ProtWarrior => "ability_warrior_defensivestance",
                 Specializations.ArmsWarrior => "ability_warrior_savageblow",
                 Specializations.FuryWarrior => "ability_warrior_innerrage",
+                Specializations.MarksmanHunter => "ability_hunter_focusedaim",
+                Specializations.SurvivalHunter => "ability_hunter_camouflage",
+                Specializations.FireMage => "spell_fire_firebolt02",
+                Specializations.FrostMage => "spell_frost_frostbolt02",
+                Specializations.HolyPriest => "spell_holy_guardianspirit",
+                Specializations.CombatRogue => "inv_sword_30",
+                Specializations.SubtletyRogue => "ability_stealth",
+                Specializations.DemoWarlock => "spell_shadow_metamorphosis",
+                Specializations.DestroWarlock => "spell_shadow_rainoffire",
                 _ => throw new ArgumentOutOfRangeException(nameof(Spec))
             };
         }
 
         protected override string GetAltText()
         {
-            return Spec switch
-            {
-                Specializations.BalanceDruid => "Balance Druid",
-                Specializations.BearDruid => "Feral Druid (Bear)",
-                Specializations.CatDruid => "Feral Druid (Cat)",
-                Specializations.RestoDruid => "Restoration Druid",
-                Specializations.Hunter => "Hunter",
-                Specializations.Mage => "Mage",
-                Specializations.HolyPaladin => "Holy Paladin",
-                Specializations.ProtPaladin => "Protection Paladin",
-                Specializations.RetPaladin => "Retribution Paladin",
-                Specializations.HealerPriest => "Healer Priest",
-                Specializations.ShadowPriest => "Shadow Priest",
-                Specializations.Rogue => "Rogue",
-                Specializations.EleShaman => "Elemental Shaman",
-                Specializations.EnhanceShaman => "Enhancement Shaman",
-                Specializations.RestoShaman => "Restoration Shaman",
-                Specializations.Warlock => "Warlock",
-                Specializations.ProtWarrior => "Protection Warrior",
-                Specializations.ArmsWarrior => "Arms Warrior",
-                Specializations.FuryWarrior => "Fury Warrior",
-                _ => throw new ArgumentOutOfRangeException(nameof(Spec))
-            };
+            return Spec.GetDisplayName(includeClassName: true);
         }
     }
 }

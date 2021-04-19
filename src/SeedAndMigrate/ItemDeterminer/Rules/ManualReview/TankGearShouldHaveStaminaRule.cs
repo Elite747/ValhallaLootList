@@ -28,7 +28,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview
             _ => false
         };
 
-        protected override Specializations ApplicableSpecs() => Specializations.Tank;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
 
         protected override bool IsAllowed(Item item, Specializations spec) => item.Stamina > 0;
     }

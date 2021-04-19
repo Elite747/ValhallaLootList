@@ -18,11 +18,11 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable
         {
             var equippableSpecs = item.Type switch
             {
-                ItemType.Dagger => (Specializations.All & ~Specializations.Paladin),
-                ItemType.Fist => Specializations.Druid | Specializations.Shaman | Specializations.Warrior | Specializations.Rogue | Specializations.Hunter,
-                ItemType.Axe => Specializations.Paladin | Specializations.Shaman | Specializations.Warrior | Specializations.Hunter,
-                ItemType.Mace => Specializations.Druid | Specializations.Paladin | Specializations.Priest | Specializations.Shaman | Specializations.Warrior | Specializations.Rogue,
-                ItemType.Sword => Specializations.Paladin | Specializations.Warrior | Specializations.Rogue | Specializations.Hunter | Specializations.Mage | Specializations.Warlock,
+                ItemType.Dagger => (SpecializationGroups.All & ~SpecializationGroups.Paladin),
+                ItemType.Fist => SpecializationGroups.Druid | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.Hunter,
+                ItemType.Axe => SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+                ItemType.Mace => SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Priest | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Rogue,
+                ItemType.Sword => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.Hunter | SpecializationGroups.Mage | SpecializationGroups.Warlock,
                 _ => throw new ArgumentException("Item is not a one-handed weapon.", nameof(item))
             };
 

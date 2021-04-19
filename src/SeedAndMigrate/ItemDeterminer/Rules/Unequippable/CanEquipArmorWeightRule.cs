@@ -19,9 +19,9 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            const Specializations mail = Specializations.Hunter | Specializations.Shaman;
-            const Specializations leather = Specializations.Druid | Specializations.Rogue;
-            const Specializations cloth = Specializations.Priest | Specializations.Mage | Specializations.Warlock;
+            const Specializations mail = SpecializationGroups.Hunter | SpecializationGroups.Shaman;
+            const Specializations leather = SpecializationGroups.Druid | SpecializationGroups.Rogue;
+            const Specializations cloth = SpecializationGroups.Priest | SpecializationGroups.Mage | SpecializationGroups.Warlock;
 
             Specializations unequippable = item.Type switch
             {

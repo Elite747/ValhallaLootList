@@ -13,7 +13,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
 
         protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && (item.Type == ItemType.Other || item.Type == ItemType.Shield);
 
-        protected override Specializations ApplicableSpecs() => Specializations.FuryWarrior | Specializations.EnhanceShaman | Specializations.Rogue;
+        protected override Specializations ApplicableSpecs() => Specializations.FuryWarrior | Specializations.EnhanceShaman | SpecializationGroups.Rogue;
 
         protected override bool IsAllowed(Item item, Specializations spec) => false;
     }

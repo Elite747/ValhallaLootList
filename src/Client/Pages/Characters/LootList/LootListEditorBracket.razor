@@ -1,7 +1,13 @@
 ﻿<MudCard Elevation="3" Class="my-4">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Bracket @(Bracket + 1)</MudText>
+            <div class="d-flex">
+                <MudText Typo="Typo.h6">Bracket @(Bracket + 1)</MudText>
+                <MudText Typo="Typo.body1" Class="ml-2 mt-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                    Not all item ranks need to be filled.
+                </MudText>
+            </div>
             @if (IsHighest)
             {
                 <MudText Color="Color.Success">Highest Priority</MudText>
@@ -13,51 +19,45 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-        <ul>
-            <li>Bracket Rules:</li>
-            <li>
-                Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank
-            </li>
+            Bracket Rules:
+            <span>Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank</span>
             @if (AllowOffSpec)
             {
-                <li>Offspec items allowed</li>
+                <span>, Offspec items allowed</span>
             }
             else
             {
-                <li>No offspec items</li>
+                <span>, No offspec items</span>
             }
             @if (!AllowTypeDuplicates)
             {
-                <li>
-                    Only one item per category
-                    <MudTooltip>
-                        <ChildContent>
-                            <MudIcon Style="font-size: 1rem" Icon="@Icons.Material.Filled.InfoOutline" />
-                        </ChildContent>
-                        <TooltipContent>
-                            <div style="text-align: start">
-                                <p><b>Categories:</b></p>
-                                <ul>
-                                    <li>Head Armor</li>
-                                    <li>Shoulder Armor</li>
-                                    <li>Chest Armor</li>
-                                    <li>Waist Armor</li>
-                                    <li>Leg Armor</li>
-                                    <li>Foot Armor</li>
-                                    <li>Wrist Armor</li>
-                                    <li>Hand Armor</li>
-                                    <li>Rings & Necklaces</li>
-                                    <li>Trinkets</li>
-                                    <li>Cloaks</li>
-                                    <li>Weapons, Shields & Offhands</li>
-                                    <li>Wands & Relics</li>
-                                </ul>
-                            </div>
-                        </TooltipContent>
-                    </MudTooltip>
-                </li>
+                <span>, Only one item per category</span>
+                <MudTooltip>
+                    <ChildContent>
+                        <MudIcon Style="font-size: 1rem" Icon="@Icons.Material.Filled.InfoOutline" />
+                    </ChildContent>
+                    <TooltipContent>
+                        <div style="text-align: start">
+                            <p><b>Categories:</b></p>
+                            <ul>
+                                <li>Head Armor</li>
+                                <li>Shoulder Armor</li>
+                                <li>Chest Armor</li>
+                                <li>Waist Armor</li>
+                                <li>Leg Armor</li>
+                                <li>Foot Armor</li>
+                                <li>Wrist Armor</li>
+                                <li>Hand Armor</li>
+                                <li>Rings & Necklaces</li>
+                                <li>Trinkets</li>
+                                <li>Cloaks</li>
+                                <li>Weapons, Shields & Offhands</li>
+                                <li>Wands & Relics</li>
+                            </ul>
+                        </div>
+                    </TooltipContent>
+                </MudTooltip>
             }
-        </ul>
     </MudCardContent>
     <MudList Dense="true">
         @foreach (var row in _rankGroups)

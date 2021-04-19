@@ -6,39 +6,43 @@
 <ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
     <CascadingValue Value="items" IsFixed="true">
         <CascadingValue Value="this" IsFixed="true">
-            <div class="ma-4">
-                <MudText Typo="Typo.h6">
-                    Main Spec:
-                    <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
-                    @LootList.MainSpec.GetDisplayName()
-                </MudText>
-                @if (LootList.OffSpec != LootList.MainSpec)
-                {
-                    <MudText Typo="Typo.h6">
-                        Off Spec:
-                        <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
-                        @LootList.OffSpec.GetDisplayName()
-                    </MudText>
-                }
-
-                <div>
+            <MudList Dense="true">
+                <MudListSubheader>
                     <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit Application</MudButton>
                     <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Change Specialization</MudButton>
                     <MudButton OnClick="ResetAsync" Color="Color.Error" Variant="Variant.Filled" Class="mr-2">Reset</MudButton>
+                </MudListSubheader>
+                <MudListSubheader>
+                    <div class="d-flex">
+                        <MudText Typo="Typo.h6" Class="mx-auto">
+                            Main Spec:
+                            <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
+                            @LootList.MainSpec.GetDisplayName()
+                        </MudText>
+                        @if (LootList.OffSpec != LootList.MainSpec)
+                        {
+                            <MudDivider Vertical="true" FlexItem="true" />
+                            <MudText Typo="Typo.h6" Class="mx-auto">
+                                Off Spec:
+                                <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
+                                @LootList.OffSpec.GetDisplayName()
+                            </MudText>
+                        }
+                    </div>
+                </MudListSubheader>
+                <div class="ml-4 mr-4">
+                    @for (int i = 0; i < _brackets.Count; i++)
+                    {
+                        var bracket = _brackets[i];
+                        <LootListEditorBracket Bracket="bracket.Key.Bracket"
+                                               AllowOffSpec="bracket.Key.AllowsOffspec"
+                                               AllowTypeDuplicates="bracket.Key.AllowsTypeDuplicates"
+                                               IsHighest="i == 0"
+                                               IsLowest="i == _brackets.Count - 1"
+                                               BracketEntries="bracket" />
+                    }
                 </div>
-
-                @for (int i = 0; i < _brackets.Count; i++)
-                {
-                    var bracket = _brackets[i];
-                    <LootListEditorBracket Bracket="bracket.Key.Bracket"
-                                           AllowOffSpec="bracket.Key.AllowsOffspec"
-                                           AllowTypeDuplicates="bracket.Key.AllowsTypeDuplicates"
-                                           IsHighest="i == 0"
-                                           IsLowest="i == _brackets.Count - 1"
-                                           BracketEntries="bracket" />
-                }
-
-            </div>
+            </MudList>
         </CascadingValue>
     </CascadingValue>
 </ApiExecutor>

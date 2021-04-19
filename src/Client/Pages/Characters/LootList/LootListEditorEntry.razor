@@ -28,7 +28,7 @@
                     }
                     else
                     {
-                        <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                        <ItemIcon Size="IconSize.Medium" Width="40" Height="40" ondragstart="event.dataTransfer.clearData();event.dataTransfer.setData('', event.target.id);" />
                     }
                 </MudAvatar>
                 <div class="mr-auto">

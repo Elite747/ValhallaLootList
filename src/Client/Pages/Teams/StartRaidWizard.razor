@@ -22,41 +22,34 @@
             </ApiExecutor>
         </WizardSection>
         <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
-            <MudList Clickable="true" Dense="true">
-                @foreach (var member in Team.Roster)
+            <div>
+                @foreach (var roleGroup in Team.Roster.GroupBy(a => (a.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec).GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
                 {
-                    <MudListItem Icon="@(State.Attendees.ContainsKey(member.Character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
-                                 OnClick="() => ToggleAttendee(member.Character)"
-                                 @key="member.Character.Id">
-                        <PlayerIcon Gender="member.Character.Gender"
-                                    PlayerClass="member.Character.Class"
-                                    Race="member.Character.Race"
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
+                    @foreach (var member in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                    {
+                        <MemberChip Member="member"
                                     Spec="member.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec ?? Specializations.None"
-                                    Size="Size.Small" />
-                        <span class="ml-2">@member.Character.Name</span>
-                    </MudListItem>
+                                    IsSelected="State.Attendees.ContainsKey(member.Character.Id)"
+                                    IsSelectedChanged="selected => SetAttending(member.Character, selected)" />
+                    }
                 }
-            </MudList>
+            </div>
         </WizardSection>
         <WizardSection Name="Additional Attendees">
             <ApiExecutor Operation="Api.Characters.GetAll" Context="characters">
-                <MudList Dense="true">
-                    @foreach (var c in characters.Where(c => c.TeamId != Team.Id && State.Attendees.ContainsKey(c.Id)).OrderBy(c => c.Name))
+                <div>
+                    @foreach (var character in State.Attendees.Values.Where(c => c.TeamId != Team.Id).OrderBy(c => c.Name))
                     {
-                        <MudListItem @key="c.Id">
-                            <div class="d-flex align-center">
-                                <PlayerIcon Gender="c.Gender" PlayerClass="c.Class" Race="c.Race" Size="Size.Small" />
-                                <span class="ml-2 mr-auto">@c.Name</span>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Size="Size.Small"
-                                               Color="Color.Error"
-                                               OnClick="() => ToggleAttendee(c)" />
-                            </div>
-                        </MudListItem>
-                        <MudDivider />
+                        <CharacterChip Character="character"
+                                       Closeable="true"
+                                       OnClose="() => SetAttending(character, false)" />
                     }
-                </MudList>
-                <MudButton OnClick="AddAttendeeAsync" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   OnClick="AddAttendeeAsync" />
+                </div>
             </ApiExecutor>
         </WizardSection>
     </ApiExecutor>
@@ -75,15 +68,18 @@
         }
     }
 
-    private void ToggleAttendee(CharacterDto character)
+    private void SetAttending(CharacterDto character, bool attending)
     {
         if (State.Attendees.ContainsKey(character.Id))
         {
-            State.Attendees.Remove(character.Id);
+            if (!attending)
+            {
+                State.Attendees.Remove(character.Id);
+            }
         }
-        else
+        else if (attending)
         {
-            State.Attendees.Add(character.Id, character);
+            State.Attendees[character.Id] = character;
         }
     }
 

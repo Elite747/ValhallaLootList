@@ -111,5 +111,22 @@ namespace ValhallaLootList
         {
             return (spec & SpecializationGroups.Dps) != 0;
         }
+
+        public static RaidRole GetRole(this Specializations spec)
+        {
+            if (IsTank(spec))
+            {
+                return RaidRole.Tank;
+            }
+            if (IsHealer(spec))
+            {
+                return RaidRole.Healer;
+            }
+            if (IsDps(spec))
+            {
+                return RaidRole.Dps;
+            }
+            return RaidRole.Unknown;
+        }
     }
 }

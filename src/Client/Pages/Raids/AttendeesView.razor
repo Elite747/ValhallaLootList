@@ -9,29 +9,16 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent Class="py-0">
-        <MudText Typo="Typo.subtitle2">Tanks</MudText>
-        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsTank()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
-        {
-            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
-        }
-        <MudText Typo="Typo.subtitle2">Healers</MudText>
-        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsHealer()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
-        {
-            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
-        }
-        <MudText Typo="Typo.subtitle2">DPS</MudText>
-        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsDps()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
-        {
-            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
-        }
-        @if (Raid.Attendees.Any(a => !a.MainSpec.HasValue))
-        {
-            <MudText Typo="Typo.subtitle2">Unknown Role</MudText>
-            @foreach (var attendance in Raid.Attendees.Where(a => !a.MainSpec.HasValue).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+        <div>
+            @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
             {
-                <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+                <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
+                @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                {
+                    <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+                }
             }
-        }
+        </div>
     </MudCardContent>
     <MudCardActions>
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)

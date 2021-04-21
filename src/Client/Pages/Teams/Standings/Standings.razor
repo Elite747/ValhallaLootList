@@ -43,9 +43,9 @@
         </MudExpansionPanelHeader>
         @if (GroupByEncounter)
         {
-            foreach (var instance in instances.Where(i => i.Phase == Phase).OrderBy(i => i.Name))
+            foreach (var instance in instances.Where(i => i.Phase == Phase))
             {
-                foreach (var e in instance.Encounters.OrderBy(e => e.Name))
+                foreach (var e in instance.Encounters)
                 {
                     var encounter = e;
                     <MudExpansionPanel IsExpanded="string.Equals(encounter.Id, SelectedEncounterId, StringComparison.OrdinalIgnoreCase)"

@@ -32,18 +32,17 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         private Task AddClickedAsync()
         {
-            return Api.Instances.GetAll()
-                .OnSuccess(AddKillAsync)
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-
-        private Task AddKillAsync(IEnumerable<InstanceDto> instances, CancellationToken cancellationToken)
-        {
-            return DialogService.ShowAsync<AddKillDialog, bool>(
-                    "Add Kill",
-                    parameters: new() { [nameof(AddKillDialog.Input)] = new AddKillInputModel(instances, Raid) },
-                    options: new() { FullWidth = true, MaxWidth = MudBlazor.MaxWidth.Medium });
+            return DialogService.ShowAsync<AddKillWizard, object?>(
+                string.Empty,
+                parameters: new()
+                {
+                    [nameof(AddKillWizard.Raid)] = Raid
+                },
+                options: new()
+                {
+                    FullWidth = true,
+                    MaxWidth = MudBlazor.MaxWidth.Medium
+                });
         }
 
         private string GetWinnerName(long? id)

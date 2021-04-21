@@ -1,11 +1,19 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System;
+
 namespace ValhallaLootList.DataTransfer
 {
     public class AttendanceDto
     {
-        public CharacterDto? Character { get; set; }
+        private CharacterDto? _character;
+
+        public CharacterDto Character
+        {
+            get => _character ?? throw new InvalidOperationException("Characer has not been set.");
+            set => _character = value;
+        }
 
         public bool IgnoreAttendance { get; set; }
 

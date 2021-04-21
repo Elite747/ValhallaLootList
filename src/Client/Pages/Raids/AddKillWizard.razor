@@ -1,0 +1,166 @@
+﻿@inject ApiClient Api
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialogScrollFix FixedFooter="true" />
+<WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
+    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+        <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
+            <MudList Clickable="true" Dense="true">
+                @foreach (var instance in instances.Where(i => i.Phase == Raid.Phase))
+                {
+                    <MudListSubheader @key="instance.Id">
+                        @instance.Name
+                    </MudListSubheader>
+                    @foreach (var e in instance.Encounters)
+                    {
+                        var encounter = e;
+                        <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                     OnClick="() => SetEncounter(encounter)"
+                                     Text="@encounter.Name"
+                                     @key="encounter.Id" />
+                    }
+                }
+            </MudList>
+        </WizardSection>
+        <WizardSection Name="Attendees" CanContinue="() => _attendees.Count != 0">
+            @if (_attendees.Count != Raid.Attendees.Count)
+            {
+                <MudAlert Severity="Severity.Warning">
+                    One or more attendees isn't listed as present for this kill.
+                    Ensure that this is correct before proceeding!
+                    <br />
+                    <small>
+                        Characters who are not present will not recieve loss bonuses for loot that drops.
+                    </small>
+                </MudAlert>
+            }
+            <MudList Clickable="true" Dense="true">
+                @foreach (var member in Raid.Attendees)
+                {
+                    <MudListItem Icon="@(_attendees.ContainsKey(member.Character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
+                                 OnClick="() => ToggleAttendee(member.Character)"
+                                 @key="member.Character.Id">
+                        <PlayerIcon Gender="member.Character.Gender"
+                                    PlayerClass="member.Character.Class"
+                                    Race="member.Character.Race"
+                                    Spec="member.MainSpec ?? Specializations.None"
+                                    Size="Size.Small" />
+                        <span class="ml-2">@member.Character.Name</span>
+                    </MudListItem>
+                }
+            </MudList>
+        </WizardSection>
+        <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
+            @foreach (var itemId in _drops.Keys)
+            {
+                var localItemId = itemId;
+                <div class="d-flex align-center py-1" @key="itemId">
+                    <CascadingItemContext Id="itemId">
+                        <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
+                            <ItemIcon Size="IconSize.Large" Width="56" Height="56" />
+                        </MudAvatar>
+                        <div class="mr-auto">
+                            <div>
+                                <ItemLink Colorize="true" Bracketize="true" />
+                            </div>
+                            <div class="d-flex align-center">
+                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Max(0, _drops[localItemId] - 1)"
+                                               Disabled="_drops[localItemId] <= 0"
+                                               Icon="@Icons.Material.Filled.RemoveCircle"
+                                               Size="Size.Small"
+                                               Color="Color.Error" />
+
+                                <MudText Typo="Typo.h6" Class="mx-2">@_drops[localItemId]</MudText>
+
+                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Min(3, _drops[localItemId] + 1)"
+                                               Disabled="_drops[localItemId] >= 3"
+                                               Icon="@Icons.Material.Filled.AddCircle"
+                                               Size="Size.Small"
+                                               Color="Color.Success" />
+                            </div>
+                        </div>
+                    </CascadingItemContext>
+                </div>
+            }
+        </WizardSection>
+    </ApiExecutor>
+</WizardDialog>
+
+@code {
+    private readonly Dictionary<long, CharacterDto> _attendees = new();
+    private readonly Dictionary<uint, int> _drops = new();
+    private EncounterDto? _encounter;
+
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+
+        var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
+        foreach (var attendee in Raid.Attendees)
+        {
+            if (lastKill?.Characters.Contains(attendee.Character.Id) != false)
+            {
+                _attendees[attendee.Character.Id] = attendee.Character;
+            }
+        }
+    }
+
+    private void SetEncounter(EncounterDto? encounter)
+    {
+        _encounter = encounter;
+        _drops.Clear();
+
+        if (encounter is not null)
+        {
+            foreach (var drop in encounter.Items)
+            {
+                _drops.Add(drop, 0);
+            }
+        }
+    }
+
+    private void ToggleAttendee(CharacterDto character)
+    {
+        if (_attendees.ContainsKey(character.Id))
+        {
+            _attendees.Remove(character.Id);
+        }
+        else
+        {
+            _attendees.Add(character.Id, character);
+        }
+    }
+
+    private Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    {
+        if (_encounter is null)
+        {
+            arg.Cancel = true;
+            return Task.CompletedTask;
+        }
+
+        var kill = new KillSubmissionDto
+        {
+            Characters = _attendees.Keys.ToList(),
+            EncounterId = _encounter.Id
+        };
+
+        foreach (var (id, count) in _drops)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                kill.Drops.Add(id);
+            }
+        }
+
+        return Api.Raids.AddKill(Raid.Id, kill)
+            .OnSuccess(Raid.Kills.Add)
+            .OnFailure(_ => arg.Cancel = true)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+}

@@ -36,21 +36,20 @@
                     </small>
                 </MudAlert>
             }
-            <MudList Clickable="true" Dense="true">
-                @foreach (var member in Raid.Attendees)
+
+            <div class="mt-1">
+                @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
                 {
-                    <MudListItem Icon="@(_attendees.ContainsKey(member.Character.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)"
-                                 OnClick="() => ToggleAttendee(member.Character)"
-                                 @key="member.Character.Id">
-                        <PlayerIcon Gender="member.Character.Gender"
-                                    PlayerClass="member.Character.Class"
-                                    Race="member.Character.Race"
-                                    Spec="member.MainSpec ?? Specializations.None"
-                                    Size="Size.Small" />
-                        <span class="ml-2">@member.Character.Name</span>
-                    </MudListItem>
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
+                    @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                    {
+                        <KillerChip Attendance="attendance"
+                                    Raid="Raid"
+                                    IsSelected="_attendees.ContainsKey(attendance.Character.Id)"
+                                    IsSelectedChanged="selected => SetPresent(attendance.Character, selected)" />
+                    }
                 }
-            </MudList>
+            </div>
         </WizardSection>
         <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
             @foreach (var itemId in _drops.Keys)
@@ -123,13 +122,16 @@
         }
     }
 
-    private void ToggleAttendee(CharacterDto character)
+    private void SetPresent(CharacterDto character, bool present)
     {
         if (_attendees.ContainsKey(character.Id))
         {
-            _attendees.Remove(character.Id);
+            if (!present)
+            {
+                _attendees.Remove(character.Id);
+            }
         }
-        else
+        else if (present)
         {
             _attendees.Add(character.Id, character);
         }

@@ -1,0 +1,30 @@
+﻿
+<CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec.GetValueOrDefault()" OnClick="ToggleSelected">
+    <div class="d-flex align-center">
+        @Attendance.Character.Name
+        @if (IsSelected)
+        {
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
+        }
+    </div>
+</CharacterChip>
+
+@code {
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+    [Parameter] public AttendanceDto Attendance { get; set; } = null!;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback<bool> IsSelectedChanged { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        if (Attendance is null) throw new ArgumentNullException(nameof(Attendance));
+    }
+
+    private Task ToggleSelected()
+    {
+        IsSelected = !IsSelected;
+        return IsSelectedChanged.InvokeAsync(IsSelected);
+    }
+}

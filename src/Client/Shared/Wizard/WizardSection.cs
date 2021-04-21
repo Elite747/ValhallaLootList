@@ -10,9 +10,7 @@ namespace ValhallaLootList.Client.Shared
     {
         [Parameter] public RenderFragment? ChildContent { get; set; }
         [Parameter] public string? Name { get; set; }
-        [Parameter] public string? NextStep { get; set; }
-        [Parameter] public Func<bool>? CanEnter { get; set; }
-        [Parameter] public Func<bool>? CanLeave { get; set; }
+        [Parameter] public Func<bool>? CanContinue { get; set; }
         [CascadingParameter] public WizardDialog WizardDialog { get; set; } = null!;
 
         protected override void OnInitialized()

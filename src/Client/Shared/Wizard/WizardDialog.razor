@@ -2,7 +2,7 @@
 
 <MudDialog>
     <TitleContent>
-        @Title
+        @(Title ?? Dialog.Title)
     </TitleContent>
     <DialogContent>
         <CascadingValue Value="this" IsFixed="true">
@@ -71,53 +71,65 @@
 
     public bool CanGoTo(WizardSection? section)
     {
-        if (section is null || section == CurrentSection)
+        // Don't navigate to nothing.
+        if (section is null)
         {
             return false;
         }
 
-        if (CurrentSection?.CanLeave?.Invoke() == false)
+        // Always navigate from nothing.
+        if (CurrentSection is null)
+        {
+            return true;
+        }
+
+        var currentIndex = Sections.IndexOf(CurrentSection);
+        var targetIndex = Sections.IndexOf(section);
+
+        // Don't navigate to self.
+        if (currentIndex == targetIndex)
         {
             return false;
         }
 
-        return section.CanEnter?.Invoke() != false;
-    }
+        // Always navigate backwards.
+        if (targetIndex < currentIndex)
+        {
+            return true;
+        }
 
-    public bool CanGoTo(string sectionName)
-    {
-        return CanGoTo(Sections.Find(s => s.Name == sectionName));
+        // Don't navigate forward if something before target is invalid.
+        for (int i = currentIndex; i < targetIndex; i++)
+        {
+            if (Sections[i].CanContinue?.Invoke() == false)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public bool CanGoNext()
     {
-        if (CurrentSection is not null)
+        if (CurrentSection is null)
         {
-            if (CurrentSection.NextStep?.Length > 0)
-            {
-                return CanGoTo(CurrentSection.NextStep);
-            }
-            else
-            {
-                var index = Sections.IndexOf(CurrentSection) + 1;
-                if (index == Sections.Count)
-                {
-                    return CurrentSection.CanLeave?.Invoke() != false;
-                }
-                else
-                {
-                    return CanGoTo(Sections[index]);
-                }
-            }
+            return true;
+        }
+
+        var index = Sections.IndexOf(CurrentSection) + 1;
+        if (index == Sections.Count)
+        {
+            return CanFinish();
         }
         else
         {
-            return false;
+            return CanGoTo(Sections[index]);
         }
     }
 
     [System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(CurrentSection))]
-    public bool IsLastStep() => Sections[^1] == CurrentSection;
+    public bool IsLastStep() => Sections.Count != 0 && Sections[^1] == CurrentSection;
 
     public void GoTo(WizardSection? section)
     {
@@ -128,43 +140,37 @@
         }
     }
 
-    public void GoTo(string sectionName)
-    {
-        GoTo(Sections.Find(s => s.Name == sectionName));
-    }
-
     public Task GoToNextAsync()
     {
-        if (CurrentSection is not null)
+        var index = CurrentSection is null ? 0 : (Sections.IndexOf(CurrentSection) + 1);
+
+        if (index == Sections.Count)
         {
-            if (CurrentSection.NextStep?.Length > 0)
-            {
-                GoTo(CurrentSection.NextStep);
-            }
-            else
-            {
-                var index = Sections.IndexOf(CurrentSection) + 1;
-                if (index == Sections.Count)
-                {
-                    return FinishAsync();
-                }
-                else
-                {
-                    GoTo(Sections[index]);
-                }
-            }
+            return FinishAsync();
+        }
+        else
+        {
+            GoTo(Sections[index]);
         }
 
         return Task.CompletedTask;
     }
 
+    public bool CanFinish()
+    {
+        return Sections.All(s => s.CanContinue?.Invoke() != false);
+    }
+
     public async Task FinishAsync()
     {
-        var arg = new System.ComponentModel.CancelEventArgs();
-        await OnFinish.InvokeAsync(arg);
-        if (!arg.Cancel)
+        if (CanFinish())
         {
-            Dialog.Close(DialogResult.Ok(State));
+            var arg = new System.ComponentModel.CancelEventArgs();
+            await OnFinish.InvokeAsync(arg);
+            if (!arg.Cancel)
+            {
+                Dialog.Close(DialogResult.Ok(State));
+            }
         }
     }
 }

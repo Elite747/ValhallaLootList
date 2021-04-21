@@ -7,7 +7,7 @@
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
         @{ State.Phase = phaseConfig.CurrentPhase; }
-        <WizardSection Name="Select Phase" CanLeave="() => phaseConfig.Phases.Contains(State.Phase)">
+        <WizardSection Name="Select Phase" CanContinue="() => phaseConfig.Phases.Contains(State.Phase)">
             <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
                 <MudList Clickable="true" Dense="true">
                     @foreach (var p in phaseConfig.Phases)
@@ -21,7 +21,7 @@
                 </MudList>
             </ApiExecutor>
         </WizardSection>
-        <WizardSection Name="Roster">
+        <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
             <MudList Clickable="true" Dense="true">
                 @foreach (var member in Team.Roster)
                 {

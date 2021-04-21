@@ -38,9 +38,9 @@
     {
         var contexts = new List<AssignEntryContext>();
 
-        foreach (var character in Raid.Attendees.Where(a => a.Character is not null).Select(a => a.Character!))
+        foreach (var attendee in Raid.Attendees)
         {
-            contexts.Add(new AssignEntryContext(Raid, Drop, character, prios.FirstOrDefault(p => p.CharacterId == character.Id)));
+            contexts.Add(new AssignEntryContext(Raid, Drop, attendee.Character, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)));
         }
 
         foreach (var group in contexts.Where(e => e.Prio.HasValue).GroupBy(e => e.Prio))

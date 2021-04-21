@@ -49,7 +49,7 @@ namespace ValhallaLootList.Client.Pages.Raids
         {
             if (id.HasValue)
             {
-                return Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name ?? "Unknown";
+                return Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name ?? "Unknown";
             }
             return "nobody";
         }

@@ -9,7 +9,7 @@
     <MudCard Class="my-4" Elevation="3" @key="kill">
         <MudCardContent>
             <MudText Typo="Typo.h6">@kill.EncounterName</MudText>
-            <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
+            <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at <DateTimeDisplay Date="kill.KilledAt" Format="t" /></MudText>
             @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))
             {

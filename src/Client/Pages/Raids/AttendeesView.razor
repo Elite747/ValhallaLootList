@@ -9,10 +9,9 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudList>
-        @foreach (var attendance in Raid.Attendees.OrderBy(a => a.Character?.Name))
+        @foreach (var attendance in Raid.Attendees.OrderBy(a => a.Character.Name))
         {
             var character = attendance.Character;
-            System.Diagnostics.Debug.Assert(character is not null);
             <MudDivider />
             <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="character.Id">
                 <div class="d-flex">
@@ -74,7 +73,7 @@
         return Api.Raids.RemoveAttendee(Raid.Id, character.Id)
             .OnSuccess(_ =>
             {
-                Raid.Attendees.RemoveAll(c => c.Character?.Id == character.Id);
+                Raid.Attendees.RemoveAll(c => c.Character.Id == character.Id);
                 StateHasChanged();
             })
             .SendErrorTo(Snackbar)
@@ -122,6 +121,6 @@
 
     private bool FilterCharacters(CharacterDto character)
     {
-        return Raid.Attendees.Find(a => a.Character?.Id == character.Id) is null;
+        return Raid.Attendees.Find(a => a.Character.Id == character.Id) is null;
     }
 }

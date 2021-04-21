@@ -49,7 +49,7 @@
             _model.IgnoreReason = null;
         }
 
-        return Api.Raids.UpdateAttendee(Raid.Id, Attendance.Character!.Id, _model)
+        return Api.Raids.UpdateAttendee(Raid.Id, Attendance.Character.Id, _model)
             .OnSuccess(attendance =>
             {
                 Attendance.IgnoreAttendance = attendance.IgnoreAttendance;

@@ -96,5 +96,20 @@ namespace ValhallaLootList
                 _ => throw new ArgumentOutOfRangeException(nameof(spec))
             };
         }
+
+        public static bool IsTank(this Specializations spec)
+        {
+            return (spec & SpecializationGroups.Tank) != 0;
+        }
+
+        public static bool IsHealer(this Specializations spec)
+        {
+            return (spec & SpecializationGroups.Healer) != 0;
+        }
+
+        public static bool IsDps(this Specializations spec)
+        {
+            return (spec & SpecializationGroups.Dps) != 0;
+        }
     }
 }

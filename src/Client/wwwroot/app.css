@@ -1,4 +1,28 @@
-﻿#blazor-error-ui {
+﻿:root {
+    --classcolor-warrior: #C69B6D;
+    --classcolor-warrior-text: black;
+    --classcolor-paladin: #F48CBA;
+    --classcolor-paladin-text: black;
+    --classcolor-hunter: #AAD372;
+    --classcolor-hunter-text: black;
+    --classcolor-rogue: #FFF468;
+    --classcolor-rogue-text: black;
+    --classcolor-priest: #EEEEEE;
+    --classcolor-priest-text: black;
+    --classcolor-shaman: #0070DD;
+    --classcolor-shaman-text: white;
+    --classcolor-mage: #3FC7EB;
+    --classcolor-mage-text: black;
+    --classcolor-warlock: #8788EE;
+    --classcolor-warlock-text: black;
+    --classcolor-druid: #FF7C0A;
+    --classcolor-druid-text: black;
+    --rolecolor-tank: #001C52;
+    --rolecolor-healer: #084D42;
+    --rolecolor-dps: #6D0A0B;
+}
+
+#blazor-error-ui {
     background: lightyellow;
     color: black;
     bottom: 0;
@@ -88,48 +112,48 @@
     }
 
     .player-icon.druid {
-        border-color: #FF7C0A;
-        background-color: #FF7C0A;
+        border-color: var(--classcolor-druid);
+        background-color: var(--classcolor-druid);
     }
 
     .player-icon.hunter {
-        border-color: #AAD372;
-        background-color: #AAD372;
+        border-color: var(--classcolor-hunter);
+        background-color: var(--classcolor-hunter);
     }
 
     .player-icon.mage {
-        border-color: #3FC7EB;
-        background-color: #3FC7EB;
+        border-color: var(--classcolor-mage);
+        background-color: var(--classcolor-mage);
     }
 
     .player-icon.paladin {
-        border-color: #F48CBA;
-        background-color: #F48CBA;
+        border-color: var(--classcolor-paladin);
+        background-color: var(--classcolor-paladin);
     }
 
     .player-icon.priest {
-        border-color: #FFFFFF;
-        background-color: #FFFFFF;
+        border-color: var(--classcolor-priest);
+        background-color: var(--classcolor-priest);
     }
 
     .player-icon.rogue {
-        border-color: #FFF468;
-        background-color: #FFF468;
+        border-color: var(--classcolor-rogue);
+        background-color: var(--classcolor-rogue);
     }
 
     .player-icon.shaman {
-        border-color: #0070DD;
-        background-color: #0070DD;
+        border-color: var(--classcolor-shaman);
+        background-color: var(--classcolor-shaman);
     }
 
     .player-icon.warrior {
-        border-color: #C69B6D;
-        background-color: #C69B6D;
+        border-color: var(--classcolor-warrior);
+        background-color: var(--classcolor-warrior);
     }
 
     .player-icon.warlock {
-        border-color: #8788EE;
-        background-color: #8788EE;
+        border-color: var(--classcolor-warlock);
+        background-color: var(--classcolor-warlock);
     }
 
 .player-icon-role {
@@ -146,7 +170,7 @@
 }
 
     .player-icon-role.tank {
-        background-color: #001C52;
+        background-color: var(--rolecolor-tank);
     }
 
         .player-icon-role.tank svg {
@@ -154,7 +178,7 @@
         }
 
     .player-icon-role.healer {
-        background-color: #084D42;
+        background-color: var(--rolecolor-healer);
     }
 
         .player-icon-role.healer svg {
@@ -162,7 +186,7 @@
         }
 
     .player-icon-role.dps {
-        background-color: #6D0A0B;
+        background-color: var(--rolecolor-dps);
     }
 
         .player-icon-role.dps svg {

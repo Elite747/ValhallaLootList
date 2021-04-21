@@ -1,0 +1,41 @@
+﻿@inject ApiClient Api
+@inject IDialogService DialogService
+
+<CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec.GetValueOrDefault()" OnClick="OpenDetailsAsync">
+    <div class="d-flex align-center">
+        @Attendance.Character.Name
+        @if (Attendance.IgnoreAttendance)
+        {
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
+        }
+    </div>
+</CharacterChip>
+
+@code {
+
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+    [Parameter] public AttendanceDto Attendance { get; set; } = null!;
+    [Parameter] public EventCallback OnRemoved { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        if (Attendance is null) throw new ArgumentNullException(nameof(Attendance));
+    }
+
+    private async Task OpenDetailsAsync()
+    {
+        var removed = await DialogService.ShowAsync<AttendanceDialog, bool>(
+            string.Empty,
+            new()
+            {
+                [nameof(AttendanceDialog.Attendance)] = Attendance,
+                [nameof(AttendanceDialog.Raid)] = Raid
+            });
+
+        if (removed)
+        {
+            await OnRemoved.InvokeAsync();
+        }
+    }
+}

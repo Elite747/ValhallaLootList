@@ -8,45 +8,31 @@
             <MudText Typo="Typo.h6">Attendees</MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudList>
-        @foreach (var attendance in Raid.Attendees.OrderBy(a => a.Character.Name))
+    <MudCardContent Class="py-0">
+        <MudText Typo="Typo.subtitle2">Tanks</MudText>
+        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsTank()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
         {
-            var character = attendance.Character;
-            <MudDivider />
-            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="character.Id">
-                <div class="d-flex">
-                    <PlayerIcon Race="character.Race"
-                                Gender="character.Gender"
-                                PlayerClass="character.Class"
-                                Spec="attendance.MainSpec ?? Specializations.None"
-                                ShowTooltip="true"
-                                Class="mr-5" />
-                    <div class="mr-auto">
-                        <MudText Inline="false">@character.Name</MudText>
-                        @if (attendance.IgnoreAttendance)
-                        {
-                            <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
-                        }
-                    </div>
-                    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
-                        @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
-                        {
-                            <MudTooltip Text="Edit">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
-                            </MudTooltip>
-                        }
-                        @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
-                        {
-                            <MudTooltip Text="Remove">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
-                            </MudTooltip>
-                        }
-                    </AuthorizeView>
-                </div>
-            </MudListItem>
+            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
         }
-        <MudDivider />
-    </MudList>
+        <MudText Typo="Typo.subtitle2">Healers</MudText>
+        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsHealer()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+        {
+            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+        }
+        <MudText Typo="Typo.subtitle2">DPS</MudText>
+        @foreach (var attendance in Raid.Attendees.Where(a => a.MainSpec.GetValueOrDefault().IsDps()).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+        {
+            <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+        }
+        @if (Raid.Attendees.Any(a => !a.MainSpec.HasValue))
+        {
+            <MudText Typo="Typo.subtitle2">Unknown Role</MudText>
+            @foreach (var attendance in Raid.Attendees.Where(a => !a.MainSpec.HasValue).OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+            {
+                <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+            }
+        }
+    </MudCardContent>
     <MudCardActions>
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
         {
@@ -60,7 +46,6 @@
 
 
 @code {
-
     [Parameter] public RaidDto Raid { get; set; } = null!;
 
     protected override void OnParametersSet()
@@ -78,14 +63,6 @@
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
-    }
-
-    private Task OnEditClickedAsync(AttendanceDto attendance)
-    {
-        return DialogService.Show<UpdateAttendanceDialog>(
-            "Update Attendance",
-            new() { [nameof(UpdateAttendanceDialog.Attendance)] = attendance, [nameof(UpdateAttendanceDialog.Raid)] = Raid },
-            new() { MaxWidth = MaxWidth.ExtraSmall }).Result;
     }
 
     private Task AddRosteredAsync()

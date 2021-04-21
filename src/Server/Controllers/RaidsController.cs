@@ -504,7 +504,7 @@ namespace ValhallaLootList.Server.Controllers
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == characterId)
-                .Select(c => new { c.Id, c.Name })
+                .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name })
                 .FirstOrDefaultAsync();
 
             _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -520,7 +520,17 @@ namespace ValhallaLootList.Server.Controllers
             return new AttendanceDto
             {
                 IgnoreAttendance = attendee.IgnoreAttendance,
-                IgnoreReason = attendee.IgnoreReason
+                IgnoreReason = attendee.IgnoreReason,
+                Character = new CharacterDto
+                {
+                    Class = character.Class,
+                    Gender = character.Gender,
+                    Id = character.Id,
+                    Name = character.Name,
+                    Race = character.Race,
+                    TeamId = character.TeamId,
+                    TeamName = character.TeamName
+                }
             };
         }
 

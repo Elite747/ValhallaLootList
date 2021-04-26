@@ -272,7 +272,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordService discordService)
+        public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters
                 .AsNoTracking()
@@ -308,8 +308,8 @@ namespace ValhallaLootList.Server.Controllers
             return new CharacterAdminDto
             {
                 TeamRemovals = removals,
-                Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
-                VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
+                Owner = await dcp.GetMemberDtoAsync(claim?.UserId),
+                VerifiedBy = await dcp.GetMemberDtoAsync(character.VerifiedById)
             };
         }
 
@@ -378,7 +378,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPut("{id:long}/OwnerId"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId)
+        public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -387,9 +387,9 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var user = await _context.Users.FindAsync(ownerId);
+            var member = await dcp.GetMemberAsync(ownerId);
 
-            if (user is null)
+            if (member is null)
             {
                 return Problem("No user with that id exists.");
             }

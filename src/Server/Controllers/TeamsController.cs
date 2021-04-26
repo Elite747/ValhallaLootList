@@ -22,14 +22,12 @@ namespace ValhallaLootList.Server.Controllers
     public class TeamsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
-        private readonly DiscordService _discordService;
         private readonly TimeZoneInfo _serverTimeZone;
         private readonly TelemetryClient _telemetry;
 
-        public TeamsController(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
+        public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
         {
             _context = context;
-            _discordService = discordService;
             _serverTimeZone = serverTimeZone;
             _telemetry = telemetry;
         }
@@ -95,7 +93,7 @@ namespace ValhallaLootList.Server.Controllers
             var scope = PrioCalculator.Scope;
             var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-            foreach (var member in await HelperQueries.GetMembersAsync(_context, _discordService, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
+            foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
             {
                 team.Roster.Add(member);
             }
@@ -344,7 +342,14 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(l => l.CharacterId == character.Id)
                 .OrderBy(l => l.Phase)
-                .Select(l => new { l.MainSpec, l.Status, l.ApprovedBy, l.Phase })
+                .Select(l => new
+                {
+                    l.MainSpec,
+                    l.Status,
+                    l.ApprovedBy,
+                    ApprovedByName = l.ApprovedBy.HasValue ? _context.Users.Where(u => u.Id == l.ApprovedBy).Select(u => u.UserName).FirstOrDefault() : null,
+                    l.Phase
+                })
                 .AsAsyncEnumerable())
             {
                 var lootListDto = new MemberLootListDto
@@ -357,7 +362,7 @@ namespace ValhallaLootList.Server.Controllers
                 if (lootList.ApprovedBy.HasValue)
                 {
                     lootListDto.Approved = true;
-                    lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
+                    lootListDto.ApprovedBy = lootList.ApprovedByName;
                 }
                 else
                 {
@@ -508,26 +513,26 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpGet("{id:long}/leaders")]
-        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
+        [HttpGet("{id:long}/leaders"), Authorize]
+        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordClientProvider dcp)
         {
             await foreach (var userId in _context.UserClaims
                 .AsNoTracking()
-                .Where(claim => claim.ClaimValue == id && claim.ClaimType == AppClaimTypes.RaidLeader)
-                .Select(claim => claim.UserId)
+                .Where(c => c.ClaimType == AppClaimTypes.RaidLeader && c.ClaimValue == id)
+                .Select(c => c.UserId)
                 .AsAsyncEnumerable())
             {
-                var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
+                var member = await dcp.GetMemberAsync(userId);
 
-                if (guildMember is not null)
+                if (member is not null)
                 {
-                    yield return guildMember;
+                    yield return dcp.CreateDto(member);
                 }
             }
         }
 
         [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordService discordService)
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -536,18 +541,17 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var leader = await _context.Users.FindAsync(userId);
+            var leader = await dcp.GetMemberAsync(userId);
 
             if (leader is null)
             {
-                return NotFound();
+                return Problem("Couldn't locate discord user.");
             }
 
-            var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
-
-            if (guildMember is null)
+            if (!dcp.IsInAppRole(leader, AppRoles.RaidLeader) && !dcp.IsInAppRole(leader, AppRoles.LootMaster))
             {
-                return Problem("Couldn't locate the corresponding discord user.");
+                // TODO: should we just assign the role here instead of failing?
+                return Problem($"{leader.DisplayName} does not have a raid leader or loot master role assigned.");
             }
 
             var idString = id.ToString();
@@ -564,14 +568,14 @@ namespace ValhallaLootList.Server.Controllers
                 props["TeamId"] = team.Id.ToString();
                 props["TeamName"] = team.Name;
                 props["LeaderId"] = leader.Id.ToString();
-                props["LeaderName"] = leader.UserName;
+                props["LeaderName"] = leader.DisplayName;
             });
 
-            return guildMember;
+            return dcp.CreateDto(leader);
         }
 
-        [HttpDelete("{id}/leaders/{userId}"), Authorize(AppPolicies.Administrator)]
-        public async Task<IActionResult> DeleteLeader(string id, long userId)
+        [HttpDelete("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
+        public async Task<IActionResult> DeleteLeader(long id, long userId)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -587,7 +591,9 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id);
+            var idString = id.ToString();
+
+            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString);
 
             if (claim is null) return NotFound();
 

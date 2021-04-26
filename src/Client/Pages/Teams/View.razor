@@ -171,7 +171,7 @@
                 var guildMember = user.CreateGuildMemberFromClient();
                 if (guildMember?.Id == arg.ApprovedBy)
                 {
-                    lootList.ApprovedBy = guildMember;
+                    lootList.ApprovedBy = guildMember.GetDisplayName();
                 }
             }
             else

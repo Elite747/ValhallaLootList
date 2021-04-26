@@ -9,13 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
-using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
     public static class HelperQueries
     {
-        public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo timeZone, IQueryable<Character> characterQuery, PriorityScope scope, long teamId, string teamName, bool isLeader)
+        public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, TimeZoneInfo timeZone, IQueryable<Character> characterQuery, PriorityScope scope, long teamId, string teamName, bool isLeader)
         {
             var now = timeZone.TimeZoneNow();
             var thisMonth = new DateTime(now.Year, now.Month, 1);
@@ -33,7 +32,15 @@ namespace ValhallaLootList.Server.Controllers
                     c.IsFemale,
                     c.MemberStatus,
                     Verified = c.VerifiedById.HasValue,
-                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Status, l.Phase }).ToList(),
+                    LootLists = c.CharacterLootLists.Select(l => new
+                    {
+                        l.MainSpec,
+                        l.ApprovedBy,
+                        ApprovedByName = l.ApprovedBy.HasValue ? context.Users.Where(u => u.Id == l.ApprovedBy).Select(u => u.UserName).FirstOrDefault() : null,
+                        l.Status,
+                        l.Phase
+                    }).ToList(),
+
                     Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId)
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
@@ -78,7 +85,7 @@ namespace ValhallaLootList.Server.Controllers
                         if (lootList.ApprovedBy.HasValue)
                         {
                             lootListDto.Approved = true;
-                            lootListDto.ApprovedBy = await discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
+                            lootListDto.ApprovedBy = lootList.ApprovedByName;
                         }
                         else
                         {

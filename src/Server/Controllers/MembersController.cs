@@ -1,88 +1,48 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DSharpPlus.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
-using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
     public class MembersController : ApiControllerV1
     {
-        private readonly ApplicationDbContext _context;
+        private readonly DiscordClientProvider _discordClientProvider;
 
-        public MembersController(ApplicationDbContext context)
+        public MembersController(DiscordClientProvider discordClientProvider)
         {
-            _context = context;
+            _discordClientProvider = discordClientProvider;
         }
 
         [HttpGet, Authorize(AppPolicies.Administrator)]
-        public async Task<IList<GuildMemberDto>> Get([FromQuery] string[]? role)
+        public async Task<IEnumerable<GuildMemberDto>> Get([FromQuery] string[]? role, bool force = false)
         {
-            string[] claimTypes = { DiscordClaimTypes.AvatarHash, DiscordClaimTypes.Username, DiscordClaimTypes.Discriminator, AppClaimTypes.Role };
+            var guild = await _discordClientProvider.GetGuildAsync();
 
-            var query = from user in _context.Users.AsNoTracking()
-                        join claim in
-                            from claim in _context.UserClaims.AsNoTracking()
-                            where claimTypes.Contains(claim.ClaimType)
-                            select claim
-                        on user.Id equals claim.UserId
-                        select new
-                        {
-                            user.Id,
-                            user.UserName,
-                            claim.ClaimType,
-                            claim.ClaimValue
-                        };
+            IEnumerable<DiscordMember> members;
 
-            var users = new Dictionary<long, GuildMemberDto>();
-            var matchesRoles = new HashSet<long>();
-
-            await foreach (var row in query.AsAsyncEnumerable())
+            if (force)
             {
-                if (!users.TryGetValue(row.Id, out var dto))
-                {
-                    users[row.Id] = dto = new() { Id = row.Id, Nickname = row.UserName };
-                }
-
-                switch (row.ClaimType)
-                {
-                    case AppClaimTypes.Role:
-                        dto.AppRoles.Add(row.ClaimValue);
-                        if (role?.Contains(row.ClaimValue, StringComparer.OrdinalIgnoreCase) == true)
-                        {
-                            matchesRoles.Add(dto.Id);
-                        }
-                        break;
-                    case DiscordClaimTypes.Role:
-                        dto.DiscordRoles.Add(row.ClaimValue);
-                        break;
-                    case DiscordClaimTypes.AvatarHash:
-                        dto.Avatar = row.ClaimValue;
-                        break;
-                    case DiscordClaimTypes.Discriminator:
-                        dto.Discriminator = row.ClaimValue;
-                        break;
-                    case DiscordClaimTypes.Username:
-                        dto.Username = row.ClaimValue;
-                        break;
-                }
+                members = await guild.GetAllMembersAsync();
             }
-
-            IEnumerable<GuildMemberDto> results = users.Values;
+            else
+            {
+                members = guild.Members.Values;
+            }
 
             if (role?.Length > 0)
             {
-                results = results.Where(user => matchesRoles.Contains(user.Id));
+                members = members.Where(m => role.Any(r => _discordClientProvider.IsInAppRole(m, r)));
             }
 
-            return results.OrderBy(user => user.Nickname ?? user.Username).ToList();
+            return members.Select(_discordClientProvider.CreateDto);
         }
     }
 }

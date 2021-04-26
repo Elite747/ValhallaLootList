@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
-using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -496,7 +495,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("Phase{phase:int}/{characterId:long}/ApproveOrReject"), Authorize(AppPolicies.RaidLeaderOrAdmin)]
-        public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto, [FromServices] DiscordService discordService)
+        public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto)
         {
             var character = await _context.Characters.FindAsync(characterId);
 
@@ -532,7 +531,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Loot list has been changed. Refresh before trying to update the status again.");
             }
 
-            if (list.Status != LootListStatus.Submitted  && character.TeamId.HasValue)
+            if (list.Status != LootListStatus.Submitted && character.TeamId.HasValue)
             {
                 return Problem("Can't approve or reject a list that isn't in the submitted state.");
             }
@@ -612,7 +611,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
 
-                foreach (var m in await HelperQueries.GetMembersAsync(_context, discordService, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
+                foreach (var m in await HelperQueries.GetMembersAsync(_context, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
                 {
                     member = m;
                     break;
@@ -724,13 +723,31 @@ namespace ValhallaLootList.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            var cname = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == characterId)
+                .Select(c => c.Name)
+                .FirstAsync();
+
             _telemetry.TrackEvent("LootListStatusChanged", User, props =>
             {
                 props["CharacterId"] = list.CharacterId.ToString();
+                props["CharacterName"] = cname;
                 props["Phase"] = list.Phase.ToString();
                 props["Status"] = list.Status.ToString();
                 props["Method"] = "Unlock";
             });
+
+            //await dcp.SendAsync(635355896020729866, m =>
+            //{
+            //    var userId = (ulong)User.GetDiscordId().GetValueOrDefault();
+
+            //    var request = Url.ActionContext.HttpContext.Request;
+
+            //    var link = request.Scheme + "://" + request.Host + Url.Content($"~/characters/{cname}/phase/{list.Phase}");
+            //    m.WithContent($"<@!{userId}> has just unlocked [{cname}'s Phase {list.Phase} Loot List]({link}).")
+            //        .WithAllowedMention(new UserMention(userId));
+            //});
 
             return new TimestampDto { Timestamp = list.Timestamp };
         }

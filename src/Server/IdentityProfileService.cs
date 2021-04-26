@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Data;
@@ -17,24 +16,23 @@ namespace ValhallaLootList.Server
 {
     public class IdentityProfileService : DefaultProfileService
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly DiscordService _discordService;
+        private readonly DiscordClientProvider _discordClientProvider;
         private readonly ApplicationDbContext _context;
 
-        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
+        public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
         {
-            _userManager = userManager;
-            _discordService = discordService;
+            _discordClientProvider = discordClientProvider;
             _context = context;
         }
 
         public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
             await base.GetProfileDataAsync(context);
-            context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
+            //context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
 
             if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
             {
+                // add character and raid leader claims
                 var claims = await _context.UserClaims
                     .AsNoTracking()
                     .Where(claim => claim.UserId == userId && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
@@ -42,6 +40,29 @@ namespace ValhallaLootList.Server
                     .ToListAsync();
 
                 context.IssuedClaims.AddRange(claims);
+
+                var member = await _discordClientProvider.GetMemberAsync(userId);
+
+                if (member is not null)
+                {
+                    // add discord claims
+                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.AvatarHash, member.AvatarHash));
+                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.AvatarUrl, member.AvatarUrl));
+                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Discriminator, member.Discriminator));
+                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Username, member.Username));
+
+                    // add discord role claims
+                    foreach (var role in member.Roles)
+                    {
+                        context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Role, role.Name));
+                    }
+
+                    // add app role claims
+                    foreach (var appRole in _discordClientProvider.GetAppRoles(member))
+                    {
+                        context.IssuedClaims.Add(new Claim(AppClaimTypes.Role, appRole));
+                    }
+                }
             }
         }
 
@@ -49,23 +70,13 @@ namespace ValhallaLootList.Server
         {
             context.IsActive = false;
 
-            string idString = context.Subject.GetSubjectId();
-
-            if (long.TryParse(idString, out var id))
+            if (long.TryParse(context.Subject.GetSubjectId(), out var id))
             {
-                var user = await _userManager.FindByIdAsync(idString);
+                var guildMember = await _discordClientProvider.GetMemberAsync(id);
 
-                if (user is not null)
+                if (guildMember is not null)
                 {
-                    var oldClaims = await _userManager.GetClaimsAsync(user);
-
-                    var guildMember = await _discordService.GetGuildMemberDtoAsync(id);
-
-                    if (guildMember is not null)
-                    {
-                        var oldAppRoles = oldClaims.Where(claim => claim.Type == AppClaimTypes.Role).Select(claim => claim.Value).ToHashSet();
-                        context.IsActive = guildMember.AppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(guildMember.AppRoles);
-                    }
+                    context.IsActive = _discordClientProvider.IsInAppRole(guildMember, AppRoles.Member);
                 }
             }
         }

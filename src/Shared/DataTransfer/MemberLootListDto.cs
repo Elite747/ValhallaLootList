@@ -13,6 +13,6 @@ namespace ValhallaLootList.DataTransfer
 
         public bool? Approved { get; set; }
 
-        public GuildMemberDto? ApprovedBy { get; set; }
+        public string? ApprovedBy { get; set; }
     }
 }

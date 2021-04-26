@@ -8,9 +8,9 @@
         <CascadingValue Value="this" IsFixed="true">
             <MudList Dense="true">
                 <MudListSubheader>
-                    <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit Application</MudButton>
-                    <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Change Specialization</MudButton>
-                    <MudButton OnClick="ResetAsync" Color="Color.Error" Variant="Variant.Filled" Class="mr-2">Reset</MudButton>
+                    <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Submit Application</MudButton>
+                    <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
+                    <MudButton OnClick="ResetAsync" Color="Color.Error" Variant="Variant.Filled" Class="ma-1">Reset</MudButton>
                 </MudListSubheader>
                 <MudListSubheader>
                     <div class="d-flex">
@@ -30,7 +30,7 @@
                         }
                     </div>
                 </MudListSubheader>
-                <div class="ml-4 mr-4">
+                <div class="mx-4">
                     @for (int i = 0; i < _brackets.Count; i++)
                     {
                         var bracket = _brackets[i];

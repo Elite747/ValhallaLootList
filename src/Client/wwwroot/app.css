@@ -192,3 +192,35 @@
         .player-icon-role.dps svg {
             font-size: 16px;
         }
+
+.bracket {
+    position: relative;
+}
+
+    .bracket::before {
+        content: '';
+        width: 5%;
+        top: -5px;
+        height: calc(100% - 10px);
+        border-color: var(--mud-palette-divider);
+        border-width: 5px;
+        border-right-width: 0;
+        border-style: solid;
+        border-radius: 10px 0 0 10px;
+        position: absolute;
+        left: -5px;
+    }
+
+    .bracket::after {
+        content: '';
+        width: 5%;
+        top: -5px;
+        height: calc(100% - 10px);
+        border-color: var(--mud-palette-divider);
+        border-width: 5px;
+        border-left-width: 0;
+        border-style: solid;
+        border-radius: 0 10px 10px 0;
+        position: absolute;
+        right: -5px;
+    }

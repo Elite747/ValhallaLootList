@@ -1,24 +1,19 @@
-﻿<MudCard Elevation="3" Class="my-4">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <div class="d-flex">
-                <MudText Typo="Typo.h6">Bracket @(Bracket + 1)</MudText>
-                <MudText Typo="Typo.body1" Class="ml-2 mt-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
-                    Not all item ranks need to be filled.
-                </MudText>
-            </div>
-            @if (IsHighest)
-            {
-                <MudText Color="Color.Success">Highest Priority</MudText>
-            }
-            else if (IsLowest)
-            {
-                <MudText Color="Color.Error">Lowest Priority</MudText>
-            }
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudCardContent>
+﻿<MudList Dense="true" Class="bracket mb-5">
+    <MudListSubheader>
+        <MudText Typo="Typo.h6">
+            Bracket @(Bracket + 1)
+            <MudIcon Icon="@Icons.Material.Filled.Info" Class="ml-2" Style="font-size: 1rem" />
+            <small>Not all item ranks need to be filled.</small>
+        </MudText>
+        @if (IsHighest)
+        {
+            <MudText Color="Color.Success">Highest Priority</MudText>
+        }
+        else if (IsLowest)
+        {
+            <MudText Color="Color.Error">Lowest Priority</MudText>
+        }
+        <MudText>
             Bracket Rules:
             <span>Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank</span>
             @if (AllowOffSpec)
@@ -58,17 +53,16 @@
                     </TooltipContent>
                 </MudTooltip>
             }
-    </MudCardContent>
-    <MudList Dense="true">
-        @foreach (var row in _rankGroups)
-        {
-            <MudDivider />
-            <MudListItem>
-                <LootListEditorRank Rank="row.Key" Entries="row" />
-            </MudListItem>
-        }
-    </MudList>
-</MudCard>
+        </MudText>
+    </MudListSubheader>
+    @foreach (var row in _rankGroups)
+    {
+        <MudDivider DividerType="DividerType.Middle" />
+        <MudListItem @key="row.Key">
+            <LootListEditorRank Rank="row.Key" Entries="row" />
+        </MudListItem>
+    }
+</MudList>
 
 @code {
     private readonly List<IGrouping<int, LootListEntryDto>> _rankGroups = new();

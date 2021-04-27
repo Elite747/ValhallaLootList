@@ -62,10 +62,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer
                             Specializations = g.Select(d => d.Specialization).Aggregate((l, r) => l | r)
                         }))
                     {
-                        var existingRestriction = restrictions.Find(r => r.ItemId == item.Id &&
-                                                                         r.Reason == restriction.Reason &&
-                                                                         r.Specializations == restriction.Specializations &&
-                                                                         r.RestrictionLevel == restriction.RestrictionLevel);
+                        var existingRestriction = restrictions.Find(r => r.ItemId == item.Id && r.Reason == restriction.Reason);
 
                         if (existingRestriction is null)
                         {
@@ -75,6 +72,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer
                         else
                         {
                             restrictionsToKeep.Add(existingRestriction.Id);
+
+                            if (restriction.Specializations != existingRestriction.Specializations)
+                            {
+                                existingRestriction.Specializations = restriction.Specializations;
+                                _logger.LogInformation($"Updated specs for '{restriction.Reason}' on {item.Name} ({item.Id})");
+                            }
+
+                            if (restriction.RestrictionLevel != existingRestriction.RestrictionLevel)
+                            {
+                                existingRestriction.RestrictionLevel = restriction.RestrictionLevel;
+                                _logger.LogInformation($"Updated restriction level for '{restriction.Reason}' on {item.Name} ({item.Id})");
+                            }
                         }
                     }
                 }

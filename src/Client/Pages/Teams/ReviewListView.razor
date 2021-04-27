@@ -10,7 +10,7 @@
             <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
             @LootList.MainSpec.GetDisplayName()
         </MudText>
-        @if (LootList.OffSpec != LootList.MainSpec)
+        @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
         {
             <MudText Typo="Typo.h6">
                 Off Spec:

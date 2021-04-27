@@ -73,8 +73,6 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            Debug.Assert(dto.MainSpec.HasValue);
-
             var character = await _context.Characters.FindAsync(characterId);
 
             if (character is null)
@@ -87,13 +85,13 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("A loot list for that character and phase already exists.");
             }
 
-            if (!dto.MainSpec.Value.IsClass(character.Class))
+            if (!dto.MainSpec.IsClass(character.Class))
             {
                 ModelState.AddModelError(nameof(dto.MainSpec), "Selected specialization does not fit the player's class.");
                 return ValidationProblem();
             }
 
-            if (dto.OffSpec.HasValue && !dto.OffSpec.Value.IsClass(character.Class))
+            if (dto.OffSpec != default && !dto.OffSpec.IsClass(character.Class))
             {
                 ModelState.AddModelError(nameof(dto.OffSpec), "Selected specialization does not fit the player's class.");
                 return ValidationProblem();
@@ -105,8 +103,8 @@ namespace ValhallaLootList.Server.Controllers
                 Character = character,
                 Entries = new List<LootListEntry>(28),
                 Status = LootListStatus.Editing,
-                MainSpec = dto.MainSpec.Value,
-                OffSpec = dto.OffSpec ?? dto.MainSpec.Value,
+                MainSpec = dto.MainSpec,
+                OffSpec = dto.OffSpec,
                 Phase = phase
             };
 
@@ -294,7 +292,7 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult> PostSpec(long characterId, byte phase, [FromBody] LootListSubmissionDto dto)
         {
-            Debug.Assert(dto.MainSpec.HasValue);
+            Debug.Assert(dto.MainSpec != default);
 
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
@@ -321,20 +319,20 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!dto.MainSpec.Value.IsClass(character.Class))
+            if (!dto.MainSpec.IsClass(character.Class))
             {
                 ModelState.AddModelError(nameof(dto.MainSpec), "Selected specialization does not fit the player's class.");
                 return ValidationProblem();
             }
 
-            if (dto.OffSpec.HasValue && !dto.OffSpec.Value.IsClass(character.Class))
+            if (dto.OffSpec != default && !dto.OffSpec.IsClass(character.Class))
             {
                 ModelState.AddModelError(nameof(dto.OffSpec), "Selected specialization does not fit the player's class.");
                 return ValidationProblem();
             }
 
-            list.MainSpec = dto.MainSpec.Value;
-            list.OffSpec = dto.OffSpec ?? dto.MainSpec.Value;
+            list.MainSpec = dto.MainSpec;
+            list.OffSpec = dto.OffSpec;
 
             await _context.SaveChangesAsync();
 

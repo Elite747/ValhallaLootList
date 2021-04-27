@@ -75,10 +75,10 @@
                                 </div>
                             </CascadingItemContext>
 
-                            @if (AllowOffspec && OffSpec.HasValue)
+                            @if (AllowOffspec && OffSpec != default)
                             {
                                 <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" SpecPrefix="MS" />
-                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec.Value) != 0)" SpecPrefix="OS" />
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec) != 0)" SpecPrefix="OS" />
                             }
                             else
                             {
@@ -103,7 +103,7 @@
 
     [Parameter] public Specializations MainSpec { get; set; }
 
-    [Parameter] public Specializations? OffSpec { get; set; }
+    [Parameter] public Specializations OffSpec { get; set; }
 
     [Parameter] public HashSet<ItemGroup> GroupsInBracket { get; set; } = null!;
 
@@ -141,19 +141,19 @@
 
         if (_msLevel != ItemRestrictionLevel.Restricted)
         {
-            if (AllowOffspec && OffSpec.HasValue)
+            if (AllowOffspec && OffSpec != default)
             {
                 if (_msLevel == ItemRestrictionLevel.ManualReview)
                 {
                     items = items.Where(item =>
                         !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted) ||
-                        !item.Restrictions.Any(r => (r.Specs & OffSpec.Value) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted));
                 }
                 else
                 {
                     items = items.Where(item =>
                         !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0) ||
-                        !item.Restrictions.Any(r => (r.Specs & OffSpec.Value) != 0));
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0));
                 }
             }
             else if (_msLevel == ItemRestrictionLevel.ManualReview)

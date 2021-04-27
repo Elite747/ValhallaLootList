@@ -150,7 +150,6 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             Debug.Assert(dto.Name?.Length > 1);
-            Debug.Assert(dto.Class.HasValue);
             Debug.Assert(dto.Race.HasValue);
 
             var normalizedName = NameHelpers.NormalizeName(dto.Name);
@@ -166,13 +165,13 @@ namespace ValhallaLootList.Server.Controllers
                 ModelState.AddModelError(nameof(dto.Race), "Race selection is not valid.");
             }
 
-            if (!dto.Class.Value.IsSingleClass())
+            if (!dto.Class.IsSingleClass())
             {
                 ModelState.AddModelError(nameof(dto.Class), "Class selection is not valid.");
                 return ValidationProblem();
             }
 
-            if ((dto.Class.Value & dto.Race.Value.GetClasses()) == 0)
+            if ((dto.Class & dto.Race.Value.GetClasses()) == 0)
             {
                 ModelState.AddModelError(nameof(dto.Class), "Class is not available to the selected race.");
                 return ValidationProblem();
@@ -180,7 +179,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var character = new Character(idGenerator.CreateId())
             {
-                Class = dto.Class.Value,
+                Class = dto.Class,
                 MemberStatus = RaidMemberStatus.FullTrial,
                 Name = normalizedName,
                 Race = dto.Race.Value,

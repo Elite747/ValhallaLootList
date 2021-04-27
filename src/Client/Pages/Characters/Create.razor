@@ -55,11 +55,11 @@
                            @bind-Value="_character.Class"
                            For="() => _character.Class"
                            Disabled="EditingCharacter is not null"
-                           ToStringFunc="pc => pc.HasValue ? pc.Value.GetDisplayName() : string.Empty"
+                           ToStringFunc="pc => pc == default ? string.Empty : pc.GetDisplayName()"
                            Variant="Variant.Filled">
                     @foreach (var playerClass in _allClasses)
                     {
-                        <MudSelectItem T="Classes?" Value="@playerClass" Disabled="!_raceClasses.Contains(playerClass)">
+                        <MudSelectItem T="Classes" Value="@playerClass" Disabled="!_raceClasses.Contains(playerClass)">
                             <div class="d-flex align-center">
                                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                                     <ClassIcon PlayerClass="playerClass" Size="IconSize.Medium" Width="24" Height="24" />

@@ -23,7 +23,7 @@ namespace ValhallaLootList.DataTransfer
             set => _lootLists = value;
         }
 
-        public RaidMemberStatus? Status { get; set; }
+        public RaidMemberStatus Status { get; set; }
 
         public bool? Verified { get; set; }
 

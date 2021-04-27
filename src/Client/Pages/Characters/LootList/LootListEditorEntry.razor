@@ -137,7 +137,7 @@
                 [nameof(SelectItemDialog.GroupsInBracket)] = groupsInBracket,
                 [nameof(SelectItemDialog.Items)] = contextItems,
                 [nameof(SelectItemDialog.MainSpec)] = Editor.LootList.MainSpec,
-                [nameof(SelectItemDialog.OffSpec)] = Editor.LootList.MainSpec == Editor.LootList.OffSpec ? null : Editor.LootList.OffSpec,
+                [nameof(SelectItemDialog.OffSpec)] = Editor.LootList.MainSpec != Editor.LootList.OffSpec ? Editor.LootList.OffSpec : default,
                 [nameof(SelectItemDialog.AlreadySelectedItems)] = Editor.LootList.Entries.Where(e => e.ItemId > 0 && e != Entry).Select(e => e.ItemId!.Value).ToHashSet(),
                 [nameof(SelectItemDialog.AllowOffspec)] = Entry.BracketAllowsOffspec
             },

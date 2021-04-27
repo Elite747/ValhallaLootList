@@ -10,7 +10,7 @@
     </MudCardHeader>
     <MudCardContent Class="py-0">
         <div>
-            @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
+            @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
             {
                 <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
                 @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))

@@ -291,7 +291,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
-                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec,
+                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec ?? Specializations.None,
                     Character = new CharacterDto
                     {
                         Id = a.CharacterId,
@@ -432,7 +432,7 @@ namespace ValhallaLootList.Server.Controllers
             var spec = await _context.CharacterLootLists
                 .AsNoTracking()
                 .Where(ll => ll.Phase == raid.Phase && ll.CharacterId == character.Id)
-                .Select(ll => (Specializations?)ll.MainSpec)
+                .Select(ll => ll.MainSpec)
                 .FirstOrDefaultAsync();
 
             return new AttendanceDto

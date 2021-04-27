@@ -11,12 +11,12 @@
             <MudSelect Label="Main Spec"
                        For="() => _model.MainSpec"
                        @bind-Value="@_model.MainSpec"
-                       ToStringFunc="spec => spec.HasValue ? spec.Value.GetDisplayName() : string.Empty"
+                       ToStringFunc="spec => spec == default ? string.Empty : spec.GetDisplayName()"
                        Variant="Variant.Filled"
                        Class="mb-2">
                 @foreach (var spec in Specializations)
                 {
-                    <MudSelectItem T="Specializations?" Value="spec">
+                    <MudSelectItem T="Specializations" Value="spec">
                         <div class="d-flex align-center">
                             <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                                 <SpecIcon Spec="spec" Size="IconSize.Medium" Width="24" Height="24" />
@@ -29,13 +29,14 @@
             <MudSelect Label="Off Spec"
                        For="() => _model.OffSpec"
                        @bind-Value="@_model.OffSpec"
-                       ToStringFunc="spec => spec.HasValue ? spec.Value.GetDisplayName() : string.Empty"
+                       ToStringFunc='spec => spec == default ? "None" : spec.GetDisplayName()'
                        Variant="Variant.Filled"
                        Disabled="Specializations.Count == 1"
                        HelperText="@(Specializations.Count == 1 ? "Off spec disabled. Your class only has one role." : null)">
+                <MudSelectItem Value="ValhallaLootList.Specializations.None">None</MudSelectItem>
                 @foreach (var spec in Specializations)
                 {
-                    <MudSelectItem T="Specializations?" Value="spec">
+                    <MudSelectItem T="Specializations" Value="spec" Disabled="spec == _model.MainSpec">
                         <div class="d-flex align-center">
                             <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                                 <SpecIcon Spec="spec" Size="IconSize.Medium" Width="24" Height="24" />
@@ -62,8 +63,8 @@
     [Parameter] public byte Phase { get; set; }
     [Parameter] public bool UpdateExisting { get; set; }
     [Parameter] public IList<Specializations> Specializations { get; set; } = null!;
-    [Parameter] public Specializations? DefaultMainSpec { get; set; }
-    [Parameter] public Specializations? DefaultOffSpec { get; set; }
+    [Parameter] public Specializations DefaultMainSpec { get; set; }
+    [Parameter] public Specializations DefaultOffSpec { get; set; }
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
     protected override void OnParametersSet()

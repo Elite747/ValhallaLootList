@@ -1,7 +1,7 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
 
-<CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec.GetValueOrDefault()" OnClick="OpenDetailsAsync">
+<CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec" OnClick="OpenDetailsAsync">
     <div class="d-flex align-center">
         @Attendance.Character.Name
         @if (Attendance.IgnoreAttendance)

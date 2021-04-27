@@ -4,16 +4,16 @@
 
 <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="Team.Id">
     <Authorized>
-        <MudSelect T="RaidMemberStatus?"
+        <MudSelect T="RaidMemberStatus"
                    Value="Member.Status"
                    ValueChanged="OnStatusChangedAsync"
                    Label="Status"
                    ToStringFunc="GetDisplayString"
                    FullWidth="true"
                    Variant="Variant.Filled">
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
         </MudSelect>
 
         @if (Member.Verified == true)
@@ -68,10 +68,7 @@
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
-        @if (Member.Status.HasValue)
-        {
-            <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status.Value)</MudText>
-        }
+        <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
         <DonationSummary Member="Member" />
         <AttendanceSummary Member="Member" />
 
@@ -95,21 +92,16 @@
         if (Member is null) throw new ArgumentNullException(nameof(Member));
     }
 
-    private Task OnStatusChangedAsync(RaidMemberStatus? status)
+    private Task OnStatusChangedAsync(RaidMemberStatus status)
     {
-        if (status.HasValue)
-        {
-            return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status.Value })
-                .OnSuccess((_, _) =>
-                {
-                    Member.Status = status;
-                    return MemberUpdated.InvokeAsync();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-
-        return Task.CompletedTask;
+        return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status })
+            .OnSuccess((_, _) =>
+            {
+                Member.Status = status;
+                return MemberUpdated.InvokeAsync();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 
     private async Task RemoveAsync()
@@ -151,7 +143,7 @@
 
     }
 
-    private static string GetDisplayString(RaidMemberStatus? status)
+    private static string GetDisplayString(RaidMemberStatus status)
     {
         return status switch
         {

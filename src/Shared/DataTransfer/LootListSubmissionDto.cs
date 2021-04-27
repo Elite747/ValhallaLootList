@@ -8,14 +8,17 @@ namespace ValhallaLootList.DataTransfer
 {
     public class LootListSubmissionDto : IValidatableObject
     {
-        [Required]
-        public Specializations? MainSpec { get; set; }
+        public Specializations MainSpec { get; set; }
 
-        public Specializations? OffSpec { get; set; }
+        public Specializations OffSpec { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (MainSpec.HasValue && MainSpec == OffSpec)
+            if (MainSpec == Specializations.None)
+            {
+                yield return new ValidationResult("The Main Spec field is required.", new[] { nameof(MainSpec) });
+            }
+            else if (MainSpec == OffSpec)
             {
                 yield return new ValidationResult("Off Spec cannot be the same as Main Spec.", new[] { nameof(OffSpec) });
             }

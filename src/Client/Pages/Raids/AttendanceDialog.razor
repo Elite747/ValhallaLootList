@@ -12,14 +12,14 @@
                 <PlayerIcon Race="Attendance.Character.Race"
                             Gender="Attendance.Character.Gender"
                             PlayerClass="Attendance.Character.Class"
-                            Spec="Attendance.MainSpec.GetValueOrDefault()"
+                            Spec="Attendance.MainSpec"
                             Class="mr-5" />
                 <div class="flex-grow-1">
-                    @if (Attendance.MainSpec.HasValue)
+                    @if (Attendance.MainSpec != default)
                     {
                         <div>
                             <MudText Typo="Typo.caption">
-                                @Attendance.MainSpec.Value.GetDisplayName(includeClassName: true)
+                                @Attendance.MainSpec.GetDisplayName(includeClassName: true)
                             </MudText>
                         </div>
                     }

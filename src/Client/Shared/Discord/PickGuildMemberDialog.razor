@@ -4,21 +4,18 @@
 <MudDialog>
     <DialogContent>
         <ApiExecutor Operation="Operation" Context="members" @ref="_executor">
-            <div class="d-flex align-baseline">
-                <MudAutocomplete Label="Member"
-                                 T="GuildMemberDto"
-                                 SearchFunc="text => Search(text, members)"
-                                 @bind-Value="_selectedMember"
-                                 @bind-Text="_searchText"
-                                 ResetValueOnEmptyText="true"
-                                 ToStringFunc="c => c.Nickname ?? c.Username"
-                                 CoerceText="true">
-                    <ItemTemplate Context="member">
-                        <GuildMemberDisplay Member="member" />
-                    </ItemTemplate>
-                </MudAutocomplete>
-                <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-            </div>
+            <MudAutocomplete Label="Member"
+                             T="GuildMemberDto"
+                             SearchFunc="text => Search(text, members)"
+                             @bind-Value="_selectedMember"
+                             @bind-Text="_searchText"
+                             ResetValueOnEmptyText="true"
+                             ToStringFunc="c => c.Nickname ?? c.Username"
+                             CoerceText="true">
+                <ItemTemplate Context="member">
+                    <GuildMemberDisplay Member="member" />
+                </ItemTemplate>
+            </MudAutocomplete>
         </ApiExecutor>
     </DialogContent>
     <DialogActions>

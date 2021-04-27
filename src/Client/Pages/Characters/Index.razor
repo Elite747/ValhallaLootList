@@ -68,6 +68,9 @@
                             }
                         </MudSelect>
                     </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox Label="Show Deactivated" @bind-Checked="_showDeactivated" />
+                    </MudItem>
                 </MudGrid>
             </MudListSubheader>
             @foreach (var ch in EnumerateCharacters(characters))
@@ -80,6 +83,13 @@
                                     Size="Size.Small"
                                     Class="mr-1" />
                         <MudText Inline="false">@ch.Name</MudText>
+
+                        @if (ch.Deactivated)
+                        {
+                            <MudTooltip Class="ml-1" Text="Deactivated">
+                                <MudIcon Icon="@Icons.Material.Outlined.Warning" Color="Color.Error" Size="Size.Small" />
+                            </MudTooltip>
+                        }
                     </div>
                 </MudListItem>
             }
@@ -92,6 +102,7 @@
     private string _searchText = string.Empty;
     private HashSet<Classes> _searchClasses = new();
     private HashSet<TeamNameDto?> _searchTeams = new();
+    private bool _showDeactivated;
     private static readonly Classes[] _allClasses = new[] {
         Classes.Druid,
         Classes.Hunter,
@@ -129,6 +140,11 @@
             if (_searchTeams?.Count > 0)
             {
                 en = en.Where(ch => _searchTeams.Any(team => team?.Id == ch.TeamId));
+            }
+
+            if (!_showDeactivated)
+            {
+                en = en.Where(ch => !ch.Deactivated);
             }
 
             return en;

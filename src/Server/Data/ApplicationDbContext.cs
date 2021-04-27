@@ -202,7 +202,7 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<LootListEntry>(e =>
             {
                 e.Property(entry => entry.Id).ValueGeneratedNever();
-                e.HasOne(entry => entry.LootList).WithMany(ll => ll.Entries).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(entry => entry.LootList).WithMany(ll => ll.Entries).OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<TeamRemoval>(e =>

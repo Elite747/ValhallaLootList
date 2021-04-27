@@ -1,4 +1,4 @@
-﻿@if (_lootList?.Status == LootListStatus.Editing)
+﻿@if (!Character.Deactivated && _lootList?.Status == LootListStatus.Editing)
 {
     <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
         <Authorized>

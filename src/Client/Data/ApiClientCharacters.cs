@@ -18,6 +18,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters");
         }
 
+        public IApiClientOperation<IList<CharacterDto>> GetActive()
+        {
+            return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters?inclDeactivated=false");
+        }
+
         public IApiClientOperation<IList<CharacterDto>> GetMine()
         {
             return Client.CreateRequest<IList<CharacterDto>>(HttpMethod.Get, "api/v1/characters/@mine");
@@ -46,6 +51,11 @@ namespace ValhallaLootList.Client.Data
         public IApiClientOperation<CharacterDto> Update(long id, CharacterSubmissionDto character)
         {
             return Client.CreateRequest<CharacterSubmissionDto, CharacterDto>(HttpMethod.Put, "api/v1/characters/" + id, character);
+        }
+
+        public IApiClientOperation ToggleActivated(long id)
+        {
+            return Client.CreateRequest(HttpMethod.Post, "api/v1/characters/" + id + "/toggleactivated");
         }
 
         public IApiClientOperation Delete(long id)

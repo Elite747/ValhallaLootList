@@ -37,7 +37,7 @@
             </div>
         </WizardSection>
         <WizardSection Name="Additional Attendees">
-            <ApiExecutor Operation="Api.Characters.GetAll" Context="characters">
+            <ApiExecutor Operation="Api.Characters.GetActive" Context="characters">
                 <div>
                     @foreach (var character in State.Attendees.Values.Where(c => c.TeamId != Team.Id).OrderBy(c => c.Name))
                     {
@@ -103,7 +103,7 @@
         var character = await DialogService.ShowAsync<Raids.PickCharacterDialog, CharacterDto>(
             string.Empty,
             new() {
-                [nameof(Raids.PickCharacterDialog.Operation)] = (Func<IApiClientOperation<IList<CharacterDto>>>)Api.Characters.GetAll,
+                [nameof(Raids.PickCharacterDialog.Operation)] = (Func<IApiClientOperation<IList<CharacterDto>>>)Api.Characters.GetActive,
                 [nameof(Raids.PickCharacterDialog.Filter)] = (Func<CharacterDto, bool>)(c => c.TeamId != Team.Id),
                 [nameof(Raids.PickCharacterDialog.ShowAdd)] = true
             },

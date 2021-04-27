@@ -32,7 +32,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<CharacterDto> Get(string? team = null)
+        public IAsyncEnumerable<CharacterDto> Get(string? team = null, bool? inclDeactivated = null)
         {
             var query = _context.Characters.AsNoTracking();
 
@@ -52,6 +52,11 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
+            if (inclDeactivated == false)
+            {
+                query = query.Where(c => !c.Deactivated);
+            }
+
             return query
                 .OrderBy(c => c.Name)
                 .Select(c => new CharacterDto
@@ -62,7 +67,8 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
                 })
                 .AsAsyncEnumerable();
         }
@@ -111,7 +117,8 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
                 })
                 .ToListAsync();
         }
@@ -129,7 +136,8 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.Team!.Id,
                     TeamName = c.Team.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
                 })
                 .FirstOrDefaultAsync();
 
@@ -212,7 +220,8 @@ namespace ValhallaLootList.Server.Controllers
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                Gender = character.IsFemale ? Gender.Female : Gender.Male
+                Gender = character.IsFemale ? Gender.Female : Gender.Male,
+                Deactivated = character.Deactivated
             });
         }
 
@@ -266,7 +275,8 @@ namespace ValhallaLootList.Server.Controllers
                 Name = character.Name,
                 Race = character.Race,
                 Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                TeamId = character.TeamId
+                TeamId = character.TeamId,
+                Deactivated = character.Deactivated
             };
         }
 
@@ -458,6 +468,28 @@ namespace ValhallaLootList.Server.Controllers
                 .AsAsyncEnumerable();
         }
 
+        [HttpPost("{id:long}/ToggleActivated"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult> ToggleHidden(long id)
+        {
+            var character = await _context.Characters.FindAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            if (!character.Deactivated && character.TeamId.HasValue)
+            {
+                return Problem("Can't deactivate a character who is on a raid team.");
+            }
+
+            character.Deactivated = !character.Deactivated;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpDelete("{id:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> Delete(long id)
         {
@@ -471,6 +503,11 @@ namespace ValhallaLootList.Server.Controllers
             if (await _context.Drops.CountAsync(d => d.WinnerId == id || d.WinningEntry!.LootList.CharacterId == id) > 0)
             {
                 return Problem("Can't delete a character who has already won loot.");
+            }
+
+            if (await _context.RaidAttendees.CountAsync(a => a.CharacterId == id) > 0)
+            {
+                return Problem("Can't delete a character who has already attended a raid.");
             }
 
             _context.Characters.Remove(character);

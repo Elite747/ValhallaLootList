@@ -59,7 +59,7 @@
 
     private Task AddUnrosteredAsync()
     {
-        return AddAttendeeAsync(Api.Characters.GetAll, c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
+        return AddAttendeeAsync(Api.Characters.GetActive, c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
     }
 
     private async Task AddAttendeeAsync(Func<IApiClientOperation<IList<CharacterDto>>> operation, Func<CharacterDto, bool> filter, bool showAdd)

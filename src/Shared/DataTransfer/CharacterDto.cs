@@ -15,6 +15,8 @@ namespace ValhallaLootList.DataTransfer
 
         public Gender Gender { get; set; }
 
+        public bool Deactivated { get; set; }
+
         public long? TeamId { get; set; }
 
         public string? TeamName { get; set; }

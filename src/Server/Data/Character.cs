@@ -31,6 +31,8 @@ namespace ValhallaLootList.Server.Data
 
         public bool IsFemale { get; set; }
 
+        public bool Deactivated { get; set; }
+
         public long? VerifiedById { get; set; }
 
         public RaidMemberStatus MemberStatus { get; set; }

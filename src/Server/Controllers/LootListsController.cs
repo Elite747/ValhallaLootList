@@ -82,6 +82,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (character.Deactivated)
+            {
+                return Problem("Character has been deactivated.");
+            }
+
             if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
             {
                 return Problem("A loot list for that character and phase already exists.");
@@ -225,6 +230,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (character.Deactivated)
+            {
+                return Problem("Character has been deactivated.");
+            }
+
             var entriesToRemove = await _context.LootListEntries
                 .AsTracking()
                 .Where(e => e.LootList == list)
@@ -321,6 +331,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            if (character.Deactivated)
+            {
+                return Problem("Character has been deactivated.");
+            }
+
             if (!dto.MainSpec.IsClass(character.Class))
             {
                 ModelState.AddModelError(nameof(dto.MainSpec), "Selected specialization does not fit the player's class.");
@@ -412,6 +427,11 @@ namespace ValhallaLootList.Server.Controllers
             if (character is null)
             {
                 return NotFound();
+            }
+
+            if (character.Deactivated)
+            {
+                return Problem("Character has been deactivated.");
             }
 
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class TeamNameDto
+    public record TeamNameDto
     {
         private List<ScheduleDto>? _schedules;
 

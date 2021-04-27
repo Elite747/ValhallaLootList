@@ -2,6 +2,7 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 @inject IDialogService DialogService
+@inject TeamsSource TeamsSource
 
 <div class="d-flex align-center mb-3">
     <MudText Typo="Typo.h4" GutterBottom="false">Characters</MudText>
@@ -58,10 +59,12 @@
                                    MultiSelection="true"
                                    Variant="Variant.Filled"
                                    Label="Team"
-                                   T="string">
-                            @foreach (var team in characters.Select(c => c.TeamName).Distinct().Where(str => str?.Length > 0).OrderBy(str => str))
+                                   ToStringFunc='team => team?.Name ?? "No Team"'
+                                   T="TeamNameDto">
+                            <MudSelectItem T="TeamNameDto" Value="null">No Team</MudSelectItem>
+                            @foreach (var team in TeamsSource.Teams)
                             {
-                                <MudSelectItem T="string" Value="@team" @key="team">@team</MudSelectItem>
+                                <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
@@ -88,7 +91,7 @@
     private ApiExecutor<IList<CharacterDto>>? _executor;
     private string _searchText = string.Empty;
     private HashSet<Classes> _searchClasses = new();
-    private HashSet<string> _searchTeams = new();
+    private HashSet<TeamNameDto?> _searchTeams = new();
     private static readonly Classes[] _allClasses = new[] {
         Classes.Druid,
         Classes.Hunter,
@@ -100,6 +103,11 @@
         Classes.Warlock,
         Classes.Warrior
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TeamsSource.EnsureStartedAsync(Api);
+    }
 
     private IEnumerable<CharacterDto> EnumerateCharacters(IList<CharacterDto> characters)
     {
@@ -120,7 +128,7 @@
 
             if (_searchTeams?.Count > 0)
             {
-                en = en.Where(ch => ch.TeamName?.Length > 0 && _searchTeams.Contains(ch.TeamName));
+                en = en.Where(ch => _searchTeams.Any(team => team?.Id == ch.TeamId));
             }
 
             return en;

@@ -83,7 +83,7 @@ namespace ValhallaLootList.Server.Discord
 
             var user = await context.Users.FindAsync((long)e.Member.Id);
 
-            if (user.UserName != e.Member.DisplayName)
+            if (user is not null && user.UserName != e.Member.DisplayName)
             {
                 user.UserName = e.Member.DisplayName;
                 user.NormalizedUserName = user.UserName.Normalize().ToUpper();

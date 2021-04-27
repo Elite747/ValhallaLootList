@@ -15,7 +15,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return spec == SpecializationGroups.Hunter && item.RangedCrit > 0;
+            return (spec & SpecializationGroups.Hunter) != 0 && item.RangedCrit > 0;
         }
     }
 }

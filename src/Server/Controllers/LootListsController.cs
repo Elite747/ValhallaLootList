@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -493,7 +495,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("Phase{phase:int}/{characterId:long}/ApproveOrReject"), Authorize(AppPolicies.RaidLeaderOrAdmin)]
-        public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto)
+        public async Task<ActionResult<ApproveOrRejectLootListResponseDto>> PostApproveOrReject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters.FindAsync(characterId);
 
@@ -644,6 +646,35 @@ namespace ValhallaLootList.Server.Controllers
                 props["Status"] = list.Status.ToString();
                 props["Method"] = "ApproveOrReject";
             });
+
+            var characterIdString = characterId.ToString();
+            var owner = await _context.UserClaims
+                .AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == characterIdString)
+                .Select(c => c.UserId)
+                .FirstOrDefaultAsync();
+
+            if (owner > 0)
+            {
+                var sb = new StringBuilder("Your application to ")
+                    .Append(team.Name)
+                    .Append(" for ")
+                    .Append(character.Name)
+                    .Append(" was ")
+                    .Append(dto.Approved ? "approved!" : "rejected.");
+
+                if (dto.Message?.Length > 0)
+                {
+                    sb.AppendLine()
+                        .Append("<@")
+                        .Append(User.GetDiscordId())
+                        .AppendLine("> said:")
+                        .Append("> ")
+                        .Append(dto.Message);
+                }
+
+                await dcp.SendDmAsync(owner, m => m.WithContent(sb.ToString()));
+            }
 
             return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member, LootListStatus = list.Status };
         }

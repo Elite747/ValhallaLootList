@@ -87,12 +87,12 @@ namespace ValhallaLootList.Client.Data
             return request;
         }
 
-        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Approve(LootListDto lootList, long teamId)
+        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Approve(LootListDto lootList, long teamId, string? message)
         {
             var request = Client.CreateRequest<ApproveOrRejectLootListDto, ApproveOrRejectLootListResponseDto>(
                 HttpMethod.Post,
                 $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/approveorreject",
-                new() { Timestamp = lootList.Timestamp, Approved = true, TeamId = teamId });
+                new() { Timestamp = lootList.Timestamp, Approved = true, TeamId = teamId, Message = message });
 
             request.ConfigureSuccess(response =>
             {
@@ -104,12 +104,12 @@ namespace ValhallaLootList.Client.Data
             return request;
         }
 
-        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Reject(LootListDto lootList, long teamId)
+        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Reject(LootListDto lootList, long teamId, string? message)
         {
             var request = Client.CreateRequest<ApproveOrRejectLootListDto, ApproveOrRejectLootListResponseDto>(
                 HttpMethod.Post,
                 $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/approveorreject",
-                new() { Timestamp = lootList.Timestamp, Approved = false, TeamId = teamId });
+                new() { Timestamp = lootList.Timestamp, Approved = false, TeamId = teamId, Message = message });
 
             request.ConfigureSuccess(response =>
             {

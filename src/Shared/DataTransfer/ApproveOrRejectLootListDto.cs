@@ -8,5 +8,7 @@ namespace ValhallaLootList.DataTransfer
         public bool Approved { get; set; }
 
         public long TeamId { get; set; }
+
+        public string? Message { get; set; }
     }
 }

@@ -192,37 +192,46 @@
             .ExecuteAsync();
     }
 
-    private Task ApproveAndAddToRosterAsync()
+    private async Task ApproveAndAddToRosterAsync()
     {
-        return Api.LootLists.Approve(LootList, Team.Id)
-            .OnSuccess(async (response, _) =>
-            {
-                LootList.TeamId = Team.Id;
-                LootList.TeamName = Team.Name;
-                SetMessage();
-                StateHasChanged();
-                await StatusUpdated.InvokeAsync(LootList);
+        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = true }).Result;
 
-                if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
+        if (!result.Cancelled)
+        {
+            await Api.LootLists.Approve(LootList, Team.Id, (string?)result.Data)
+                .OnSuccess(async (response, _) =>
                 {
-                    Team.Roster.Add(response.Member);
-                    await RosterChanged.InvokeAsync();
-                }
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
+                    LootList.TeamId = Team.Id;
+                    LootList.TeamName = Team.Name;
+                    SetMessage();
+                    StateHasChanged();
+                    await StatusUpdated.InvokeAsync(LootList);
+
+                    if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
+                    {
+                        Team.Roster.Add(response.Member);
+                        await RosterChanged.InvokeAsync();
+                    }
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 
-    private Task DenyAsync()
+    private async Task DenyAsync()
     {
-        return Api.LootLists.Reject(LootList, Team.Id)
-            .OnSuccess((_, _) =>
-            {
-                SetMessage();
-                return StatusUpdated.InvokeAsync(LootList);
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
+        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = false }).Result;
 
+        if (!result.Cancelled)
+        {
+            await Api.LootLists.Reject(LootList, Team.Id, (string?)result.Data)
+                .OnSuccess((_, _) =>
+                {
+                    SetMessage();
+                    return StatusUpdated.InvokeAsync(LootList);
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 }

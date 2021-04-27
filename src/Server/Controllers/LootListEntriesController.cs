@@ -142,7 +142,11 @@ namespace ValhallaLootList.Server.Controllers
         {
             if (entry.ItemId.HasValue)
             {
-                var item = await _context.Items.FindAsync(entry.ItemId.Value);
+                var item = await _context.Items
+                    .AsNoTracking()
+                    .Where(i => i.Id == entry.ItemId.Value)
+                    .Select(i => new { i.Id, i.Name, i.Phase, i.RewardFromId, QuestId = (uint?)i.RewardFrom!.QuestId })
+                    .FirstOrDefaultAsync();
 
                 if (item is null)
                 {
@@ -172,10 +176,10 @@ namespace ValhallaLootList.Server.Controllers
                     .AsNoTracking()
                     .Where(e => e.Id != excludeId && e.LootList.Phase == entry.LootList.Phase && e.LootList.CharacterId == entry.LootList.CharacterId);
 
-                if (item.RewardFromId is 32385 or 32405) // TODO: add this info to database
+                if (item.QuestId > 0)
                 {
                     var firstConflict = await existingItemMutexQuery
-                        .Where(e => e.ItemId == entry.ItemId || e.Item!.RewardFromId == item.RewardFromId)
+                        .Where(e => e.ItemId == entry.ItemId || e.Item!.RewardFrom!.QuestId == item.QuestId.Value)
                         .Select(e => new { e.Item!.Id, e.Item!.Name })
                         .FirstOrDefaultAsync();
 

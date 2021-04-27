@@ -72,6 +72,12 @@
                                     {
                                         <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Class="ml-1" />
                                     }
+                                    else if (item.QuestId > 0 && AlreadySelectedQuests.Contains(item.QuestId))
+                                    {
+                                        <a class="ml-1 mud-error-text" data-wowhead="quest=@item.QuestId&domain=tbc">
+                                            Rewarded from a quest which may only be completed once.
+                                        </a>
+                                    }
                                 </div>
                             </CascadingItemContext>
 
@@ -109,6 +115,8 @@
 
     [Parameter] public HashSet<uint> AlreadySelectedItems { get; set; } = null!;
 
+    [Parameter] public HashSet<uint> AlreadySelectedQuests { get; set; } = null!;
+
     [Parameter] public bool AllowOffspec { get; set; }
 
     protected override void OnParametersSet()
@@ -117,6 +125,7 @@
         if (Items is null) throw new ArgumentNullException(nameof(Items));
         if (GroupsInBracket is null) throw new ArgumentNullException(nameof(GroupsInBracket));
         if (AlreadySelectedItems is null) throw new ArgumentNullException(nameof(AlreadySelectedItems));
+        if (AlreadySelectedQuests is null) throw new ArgumentNullException(nameof(AlreadySelectedQuests));
     }
 
     private void LinkClicked(uint itemId)

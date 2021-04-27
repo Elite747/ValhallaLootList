@@ -399,7 +399,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("Phase{phase:int}/{characterId:long}/Submit")]
-        public async Task<ActionResult<TimestampDto>> PostSubmit(long characterId, byte phase, [FromBody] SubmitLootListDto dto)
+        public async Task<ActionResult<TimestampDto>> PostSubmit(long characterId, byte phase, [FromBody] SubmitLootListDto dto, [FromServices] DiscordClientProvider dcp)
         {
             if (dto.SubmitTo.Count == 0)
             {
@@ -438,12 +438,13 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't submit a list that is not editable.");
             }
 
-            var count = await _context.RaidTeams
+            var teams = await _context.RaidTeams
                 .AsNoTracking()
                 .Where(t => dto.SubmitTo.Contains(t.Id))
-                .CountAsync();
+                .Select(t => new { t.Id, t.Name })
+                .ToDictionaryAsync(t => t.Id);
 
-            if (count != dto.SubmitTo.Count)
+            if (teams.Count != dto.SubmitTo.Count)
             {
                 return Problem("One or more raid teams specified do not exist.");
             }
@@ -490,6 +491,27 @@ namespace ValhallaLootList.Server.Controllers
                 props["Status"] = list.Status.ToString();
                 props["Method"] = "Submit";
             });
+
+            const string format = "You have a new application to {0} from {1}. ({2} {3})";
+
+            await foreach (var claim in _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.ClaimType == AppClaimTypes.RaidLeader)
+                .Select(claim => new { claim.UserId, claim.ClaimValue })
+                .AsAsyncEnumerable())
+            {
+                if (long.TryParse(claim.ClaimValue, out var teamId) &&
+                    teams.TryGetValue(teamId, out var team) &&
+                    submissions.Find(s => s.TeamId == teamId) is null) // Don't notify when submission status doesn't change.
+                {
+                    await dcp.SendDmAsync(claim.UserId, m => m.WithContent(string.Format(
+                        format,
+                        team.Name,
+                        character.Name,
+                        character.Race.GetDisplayName(),
+                        list.MainSpec.GetDisplayName(true))));
+                }
+            }
 
             return new TimestampDto { Timestamp = list.Timestamp };
         }

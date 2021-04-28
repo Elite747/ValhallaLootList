@@ -18,14 +18,7 @@
             @foreach (var character in myCharacters)
             {
                 <MudListItem Href="@("characters/" + character.Name)" @key="character.Id">
-                    <div class="d-flex">
-                        <PlayerIcon Race="character.Race"
-                                    Gender="character.Gender"
-                                    PlayerClass="character.Class"
-                                    Size="Size.Small"
-                                    Class="mr-1" />
-                        <MudText Inline="false">@character.Name</MudText>
-                    </div>
+                    <ValhallaLootList.Client.Pages.Characters.CharacterRow Character="character" />
                 </MudListItem>
             }
         </MudList>

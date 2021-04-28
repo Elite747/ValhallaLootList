@@ -81,12 +81,26 @@
                        Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark">
                 <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
             </MudAvatar>
-            <div class="mr-auto">
+            <div class="mr-2">
                 <div><span>&nbsp;</span></div>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
                     Select Item
                 </MudButton>
             </div>
+            @if (Editor.LootList.Entries.Any(e => !e.Won && e.Bracket == Entry.Bracket && e.ItemId.HasValue && e.Rank < Entry.Rank))
+            {
+                <MudTooltip>
+                    <TooltipContent>
+                        <p style="max-width: 150px">
+                            You have items in this bracket with a lower rank which can be put here instead for a higher priority.
+                        </p>
+                    </TooltipContent>
+                    <ChildContent>
+                        <MudIcon Icon="@Icons.Material.Filled.InfoOutline" Color="Color.Secondary" />
+                    </ChildContent>
+                </MudTooltip>
+            }
+            <div class="mr-auto"></div>
         </div>
     }
 </MudItem>

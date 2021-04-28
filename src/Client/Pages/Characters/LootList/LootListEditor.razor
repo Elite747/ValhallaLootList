@@ -83,6 +83,20 @@
 
     private async Task SubmitAsync()
     {
+        if (HasCollapsibleBrackets())
+        {
+            if (await DialogService.ShowMessageBox(
+                "Unfilled Ranks",
+                "Your loot list has higher ranks that could be used for items you have listed. " +
+                "Submitting this list would be voluntarily accepting lower priority on these items with no benefit. " +
+                "Are you sure you want to continue to submit this list?",
+                "Continue",
+                "Cancel") != true)
+            {
+                return;
+            }
+        }
+
         var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
             string.Empty,
             parameters: new()
@@ -100,6 +114,36 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
+
+    private bool HasCollapsibleBrackets()
+    {
+        foreach (var bracket in LootList.Entries.Where(e => !e.Won).GroupBy(e => e.Bracket))
+        {
+            bool hasUnselected = false;
+
+            foreach (var entry in bracket.OrderByDescending(e => e.Rank))
+            {
+                if (entry.ItemId.HasValue)
+                {
+                    if (hasUnselected)
+                    {
+                        // higher rank is not filled.
+                        return true;
+                    }
+                    else
+                    {
+                        hasUnselected = false;
+                    }
+                }
+                else
+                {
+                    hasUnselected = true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private Task ResetAsync()

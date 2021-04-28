@@ -16,39 +16,18 @@
             <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
         </MudSelect>
 
-        @if (Member.Verified == true)
+        @if (Member.Verified == false)
         {
-            <MudText Color="Color.Success">Character is verified!</MudText>
-        }
-        else if (context.User.IsAdmin())
-        {
-            <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
-        }
-        else
-        {
-            <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
-        }
-
-        @if (Member.LootLists.Find(ll => ll.Phase == Phase) is MemberLootListDto lootList)
-        {
-            if (lootList.Approved == true)
+            if (context.User.IsAdmin())
             {
-                <MudText Color="Color.Success">
-                    Loot list for phase @Phase was approved!
-                </MudText>
+                <div class="my-2">
+                    <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
+                </div>
             }
             else
             {
-                <MudText Color="Color.Warning">
-                    Loot list for phase @Phase has not been approved yet!
-                </MudText>
+                <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
             }
-        }
-        else
-        {
-            <MudText Color="Color.Warning">
-                Character does not have a loot list! Have the owner create one or create it on their behalf by going to their <a href="characters/@Member.Character.Name">character page</a>.
-            </MudText>
         }
 
         <DonationSummary Member="Member">

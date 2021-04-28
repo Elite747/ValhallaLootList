@@ -65,9 +65,32 @@
                                     ShowTooltip="true"
                                     Class="mr-5" />
                         <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
-                        @if (phaseLootList is null || phaseLootList.Approved == false || member.Verified == false)
+                        @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || member.Verified == false)
                         {
-                            <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                            <MudTooltip>
+                                <TooltipContent>
+                                    @if (phaseLootList is null)
+                                    {
+                                        <p>No loot list for this phase!</p>
+                                    }
+                                    else if (phaseLootList.Approved == false)
+                                    {
+                                        <p>Loot list has not been approved yet!</p>
+                                    }
+                                    else if (phaseLootList.Status != LootListStatus.Locked)
+                                    {
+                                        <p>Loot list has not been locked yet!</p>
+                                    }
+                                    @if (member.Verified == false)
+                                    {
+                                        <p>Character ownership has not been verified!</p>
+                                        <p>Have an officer verify the owner of this character.</p>
+                                    }
+                                </TooltipContent>
+                                <ChildContent>
+                                    <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                                </ChildContent>
+                            </MudTooltip>
                         }
                         @if (member.Status != RaidMemberStatus.Member)
                         {

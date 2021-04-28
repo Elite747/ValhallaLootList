@@ -1,14 +1,10 @@
-﻿<div>
-    <MudTooltip Text="This was what was donated last month for priority in the current month.">
-        <MudText Inline="false">
-            Attendance: @Member.Attendance of @Member.AttendanceMax
-            @if (Member.AttendanceBonus > 0)
-            {
-                <MudAvatar Size="Size.Small" Color="Color.Success">+@Member.AttendanceBonus</MudAvatar>
-            }
-        </MudText>
-    </MudTooltip>
-</div>
+﻿<MudText>
+    Attendance: @Member.Attendance of @Member.AttendanceMax
+    @if (Member.AttendanceBonus > 0)
+    {
+        <MudAvatar Size="Size.Small" Color="Color.Success">+@Member.AttendanceBonus</MudAvatar>
+    }
+</MudText>
 
 @code {
     [Parameter] public MemberDto Member { get; set; } = null!;

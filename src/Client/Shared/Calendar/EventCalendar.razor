@@ -1,0 +1,71 @@
+﻿@using ValhallaLootList.Helpers;
+@namespace ValhallaLootList.Client.Shared
+@inject UserTimeProvider TimeProvider
+
+<MudCard Elevation="Elevation">
+    <div class="d-flex justify-space-between align-center pa-1">
+        <MudIconButton OnClick="() => ChangeMonthAsync(-1)" Icon="@Icons.Material.Filled.ChevronLeft" />
+        <MudText Typo="Typo.h4">
+            @Date.ToString("MMMM yyyy", CultureInfo.CurrentCulture)
+        </MudText>
+        <MudIconButton OnClick="() => ChangeMonthAsync(1)" Icon="@Icons.Material.Filled.ChevronRight" />
+    </div>
+    @ChildContent
+    <div class="d-flex flex-column month">
+        <div class="d-flex align-stretch week">
+            @foreach (var day in DayOfWeekHelpers.EnumerateDaysByCulture(Culture))
+            {
+                <div class="day dow pa-1 mud-typography-align-center" @key="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</div>
+            }
+        </div>
+
+        @for (int week = 0; week < 6; week++)
+        {
+            DateTime firstDayThisWeek = _firstCalendarDay.AddDays(week * 7);
+
+            if (firstDayThisWeek.Month > Date.Month || firstDayThisWeek.Year > Date.Year)
+            {
+                break;
+            }
+
+            <div class="d-flex align-stretch week">
+                @for (int day = 0; day < 7; day++)
+                {
+                    DateTime current = firstDayThisWeek.AddDays(day);
+
+                    <div class="d-flex flex-column day" @key="current">
+                        @if (current.Month == Date.Month)
+                        {
+                            <div class="pa-1 mb-1 mud-theme-@(current == TimeProvider.Today ? "tertiary" : "primary")">@current.Day</div>
+                            @EventContent?.Invoke(current)
+                        }
+                    </div>
+                }
+            </div>
+
+        }
+    </div>
+</MudCard>
+
+@code {
+    private DateTime _firstCalendarDay;
+
+    [Parameter] public DateTime Date { get; set; } = DateTime.Today;
+    [Parameter] public EventCallback<DateTime> DateChanged { get; set; }
+    [Parameter] public CultureInfo Culture { get; set; } = CultureInfo.CurrentCulture;
+    [Parameter] public int Elevation { get; set; } = 5;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment<DateTime>? EventContent { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var firstDayOfMonth = new DateTime(Date.Year, Date.Month, 1);
+        _firstCalendarDay = firstDayOfMonth.AddDays((int)Culture.DateTimeFormat.FirstDayOfWeek - (int)firstDayOfMonth.DayOfWeek);
+    }
+
+    public Task ChangeMonthAsync(int offset)
+    {
+        Date = Date.AddMonths(offset);
+        return DateChanged.InvokeAsync(Date);
+    }
+}

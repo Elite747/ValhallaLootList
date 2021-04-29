@@ -10,7 +10,6 @@
                 <MudListSubheader>
                     <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Submit Application</MudButton>
                     <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
-                    <MudButton OnClick="ResetAsync" Color="Color.Error" Variant="Variant.Filled" Class="ma-1">Reset</MudButton>
                 </MudListSubheader>
                 <MudListSubheader>
                     <div class="d-flex">
@@ -144,18 +143,6 @@
         }
 
         return false;
-    }
-
-    private Task ResetAsync()
-    {
-        return Api.LootLists.Reset(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(lootList =>
-            {
-                LootList.Entries.Clear();
-                LootList.Entries.AddRange(lootList.Entries);
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
     }
 
     private Task ChangeSpecAsync()

@@ -224,3 +224,49 @@
         position: absolute;
         right: -5px;
     }
+
+.wow-money {
+    background: no-repeat right center;
+    display: inline-block;
+    padding-right: 15px;
+}
+
+    .wow-money.gold {
+        background-image: url(https://wow.zamimg.com/images/icons/money-gold.gif);
+    }
+
+    .wow-money.silver {
+        background-image: url(https://wow.zamimg.com/images/icons/money-silver.gif);
+    }
+
+    .wow-money.copper {
+        background-image: url(https://wow.zamimg.com/images/icons/money-copper.gif);
+    }
+
+
+.ev-cal-month, .ev-cal-week, .ev-cal-day {
+    border: 0 solid var(--mud-palette-table-lines);
+}
+
+.ev-cal-month {
+    border-top-width: 1px;
+}
+
+.ev-cal-week {
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+}
+
+.ev-cal-day {
+    margin: 0;
+    box-sizing: border-box;
+    flex-grow: 0;
+    max-width: calc(100% / 7);
+    flex-basis: calc(100% / 7);
+    min-height: 8rem;
+    border-left-width: 1px;
+}
+
+    .ev-cal-day.dow {
+        min-height: 1rem;
+    }

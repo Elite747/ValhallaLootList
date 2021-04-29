@@ -11,11 +11,11 @@
         <MudIconButton OnClick="() => ChangeMonthAsync(1)" Icon="@Icons.Material.Filled.ChevronRight" />
     </div>
     @ChildContent
-    <div class="d-flex flex-column month">
-        <div class="d-flex align-stretch week">
+    <div class="d-flex flex-column ev-cal-month">
+        <div class="d-flex align-stretch ev-cal-week">
             @foreach (var day in DayOfWeekHelpers.EnumerateDaysByCulture(Culture))
             {
-                <div class="day dow pa-1 mud-typography-align-center" @key="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</div>
+                <div class="ev-cal-day dow pa-1 mud-typography-align-center" @key="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</div>
             }
         </div>
 
@@ -28,12 +28,12 @@
                 break;
             }
 
-            <div class="d-flex align-stretch week">
+            <div class="d-flex align-stretch ev-cal-week">
                 @for (int day = 0; day < 7; day++)
                 {
                     DateTime current = firstDayThisWeek.AddDays(day);
 
-                    <div class="d-flex flex-column day" @key="current">
+                    <div class="d-flex flex-column ev-cal-day" @key="current">
                         @if (current.Month == Date.Month)
                         {
                             <div class="pa-1 mb-1 mud-theme-@(current == TimeProvider.Today ? "tertiary" : "primary")">@current.Day</div>

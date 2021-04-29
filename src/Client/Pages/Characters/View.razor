@@ -51,7 +51,7 @@
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
         <MudTabsEx Elevation="5" Rounded="true" ApplyEffectsToContainer="true" InitialTabId="GetPanelId()" ActivePanelIndexChanged="OnTabChanged" @ref="_tabs">
-            @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderBy(p => p))
+            @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
                     <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />

@@ -1,4 +1,5 @@
 ﻿@page "/Teams/{teamName}"
+@page "/Teams/{teamName}/Phase/{Phase:int}"
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject TeamsSource TeamsSource
@@ -25,7 +26,7 @@
                 <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
                     <Success>
                         <MudSelect T="byte"
-                                   Value="_phase ?? phaseConfig.CurrentPhase"
+                                   Value="GetDisplayPhase(phaseConfig)"
                                    ValueChanged="OnPhaseChanged"
                                    Label="Phase"
                                    Variant="Variant.Filled"
@@ -43,7 +44,7 @@
                     </Success>
                     <Failure>
                         <MudSelect T="byte"
-                                   Value="_phase ?? phaseConfig.CurrentPhase"
+                                   Value="GetDisplayPhase(phaseConfig)"
                                    ValueChanged="OnPhaseChanged"
                                    Label="Phase"
                                    Variant="Variant.Filled"
@@ -67,22 +68,22 @@
                     <LeadersView Team="team" />
                 </div>
                 <TeamMembers Team="team"
-                             SelectedPhase="_phase"
+                             SelectedPhase="GetSelectedPhase()"
                              CurrentPhase="phaseConfig.CurrentPhase"
                              OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
             </MudItem>
 
             <MudItem xs="12" md="6">
                 <div class="mb-5">
-                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="_phase ?? phaseConfig.CurrentPhase" Team="team" ShowExternalLink="true" />
+                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" ShowExternalLink="true" />
                 </div>
                 <TeamRaids Team="team" />
             </MudItem>
 
-            
+
             <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
                 <MudItem xs="12">
-                    <Review Phase="_phase ?? phaseConfig.CurrentPhase"
+                    <Review Phase="GetDisplayPhase(phaseConfig)"
                             Team="team"
                             User="context.User"
                             StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
@@ -97,7 +98,6 @@
     private IApiExecutor? _executor;
     private string? _teamName;
     private bool _teamChanged;
-    private byte? _phase;
 
     [Parameter]
     public string TeamName
@@ -113,19 +113,11 @@
         }
     }
 
+    [Parameter]
+    public int? Phase { get; set; }
+
     protected override Task OnParametersSetAsync()
     {
-        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Nav.ToAbsoluteUri(Nav.Uri).Query).TryGetValue("phase", out var phaseStrings)
-            && phaseStrings.Count == 1
-            && byte.TryParse(phaseStrings[0], out var phase))
-        {
-            _phase = phase;
-        }
-        else
-        {
-            _phase = null;
-        }
-
         if (_teamChanged)
         {
             _teamChanged = false;
@@ -137,12 +129,27 @@
         return Task.CompletedTask;
     }
 
+    private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
+    {
+        var phase = GetSelectedPhase();
+        if (phase.HasValue)
+        {
+            if (phaseConfig.Phases.Contains(phase.Value))
+            {
+                return phase.Value;
+            }
+        }
+        return phaseConfig.CurrentPhase;
+    }
+
+    private byte? GetSelectedPhase()
+    {
+        return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
+    }
+
     private void OnPhaseChanged(byte phase)
     {
-        if (_phase != phase)
-        {
-            Nav.NavigateTo($"teams/{TeamName}?phase={phase}");
-        }
+        Nav.NavigateTo($"teams/{TeamName}/phase/{phase}");
     }
 
     private async Task EditAsync(TeamDto team)

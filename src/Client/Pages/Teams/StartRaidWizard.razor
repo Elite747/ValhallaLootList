@@ -6,7 +6,7 @@
 <MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
-        @{ State.Phase = phaseConfig.CurrentPhase; }
+        @{ State.Phase = State.Phase == 0 ? phaseConfig.CurrentPhase : State.Phase; }
         <WizardSection Name="Select Phase" CanContinue="() => phaseConfig.Phases.Contains(State.Phase)">
             <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
                 <MudList Clickable="true" Dense="true">

@@ -130,7 +130,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
-                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec,
+                    MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec).GetValueOrDefault(),
                     Character = new CharacterDto
                     {
                         Class = a.Character.Class,

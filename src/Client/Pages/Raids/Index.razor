@@ -16,7 +16,7 @@
     <EventContent Context="date">
         @if (!_raidsLoading)
         {
-            if (date > TimeProvider.Today)
+            if (date >= TimeProvider.Today)
             {
                 var teamsAdded = _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == date).Select(r => r.TeamId).ToHashSet();
                 @foreach (var team in TeamsSource.Teams.Where(team => !teamsAdded.Contains(team.Id)))

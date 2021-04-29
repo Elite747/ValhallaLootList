@@ -56,12 +56,6 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<Bracket> Brackets { get; set; } = null!;
         public virtual DbSet<PhaseDetails> PhaseDetails { get; set; } = null!;
 
-        public Task<byte> GetCurrentPhaseAsync(CancellationToken cancellationToken = default)
-        {
-            var now = DateTimeOffset.UtcNow;
-            return PhaseDetails.AsNoTracking().Where(pd => pd.StartsAt <= now).OrderByDescending(pd => pd.Id).Select(pd => pd.Id).FirstAsync(cancellationToken);
-        }
-
         public async Task<bool> IsLeaderOf(ClaimsPrincipal user, long teamId)
         {
             var userId = user.GetDiscordId();

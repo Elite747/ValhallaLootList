@@ -23,24 +23,29 @@
         @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
         {
             <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
-                    <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                        Revoke Approval
-                    </MudButton>
-                </MudTooltip>
-                <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, use the Revoke Approval action instead.">
-                    <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
-                </MudTooltip>
+                <Authorized>
+                    <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings.">
+                        <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                            Revoke Approval
+                        </MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. If the list is unlocked and approval revoked, it becomes editable.">
+                        <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    </MudTooltip>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body1">Loot list may only be unlocked by an officer.</MudText>
+                </NotAuthorized>
             </AuthorizeView>
         }
         else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
         {
-            <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team, but will not allow non-leaders to see rankings.">
+            <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team.">
                 <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
                     Approve
                 </MudButton>
             </MudTooltip>
-            <MudTooltip Text="Denying a loot list may allow it to be edited by the owner.">
+            <MudTooltip Text="Denying a loot list will allow it to be edited by the owner if the list is unlocked.">
                 <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                     Deny
                 </MudButton>
@@ -48,7 +53,7 @@
         }
         else if (LootList.Status == LootListStatus.Approved)
         {
-            <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, and allow it to be edited by the owner.">
+            <MudTooltip Text="Revoking an approval will allow it to be edited by the owner. This will not remove the player from the team.">
                 <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                     Revoke Approval
                 </MudButton>

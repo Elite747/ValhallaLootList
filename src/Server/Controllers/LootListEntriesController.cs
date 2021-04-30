@@ -145,17 +145,25 @@ namespace ValhallaLootList.Server.Controllers
                 var item = await _context.Items
                     .AsNoTracking()
                     .Where(i => i.Id == entry.ItemId.Value)
-                    .Select(i => new { i.Id, i.Name, i.Phase, i.RewardFromId, QuestId = (uint?)i.RewardFrom!.QuestId })
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.Name,
+                        i.Phase,
+                        i.RewardFromId,
+                        QuestId = (uint?)i.RewardFrom!.QuestId,
+                        MaxCount = (!i.IsUnique && (i.Slot == InventorySlot.Trinket || i.Slot == InventorySlot.Finger || i.Slot == InventorySlot.OneHand)) ? 2 : 1
+                    })
                     .FirstOrDefaultAsync();
 
                 if (item is null)
                 {
-                    return (false, "Item does not exist.");
+                    return (false, $"Item #{entry.ItemId} does not exist.");
                 }
 
                 if (item.Phase != entry.LootList.Phase)
                 {
-                    return (false, "Item is not part of the same phase as the loot list.");
+                    return (false, item.Name + " is not part of the same phase as the loot list.");
                 }
 
                 var spec = entry.LootList.MainSpec | entry.LootList.OffSpec;
@@ -187,17 +195,21 @@ namespace ValhallaLootList.Server.Controllers
                     {
                         if (firstConflict.Id == item.Id)
                         {
-                            return (false, "Item is already on this loot list.");
+                            return (false, item.Name + " is already on this loot list.");
                         }
                         else
                         {
-                            return (false, $"Item comes from a quest reward that also gives {firstConflict.Name}. Only one of these items may be on your list.");
+                            return (false, $"{item.Name} comes from a quest reward that also gives {firstConflict.Name}. Only one of these items may be on your list.");
                         }
                     }
                 }
-                else if (await existingItemMutexQuery.Where(e => e.ItemId == dto.ItemId).AnyAsync())
+                else if (await existingItemMutexQuery.Where(e => e.ItemId == dto.ItemId).CountAsync() >= item.MaxCount)
                 {
-                    return (false, "Item is already on this loot list.");
+                    if (item.MaxCount == 1)
+                    {
+                        return (false, item.Name + " is already on this loot list.");
+                    }
+                    return (false, $"{item.Name} has already been added {item.MaxCount:N0} times.");
                 }
             }
 

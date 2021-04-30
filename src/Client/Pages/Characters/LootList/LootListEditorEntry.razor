@@ -164,14 +164,15 @@
 
         if (selectedId.HasValue)
         {
+            ItemDto? item;
             string? justification = null;
             if (selectedId == 0U)
             {
-                selectedId = null;
+                item = null;
             }
             else
             {
-                var item = Items.First(i => i.Id == selectedId);
+                item = Items.First(i => i.Id == selectedId);
                 var restrictions = item.GetRestrictions(Editor.LootList.MainSpec, Editor.LootList.OffSpec, Entry.BracketAllowsOffspec).ToList();
 
                 if (restrictions.Count != 0)
@@ -191,25 +192,44 @@
                 }
             }
 
-            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = selectedId, Justification = justification, RemoveIfInvalid = true };
-            if (selectedId.HasValue)
+            var dto = new LootListEntrySubmissionDto { EntryId = Entry.Id, ItemId = item?.Id, Justification = justification, RemoveIfInvalid = true };
+            if (item is not null)
             {
-                var swapEntry = Editor.LootList.Entries.Find(e => e.Id != Entry.Id && e.ItemId == selectedId);
-
-                if (swapEntry is not null)
+                var sameItemEntries = Editor.LootList.Entries.FindAll(e => e.Id != Entry.Id && e.ItemId == item.Id);
+                if (sameItemEntries.Count >= item.MaxCount)
                 {
-                    dto.SwapEntryId = swapEntry.Id;
+                    var firstMovableEntry = sameItemEntries.Where(e => !e.Won).OrderBy(e => e.Rank).FirstOrDefault();
+
+                    if (firstMovableEntry is null)
+                    {
+                        // all added entries are already won.
+                        string msg = "You have already won this item";
+
+                        if (item.MaxCount > 1)
+                        {
+                            msg = $"{msg} {item.MaxCount:N0} times";
+                        }
+
+                        Snackbar.Add(msg, Severity.Error);
+                        return;
+                    }
+
+                    dto.SwapEntryId = firstMovableEntry.Id;
                 }
             }
 
             await Api.LootListEntries.Submit(Entry.Id, dto)
-                .OnSuccess(HandleSuccess)
+                .OnSuccess(HandleSuccessNotDragged)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
     }
 
-    private void HandleSuccess(LootListEntryUpdateDto update)
+    private void HandleSuccessNotDragged(LootListEntryUpdateDto update) => HandleSuccess(update, false);
+
+    private void HandleSuccessDragged(LootListEntryUpdateDto update) => HandleSuccess(update, true);
+
+    private void HandleSuccess(LootListEntryUpdateDto update, bool dragged)
     {
         Entry.ItemId = update.ItemId;
         Entry.Justification = update.EntryJustification;
@@ -221,6 +241,12 @@
                 entry.ItemId = update.SwapItemId;
                 entry.Justification = update.SwapEntryJustification;
                 Editor.NotifyStateChanged();
+
+                if (!dragged && !update.SwapItemId.HasValue && update.ItemId.HasValue)
+                {
+                    var item = Items.FirstOrDefault(i => i.Id == update.ItemId.Value)?.Name ?? "Item";
+                    Snackbar.Add($"{item} was moved from rank {entry.Rank:N0}");
+                }
             }
         }
     }
@@ -269,7 +295,7 @@
                     Justification = Editor.DraggingEntry.Justification,
                     SwapEntryId = Editor.DraggingEntry.Id
                 })
-                .OnSuccess(HandleSuccess)
+                .OnSuccess(HandleSuccessDragged)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
@@ -280,7 +306,7 @@
     private Task ClearAsync()
     {
         return Api.LootListEntries.Submit(Entry.Id, new() { EntryId = Entry.Id, ItemId = null, Justification = null })
-            .OnSuccess(HandleSuccess)
+            .OnSuccess(HandleSuccessNotDragged)
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }

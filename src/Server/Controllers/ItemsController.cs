@@ -39,6 +39,7 @@ namespace ValhallaLootList.Server.Controllers
                     Name = item.Name,
                     Slot = item.Slot,
                     Type = item.Type,
+                    MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1
                 })
                 .ToDictionaryAsync(item => item.Id);
 

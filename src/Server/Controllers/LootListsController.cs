@@ -151,7 +151,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["Phase"] = list.Phase.ToString();
             });
 
-            var scope = PrioCalculator.Scope;
+            var scope = await _context.GetCurrentPriorityScopeAsync();
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(x => !x.IgnoreAttendance && x.RemovalId == null && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
@@ -162,13 +162,13 @@ namespace ValhallaLootList.Server.Controllers
                 .CountAsync();
 
             var now = _serverTimeZoneInfo.TimeZoneNow();
-            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == characterId);
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == characterId, scope);
             var donations = donationMatrix.GetCreditForMonth(characterId, now);
 
             var returnDto = new LootListDto
             {
                 ApprovedBy = null,
-                Bonuses = PrioCalculator.GetListBonuses(PrioCalculator.Scope, attendance, character.MemberStatus, donations).ToList(),
+                Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations).ToList(),
                 CharacterId = character.Id,
                 CharacterMemberStatus = character.MemberStatus,
                 CharacterName = character.Name,
@@ -652,8 +652,9 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
+                var scope = await _context.GetCurrentPriorityScopeAsync();
 
-                foreach (var m in await HelperQueries.GetMembersAsync(_context, _serverTimeZoneInfo, characterQuery, PrioCalculator.Scope, team.Id, team.Name, true))
+                foreach (var m in await HelperQueries.GetMembersAsync(_context, _serverTimeZoneInfo, characterQuery, scope, team.Id, team.Name, true))
                 {
                     member = m;
                     break;
@@ -927,6 +928,8 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(pass => new { pass.CharacterId, pass.RelativePriority, pass.LootListEntryId })
                 .ToListAsync();
 
+            var scope = await _context.GetCurrentPriorityScopeAsync();
+
             var attendances = await attendanceQuery
                 .Select(a => new { a.CharacterId, a.Raid.StartedAt.Date })
                 .GroupBy(a => a.CharacterId)
@@ -937,13 +940,13 @@ namespace ValhallaLootList.Server.Controllers
 
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.RaidLeaderOrAdmin);
 
-            var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate);
+            var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate, scope);
 
             foreach (var dto in dtos)
             {
                 attendances.TryGetValue(dto.CharacterId, out int attended);
                 var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
-                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(PrioCalculator.Scope, attended, dto.CharacterMemberStatus, characterDonations));
+                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended, dto.CharacterMemberStatus, characterDonations));
 
                 if (authorizationResult.Succeeded)
                 {

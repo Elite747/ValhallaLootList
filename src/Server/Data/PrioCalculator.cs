@@ -10,15 +10,6 @@ namespace ValhallaLootList.Server.Data
 {
     public static class PrioCalculator
     {
-        public static PriorityScope Scope { get; } = new()
-        {
-            AttendancesPerPoint = 4,
-            FullTrialPenalty = -18,
-            HalfTrialPenalty = -9,
-            ObservedAttendances = 8,
-            RequiredDonationCopper = 50_00_00
-        }; // TODO: Add this to DB.
-
         public static int CalculateAttendanceBonus(int attendances, PriorityScope scope)
         {
             return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);

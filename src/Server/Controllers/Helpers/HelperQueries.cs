@@ -100,7 +100,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var memberIds = members.ConvertAll(m => m.Character.Id);
-            var donationMatrix = await context.GetDonationMatrixAsync(d => memberIds.Contains(d.CharacterId));
+            var donationMatrix = await context.GetDonationMatrixAsync(d => memberIds.Contains(d.CharacterId), scope);
 
             foreach (var member in members)
             {

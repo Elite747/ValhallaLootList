@@ -55,6 +55,12 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<TeamRemoval> TeamRemovals { get; set; } = null!;
         public virtual DbSet<Bracket> Brackets { get; set; } = null!;
         public virtual DbSet<PhaseDetails> PhaseDetails { get; set; } = null!;
+        public virtual DbSet<PriorityScope> PriorityScopes { get; set; } = null!;
+
+        public Task<PriorityScope> GetCurrentPriorityScopeAsync(CancellationToken cancellationToken = default)
+        {
+            return PriorityScopes.OrderByDescending(ps => ps.StartsAt).FirstAsync(cancellationToken);
+        }
 
         public async Task<bool> IsLeaderOf(ClaimsPrincipal user, long teamId)
         {
@@ -63,7 +69,7 @@ namespace ValhallaLootList.Server.Data
             return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamIdString) > 0;
         }
 
-        public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, CancellationToken cancellationToken = default)
+        public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, PriorityScope scope, CancellationToken cancellationToken = default)
         {
             var results = await Donations
                 .AsNoTracking()
@@ -82,7 +88,8 @@ namespace ValhallaLootList.Server.Data
                 .ThenBy(md => md.Year)
                 .ThenBy(md => md.Month)
                 .ToListAsync(cancellationToken);
-            return new(results, PrioCalculator.Scope);
+
+            return new(results, scope);
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -227,6 +234,14 @@ namespace ValhallaLootList.Server.Data
             });
 
             builder.Entity<AppUser>().Property(e => e.Id).ValueGeneratedNever();
+
+            builder.Entity<PriorityScope>(e =>
+            {
+                e.Property(ps => ps.Id).ValueGeneratedNever();
+                e.HasData(
+                    new PriorityScope { Id = 1, StartsAt = default, AttendancesPerPoint = 4, FullTrialPenalty = -18, HalfTrialPenalty = -9, ObservedAttendances = 8, RequiredDonationCopper = 50_00_00 }
+                    );
+            });
         }
 
         Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();

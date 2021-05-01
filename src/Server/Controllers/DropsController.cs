@@ -81,7 +81,7 @@ namespace ValhallaLootList.Server.Controllers
 
             drop.AwardedAt = now;
             drop.AwardedBy = User.GetDiscordId();
-            var observedAttendances = PrioCalculator.Scope.ObservedAttendances;
+            var scope = await _context.GetCurrentPriorityScopeAsync();
 
             var presentTeamRaiders = await _context.CharacterEncounterKills
                 .AsTracking()
@@ -95,7 +95,7 @@ namespace ValhallaLootList.Server.Controllers
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
-                        .Take(observedAttendances)
+                        .Take(scope.ObservedAttendances)
                         .Count(),
                     Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
                         .OrderByDescending(e => e.Rank)
@@ -110,7 +110,7 @@ namespace ValhallaLootList.Server.Controllers
                 })
                 .ToListAsync();
 
-            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId));
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
 
             await _context.Entry(drop).Collection(drop => drop.Passes).LoadAsync();
             drop.Passes.Clear();
@@ -140,7 +140,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     var donated = donationMatrix.GetCreditForMonth(winner.Id, now);
 
-                    foreach (var bonus in PrioCalculator.GetAllBonuses(PrioCalculator.Scope, winner.Attended, winner.MemberStatus, donated, passes.Count))
+                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, winner.Attended, winner.MemberStatus, donated, passes.Count))
                     {
                         winnerPrio = winnerPrio.Value + bonus.Value;
                     }
@@ -165,7 +165,7 @@ namespace ValhallaLootList.Server.Controllers
 
                         var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
 
-                        foreach (var bonus in PrioCalculator.GetAllBonuses(PrioCalculator.Scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes))
+                        foreach (var bonus in PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes))
                         {
                             thisPrio += bonus.Value;
                         }
@@ -274,7 +274,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var now = serverTimeZone.TimeZoneNow();
-            var observedAttendances = PrioCalculator.Scope.ObservedAttendances;
+            var scope = await _context.GetCurrentPriorityScopeAsync();
 
             var presentTeamRaiders = await _context.RaidAttendees
                 .AsNoTracking()
@@ -289,7 +289,7 @@ namespace ValhallaLootList.Server.Controllers
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
-                        .Take(observedAttendances)
+                        .Take(scope.ObservedAttendances)
                         .Count(),
                     Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
                         .OrderByDescending(e => e.Rank)
@@ -304,7 +304,7 @@ namespace ValhallaLootList.Server.Controllers
                 })
                 .ToListAsync();
 
-            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId));
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
 
             var dto = new List<ItemPrioDto>();
 
@@ -321,7 +321,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
 
-                prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(PrioCalculator.Scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes));
+                prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes));
 
                 dto.Add(prio);
             }

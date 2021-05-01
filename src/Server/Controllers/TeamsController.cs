@@ -90,7 +90,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             bool isLeader = await _context.IsLeaderOf(User, team.Id);
-            var scope = PrioCalculator.Scope;
+            var scope = await _context.GetCurrentPriorityScopeAsync();
             var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
             foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
@@ -308,7 +308,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["CharacterName"] = character.Name;
             });
 
-            var scope = PrioCalculator.Scope;
+            var scope = await _context.GetCurrentPriorityScopeAsync();
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
@@ -373,7 +373,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var now = _serverTimeZone.TimeZoneNow();
-            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == character.Id);
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == character.Id, scope);
 
             returnDto.DonatedThisMonth = donationMatrix.GetCreditForMonth(returnDto.Character.Id, now);
             returnDto.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(returnDto.Character.Id, now);

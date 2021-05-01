@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -35,7 +36,7 @@ namespace ValhallaLootList.Server
                 // add character and raid leader claims
                 var claims = await _context.UserClaims
                     .AsNoTracking()
-                    .Where(claim => claim.UserId == userId && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
+                    .Where(claim => claim.UserId == userId && claim.ClaimValue != null && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
                     .Select(claim => new Claim(claim.ClaimType, claim.ClaimValue))
                     .ToListAsync();
 
@@ -46,23 +47,31 @@ namespace ValhallaLootList.Server
                 if (member is not null)
                 {
                     // add discord claims
-                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.AvatarHash, member.AvatarHash));
-                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.AvatarUrl, member.AvatarUrl));
-                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Discriminator, member.Discriminator));
-                    context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Username, member.Username));
+                    TryAddClaim(context, DiscordClaimTypes.AvatarHash, member.AvatarHash);
+                    TryAddClaim(context, DiscordClaimTypes.AvatarUrl, member.AvatarUrl);
+                    TryAddClaim(context, DiscordClaimTypes.Discriminator, member.Discriminator);
+                    TryAddClaim(context, DiscordClaimTypes.Username, member.Username);
 
                     // add discord role claims
                     foreach (var role in member.Roles)
                     {
-                        context.IssuedClaims.Add(new Claim(DiscordClaimTypes.Role, role.Name));
+                        TryAddClaim(context, DiscordClaimTypes.Role, role.Name);
                     }
 
                     // add app role claims
                     foreach (var appRole in _discordClientProvider.GetAppRoles(member))
                     {
-                        context.IssuedClaims.Add(new Claim(AppClaimTypes.Role, appRole));
+                        TryAddClaim(context, AppClaimTypes.Role, appRole);
                     }
                 }
+            }
+        }
+
+        private static void TryAddClaim(ProfileDataRequestContext context, string claimType, string? value)
+        {
+            if (value?.Length > 0)
+            {
+                context.IssuedClaims.Add(new(claimType, value));
             }
         }
 

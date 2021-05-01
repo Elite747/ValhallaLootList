@@ -1,123 +1,75 @@
-﻿@implements IDisposable 
+﻿@implements IDisposable
 @inject ApiClient Api
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject TeamsSource TeamsSource
 
-<MudList Dense="true">
-    @if (LootList is null)
-    {
-        if (!Character.Deactivated)
-        {
-            <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
-                <MudListSubheader>
-                    <MudButton OnClick="CreateListAsync" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
-                </MudListSubheader>
-            </AuthorizeView>
-        }
-        <MudListSubheader>
-            <p>@Character.Name does not have a loot list for Phase @Phase.</p>
-        </MudListSubheader>
-    }
-    else
-    {
-        <MudListSubheader>
-            <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
-            @if (!Character.Deactivated)
-            {
-                if (!Character.TeamId.HasValue)
+@if (LootList is null)
+{
+    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
+        <div class="mx-4 my-2">
+            <MudButton OnClick="CreateListAsync" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        </div>
+    </AuthorizeView>
+    <p class="mx-4 my-2">
+        @Character.Name does not have a loot list for Phase @Phase.
+    </p>
+}
+else
+{
+    <LootListLayout LootList="LootList">
+        <HeaderContent>
+            <div class="mb-3">
+                <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
+                @if (!Character.Deactivated)
                 {
-                    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
-                        <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit Application</MudButton>
-                    </AuthorizeView>
-                }
-                if (LootList.Status == LootListStatus.Submitted)
-                {
-                    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
-                        <MudButton OnClick="RevokeAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error" Class="mr-2">Revoke Application</MudButton>
-                    </AuthorizeView>
-                }
-            }
-        </MudListSubheader>
-        <MudListSubheader>
-            @if (LootList.Status == LootListStatus.Submitted)
-            {
-                if (LootList.SubmittedTo.Count == 0)
-                {
-                    <MudText Typo="Typo.body1" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Clear" Size="Size.Small" /> Loot List has been rejected.</MudText>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body1">
-                        <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" />
-                        @GetSubmittedTeamNames()
-                    </MudText>
-                }
-            }
-            else if (LootList.Status == LootListStatus.Approved)
-            {
-                <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Custom.Uncategorized.AlertSuccess" Size="Size.Small" /> Loot List has been approved!</MudText>
-            }
-            else if (LootList.Status == LootListStatus.Locked)
-            {
-                <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
-            }
-            @if (!LootList.Entries.Any(e => e.Rank > 0))
-            {
-                <MudText Typo="Typo.body1">Rankings will not be shown until the loot list has been locked.</MudText>
-            }
-        </MudListSubheader>
-        <MudListSubheader>
-            <div class="d-flex">
-                <MudText Typo="Typo.h6" Class="mx-auto">
-                    Main Spec:
-                    <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
-                    @LootList.MainSpec.GetDisplayName()
-                </MudText>
-                @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
-                {
-                    <MudDivider Vertical="true" FlexItem="true" />
-                    <MudText Typo="Typo.h6" Class="mx-auto">
-                        Off Spec:
-                        <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
-                        @LootList.OffSpec.GetDisplayName()
-                    </MudText>
+                    if (!Character.TeamId.HasValue)
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
+                            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit Application</MudButton>
+                        </AuthorizeView>
+                    }
+                    if (LootList.Status == LootListStatus.Submitted)
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
+                            <MudButton OnClick="RevokeAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error" Class="mr-2">Revoke Application</MudButton>
+                        </AuthorizeView>
+                    }
                 }
             </div>
-        </MudListSubheader>
-        @if (LootList.Status == LootListStatus.Locked || LootList.Entries.Any(e => e.Rank > 0))
-        {
-            var rows = LootList.Entries.GroupBy(e => e.Rank);
-            var rowSize = rows.Select(row => row.Count()).Max();
-            @foreach (var row in rows.OrderByDescending(g => g.Key))
+            <div class="mb-3">
+                @if (LootList.Status == LootListStatus.Submitted)
+                {
+                    if (LootList.SubmittedTo.Count == 0)
+                    {
+                        <MudText Typo="Typo.body1" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Clear" Size="Size.Small" /> Loot List has been rejected.</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" />
+                            @GetSubmittedTeamNames()
+                        </MudText>
+                    }
+                }
+                else if (LootList.Status == LootListStatus.Approved)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Custom.Uncategorized.AlertSuccess" Size="Size.Small" /> Loot List has been approved!</MudText>
+                }
+                else if (LootList.Status == LootListStatus.Locked)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
+                }
+            </div>
+        </HeaderContent>
+        <EntryTemplate Context="entry">
+            @if (entry.ItemId > 0)
             {
-                <MudDivider />
-                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
-                    <MudGrid>
-                        <MudItem xs="12" md="3" lg="2">
-                            <MudText Typo="Typo.h6" GutterBottom="false">Rank @row.Key</MudText>
-                        </MudItem>
-                        @foreach (var entry in row.Where(e => e.ItemId > 0))
-                        {
-                            <MudItem xs="12" md="9 / rowSize" lg="10 / rowSize">
-                                <LootListViewerEntry LootList="LootList" Entry="entry" />
-                            </MudItem>
-                        }
-                    </MudGrid>
-                </MudListItem>
+                <LootListViewerEntry LootList="LootList" Entry="entry" />
             }
-        }
-        else
-        {
-            @foreach (var entry in LootList.Entries.Where(e => e.ItemId > 0).OrderBy(e => e.ItemName))
-            {
-                <MudListItem>
-                    <LootListViewerEntry Entry="entry" LootList="LootList" />
-                </MudListItem>
-            }
-        }
-    }
-</MudList>
+        </EntryTemplate>
+    </LootListLayout>
+}
 
 @code {
     [Parameter] public byte Phase { get; set; }

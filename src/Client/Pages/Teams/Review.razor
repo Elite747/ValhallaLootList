@@ -16,7 +16,7 @@
     <MudDivider />
     <div class="d-flex">
         <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
-            <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items">
+            <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items" @key="Phase">
                 <ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team.Id, Phase)" Context="lootLists" @ref="_executor" @key="(Team.Id, Phase)">
                     <MudList Clickable="true">
                         @foreach (var list in lootLists.OrderBy(ll => ll.CharacterName))

@@ -4,51 +4,18 @@
 @inject ISnackbar Snackbar
 
 <ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
-    <CascadingValue Value="items" IsFixed="true">
-        <CascadingValue Value="this" IsFixed="true">
-            <MudList Dense="true">
-                <MudListSubheader>
-                    <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Submit Application</MudButton>
-                    <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
-                </MudListSubheader>
-                <MudListSubheader>
-                    <div class="d-flex">
-                        <MudText Typo="Typo.h6" Class="mx-auto">
-                            Main Spec:
-                            <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
-                            @LootList.MainSpec.GetDisplayName()
-                        </MudText>
-                        @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
-                        {
-                            <MudDivider Vertical="true" FlexItem="true" />
-                            <MudText Typo="Typo.h6" Class="mx-auto">
-                                Off Spec:
-                                <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
-                                @LootList.OffSpec.GetDisplayName()
-                            </MudText>
-                        }
-                    </div>
-                </MudListSubheader>
-                <div class="mx-4">
-                    @for (int i = 0; i < _brackets.Count; i++)
-                    {
-                        var bracket = _brackets[i];
-                        <LootListEditorBracket Bracket="bracket.Key.Bracket"
-                                               AllowOffSpec="bracket.Key.AllowsOffspec"
-                                               AllowTypeDuplicates="bracket.Key.AllowsTypeDuplicates"
-                                               IsHighest="i == 0"
-                                               IsLowest="i == _brackets.Count - 1"
-                                               BracketEntries="bracket" />
-                    }
-                </div>
-            </MudList>
-        </CascadingValue>
-    </CascadingValue>
+    <LootListLayout LootList="LootList" ShowBracketRules="true">
+        <HeaderContent>
+            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Submit Application</MudButton>
+            <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
+        </HeaderContent>
+        <EntryTemplate Context="entry">
+            <LootListEditorEntry Entry="entry" Editor="this" Items="items" />
+        </EntryTemplate>
+    </LootListLayout>
 </ApiExecutor>
 
 @code {
-    private List<IGrouping<BracketInfo, LootListEntryDto>> _brackets = null!;
-
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public EventCallback OnSubmit { get; set; }
 
@@ -59,25 +26,6 @@
     protected override void OnParametersSet()
     {
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
-        _brackets = LootList.Entries.GroupBy(e => new BracketInfo(e)).OrderBy(b => b.Key.Bracket).ToList();
-    }
-
-    private struct BracketInfo
-    {
-        public BracketInfo(LootListEntryDto entry)
-        {
-            Bracket = entry.Bracket;
-            AllowsOffspec = entry.BracketAllowsOffspec;
-            AllowsTypeDuplicates = entry.BracketAllowsTypeDuplicates;
-        }
-
-        public int Bracket { get; }
-        public bool AllowsOffspec { get; }
-        public bool AllowsTypeDuplicates { get; }
-
-        public override int GetHashCode() => Bracket;
-
-        public override bool Equals(object? obj) => Bracket.Equals((obj as BracketInfo?)?.Bracket);
     }
 
     private async Task SubmitAsync()

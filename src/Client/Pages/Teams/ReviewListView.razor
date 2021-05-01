@@ -1,23 +1,11 @@
-﻿@inject ApiClient Api
+﻿@using ValhallaLootList.Client.Pages.Characters.LootList 
+@inject ApiClient Api
 @inject ISnackbar Snackbar
-@inject IDialogService DialogService 
+@inject IDialogService DialogService
 
-<MudList Dense="true" Class="flex-grow-1">
-    <MudListSubheader>
+<LootListLayout LootList="LootList" Class="flex-grow-1">
+    <HeaderContent>
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
-        <MudText Typo="Typo.h6">
-            Main Spec:
-            <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
-            @LootList.MainSpec.GetDisplayName()
-        </MudText>
-        @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
-        {
-            <MudText Typo="Typo.h6">
-                Off Spec:
-                <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
-                @LootList.OffSpec.GetDisplayName()
-            </MudText>
-        }
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
         @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
@@ -62,62 +50,48 @@
                 <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
             </MudTooltip>
         }
-    </MudListSubheader>
-    @foreach (var row in _rows.OrderByDescending(g => g.Key))
-    {
-        <MudDivider />
-        <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="row.Key">
-            <MudGrid>
-                <MudItem xs="12" md="3" lg="2">
-                    <MudText Typo="Typo.h6" GutterBottom="false">Rank @row.Key</MudText>
-                </MudItem>
-                @foreach (var entry in row)
-                {
-                    @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
+    </HeaderContent>
+    <EntryTemplate Context="entry">
+        @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
+        {
+            <div class="d-flex align-center">
+                <CascadingItemContext Id="entry.ItemId">
+                    @if (entry.Won)
                     {
-                        <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize" @key="entry.Id">
-                            <div class="d-flex align-center">
-                                <CascadingItemContext Id="item.Id">
-                                    @if (entry.Won)
-                                    {
-                                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                                            <MudAvatar Rounded="true" Class="mr-2">
-                                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                            </MudAvatar>
-                                        </MudBadge>
-                                    }
-                                    else
-                                    {
-                                        <MudAvatar Rounded="true" Class="mr-2">
-                                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                        </MudAvatar>
-                                    }
-                                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
-                                </CascadingItemContext>
-                            </div>
-                            <ul>
-                                @foreach (var restriction in GetRestrictions(item, entry))
-                                {
-                                    <li>
-                                        <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
-                                            @restriction.Reason
-                                        </MudText>
-                                    </li>
-                                }
-                            </ul>
-                            @if (entry.Justification?.Length > 0)
-                            {
-                                <div>
-                                    Justification: @entry.Justification
-                                </div>
-                            }
-                        </MudItem>
+                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                            <MudAvatar Rounded="true" Class="mr-2">
+                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                            </MudAvatar>
+                        </MudBadge>
                     }
+                    else
+                    {
+                        <MudAvatar Rounded="true" Class="mr-2">
+                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                        </MudAvatar>
+                    }
+                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
+                </CascadingItemContext>
+            </div>
+            <ul>
+                @foreach (var restriction in GetRestrictions(item, entry))
+                {
+                <li>
+                    <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                        @restriction.Reason
+                    </MudText>
+                </li>
                 }
-            </MudGrid>
-        </MudListItem>
-    }
-</MudList>
+            </ul>
+            @if (entry.Justification?.Length > 0)
+            {
+                <div>
+                    Justification: @entry.Justification
+                </div>
+            }
+        }
+    </EntryTemplate>
+</LootListLayout>
 
 @code {
     private IEnumerable<IGrouping<int, LootListEntryDto>> _rows = Enumerable.Empty<IGrouping<int, LootListEntryDto>>();

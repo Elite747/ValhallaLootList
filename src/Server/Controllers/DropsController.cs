@@ -83,6 +83,15 @@ namespace ValhallaLootList.Server.Controllers
             drop.AwardedBy = User.GetDiscordId();
             var scope = await _context.GetCurrentPriorityScopeAsync();
 
+            var observedDates = await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.RaidTeamId == teamId)
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => r.StartedAt.Date)
+                .Distinct()
+                .Take(scope.ObservedAttendances)
+                .ToListAsync();
+
             var presentTeamRaiders = await _context.CharacterEncounterKills
                 .AsTracking()
                 .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId)
@@ -91,7 +100,7 @@ namespace ValhallaLootList.Server.Controllers
                     Id = c.CharacterId,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
-                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId && x.RemovalId == null)
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)
@@ -276,6 +285,15 @@ namespace ValhallaLootList.Server.Controllers
             var now = serverTimeZone.TimeZoneNow();
             var scope = await _context.GetCurrentPriorityScopeAsync();
 
+            var observedDates = await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.RaidTeamId == drop.TeamId)
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => r.StartedAt.Date)
+                .Distinct()
+                .Take(scope.ObservedAttendances)
+                .ToListAsync();
+
             var presentTeamRaiders = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(a => a.RaidId == drop.EncounterKillRaidId && a.Character.TeamId == drop.TeamId)
@@ -285,7 +303,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.Character.Name,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
-                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId && x.RemovalId == null)
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
                         .OrderByDescending(x => x)

@@ -1,13 +1,11 @@
 ﻿@page "/Characters/{characterName}"
-@page "/Characters/{characterName}/{tab}"
-@page "/Characters/{characterName}/{tab}/{phase:int}"
 @using ValhallaLootList.Client.Pages.Characters.LootList;
 @inject ApiClient Api
 @inject IDialogService DialogService
-@inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject NavigationManager Nav 
 
-<ApiExecutor Operation="() => Api.Characters.Get(CharacterName)" Context="character" @ref="_executor">
+<ApiExecutor Operation="() => Api.Characters.Get(CharacterName ?? string.Empty)" Context="character" @key="CharacterName">
     <div class="d-flex align-center mb-3">
         <PlayerIcon Race="character.Race"
                     Gender="character.Gender"
@@ -26,23 +24,23 @@
                 <MudIcon Icon="@Icons.Material.Outlined.Warning" Color="Color.Error" Size="Size.Medium" />
             </MudTooltip>
         }
-    <AuthorizeView Policy="@AppPolicies.Administrator">
-        <MudTooltip Text="Edit">
-            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(character)" />
-        </MudTooltip>
-        <MudTooltip Text="@(character.Deactivated ? "Reactivate" : "Deactivate")">
-            <MudIconButton Class="ml-2"
-                           Color="character.Deactivated ? Color.Success : Color.Error"
-                           Icon="@(character.Deactivated ? Icons.Material.Filled.AddCircleOutline : Icons.Material.Filled.RemoveCircleOutline)"
-                           OnClick="() => ToggleActivatedAsync(character)" />
-        </MudTooltip>
-        <MudTooltip Text="Delete">
-            <MudIconButton Class="ml-2"
-                           Color="Color.Error"
-                           Icon="@Icons.Material.Filled.DeleteForever"
-                           OnClick="() => DeleteAsync(character)" />
-        </MudTooltip>
-    </AuthorizeView>
+        <AuthorizeView Policy="@AppPolicies.Administrator">
+            <MudTooltip Text="Edit">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(character)" />
+            </MudTooltip>
+            <MudTooltip Text="@(character.Deactivated ? "Reactivate" : "Deactivate")">
+                <MudIconButton Class="ml-2"
+                               Color="character.Deactivated ? Color.Success : Color.Error"
+                               Icon="@(character.Deactivated ? Icons.Material.Filled.AddCircleOutline : Icons.Material.Filled.RemoveCircleOutline)"
+                               OnClick="() => ToggleActivatedAsync(character)" />
+            </MudTooltip>
+            <MudTooltip Text="Delete">
+                <MudIconButton Class="ml-2"
+                               Color="Color.Error"
+                               Icon="@Icons.Material.Filled.DeleteForever"
+                               OnClick="() => DeleteAsync(character)" />
+            </MudTooltip>
+        </AuthorizeView>
     </div>
 
     <AuthorizeView Policy="@AppPolicies.Administrator">
@@ -50,7 +48,7 @@
     </AuthorizeView>
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-        <MudTabsEx Elevation="5" Rounded="true" ApplyEffectsToContainer="true" InitialTabId="GetPanelId()" ActivePanelIndexChanged="OnTabChanged" @ref="_tabs">
+        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true">
             @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
@@ -63,47 +61,15 @@
             <MudTabPanel Text="Attendance" ID="_attendanceId">
                 <AttendanceView Character="character" />
             </MudTabPanel>
-        </MudTabsEx>
+        </MudTabs>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
-    private IApiExecutor? _executor;
-    private MudTabs? _tabs;
     private PhaseConfigDto? _phaseConfig;
-    private bool _characterChanged;
-    private string _characterName = string.Empty;
     private object _wonId = new(), _attendanceId = new();
 
-    [Parameter] public string CharacterName
-    {
-        get => _characterName;
-        set
-        {
-            if (_characterName != value)
-            {
-                _characterName = value;
-                _characterChanged = true;
-            }
-        }
-    }
-
-    [Parameter] public string? Tab { get; set; }
-    [Parameter] public int? Phase { get; set; }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (_characterChanged)
-        {
-            _characterChanged = false;
-            if (_executor is not null)
-            {
-                await _executor.RestartAsync();
-            }
-        }
-
-        _tabs?.ActivatePanel(GetPanelId());
-    }
+    [Parameter] public string? CharacterName { get; set; }
 
     protected override Task OnInitializedAsync()
     {
@@ -161,54 +127,5 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
-    }
-
-    private object? GetPanelId()
-    {
-        if (string.Equals(Tab, "Won", StringComparison.OrdinalIgnoreCase))
-        {
-            return _wonId;
-        }
-        if (string.Equals(Tab, "Attendance", StringComparison.OrdinalIgnoreCase))
-        {
-            return _attendanceId;
-        }
-        if (string.Equals(Tab, "Phase", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!Phase.HasValue || Phase < byte.MinValue || Phase > byte.MaxValue)
-            {
-                return _phaseConfig?.CurrentPhase;
-            }
-            return Phase.Value;
-        }
-        return _phaseConfig?.CurrentPhase;
-    }
-
-    private void OnTabChanged(int index)
-    {
-        var panel = _tabs?.Panels.ElementAt(index);
-        string? tab = null;
-        byte? phase = null;
-
-        if (panel is not null)
-        {
-            if (panel.ID == _wonId)
-            {
-                tab = "won";
-            }
-            else if (panel.ID == _attendanceId)
-            {
-                tab = "attendance";
-            }
-            else if (panel.ID is byte b)
-            {
-                tab = "phase";
-                phase = b;
-            }
-        }
-
-        string format = phase.HasValue ? "characters/{0}/{1}/{2}" : "characters/{0}/{1}";
-
-        Nav.NavigateTo(string.Format(format, CharacterName, tab, phase));
     }
 }

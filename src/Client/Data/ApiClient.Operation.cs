@@ -21,13 +21,17 @@ namespace ValhallaLootList.Client.Data
             private readonly HttpRequestMessage _request;
             private readonly JsonSerializerOptions _jsonSerializerOptions;
             private readonly IMemoryCache _memoryCache;
-            private bool _executed;
+            private Task? _task;
+            private TResult? _result;
+            private ProblemDetails? _problem;
             private Action<ProblemDetails>? _failureAction;
             private Action<HttpStatusCode>? _successAction;
             private Action<TResult>? _typedSuccessAction;
             private Func<HttpStatusCode, CancellationToken, Task>? _successTask;
             private Func<TResult, CancellationToken, Task>? _typedSuccessTask;
             private Func<MemoryCacheEntryOptions>? _createCacheEntryOptions;
+
+            public event Action? StatusChanged;
 
             public Operation(HttpClient httpClient, IMemoryCache memoryCache, JsonSerializerOptions jsonSerializerOptions, HttpRequestMessage request)
             {
@@ -36,6 +40,10 @@ namespace ValhallaLootList.Client.Data
                 _jsonSerializerOptions = jsonSerializerOptions;
                 _memoryCache = memoryCache;
             }
+
+            public ApiOperationStatus Status { get; private set; }
+
+            public Task Task => _task ?? Task.CompletedTask;
 
             public void EnableCaching(Func<MemoryCacheEntryOptions> createEntryOptions) => _createCacheEntryOptions = createEntryOptions;
 
@@ -89,11 +97,6 @@ namespace ValhallaLootList.Client.Data
                 return default;
             }
 
-            private bool HasSuccessAction()
-            {
-                return _typedSuccessAction is not null || _typedSuccessTask is not null;
-            }
-
             private ValueTask InvokeSuccessAsync(TResult result, CancellationToken cancellationToken)
             {
                 _typedSuccessAction?.Invoke(result);
@@ -106,44 +109,54 @@ namespace ValhallaLootList.Client.Data
                 return default;
             }
 
-            public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+            public Task ExecuteAsync(CancellationToken cancellationToken = default)
             {
-                if (_executed)
+                if (_task is not null)
                 {
                     throw new InvalidOperationException("Can't execute an api operation multiple times. Create a new operation instead.");
                 }
 
-                _executed = true;
+                return _task = ExecuteInternalAsync(cancellationToken);
+            }
 
-                var cacheKey = _request.RequestUri?.OriginalString;
-
-                if (_createCacheEntryOptions is not null &&
-                    cacheKey is not null &&
-                    _memoryCache.TryGetValue(cacheKey, out TResult? result) &&
-                    result is not null)
-                {
-                    await InvokeHeaderSuccessAsync(HttpStatusCode.OK, cancellationToken);
-                    await InvokeSuccessAsync(result, cancellationToken);
-                    return;
-                }
-
+            private async Task ExecuteInternalAsync(CancellationToken cancellationToken = default)
+            {
+                Status = ApiOperationStatus.Running;
+                StatusChanged?.Invoke();
                 HttpResponseMessage? response = null;
+                bool succeeded = false;
                 try
                 {
+                    var cacheKey = _request.RequestUri?.OriginalString;
+
+                    if (_createCacheEntryOptions is not null &&
+                        cacheKey is not null &&
+                        _memoryCache.TryGetValue(cacheKey, out TResult? result) &&
+                        result is not null)
+                    {
+                        _result = result;
+                        await InvokeHeaderSuccessAsync(HttpStatusCode.OK, cancellationToken);
+                        await InvokeSuccessAsync(result, cancellationToken);
+                        succeeded = true;
+                        return;
+                    }
+
                     response = await _httpClient.SendAsync(_request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                     if (response.IsSuccessStatusCode)
                     {
                         await InvokeHeaderSuccessAsync(response.StatusCode, cancellationToken);
 
-                        if (HasSuccessAction())
+                        if (response.Content.Headers.ContentLength > 0 || typeof(TResult) != typeof(object))
                         {
                             result = await response.Content.ReadFromJsonAsync<TResult>(_jsonSerializerOptions, cancellationToken);
 
                             if (result is null)
                             {
-                                throw new Exception($"No valid result of type {typeof(TResult)} could be read from the response.");
+                                throw new Exception($"No valid result of type {typeof(TResult).Name} could be read from the response.");
                             }
+
+                            _result = result;
 
                             if (_createCacheEntryOptions is not null && cacheKey is not null)
                             {
@@ -152,6 +165,8 @@ namespace ValhallaLootList.Client.Data
 
                             await InvokeSuccessAsync(result, cancellationToken);
                         }
+
+                        succeeded = true;
                     }
                     else if (_failureAction is not null)
                     {
@@ -185,6 +200,7 @@ namespace ValhallaLootList.Client.Data
                             }
                         }
 
+                        _problem = problem;
                         _failureAction.Invoke(problem);
                     }
                 }
@@ -192,12 +208,55 @@ namespace ValhallaLootList.Client.Data
                 {
                     exception.Redirect();
                 }
+                catch (OperationCanceledException)
+                {
+                    _problem = new() { Detail = "The operation was canceled." };
+                }
+                catch (Exception ex)
+                {
+                    _problem = new() { Detail = ex.Message };
+                    throw;
+                }
                 finally
                 {
                     _request.Dispose();
                     response?.Dispose();
+                    Status = succeeded ? ApiOperationStatus.Success : ApiOperationStatus.Failure;
+                    StatusChanged?.Invoke();
                 }
             }
+
+            public bool HasResult()
+            {
+                return Status == ApiOperationStatus.Success && _result is not null;
+            }
+
+            public TResult GetResult()
+            {
+                if (Status != ApiOperationStatus.Success)
+                {
+                    throw new InvalidOperationException("Can't get the result of an unsuccessful operation.");
+                }
+
+                if (_result is null)
+                {
+                    throw new InvalidOperationException("Operation did not have a return value.");
+                }
+
+                return _result;
+            }
+
+            public ProblemDetails GetProblem()
+            {
+                if (Status != ApiOperationStatus.Failure)
+                {
+                    throw new InvalidOperationException("Can't get a problem when the operation isn't in a failed state.");
+                }
+
+                return GetProblemInternal();
+            }
+
+            private ProblemDetails GetProblemInternal() => _problem ?? new() { Detail = "An unknown error has occurred." };
         }
     }
 }

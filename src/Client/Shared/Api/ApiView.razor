@@ -1,0 +1,38 @@
+﻿@namespace ValhallaLootList.Client.Shared
+
+@if (_operations.All(c => c.Status == ApiOperationStatus.NotStarted))
+{
+    @NotStarted
+}
+else if (_operations.All(c => c.Status == ApiOperationStatus.Success))
+{
+    if (Success is not null)
+    {
+        @Success
+    }
+    else
+    {
+        @ChildContent
+    }
+}
+else if (_operations.Any(c => c.Status == ApiOperationStatus.Running))
+{
+    if (Running is not null)
+    {
+        @Running
+    }
+    else
+    {
+        <LoadingIndicator />
+    }
+}
+else if (Failure is not null)
+{
+    <CascadingValue Value="FindFirstProblem()">
+        @Failure
+    </CascadingValue>
+}
+else
+{
+    <DefaultProblemView Problem="FindFirstProblem()" />
+}

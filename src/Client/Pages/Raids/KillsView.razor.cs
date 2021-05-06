@@ -2,8 +2,6 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Shared;
@@ -37,11 +35,6 @@ namespace ValhallaLootList.Client.Pages.Raids
                 parameters: new()
                 {
                     [nameof(AddKillWizard.Raid)] = Raid
-                },
-                options: new()
-                {
-                    FullWidth = true,
-                    MaxWidth = MudBlazor.MaxWidth.Medium
                 });
         }
 

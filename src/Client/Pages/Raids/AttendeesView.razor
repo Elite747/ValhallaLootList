@@ -54,15 +54,15 @@
 
     private Task AddRosteredAsync()
     {
-        return AddAttendeeAsync(() => Api.Characters.GetByTeam(Raid.TeamId), FilterCharacters, showAdd: false);
+        return AddAttendeeAsync(Api.Characters.GetByTeam(Raid.TeamId), FilterCharacters, showAdd: false);
     }
 
     private Task AddUnrosteredAsync()
     {
-        return AddAttendeeAsync(Api.Characters.GetActive, c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
+        return AddAttendeeAsync(Api.Characters.GetActive(), c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
     }
 
-    private async Task AddAttendeeAsync(Func<IApiClientOperation<IList<CharacterDto>>> operation, Func<CharacterDto, bool> filter, bool showAdd)
+    private async Task AddAttendeeAsync(IApiClientOperation<IList<CharacterDto>> operation, Func<CharacterDto, bool> filter, bool showAdd)
     {
         var character = await DialogService.ShowAsync<PickCharacterDialog, CharacterDto>(
             string.Empty,

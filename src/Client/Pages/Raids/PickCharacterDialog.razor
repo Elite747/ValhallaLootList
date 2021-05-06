@@ -1,8 +1,8 @@
 ﻿<MudDialog>
     <DialogContent>
-        <ApiExecutor Operation="Operation" Context="characters">
-            <CharacterPicker Characters="Filter is null ? characters : characters.Where(Filter).ToList()" ShowAdd="ShowAdd" @bind-SelectedCharacter="_selectedCharacter" />
-        </ApiExecutor>
+        <ApiView Operation="Operation">
+            <CharacterPicker Characters="GetCharacters()" ShowAdd="ShowAdd" @bind-SelectedCharacter="_selectedCharacter" />
+        </ApiView>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
@@ -14,7 +14,7 @@
     private CharacterDto? _selectedCharacter;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
-    [Parameter] public Func<IApiClientOperation<IList<CharacterDto>>> Operation { get; set; } = null!;
+    [Parameter] public IApiClientOperation<IList<CharacterDto>> Operation { get; set; } = null!;
     [Parameter] public Func<CharacterDto, bool>? Filter { get; set; }
     [Parameter] public bool ShowAdd { get; set; }
 
@@ -22,5 +22,17 @@
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
         if (Operation is null) throw new ArgumentNullException(nameof(Operation));
+    }
+
+    private IList<CharacterDto> GetCharacters()
+    {
+        var characters = Operation.GetResult();
+
+        if (Filter is not null)
+        {
+            return characters.Where(Filter).ToList();
+        }
+
+        return characters;
     }
 }

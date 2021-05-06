@@ -14,9 +14,9 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IEnumerable<InstanceDto>> GetAll()
+        public IApiClientOperation<IList<InstanceDto>> GetAll()
         {
-            return Client.CreateRequest<IEnumerable<InstanceDto>>(HttpMethod.Get, "api/v1/instances").CacheFor(TimeSpan.FromHours(2));
+            return Client.CreateRequest<IList<InstanceDto>>(HttpMethod.Get, "api/v1/instances").CacheFor(TimeSpan.FromHours(2));
         }
     }
 }

@@ -2,7 +2,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="Team.Id">
+<AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
     <Authorized>
         <MudSelect T="RaidMemberStatus"
                    Value="Member.Status"
@@ -29,32 +29,37 @@
                 <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
             }
         }
-
-        <DonationSummary Member="Member">
-            <MudIconButton OnClick="() => AddDonationAsync(false)"
-                           Icon="@Icons.Material.Filled.AddCircle"
-                           Size="Size.Small"
-                           Color="Color.Success"
-                           Class="mx-2" />
-            <MudIconButton OnClick="() => AddDonationAsync(true)"
-                           Icon="@Icons.Material.Filled.RemoveCircle"
-                           Size="Size.Small"
-                           Color="Color.Error" />
-        </DonationSummary>
-        <AttendanceSummary Member="Member" />
-
-        <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
-        <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
         <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
-        <DonationSummary Member="Member" />
-        <AttendanceSummary Member="Member" />
+    </NotAuthorized>
+</AuthorizeView>
 
-        <MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
+<DonationSummary Member="Member">
+    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
+        <MudIconButton OnClick="() => AddDonationAsync(false)"
+                       Icon="@Icons.Material.Filled.AddCircle"
+                       Size="Size.Small"
+                       Color="Color.Success"
+                       Class="mx-2" />
+        <MudIconButton OnClick="() => AddDonationAsync(true)"
+                       Icon="@Icons.Material.Filled.RemoveCircle"
+                       Size="Size.Small"
+                       Color="Color.Error" />
+    </AuthorizeView>
+</DonationSummary>
 
-        <AuthorizeView Policy="@AppPolicies.CharacterOwner" Resource="Member.Character.Id" Context="_">
-            <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
+<AttendanceSummary Member="Member" />
+
+<MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
+
+<AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
+    <Authorized>
+        <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
+    </Authorized>
+    <NotAuthorized>
+        <AuthorizeView Policy="@AppPolicies.CharacterOwner" Resource="Member.Character" Context="_">
+            <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Leave Team</MudButton>
         </AuthorizeView>
     </NotAuthorized>
 </AuthorizeView>
@@ -110,7 +115,7 @@
                 actualAmount = -actualAmount;
             }
 
-            await Api.Donations.Add(new(){ CopperAmount = actualAmount, CharacterId = Member.Character.Id })
+            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id })
                 .OnSuccess(_ =>
                 {
                     Member.DonatedNextMonth += actualAmount;
@@ -126,9 +131,9 @@
     {
         return status switch
         {
-            RaidMemberStatus.FullTrial =>"Full Trial (-18 prio)",
-            RaidMemberStatus.HalfTrial =>"Half Trial (-9 prio)",
-            RaidMemberStatus.Member =>"Member (no penalty)",
+            RaidMemberStatus.FullTrial => "Full Trial (-18 prio)",
+            RaidMemberStatus.HalfTrial => "Half Trial (-9 prio)",
+            RaidMemberStatus.Member => "Member (no penalty)",
             _ => "Not Selected"
         };
     }

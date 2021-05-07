@@ -175,7 +175,7 @@
             if (arg.ApprovedBy.HasValue)
             {
                 lootList.Approved = true;
-                var guildMember = user.CreateGuildMemberFromClient();
+                var guildMember = user.CreateGuildMember();
                 if (guildMember?.Id == arg.ApprovedBy)
                 {
                     lootList.ApprovedBy = guildMember.GetDisplayName();

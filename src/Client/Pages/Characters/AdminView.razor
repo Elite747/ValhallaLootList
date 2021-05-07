@@ -73,7 +73,7 @@
             await Api.Characters.SetOwner(Character.Id, result.Id)
                 .OnSuccess(async (_, ct) =>
                 {
-                    var currentUserId = User.GetDiscordIdFromClient();
+                    var currentUserId = User.GetDiscordId();
                     if (oldOwner?.Id == currentUserId || result.Id == currentUserId)
                     {
                         await Permissions.RefreshAsync(ct);

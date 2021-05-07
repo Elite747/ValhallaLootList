@@ -19,7 +19,7 @@ namespace ValhallaLootList.Server.Authorization
 
         protected override sealed async Task HandleRequirementAsync(AuthorizationHandlerContext context, TRequirement requirement)
         {
-            var discordId = context.User.GetDiscordId() ?? context.User.GetDiscordIdFromClient() ?? default;
+            var discordId = context.User.GetDiscordId() ?? default;
 
             if (discordId == 0)
             {

@@ -117,7 +117,7 @@
                 .OnSuccess((member, ct) =>
                 {
                     leaders.Add(member);
-                    if (member.Id == auth.User.GetDiscordIdFromClient())
+                    if (member.Id == auth.User.GetDiscordId())
                     {
                         return Permissions.RefreshAsync(ct);
                     }
@@ -134,7 +134,7 @@
             .OnSuccess((_, ct) =>
             {
                 leaders.Remove(leader);
-                if (leader.Id == auth.User.GetDiscordIdFromClient())
+                if (leader.Id == auth.User.GetDiscordId())
                 {
                     return Permissions.RefreshAsync(ct);
                 }

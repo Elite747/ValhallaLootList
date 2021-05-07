@@ -39,7 +39,7 @@ namespace ValhallaLootList.Server.Controllers
 
             if (role?.Length > 0)
             {
-                members = members.Where(m => role.Any(r => _discordClientProvider.IsInAppRole(m, r)));
+                members = members.Where(m => role.Any(r => _discordClientProvider.HasAppRole(m, r)));
             }
 
             return members.Select(_discordClientProvider.CreateDto);

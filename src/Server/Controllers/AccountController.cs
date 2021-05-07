@@ -75,7 +75,7 @@ namespace ValhallaLootList.Server.Controllers
                 return LocalRedirect("~/loginerror/" + LoginErrorReason.FromLoginProvider);
             }
 
-            if (!_discordClientProvider.IsInAppRole(guildMember, AppRoles.Member))
+            if (!_discordClientProvider.HasMemberRole(guildMember))
             {
                 return LocalRedirect("~/loginerror/" + LoginErrorReason.NotAMember);
             }

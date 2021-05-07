@@ -85,7 +85,7 @@ namespace ValhallaLootList.Server
 
                 if (guildMember is not null)
                 {
-                    context.IsActive = _discordClientProvider.IsInAppRole(guildMember, AppRoles.Member);
+                    context.IsActive = _discordClientProvider.HasMemberRole(guildMember);
                 }
             }
         }

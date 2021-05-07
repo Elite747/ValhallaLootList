@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -17,8 +16,7 @@ namespace ValhallaLootList.Server.Discord
     public sealed class DiscordClientProvider : IDisposable
     {
         private readonly DiscordClient _client;
-        private readonly long _guildId;
-        private readonly Dictionary<string, string> _appRoleMap;
+        private readonly long _guildId, _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _memberRoleId;
         private bool _started, _disposed;
 
         public DiscordClientProvider(IOptions<DiscordServiceOptions> options, ILoggerFactory loggerFactory)
@@ -31,7 +29,10 @@ namespace ValhallaLootList.Server.Discord
                 Intents = DiscordIntents.GuildMembers | DiscordIntents.Guilds | DiscordIntents.GuildPresences
             });
             _guildId = options.Value.GuildId;
-            _appRoleMap = options.Value.AppRoleMap;
+            _adminRoleId = options.Value.AdminRoleId;
+            _raidLeaderRoleId = options.Value.RaidLeaderRoleId;
+            _lootMasterRoleId = options.Value.LootMasterRoleId;
+            _memberRoleId = options.Value.MemberRoleId;
         }
 
         public DiscordClient Client
@@ -76,28 +77,74 @@ namespace ValhallaLootList.Server.Discord
 
         public IEnumerable<string> GetAppRoles(DiscordMember member)
         {
-            foreach (var (appRole, discordRole) in _appRoleMap)
+            foreach (var role in member.Roles)
             {
-                if (IsInDiscordRole(member, discordRole))
+                long roleId = (long)role.Id;
+
+                if (roleId == _adminRoleId)
                 {
-                    yield return appRole;
+                    yield return AppRoles.Administrator;
+                }
+
+                if (roleId == _memberRoleId)
+                {
+                    yield return AppRoles.Member;
+                }
+
+                if (roleId == _raidLeaderRoleId)
+                {
+                    yield return AppRoles.RaidLeader;
+                }
+
+                if (roleId == _lootMasterRoleId)
+                {
+                    yield return AppRoles.LootMaster;
                 }
             }
         }
 
-        public bool IsInAppRole(DiscordMember member, string role)
+        public bool HasAppRole(DiscordMember member, string role)
         {
-            if (_appRoleMap.TryGetValue(role, out var discordRole))
+            if (string.Equals(role, AppRoles.Administrator, StringComparison.OrdinalIgnoreCase))
             {
-                return IsInDiscordRole(member, discordRole);
+                return HasAdminRole(member);
+            }
+
+            if (string.Equals(role, AppRoles.LootMaster, StringComparison.OrdinalIgnoreCase))
+            {
+                return HasLootMasterRole(member);
+            }
+
+            if (string.Equals(role, AppRoles.RaidLeader, StringComparison.OrdinalIgnoreCase))
+            {
+                return HasRaidLeaderRole(member);
+            }
+
+            if (string.Equals(role, AppRoles.Member, StringComparison.OrdinalIgnoreCase))
+            {
+                return HasMemberRole(member);
             }
 
             return false;
         }
 
-        public bool IsInDiscordRole(DiscordMember member, string role)
+        public bool HasAdminRole(DiscordMember member) => HasDiscordRole(member, _adminRoleId);
+
+        public bool HasMemberRole(DiscordMember member) => HasDiscordRole(member, _memberRoleId);
+
+        public bool HasLootMasterRole(DiscordMember member) => HasDiscordRole(member, _lootMasterRoleId);
+
+        public bool HasRaidLeaderRole(DiscordMember member) => HasDiscordRole(member, _raidLeaderRoleId);
+
+        public bool HasDiscordRole(DiscordMember member, string role)
         {
             return member.Roles.Any(r => string.Equals(r.Name, role, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public bool HasDiscordRole(DiscordMember member, long roleId)
+        {
+            var uroleId = (ulong)roleId;
+            return member.Roles.Any(r => r.Id == uroleId);
         }
 
         public async Task SendDmAsync(long id, Action<DiscordMessageBuilder> configureMessage)

@@ -27,48 +27,42 @@ namespace ValhallaLootList
         {
             options.AddPolicy(Member, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.Member)
+                .AddRequirements(new MemberRequirement())
                 .Build());
 
             options.AddPolicy(Administrator, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.Administrator)
+                .AddRequirements(new AdminRequirement())
                 .Build());
 
             options.AddPolicy(RaidLeader, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.RaidLeader)
-                .AddRequirements(new TeamLeaderRequirement(false))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: true, allowLootMaster: false))
                 .Build());
 
             options.AddPolicy(RaidLeaderOrAdmin, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.RaidLeader, AppRoles.Administrator)
-                .AddRequirements(new TeamLeaderRequirement(true))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: true, allowLootMaster: false))
                 .Build());
 
             options.AddPolicy(LootMaster, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.LootMaster)
-                .AddRequirements(new TeamLeaderRequirement(false))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: false, allowLootMaster: true))
                 .Build());
 
             options.AddPolicy(LootMasterOrAdmin, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.LootMaster, AppRoles.Administrator)
-                .AddRequirements(new TeamLeaderRequirement(true))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: false, allowLootMaster: true))
                 .Build());
 
             options.AddPolicy(CharacterOwner, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.Member)
-                .AddRequirements(new CharacterOwnerRequirement(false))
+                .AddRequirements(new CharacterOwnerRequirement(allowAdmin: false))
                 .Build());
 
             options.AddPolicy(CharacterOwnerOrAdmin, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AppClaimTypes.Role, AppRoles.Member, AppRoles.Administrator)
-                .AddRequirements(new CharacterOwnerRequirement(true))
+                .AddRequirements(new CharacterOwnerRequirement(allowAdmin: true))
                 .Build());
         }
     }

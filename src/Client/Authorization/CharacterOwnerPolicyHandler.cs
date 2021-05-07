@@ -19,7 +19,7 @@ namespace ValhallaLootList.Client.Authorization
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
         {
-            if (context.User.IsAdmin() && requirement.AllowAdmin)
+            if (requirement.AllowAdmin && context.User.HasClaim(AppClaimTypes.Role, AppRoles.Administrator))
             {
                 context.Succeed(requirement);
                 return;

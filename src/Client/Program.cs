@@ -39,7 +39,9 @@ namespace ValhallaLootList.Client
                 .AddScoped<PermissionManager>()
                 .AddScoped<UserTimeProvider>()
                 .AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>()
-                .AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>();
+                .AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>()
+                .AddScoped<IAuthorizationHandler, Authorization.AdminPolicyHandler>()
+                .AddScoped<IAuthorizationHandler, Authorization.MemberPolicyHandler>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 

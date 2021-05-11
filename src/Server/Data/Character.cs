@@ -37,6 +37,8 @@ namespace ValhallaLootList.Server.Data
 
         public RaidMemberStatus MemberStatus { get; set; }
 
+        public DateTimeOffset JoinedTeamAt { get; set; }
+
         public long? TeamId { get; set; }
 
         public virtual RaidTeam? Team { get; set; }

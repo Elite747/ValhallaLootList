@@ -9,6 +9,8 @@ namespace ValhallaLootList.DataTransfer
     {
         public long Id { get; set; }
 
+        public DateTimeOffset JoinedAt { get; set; }
+
         public DateTimeOffset RemovedAt { get; set; }
 
         public long TeamId { get; set; }

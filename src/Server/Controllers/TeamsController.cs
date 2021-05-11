@@ -330,6 +330,7 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = id,
                     TeamName = null // TODO
                 },
+                JoinedAt = character.JoinedTeamAt,
                 Status = character.MemberStatus,
                 Verified = character.VerifiedById.HasValue,
                 ThisMonthRequiredDonations = scope.RequiredDonationCopper,
@@ -467,17 +468,19 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Character is not assigned to this team.");
             }
 
-            character.TeamId = null;
-            character.MemberStatus = RaidMemberStatus.FullTrial;
-
             var removal = new TeamRemoval(idGenerator.CreateId())
             {
                 Character = character,
                 CharacterId = character.Id,
                 RemovedAt = _serverTimeZone.TimeZoneNow(),
+                JoinedAt = character.JoinedTeamAt,
                 Team = team,
                 TeamId = team.Id
             };
+
+            character.TeamId = null;
+            character.MemberStatus = RaidMemberStatus.FullTrial;
+            character.JoinedTeamAt = default;
 
             await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
             {

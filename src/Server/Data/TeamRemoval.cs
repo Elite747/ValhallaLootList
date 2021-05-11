@@ -19,6 +19,8 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
+        public DateTimeOffset JoinedAt { get; set; }
+
         public DateTimeOffset RemovedAt { get; set; }
 
         public long TeamId { get; set; }

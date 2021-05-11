@@ -651,6 +651,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     character.TeamId = dto.TeamId;
                     character.MemberStatus = RaidMemberStatus.FullTrial;
+                    character.JoinedTeamAt = _serverTimeZoneInfo.TimeZoneNow();
                 }
 
                 list.ApprovedBy = User.GetDiscordId();
@@ -659,6 +660,8 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     list.Status = LootListStatus.Approved;
                 }
+
+                await _context.SaveChangesAsync();
 
                 var characterQuery = _context.Characters.AsNoTracking().Where(c => c.Id == character.Id);
                 var scope = await _context.GetCurrentPriorityScopeAsync();
@@ -687,9 +690,9 @@ namespace ValhallaLootList.Server.Controllers
 
                     list.ApprovedBy = null;
                 }
-            }
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
 
             _telemetry.TrackEvent("LootListStatusChanged", User, props =>
             {

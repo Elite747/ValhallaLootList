@@ -310,7 +310,8 @@ namespace ValhallaLootList.Server.Controllers
                     Id = r.Id,
                     RemovedAt = r.RemovedAt,
                     TeamId = r.TeamId,
-                    TeamName = r.Team.Name
+                    TeamName = r.Team.Name,
+                    JoinedAt = r.JoinedAt
                 })
                 .ToListAsync();
 
@@ -354,6 +355,9 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             _context.TeamRemovals.Remove(removal);
+
+            character.TeamId = removal.TeamId;
+            character.JoinedTeamAt = removal.JoinedAt;
 
             await _context.SaveChangesAsync();
 

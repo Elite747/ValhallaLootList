@@ -55,7 +55,7 @@
 
 <AttendanceSummary Member="Member" />
 
-<MudButton Link="@("characters/" + Member.Character.Name + "/phase/" + Phase)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
+<MudButton Link="@("characters/" + Member.Character.Name)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
 
 <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
     <Authorized>

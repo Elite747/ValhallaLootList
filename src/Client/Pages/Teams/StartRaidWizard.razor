@@ -114,12 +114,12 @@
         _phaseConfigOperation = Api.GetPhaseConfiguration();
         _instancesOperation = Api.Instances.GetAll();
         _charactersOperation = Api.Characters.GetActive();
+        ResetState();
     }
 
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
-        ResetState();
     }
 
     private void ResetState()

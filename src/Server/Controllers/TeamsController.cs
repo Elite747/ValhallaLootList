@@ -535,7 +535,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp)
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp, [FromServices] UserManager<AppUser> userManager)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -563,8 +563,39 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("User is already a leader of this team.");
             }
 
-            _context.UserClaims.Add(new IdentityUserClaim<long> { UserId = userId, ClaimType = AppClaimTypes.RaidLeader, ClaimValue = idString });
-            await _context.SaveChangesAsync();
+            var userIdString = userId.ToString();
+            var user = await userManager.FindByIdAsync(userIdString);
+            IdentityResult identityResult;
+
+            if (user is null)
+            {
+                user = new AppUser
+                {
+                    Id = userId,
+                    UserName = leader.DisplayName
+                };
+
+                identityResult = await userManager.CreateAsync(user);
+
+                if (!identityResult.Succeeded)
+                {
+                    return Problem($"User creation failed: {identityResult}");
+                }
+
+                identityResult = await userManager.AddLoginAsync(user, new UserLoginInfo("Discord", userIdString, "Discord"));
+
+                if (!identityResult.Succeeded)
+                {
+                    return Problem($"User creation failed: {identityResult}");
+                }
+            }
+
+            identityResult = await userManager.AddClaimAsync(user, new(AppClaimTypes.RaidLeader, idString));
+
+            if (!identityResult.Succeeded)
+            {
+                return Problem($"Assignment failed: {identityResult}");
+            }
 
             _telemetry.TrackEvent("TeamLeaderAdded", User, props =>
             {

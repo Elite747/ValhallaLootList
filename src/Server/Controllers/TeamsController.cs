@@ -551,10 +551,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Couldn't locate discord user.");
             }
 
-            if (!dcp.HasRaidLeaderRole(leader) && !dcp.HasLootMasterRole(leader))
+            if (!dcp.HasAnyLeadershipRole(leader))
             {
-                // TODO: should we just assign the role here instead of failing?
-                return Problem($"{leader.DisplayName} does not have a raid leader or loot master role assigned.");
+                return Problem($"{leader.DisplayName} does not have a leadership role assigned.");
             }
 
             var idString = id.ToString();

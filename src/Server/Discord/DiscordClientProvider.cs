@@ -16,7 +16,9 @@ namespace ValhallaLootList.Server.Discord
     public sealed class DiscordClientProvider : IDisposable
     {
         private readonly DiscordClient _client;
-        private readonly long _guildId, _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _memberRoleId, _publicNotificationChannelId;
+        private readonly long _guildId,
+            _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _recruiterRoleId, _memberRoleId,
+            _publicNotificationChannelId;
         private readonly bool _suppressOutgoingMessages;
         private bool _started, _disposed;
 
@@ -33,6 +35,7 @@ namespace ValhallaLootList.Server.Discord
             _adminRoleId = options.Value.AdminRoleId;
             _raidLeaderRoleId = options.Value.RaidLeaderRoleId;
             _lootMasterRoleId = options.Value.LootMasterRoleId;
+            _recruiterRoleId = options.Value.RecruiterRoleId;
             _memberRoleId = options.Value.MemberRoleId;
             _publicNotificationChannelId = options.Value.PublicNotificationChannelId;
             _suppressOutgoingMessages = options.Value.SuppressOutgoingMessages;
@@ -103,6 +106,11 @@ namespace ValhallaLootList.Server.Discord
                 {
                     yield return AppRoles.LootMaster;
                 }
+
+                if (roleId == _recruiterRoleId)
+                {
+                    yield return AppRoles.Recruiter;
+                }
             }
         }
 
@@ -123,6 +131,11 @@ namespace ValhallaLootList.Server.Discord
                 return HasRaidLeaderRole(member);
             }
 
+            if (string.Equals(role, AppRoles.Recruiter, StringComparison.OrdinalIgnoreCase))
+            {
+                return HasRecruiterRole(member);
+            }
+
             if (string.Equals(role, AppRoles.Member, StringComparison.OrdinalIgnoreCase))
             {
                 return HasMemberRole(member);
@@ -138,6 +151,23 @@ namespace ValhallaLootList.Server.Discord
         public bool HasLootMasterRole(DiscordMember member) => HasDiscordRole(member, _lootMasterRoleId);
 
         public bool HasRaidLeaderRole(DiscordMember member) => HasDiscordRole(member, _raidLeaderRoleId);
+
+        public bool HasRecruiterRole(DiscordMember member) => HasDiscordRole(member, _recruiterRoleId);
+
+        public bool HasAnyLeadershipRole(DiscordMember member)
+        {
+            ReadOnlySpan<long> leadershipIds = stackalloc[] { _raidLeaderRoleId, _lootMasterRoleId, _recruiterRoleId };
+
+            foreach (var role in member.Roles)
+            {
+                if (leadershipIds.IndexOf((long)role.Id) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public bool HasDiscordRole(DiscordMember member, string role)
         {

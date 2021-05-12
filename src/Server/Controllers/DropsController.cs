@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -45,7 +46,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPut("{id:long}"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IAuthorizationService auth)
+        public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IAuthorizationService auth, [FromServices] DiscordClientProvider dcp)
         {
             var now = realmTimeZoneInfo.TimeZoneNow();
             var drop = await _context.Drops.FindAsync(id);
@@ -217,6 +218,25 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            var kill = await _context.EncounterKills
+                .AsNoTracking()
+                .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId)
+                .Select(kill => new { kill.DiscordMessageId, kill.KilledAt, kill.RaidId, TeamName = kill.Raid.RaidTeam.Name, EncounterName = kill.Encounter.Name })
+                .FirstOrDefaultAsync();
+
+            var drops = new List<(uint, string, string?)>();
+
+            await foreach (var d in _context.Drops
+                .AsNoTracking()
+                .Where(d => d.EncounterKillEncounterId == drop.EncounterKillEncounterId && d.EncounterKillRaidId == drop.EncounterKillRaidId)
+                .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name })
+                .AsAsyncEnumerable())
+            {
+                drops.Add((d.ItemId, d.ItemName, d.WinnerName));
+            }
+
+            var message = await dcp.SendOrUpdatePublicNotificationAsync(kill.DiscordMessageId, m => m.ConfigureKillMessage(Request, Url, kill.RaidId, kill.KilledAt, kill.TeamName, kill.EncounterName, drops));
 
             _telemetry.TrackEvent("DropAssigned", User, props =>
             {

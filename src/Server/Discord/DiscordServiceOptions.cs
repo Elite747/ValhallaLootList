@@ -5,9 +5,13 @@ namespace ValhallaLootList.Server.Discord
 {
     public class DiscordServiceOptions
     {
+        public bool SuppressOutgoingMessages { get; set; }
+
         public string? BotToken { get; set; }
 
         public long GuildId { get; set; }
+
+        public long PublicNotificationChannelId { get; set; }
 
         public long MemberRoleId { get; set; }
 

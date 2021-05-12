@@ -16,7 +16,8 @@ namespace ValhallaLootList.Server.Discord
     public sealed class DiscordClientProvider : IDisposable
     {
         private readonly DiscordClient _client;
-        private readonly long _guildId, _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _memberRoleId;
+        private readonly long _guildId, _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _memberRoleId, _publicNotificationChannelId;
+        private readonly bool _suppressOutgoingMessages;
         private bool _started, _disposed;
 
         public DiscordClientProvider(IOptions<DiscordServiceOptions> options, ILoggerFactory loggerFactory)
@@ -33,6 +34,8 @@ namespace ValhallaLootList.Server.Discord
             _raidLeaderRoleId = options.Value.RaidLeaderRoleId;
             _lootMasterRoleId = options.Value.LootMasterRoleId;
             _memberRoleId = options.Value.MemberRoleId;
+            _publicNotificationChannelId = options.Value.PublicNotificationChannelId;
+            _suppressOutgoingMessages = options.Value.SuppressOutgoingMessages;
         }
 
         public DiscordClient Client
@@ -149,17 +152,52 @@ namespace ValhallaLootList.Server.Discord
 
         public async Task SendDmAsync(long id, Action<DiscordMessageBuilder> configureMessage)
         {
+            CheckStarted();
+            if (_suppressOutgoingMessages)
+            {
+                return;
+            }
+
             var member = await GetMemberAsync(id);
             var message = new DiscordMessageBuilder();
             configureMessage(message);
             await member.SendMessageAsync(message);
         }
 
-        public async Task SendAsync(long channelId, Action<DiscordMessageBuilder> configureMessage)
+        public async Task<DiscordMessage?> SendOrUpdatePublicNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
         {
+            CheckStarted();
+            if (_suppressOutgoingMessages || _publicNotificationChannelId == 0L)
+            {
+                return null;
+            }
+
             var guild = await GetGuildAsync();
-            var channel = guild.GetChannel((ulong)channelId);
-            await channel.SendMessageAsync(configureMessage);
+            var channel = guild.GetChannel((ulong)_publicNotificationChannelId);
+
+            var messageBuilder = new DiscordMessageBuilder();
+            configureMessage(messageBuilder);
+
+            if (messageId > 0)
+            {
+                var message = await channel.GetMessageAsync((ulong)messageId.Value);
+
+                if (message is not null)
+                {
+                    return await message.ModifyAsync(messageBuilder);
+                }
+            }
+
+            return await channel.SendMessageAsync(messageBuilder);
+        }
+
+        public async Task DeletePublicNotificationAsync(long messageId)
+        {
+            CheckStarted();
+            var guild = await GetGuildAsync();
+            var channel = guild.GetChannel((ulong)_publicNotificationChannelId);
+            var message = await channel.GetMessageAsync((ulong)messageId);
+            await message.DeleteAsync();
         }
 
         private void CheckDisposed()
@@ -178,6 +216,7 @@ namespace ValhallaLootList.Server.Discord
 
         public GuildMemberDto CreateDto(DiscordMember member)
         {
+            CheckStarted();
             return new GuildMemberDto
             {
                 AppRoles = GetAppRoles(member).ToList(),
@@ -192,6 +231,7 @@ namespace ValhallaLootList.Server.Discord
 
         public async Task<GuildMemberDto?> GetMemberDtoAsync(long? id)
         {
+            CheckStarted();
             if (id > 0)
             {
                 var member = await GetMemberAsync(id.Value);

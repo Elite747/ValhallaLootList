@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -593,7 +594,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("{id:long}/Kills"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
         {
             if (dto.Drops.Count == 0)
             {
@@ -687,6 +688,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var items = await _context.Items.AsTracking().Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
+            var drops = new List<(uint, string, string?)>();
 
             for (int i = 0; i < dto.Drops.Count; i++)
             {
@@ -711,6 +713,7 @@ namespace ValhallaLootList.Server.Controllers
                         Item = item,
                         ItemId = item.Id
                     });
+                    drops.Add((itemId, item.Name, null));
                 }
             }
 
@@ -721,13 +724,21 @@ namespace ValhallaLootList.Server.Controllers
 
             _context.EncounterKills.Add(kill);
 
-            await _context.SaveChangesAsync();
-
             var teamName = await _context.RaidTeams
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
                 .FirstOrDefaultAsync();
+
+            await _context.SaveChangesAsync();
+
+            var message = await dcp.SendOrUpdatePublicNotificationAsync(null, m => m.ConfigureKillMessage(Request, Url, kill, teamName, encounter.Name, drops));
+
+            if (message is not null)
+            {
+                kill.DiscordMessageId = (long)message.Id;
+                await _context.SaveChangesAsync();
+            }
 
             _telemetry.TrackEvent("KillAdded", User, props =>
             {
@@ -756,7 +767,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult> DeleteKill(long id, string encounterId)
+        public async Task<ActionResult> DeleteKill(long id, string encounterId, [FromServices] DiscordClientProvider dcp)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -795,6 +806,11 @@ namespace ValhallaLootList.Server.Controllers
             _context.EncounterKills.Remove(kill);
 
             await _context.SaveChangesAsync();
+
+            if (kill.DiscordMessageId > 0)
+            {
+                await dcp.DeletePublicNotificationAsync(kill.DiscordMessageId);
+            }
 
             var teamName = await _context.RaidTeams
                 .AsNoTracking()

@@ -23,6 +23,8 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public virtual Encounter Encounter { get; set; } = null!;
 
+        public long DiscordMessageId { get; set; }
+
         public virtual ICollection<Drop> Drops { get; set; } = new HashSet<Drop>();
 
         public virtual ICollection<CharacterEncounterKill> Characters { get; set; } = new HashSet<CharacterEncounterKill>();

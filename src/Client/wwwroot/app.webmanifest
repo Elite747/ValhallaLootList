@@ -1,0 +1,17 @@
+{
+  "name": "Valhalla Loot List",
+  "short_name": "Valhalla",
+  "description": "Web app for managing loot distribution for the <Valhalla> World of Warcraft guild on Bloodsail Buccaneers.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#388E3C",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -19,7 +19,7 @@
         <MudList Clickable="true">
             @foreach (var raid in raids.OrderByDescending(r => r.StartedAt))
             {
-                <MudListItem Href="@("raids/" + raid.Id)">
+                <MudListItem Href="@("raids/" + raid.Id)" @key="raid.Id">
                     Phase @raid.Phase Raid (<DateTimeDisplay Date="raid.StartedAt" Format="D" />)
                 </MudListItem>
             }
@@ -39,6 +39,6 @@
 
     private void StartRaid()
     {
-        DialogService.Show<RaidStarter>("Start Raid", parameters: new() { [nameof(RaidStarter.Team)] = Team });
+        DialogService.Show<StartRaidWizard>("Start Raid", parameters: new() { [nameof(StartRaidWizard.Team)] = Team });
     }
 }

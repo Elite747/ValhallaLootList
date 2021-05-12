@@ -41,7 +41,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer
 
         public Specializations GetAllowedSpecs(Item item, bool includeManualReview)
         {
-            var specs = Specializations.All;
+            var specs = SpecializationGroups.All;
 
             foreach (var rule in _rules)
             {

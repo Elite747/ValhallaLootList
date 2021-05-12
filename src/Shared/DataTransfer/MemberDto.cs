@@ -23,7 +23,9 @@ namespace ValhallaLootList.DataTransfer
             set => _lootLists = value;
         }
 
-        public RaidMemberStatus? Status { get; set; }
+        public RaidMemberStatus Status { get; set; }
+
+        public DateTimeOffset JoinedAt { get; set; }
 
         public bool? Verified { get; set; }
 
@@ -34,11 +36,12 @@ namespace ValhallaLootList.DataTransfer
         public long ThisMonthRequiredDonations { get; set; }
 
         public long NextMonthRequiredDonations { get; set; }
-        public int Attendance { get; set; }
-        public int AttendanceMax { get; set; }
-        public int AttendanceBonus { get; set; }
 
-        //TODO: Attendance info
+        public int Attendance { get; set; }
+
+        public int AttendanceMax { get; set; }
+
+        public int AttendanceBonus { get; set; }
     }
 
     public class DonationSubmissionDto

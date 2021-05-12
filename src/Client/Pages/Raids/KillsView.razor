@@ -6,10 +6,10 @@
 @foreach (var kill in Raid.Kills)
 {
     var localKill = kill;
-    <MudCard Class="my-4" Elevation="3">
+    <MudCard Class="my-4" Elevation="3" @key="kill">
         <MudCardContent>
             <MudText Typo="Typo.h6">@kill.EncounterName</MudText>
-            <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character?.Id == id)?.Character?.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
+            <MudText Typo="Typo.subtitle1">Killed by: @string.Join(", ", kill.Characters.Select(id => Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name).Where(str => str?.Length > 0).OrderBy(str => str))</MudText>
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Recorded at <DateTimeDisplay Date="kill.KilledAt" Format="t" /></MudText>
             @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))
             {
@@ -23,17 +23,17 @@
             {
                 var drop = d;
                 <MudDivider />
-                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
+                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="drop.Id">
                     <div class="d-flex">
-                        <MudAvatar Class="mr-5" Rounded="true">
-                            <ItemIcon ItemId="drop.ItemId" Size="IconSize.Medium" width="40" height="40" />
-                        </MudAvatar>
-                        <div class="mr-auto">
-                            <ItemLink LinkEnabled="true" Id="drop.ItemId" Colorize="true" Bracketize="true" OverrideText="@drop.ItemName">
-                                <ItemLinkText />
-                            </ItemLink>
-                            <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @(drop.WinnerName ?? "nobody").</MudText>
-                        </div>
+                        <CascadingItemContext Id="drop.ItemId">
+                            <MudAvatar Class="mr-5" Rounded="true">
+                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                            </MudAvatar>
+                            <div class="mr-auto">
+                                <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" />
+                                <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @GetWinnerName(drop.WinnerId).</MudText>
+                            </div>
+                        </CascadingItemContext>
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
                         {
                             <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">

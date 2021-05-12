@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.DataTransfer
 {
@@ -10,7 +11,7 @@ namespace ValhallaLootList.DataTransfer
     {
         private List<ScheduleSubmissionDto>? _schedules;
 
-        [Required]
+        [Required, GuildName]
         public string? Name { get; set; }
 
         public List<ScheduleSubmissionDto> Schedules

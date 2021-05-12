@@ -1,0 +1,89 @@
+﻿@using MudBlazor.Extensions;
+
+<span class="@Class">
+    <MudTooltip Text="@_tooltipText">
+        <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
+        @if (_role?.Length > 0)
+        {
+            <span class="player-icon-role @_role">
+                <MudIcon Icon="@_roleIcon" />
+            </span>
+        }
+    </MudTooltip>
+</span>
+
+@code {
+    private string? _roleIcon, _role, _tooltipText;
+    private IconSize _iconSize;
+
+    [Parameter] public Gender Gender { get; set; }
+    [Parameter] public PlayerRace Race { get; set; }
+    [Parameter] public Classes PlayerClass { get; set; }
+    [Parameter] public Specializations Spec { get; set; }
+    [Parameter] public Size Size { get; set; } = Size.Medium;
+    [Parameter] public bool Rounded { get; set; }
+    [Parameter] public bool Square { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public bool ShowTooltip { get; set; }
+
+    private string IconClass => new MudBlazor.Utilities.CssBuilder("player-icon")
+        .AddClass(Size.ToDescriptionString())
+        .AddClass(PlayerClass.GetLowercaseName())
+        .Build();
+
+    protected override void OnParametersSet()
+    {
+        SetIconSize();
+        SetRoleIcon();
+        SetTooltipText();
+    }
+
+    private void SetIconSize()
+    {
+        _iconSize = Size switch
+        {
+            Size.Small => IconSize.Medium,
+            Size.Medium => IconSize.Large,
+            Size.Large => IconSize.Large,
+            _ => throw new ArgumentOutOfRangeException(nameof(Size))
+        };
+    }
+
+    private void SetRoleIcon()
+    {
+        if (Spec == Specializations.None)
+        {
+            _roleIcon = null;
+            _role = null;
+        }
+        else if ((Spec & SpecializationGroups.Healer) != 0)
+        {
+            _roleIcon = CustomIcons.Cross;
+            _role = "healer";
+        }
+        else if ((Spec & SpecializationGroups.Tank) != 0)
+        {
+            _roleIcon = Icons.Material.Filled.Shield;
+            _role = "tank";
+        }
+        else
+        {
+            // TODO: split melee and ranged
+            _roleIcon = CustomIcons.Sword;
+            _role = "dps";
+        }
+    }
+
+    private void SetTooltipText()
+    {
+        if (!ShowTooltip)
+        {
+            _tooltipText = null;
+            return;
+        }
+
+        _tooltipText = Race.GetDisplayName() + " ";
+
+        _tooltipText += Spec == Specializations.None ? PlayerClass.GetDisplayName() : Spec.GetDisplayName(includeClassName: true);
+    }
+}

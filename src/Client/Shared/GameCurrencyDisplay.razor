@@ -1,14 +1,14 @@
 ﻿@if (_gold != 0)
 {
-    <span gold>@_gold</span>
+    <span class="wow-money gold">@_gold</span>
 }
 @if (_silver != 0)
 {
-    <span silver>@_silver</span>
+    <span class="wow-money silver">@_silver</span>
 }
 @if (_copper != 0 || Amount == 0)
 {
-    <span copper>@_copper</span>
+    <span class="wow-money copper">@_copper</span>
 }
 
 @code {

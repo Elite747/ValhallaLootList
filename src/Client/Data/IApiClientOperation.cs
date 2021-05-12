@@ -10,6 +10,14 @@ namespace ValhallaLootList.Client.Data
 {
     public interface IApiClientOperation
     {
+        ApiOperationStatus Status { get; }
+
+        Task Task { get; }
+
+        event Action StatusChanged;
+
+        ProblemDetails GetProblem();
+
         void ConfigureSuccess(Action<HttpStatusCode> action);
 
         void ConfigureFailure(Action<ProblemDetails> action);

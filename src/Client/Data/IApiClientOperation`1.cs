@@ -8,8 +8,12 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ValhallaLootList.Client.Data
 {
-    public interface IApiClientOperation<TResult> : IApiClientOperation
+    public interface IApiClientOperation<out TResult> : IApiClientOperation
     {
+        bool HasResult();
+
+        TResult GetResult();
+
         void ConfigureSuccess(Action<TResult> action);
 
         void SetSuccessTask(Func<TResult, CancellationToken, Task> task);

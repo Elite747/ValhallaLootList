@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class ArmorPenetrationDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.Healer | Specializations.CasterDps;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
 
         protected override int GetStat(Item item) => item.ArmorPenetration;
 

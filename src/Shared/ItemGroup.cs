@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 
 namespace ValhallaLootList
 {
@@ -23,6 +24,8 @@ namespace ValhallaLootList
             _misc = 13;
 
         private readonly byte _value;
+
+        private ItemGroup(byte value) => _value = value;
 
         public ItemGroup(ItemType type, InventorySlot slot)
         {
@@ -49,6 +52,17 @@ namespace ValhallaLootList
                 },
                 _ => default
             };
+        }
+
+        public static IEnumerable<ItemGroup> All
+        {
+            get
+            {
+                for (byte v = _head; v <= _misc; v++)
+                {
+                    yield return new(v);
+                }
+            }
         }
 
         public string Name => _value switch

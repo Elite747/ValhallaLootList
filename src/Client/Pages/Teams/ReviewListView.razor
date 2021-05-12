@@ -1,105 +1,97 @@
-﻿@inject ApiClient Api
+﻿@using ValhallaLootList.Client.Pages.Characters.LootList 
+@inject ApiClient Api
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
-<MudList Dense="true" Class="flex-grow-1">
-    <MudListSubheader>
+<LootListLayout LootList="LootList" Class="flex-grow-1">
+    <HeaderContent>
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
-        @if (LootList.ApprovedBy.HasValue)
+        @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
         {
             <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings from non-leaders.">
-                    <MudButton OnClick="RevokeApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                        Revoke Approval
-                    </MudButton>
-                </MudTooltip>
+                <Authorized>
+                    <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings.">
+                        <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                            Revoke Approval
+                        </MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. If the list is unlocked and approval revoked, it becomes editable.">
+                        <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    </MudTooltip>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body1">Loot list may only be unlocked by an officer.</MudText>
+                </NotAuthorized>
             </AuthorizeView>
         }
-        else
+        else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
         {
-            <MudTooltip Text="Approving a loot list will prevent it from being modified, but will not allow non-leaders to see rankings.">
-                <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
-                    Approve Loot List
+            <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team.">
+                <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                    Approve
+                </MudButton>
+            </MudTooltip>
+            <MudTooltip Text="Denying a loot list will allow it to be edited by the owner if the list is unlocked.">
+                <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                    Deny
                 </MudButton>
             </MudTooltip>
         }
-
-        @if (LootList.Locked)
+        else if (LootList.Status == LootListStatus.Approved)
         {
-            <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. To allow it to be modified, the list must also have its approval revoked.">
-                    <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
-                </MudTooltip>
-            </AuthorizeView>
-        }
-        else
-        {
+            <MudTooltip Text="Revoking an approval will allow it to be edited by the owner. This will not remove the player from the team.">
+                <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                    Revoke Approval
+                </MudButton>
+            </MudTooltip>
             <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
                 <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
             </MudTooltip>
         }
-    </MudListSubheader>
-    @foreach (var row in _rows.OrderByDescending(g => g.Key))
-    {
-        <MudDivider />
-        <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
-            <MudGrid>
-                <MudItem xs="12" md="3" lg="2">
-                    <MudText Typo="Typo.h6" GutterBottom="false">Rank @row.Key</MudText>
-                </MudItem>
-                @foreach (var entry in row)
-                {
-                    @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
+    </HeaderContent>
+    <EntryTemplate Context="entry">
+        @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
+        {
+            <div class="d-flex align-center">
+                <CascadingItemContext Id="entry.ItemId">
+                    @if (entry.Won)
                     {
-                        <MudItem xs="12" md="9 / _rowSize" lg="10 / _rowSize">
-                            <ItemLink Id="item.Id"
-                                      LinkEnabled="true"
-                                      Colorize="true"
-                                      Bracketize="true"
-                                      OverrideText="@item.Name"
-                                      class="d-flex align-center">
-                                @if (entry.Prio.HasValue)
-                                {
-                                    <MudBadge Content="entry.Prio.Value" Color="Color.Info" Overlap="true">
-                                        <MudAvatar Rounded="true" Class="mr-2">
-                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                        </MudAvatar>
-                                    </MudBadge>
-                                }
-                                else if (entry.Won)
-                                {
-                                    <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                                        <MudAvatar Rounded="true" Class="mr-2">
-                                            <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                        </MudAvatar>
-                                    </MudBadge>
-                                }
-                                else
-                                {
-                                    <MudAvatar Rounded="true" Class="mr-2">
-                                        <ItemLinkIcon Size="IconSize.Medium" Width="40" Height="40" />
-                                    </MudAvatar>
-                                }
-                                <ItemLinkText />
-                            </ItemLink>
-                            <ul>
-                                @foreach (var restriction in GetRestrictions(item, entry.Rank))
-                                {
-                                    <li>
-                                        <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
-                                            @restriction.Reason
-                                        </MudText>
-                                    </li>
-                                }
-                            </ul>
-                        </MudItem>
+                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                            <MudAvatar Rounded="true" Class="mr-2">
+                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                            </MudAvatar>
+                        </MudBadge>
                     }
+                    else
+                    {
+                        <MudAvatar Rounded="true" Class="mr-2">
+                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                        </MudAvatar>
+                    }
+                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
+                </CascadingItemContext>
+            </div>
+            <ul>
+                @foreach (var restriction in GetRestrictions(item, entry))
+                {
+                <li>
+                    <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                        @restriction.Reason
+                    </MudText>
+                </li>
                 }
-            </MudGrid>
-        </MudListItem>
-    }
-</MudList>
+            </ul>
+            @if (entry.Justification?.Length > 0)
+            {
+                <div>
+                    Justification: @entry.Justification
+                </div>
+            }
+        }
+    </EntryTemplate>
+</LootListLayout>
 
 @code {
     private IEnumerable<IGrouping<int, LootListEntryDto>> _rows = Enumerable.Empty<IGrouping<int, LootListEntryDto>>();
@@ -107,111 +99,118 @@
     private Color _messageColor;
     private string? _message;
 
+    [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public IList<ItemDto> Items { get; set; } = null!;
-    [Parameter] public List<BracketDto> Brackets { get; set; } = null!;
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
 
     protected override void OnParametersSet()
     {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
-        if (Brackets is null) throw new ArgumentNullException(nameof(Brackets));
         if (User is null) throw new ArgumentNullException(nameof(User));
         _rows = LootList.Entries.GroupBy(e => e.Rank);
         _rowSize = _rows.Select(row => row.Count()).Max();
-
-        if (LootList.Locked)
-        {
-            if (LootList.ApprovedBy.HasValue)
-            {
-                _message = "Loot list is locked and approved!";
-                _messageColor = Color.Success;
-            }
-            else
-            {
-                _message = "Loot list is locked, but needs approval.";
-                _messageColor = Color.Warning;
-            }
-        }
-        else if (LootList.ApprovedBy.HasValue)
-        {
-            _message = "Loot list is approved, but not yet locked.";
-            _messageColor = Color.Warning;
-        }
-        else
-        {
-            _message = "Loot list has not yet been reviewed or locked.";
-            _messageColor = Color.Warning;
-        }
+        SetMessage();
     }
 
-    private BracketDto? GetBracket(int rank)
+    private void SetMessage()
     {
-        foreach (var bracket in Brackets)
+        (_message, _messageColor) = LootList.Status switch
         {
-            if (rank >= bracket.MaxRank && rank <= bracket.MinRank)
+            LootListStatus.Editing => ("Loot List is still being edited.", Color.Error),
+            LootListStatus.Submitted => ("Loot List is submitted but awaiting approval.", Color.Warning),
+            LootListStatus.Approved => ("Loot List has been approved, but still needs to be locked.", Color.Warning),
+            LootListStatus.Locked when LootList.TeamId is null => ("Loot list is locked, but character is not on this team yet.", Color.Warning),
+            LootListStatus.Locked => ("Loot List has been approved and locked!", Color.Success),
+            _ => ("Unrecognized status!", Color.Error)
+        };
+    }
+
+    private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, LootListEntryDto entry)
+    {
+        return item.GetRestrictions(LootList.MainSpec, LootList.OffSpec, entry.BracketAllowsOffspec);
+    }
+
+    private Task SetEditableAsync()
+    {
+        return Api.LootLists.SetEditable(LootList)
+            .OnSuccess((_, _) =>
             {
-                return bracket;
-            }
-        }
-        return null;
-    }
-
-    private IEnumerable<RestrictionDto> GetRestrictions(ItemDto item, int rank)
-    {
-        var restrictions = item.Restrictions.Where(r => (r.Specs & LootList.MainSpec) != 0);
-
-        if (GetBracket(rank)?.AllowOffSpec == true && LootList.OffSpec != LootList.MainSpec)
-        {
-            if (restrictions.Any() ^ item.Restrictions.Any(r => (r.Specs & LootList.OffSpec) != 0))
-            {
-                return Array.Empty<RestrictionDto>();
-            }
-        }
-
-        return restrictions.OrderBy(r => r.Level);
-    }
-
-    private Task ApproveAsync()
-    {
-        return Api.LootLists.Approve(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.ApprovedBy = User.GetDiscordIdFromClient())
-            .OnSuccess(InvokeStatusUpdatedAsync)
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
-    private Task RevokeApproveAsync()
-    {
-        return Api.LootLists.RevokeApproval(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.ApprovedBy = null)
-            .OnSuccess(InvokeStatusUpdatedAsync)
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
     private Task LockAsync()
     {
-        return Api.LootLists.Lock(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.Locked = true)
-            .OnSuccess(InvokeStatusUpdatedAsync)
+        return Api.LootLists.Lock(LootList)
+            .OnSuccess((_, _) =>
+            {
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
     private Task UnlockAsync()
     {
-        return Api.LootLists.Unlock(LootList.CharacterId, LootList.Phase)
-            .OnSuccess(_ => LootList.Locked = false)
-            .OnSuccess(InvokeStatusUpdatedAsync)
+        return Api.LootLists.Unlock(LootList)
+            .OnSuccess((_, _) =>
+            {
+                SetMessage();
+                return StatusUpdated.InvokeAsync(LootList);
+            })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
-    private Task InvokeStatusUpdatedAsync(System.Net.HttpStatusCode _, System.Threading.CancellationToken __)
+    private async Task ApproveAndAddToRosterAsync()
     {
-        return StatusUpdated.InvokeAsync(LootList);
+        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = true }).Result;
+
+        if (!result.Cancelled)
+        {
+            await Api.LootLists.Approve(LootList, Team.Id, (string?)result.Data)
+                .OnSuccess(async (response, _) =>
+                {
+                    LootList.TeamId = Team.Id;
+                    LootList.TeamName = Team.Name;
+                    SetMessage();
+                    StateHasChanged();
+                    await StatusUpdated.InvokeAsync(LootList);
+
+                    if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
+                    {
+                        Team.Roster.Add(response.Member);
+                        await RosterChanged.InvokeAsync();
+                    }
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private async Task DenyAsync()
+    {
+        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = false }).Result;
+
+        if (!result.Cancelled)
+        {
+            await Api.LootLists.Reject(LootList, Team.Id, (string?)result.Data)
+                .OnSuccess((_, _) =>
+                {
+                    SetMessage();
+                    return StatusUpdated.InvokeAsync(LootList);
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 }

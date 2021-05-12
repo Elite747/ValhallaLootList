@@ -1,0 +1,27 @@
+﻿@namespace ValhallaLootList.Client.Shared
+@inherits MudComponentBase
+@implements IAsyncDisposable
+@inject WowheadInterop WH
+
+<a data-wowhead="@DataWowhead" href="@Href" target="@Target" class="@Classname" style="@CompleteStyle" @attributes="UserAttributes">
+    @if (Context?.Item is not null)
+    {
+        @Context.Item.Name
+    }
+    else if (_item is not null)
+    {
+        @_item.Name
+    }
+    else if (PlaceholderText?.Length > 0)
+    {
+        @PlaceholderText
+    }
+    else if (Context?.Failed ?? _failed)
+    {
+        @:Couldn't load Item #@(Context?.Id ?? Id ?? 0)
+    }
+    else if (Context?.Loading ?? _loading)
+    {
+        @:Loading...
+    }
+</a>

@@ -1,0 +1,70 @@
+﻿@inject IDialogService DialogService
+ 
+<div class="d-flex align-baseline">
+    <MudAutocomplete Label="Add Member"
+                     T="CharacterDto"
+                     SearchFunc="Search"
+                     Value="SelectedCharacter"
+                     ValueChanged="SelectedCharacterChanged"
+                     Text="@SearchText"
+                     TextChanged="SearchTextChanged"
+                     ResetValueOnEmptyText="true"
+                     ToStringFunc="c => c.Name"
+                     CoerceText="true">
+        <ItemTemplate Context="character">
+            <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
+        </ItemTemplate>
+    </MudAutocomplete>
+    @if (ShowAdd)
+    {
+        <MudIconButton OnClick="AddAsync" Color="Color.Success" Icon="@Icons.Material.Filled.Add" />
+    }
+</div>
+
+@code {
+    [Parameter] public IList<CharacterDto> Characters { get; set; } = null!;
+    [Parameter] public bool ShowAdd { get; set; }
+    [Parameter] public CharacterDto? SelectedCharacter { get; set; }
+    [Parameter] public EventCallback<CharacterDto?> SelectedCharacterChanged { get; set; }
+    [Parameter] public string? SearchText { get; set; }
+    [Parameter] public EventCallback<string?> SearchTextChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Characters is null) throw new ArgumentNullException(nameof(Characters));
+    }
+
+    private Task<IEnumerable<CharacterDto>> Search(string? text)
+    {
+        IEnumerable<CharacterDto> results = Characters;
+
+        if (text?.Length > 0)
+        {
+            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, text, compareOptions) >= 0);
+        }
+
+        return Task.FromResult(results.OrderBy(c => c.Name).AsEnumerable());
+    }
+
+    private async Task AddAsync()
+    {
+        var character = await DialogService.ShowAsync<Pages.Characters.Create, CharacterDto>(
+            "Create Character",
+            parameters: new()
+            {
+                [nameof(Pages.Characters.Create.AllowSubmitNonOwned)] = true,
+                [nameof(Pages.Characters.Create.DefaultSenderIsOwner)] = false
+            },
+            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+
+        if (character is not null)
+        {
+            Characters.Add(character);
+            SelectedCharacter = character;
+            SearchText = character.Name;
+            await SelectedCharacterChanged.InvokeAsync(character);
+            await SearchTextChanged.InvokeAsync(SearchText);
+        }
+    }
+}

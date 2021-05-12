@@ -22,14 +22,12 @@ namespace ValhallaLootList.Server.Controllers
     public class TeamsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
-        private readonly DiscordService _discordService;
         private readonly TimeZoneInfo _serverTimeZone;
         private readonly TelemetryClient _telemetry;
 
-        public TeamsController(ApplicationDbContext context, DiscordService discordService, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
+        public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
         {
             _context = context;
-            _discordService = discordService;
             _serverTimeZone = serverTimeZone;
             _telemetry = telemetry;
         }
@@ -39,8 +37,19 @@ namespace ValhallaLootList.Server.Controllers
         {
             return _context.RaidTeams
                 .AsNoTracking()
-                .OrderBy(c => c.Name)
-                .Select(c => new TeamNameDto { Id = c.Id, Name = c.Name })
+                .OrderBy(team => team.Name)
+                .Select(team => new TeamNameDto
+                {
+                    Id = team.Id,
+                    Name = team.Name,
+                    Schedules = team.Schedules.Select(s => new ScheduleDto
+                    {
+                        Day = s.Day,
+                        RealmTimeStart = s.RealmTimeStart,
+                        Duration = s.Duration
+                    }).ToList()
+                })
+                .AsSingleQuery()
                 .AsAsyncEnumerable();
         }
 
@@ -81,85 +90,12 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             bool isLeader = await _context.IsLeaderOf(User, team.Id);
+            var scope = await _context.GetCurrentPriorityScopeAsync();
+            var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-            var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
-
-            await foreach (var character in _context.Characters
-                .AsNoTracking()
-                .Where(c => c.TeamId == team.Id)
-                .Select(c => new
-                {
-                    c.Class,
-                    c.Id,
-                    c.Name,
-                    c.Race,
-                    c.IsFemale,
-                    c.MemberStatus,
-                    Verified = c.VerifiedById.HasValue,
-                    LootLists = c.CharacterLootLists.Select(l => new { l.MainSpec, l.ApprovedBy, l.Locked, l.Phase }).ToList(),
-                    DonatedThisMonth = c.Donations.Where(d => d.Month == thisMonth.Month && d.Year == thisMonth.Year).Sum(d => (long)d.CopperAmount),
-                    DonatedNextMonth = c.Donations.Where(d => d.Month == nextMonth.Month && d.Year == nextMonth.Year).Sum(d => (long)d.CopperAmount),
-                    Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == team.Id)
-                        .Select(x => x.Raid.StartedAt.Date)
-                        .Distinct()
-                        .OrderByDescending(x => x)
-                        .Take(PrioCalculator.ObservedRaidsForAttendance)
-                        .Count()
-                })
-                .AsSingleQuery()
-                .AsAsyncEnumerable())
+            foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
             {
-                var memberDto = new MemberDto
-                {
-                    Character = new()
-                    {
-                        Class = character.Class,
-                        Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                        Id = character.Id,
-                        Name = character.Name,
-                        Race = character.Race,
-                        TeamId = team.Id,
-                        TeamName = team.Name
-                    },
-                    Status = character.MemberStatus,
-                    Verified = character.Verified,
-                    DonatedThisMonth = character.DonatedThisMonth,
-                    DonatedNextMonth = character.DonatedNextMonth,
-                    ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
-                    NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
-                    Attendance = character.Attendance,
-                    AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
-                    AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(character.Attendance)
-                };
-
-                foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
-                {
-                    var lootListDto = new MemberLootListDto
-                    {
-                        Locked = lootList.Locked,
-                        MainSpec = lootList.MainSpec,
-                        Phase = lootList.Phase
-                    };
-
-                    if (isLeader)
-                    {
-                        if (lootList.ApprovedBy.HasValue)
-                        {
-                            lootListDto.Approved = true;
-                            lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
-                        }
-                        else
-                        {
-                            lootListDto.Approved = false;
-                        }
-                    }
-
-                    memberDto.LootLists.Add(lootListDto);
-                }
-
-                team.Roster.Add(memberDto);
+                team.Roster.Add(member);
             }
 
             return team;
@@ -324,6 +260,41 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Character is already a part of another team.");
             }
 
+            var idString = character.Id.ToString();
+            var claim = await _context.UserClaims.AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
+                .Select(c => new { c.UserId })
+                .FirstOrDefaultAsync();
+
+            if (claim is not null)
+            {
+                var otherClaims = await _context.UserClaims.AsNoTracking()
+                    .Where(c => c.ClaimType == AppClaimTypes.Character && c.UserId == claim.UserId)
+                    .Select(c => c.ClaimValue)
+                    .ToListAsync();
+
+                var characterIds = new List<long>();
+
+                foreach (var otherClaim in otherClaims)
+                {
+                    if (long.TryParse(otherClaim, out var characterId))
+                    {
+                        characterIds.Add(characterId);
+                    }
+                }
+
+                var existingCharacterName = await _context.Characters
+                    .AsNoTracking()
+                    .Where(c => characterIds.Contains(c.Id) && c.TeamId == id)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync();
+
+                if (existingCharacterName?.Length > 0)
+                {
+                    return Problem($"The owner of this character is already on this team as {existingCharacterName}.");
+                }
+            }
+
             character.TeamId = id;
             character.MemberStatus = dto.MemberStatus;
 
@@ -337,13 +308,14 @@ namespace ValhallaLootList.Server.Controllers
                 props["CharacterName"] = character.Name;
             });
 
+            var scope = await _context.GetCurrentPriorityScopeAsync();
             var attendance = await _context.RaidAttendees
                 .AsNoTracking()
                 .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
                 .Select(x => x.Raid.StartedAt.Date)
                 .Distinct()
                 .OrderByDescending(x => x)
-                .Take(PrioCalculator.ObservedRaidsForAttendance)
+                .Take(scope.ObservedAttendances)
                 .CountAsync();
 
             var returnDto = new MemberDto
@@ -358,25 +330,32 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = id,
                     TeamName = null // TODO
                 },
+                JoinedAt = character.JoinedTeamAt,
                 Status = character.MemberStatus,
                 Verified = character.VerifiedById.HasValue,
-                ThisMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
-                NextMonthRequiredDonations = PrioCalculator.CopperForDonationPrio,
+                ThisMonthRequiredDonations = scope.RequiredDonationCopper,
+                NextMonthRequiredDonations = scope.RequiredDonationCopper,
                 Attendance = attendance,
-                AttendanceMax = PrioCalculator.ObservedRaidsForAttendance,
-                AttendanceBonus = PrioCalculator.CalculateAttendanceBonus(attendance)
+                AttendanceMax = scope.ObservedAttendances
             };
 
             await foreach (var lootList in _context.CharacterLootLists
                 .AsNoTracking()
                 .Where(l => l.CharacterId == character.Id)
                 .OrderBy(l => l.Phase)
-                .Select(l => new { l.MainSpec, l.Locked, l.ApprovedBy, l.Phase })
+                .Select(l => new
+                {
+                    l.MainSpec,
+                    l.Status,
+                    l.ApprovedBy,
+                    ApprovedByName = l.ApprovedBy.HasValue ? _context.Users.Where(u => u.Id == l.ApprovedBy).Select(u => u.UserName).FirstOrDefault() : null,
+                    l.Phase
+                })
                 .AsAsyncEnumerable())
             {
                 var lootListDto = new MemberLootListDto
                 {
-                    Locked = lootList.Locked,
+                    Status = lootList.Status,
                     MainSpec = lootList.MainSpec,
                     Phase = lootList.Phase
                 };
@@ -384,7 +363,7 @@ namespace ValhallaLootList.Server.Controllers
                 if (lootList.ApprovedBy.HasValue)
                 {
                     lootListDto.Approved = true;
-                    lootListDto.ApprovedBy = await _discordService.GetGuildMemberDtoAsync(lootList.ApprovedBy);
+                    lootListDto.ApprovedBy = lootList.ApprovedByName;
                 }
                 else
                 {
@@ -395,18 +374,15 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == character.Id, scope);
 
-            returnDto.DonatedThisMonth = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && d.Month == thisMonth.Month && d.Year == thisMonth.Year)
-                .SumAsync(d => (long)d.CopperAmount);
+            returnDto.DonatedThisMonth = donationMatrix.GetCreditForMonth(returnDto.Character.Id, now);
+            returnDto.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(returnDto.Character.Id, now);
 
-            returnDto.DonatedNextMonth = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == character.Id && nextMonth.Month == now.Month && d.Year == nextMonth.Year)
-                .SumAsync(d => (long)d.CopperAmount);
+            if (returnDto.DonatedThisMonth > scope.RequiredDonationCopper)
+            {
+                returnDto.DonatedNextMonth += returnDto.DonatedThisMonth - scope.RequiredDonationCopper;
+            }
 
             return returnDto;
         }
@@ -459,12 +435,18 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
-        [HttpDelete("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<IActionResult> DeleteMember(long id, long characterId)
+        [HttpDelete("{id:long}/members/{characterId:long}")]
+        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService authService)
         {
-            if (!await _context.IsLeaderOf(User, id))
+            var auth = await authService.AuthorizeAsync(User, id, AppPolicies.RaidLeader);
+
+            if (!auth.Succeeded)
             {
-                return Unauthorized();
+                auth = await authService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwner);
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
             }
 
             var team = await _context.RaidTeams.FindAsync(id);
@@ -486,12 +468,38 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Character is not assigned to this team.");
             }
 
-            character.TeamId = null;
+            var removal = new TeamRemoval(idGenerator.CreateId())
+            {
+                Character = character,
+                CharacterId = character.Id,
+                RemovedAt = _serverTimeZone.TimeZoneNow(),
+                JoinedAt = character.JoinedTeamAt,
+                Team = team,
+                TeamId = team.Id
+            };
 
-            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance).AsAsyncEnumerable())
+            character.TeamId = null;
+            character.MemberStatus = RaidMemberStatus.FullTrial;
+            character.JoinedTeamAt = default;
+
+            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
             {
                 attendance.IgnoreAttendance = true;
                 attendance.IgnoreReason = "Character was removed from the raid team.";
+                attendance.Removal = removal;
+                attendance.RemovalId = removal.Id;
+            }
+
+            await foreach (var donation in _context.Donations.AsTracking().Where(d => d.CharacterId == character.Id && d.RemovalId == null).AsAsyncEnumerable())
+            {
+                donation.Removal = removal;
+                donation.RemovalId = removal.Id;
+            }
+
+            await foreach (var pass in _context.DropPasses.AsTracking().Where(p => p.CharacterId == character.Id && p.WonEntryId == null && p.RemovalId == null).AsAsyncEnumerable())
+            {
+                pass.Removal = removal;
+                pass.RemovalId = removal.Id;
             }
 
             await _context.SaveChangesAsync();
@@ -502,31 +510,32 @@ namespace ValhallaLootList.Server.Controllers
                 props["TeamName"] = team.Name;
                 props["CharacterId"] = character.Id.ToString();
                 props["CharacterName"] = character.Name;
+                props["RemovalId"] = removal.Id.ToString();
             });
 
             return Accepted();
         }
 
-        [HttpGet("{id:long}/leaders"), Authorize(AppPolicies.Administrator)]
-        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordService discordService)
+        [HttpGet("{id:long}/leaders"), Authorize]
+        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordClientProvider dcp)
         {
             await foreach (var userId in _context.UserClaims
                 .AsNoTracking()
-                .Where(claim => claim.ClaimValue == id && claim.ClaimType == AppClaimTypes.RaidLeader)
-                .Select(claim => claim.UserId)
+                .Where(c => c.ClaimType == AppClaimTypes.RaidLeader && c.ClaimValue == id)
+                .Select(c => c.UserId)
                 .AsAsyncEnumerable())
             {
-                var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
+                var member = await dcp.GetMemberAsync(userId);
 
-                if (guildMember is not null)
+                if (member is not null)
                 {
-                    yield return guildMember;
+                    yield return dcp.CreateDto(member);
                 }
             }
         }
 
         [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordService discordService)
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -535,18 +544,17 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var leader = await _context.Users.FindAsync(userId);
+            var leader = await dcp.GetMemberAsync(userId);
 
             if (leader is null)
             {
-                return NotFound();
+                return Problem("Couldn't locate discord user.");
             }
 
-            var guildMember = await discordService.GetGuildMemberDtoAsync(userId);
-
-            if (guildMember is null)
+            if (!dcp.HasRaidLeaderRole(leader) && !dcp.HasLootMasterRole(leader))
             {
-                return Problem("Couldn't locate the corresponding discord user.");
+                // TODO: should we just assign the role here instead of failing?
+                return Problem($"{leader.DisplayName} does not have a raid leader or loot master role assigned.");
             }
 
             var idString = id.ToString();
@@ -563,14 +571,14 @@ namespace ValhallaLootList.Server.Controllers
                 props["TeamId"] = team.Id.ToString();
                 props["TeamName"] = team.Name;
                 props["LeaderId"] = leader.Id.ToString();
-                props["LeaderName"] = leader.UserName;
+                props["LeaderName"] = leader.DisplayName;
             });
 
-            return guildMember;
+            return dcp.CreateDto(leader);
         }
 
-        [HttpDelete("{id}/leaders/{userId}"), Authorize(AppPolicies.Administrator)]
-        public async Task<IActionResult> DeleteLeader(string id, long userId)
+        [HttpDelete("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
+        public async Task<IActionResult> DeleteLeader(long id, long userId)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -586,7 +594,9 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == id);
+            var idString = id.ToString();
+
+            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString);
 
             if (claim is null) return NotFound();
 

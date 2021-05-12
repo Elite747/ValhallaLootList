@@ -26,14 +26,14 @@ namespace ValhallaLootList.Server.Data
 
         public int CopperAmount { get; set; }
 
-        public byte Month { get; set; }
-
-        public short Year { get; set; }
-
         [Required]
         public long CharacterId { get; set; }
 
         [Required]
         public virtual Character Character { get; set; } = null!;
+
+        public long? RemovalId { get; set; }
+
+        public virtual TeamRemoval? Removal { get; set; }
     }
 }

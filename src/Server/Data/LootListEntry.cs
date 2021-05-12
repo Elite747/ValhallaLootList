@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data
@@ -32,5 +33,10 @@ namespace ValhallaLootList.Server.Data
         public long? DropId { get; set; }
 
         public Drop? Drop { get; set; }
+
+        [StringLength(256)]
+        public string? Justification { get; set; }
+
+        public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
     }
 }

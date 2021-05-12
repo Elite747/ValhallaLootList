@@ -2,58 +2,138 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 @inject IDialogService DialogService
+@inject TeamsSource TeamsSource
 
-<h1>Characters</h1>
+<div class="d-flex align-center mb-3">
+    <MudText Typo="Typo.h4" GutterBottom="false">Characters</MudText>
 
-<MudPaper>
-    <ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
+    <AuthorizeView Context="auth">
+        <MudTooltip Text="Add Character">
+            <MudIconButton OnClick="() => CreateClickedAsync(auth)" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
+        </MudTooltip>
+    </AuthorizeView>
+
+    <MudTooltip Text="Refresh">
+        <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
+    </MudTooltip>
+</div>
+
+
+<ApiExecutor Operation="Api.Characters.GetAll" @ref="_executor" Context="characters">
+    <MudPaper Elevation="5">
         <MudList Clickable="true">
-            <MudListSubheader Class="d-flex align-baseline">
-                <MudTextField @bind-Value="_searchText"
-                              Immediate="true"
-                              Label="Find Character"
-                              Variant="Variant.Text"
-                              Adornment="Adornment.End"
-                              AdornmentIcon="@Icons.Filled.Search" />
+            <MudListSubheader>
+                <MudGrid>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="_searchText"
+                                      Immediate="true"
+                                      Label="Find Character"
+                                      Variant="Variant.Filled"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@Icons.Filled.Search" />
 
-                <MudTooltip Text="Refresh Characters">
-                    <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-                </MudTooltip>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-SelectedValues="_searchClasses"
+                                   MultiSelection="true"
+                                   Variant="Variant.Filled"
+                                   Label="Class"
+                                   ToStringFunc="ClassesExtensions.GetDisplayName"
+                                   T="Classes">
+                            @foreach (var c in _allClasses)
+                            {
+                                <MudSelectItem T="Classes" Value="@c">
+                                    <div class="d-flex align-center">
+                                        <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                                            <ClassIcon PlayerClass="c" Size="IconSize.Medium" Width="24" Height="24" />
+                                        </MudAvatar>
+                                        <span>@c.GetDisplayName()</span>
+                                    </div>
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-                <AuthorizeView Context="auth">
-                    <MudTooltip Text="Add Character">
-                        <MudFab OnClick="() => CreateClickedAsync(auth)" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
-                    </MudTooltip>
-                </AuthorizeView>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-SelectedValues="_searchTeams"
+                                   MultiSelection="true"
+                                   Variant="Variant.Filled"
+                                   Label="Team"
+                                   ToStringFunc='team => team?.Name ?? "No Team"'
+                                   T="TeamNameDto">
+                            <MudSelectItem T="TeamNameDto" Value="null">No Team</MudSelectItem>
+                            @foreach (var team in TeamsSource.Teams)
+                            {
+                                <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox Label="Show Deactivated" @bind-Checked="_showDeactivated" />
+                    </MudItem>
+                </MudGrid>
             </MudListSubheader>
-            @foreach (var ch in EnumerateCharacters(characters))
+            @foreach (var character in EnumerateCharacters(characters))
             {
-                <MudListItem Href="@("characters/" + ch.Name)">
-                    <div class="d-flex">
-                        <MudAvatar Class="mr-1" Size="Size.Small">
-                            <RaceIcon Race="ch.Race" Gender="ch.Gender" Size="IconSize.Small" width="24" height="24" />
-                        </MudAvatar>
-                        <MudAvatar Class="mr-1" Size="Size.Small">
-                            <ClassIcon PlayerClass="ch.Class" Size="IconSize.Small" width="24" height="24" />
-                        </MudAvatar>
-                        <MudText Inline="false">@ch.Name</MudText>
-                    </div>
+                <MudListItem Href="@("characters/" + character.Name)" @key="character.Id">
+                    <CharacterRow Character="character" />
                 </MudListItem>
             }
         </MudList>
-    </ApiExecutor>
-</MudPaper>
+    </MudPaper>
+</ApiExecutor>
 
 @code {
     private ApiExecutor<IList<CharacterDto>>? _executor;
     private string _searchText = string.Empty;
+    private HashSet<Classes> _searchClasses = new();
+    private HashSet<TeamNameDto?> _searchTeams = new();
+    private bool _showDeactivated;
+    private static readonly Classes[] _allClasses = new[] {
+        Classes.Druid,
+        Classes.Hunter,
+        Classes.Mage,
+        Classes.Paladin,
+        Classes.Priest,
+        Classes.Rogue,
+        Classes.Shaman,
+        Classes.Warlock,
+        Classes.Warrior
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TeamsSource.EnsureStartedAsync(Api);
+    }
 
     private IEnumerable<CharacterDto> EnumerateCharacters(IList<CharacterDto> characters)
     {
-        if (characters.Count > 0 && _searchText?.Length > 0)
+        if (characters.Count > 0)
         {
-            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
-            return characters.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+            IEnumerable<CharacterDto> en = characters;
+
+            if (_searchText?.Length > 0)
+            {
+                const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+                en = en.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+            }
+
+            if (_searchClasses?.Count > 0)
+            {
+                en = en.Where(ch => _searchClasses.Contains(ch.Class));
+            }
+
+            if (_searchTeams?.Count > 0)
+            {
+                en = en.Where(ch => _searchTeams.Any(team => team?.Id == ch.TeamId));
+            }
+
+            if (!_showDeactivated)
+            {
+                en = en.Where(ch => !ch.Deactivated);
+            }
+
+            return en;
         }
         return characters;
     }

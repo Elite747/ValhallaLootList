@@ -1,14 +1,13 @@
 ﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService 
   
 <MudCard Elevation="5">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Loot Lists</MudText>
+            <MudText Typo="Typo.h6">Loot Lists</MudText> 
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudTooltip Text="Switch to roster view">
-                <MudIconButton Icon="@Icons.Material.Filled.ViewList" Color="Color.Default" OnClick="OnSwitchViewClicked" />
-            </MudTooltip>
             <MudTooltip Text="Refresh">
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
             </MudTooltip>
@@ -17,31 +16,37 @@
     <MudDivider />
     <div class="d-flex">
         <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
-            <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items">
-                <ApiExecutor Operation="() => Api.LootLists.GetForTeam(TeamId, Phase)" Context="lootLists" @ref="_executor">
+            <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items" @key="Phase">
+                <ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team.Id, Phase)" Context="lootLists" @ref="_executor" @key="(Team.Id, Phase)">
                     <MudList Clickable="true">
                         @foreach (var list in lootLists.OrderBy(ll => ll.CharacterName))
                         {
                             var characterId = list.CharacterId;
                             <MudListItem Class="@(_characterId == list.CharacterId ? "mud-selected-item" : null)"
-                                            OnClick="() => _characterId = characterId"
-                                            Icon="@(list.Locked && list.ApprovedBy.HasValue ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
-                                            IconColor="@(list.Locked && list.ApprovedBy.HasValue ? Color.Success : Color.Warning)">
+                                         OnClick="() => _characterId = characterId"
+                                         Icon="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
+                                         IconColor="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Color.Success : list.Status == LootListStatus.Approved ? Color.Warning : Color.Error)"
+                                         @key="characterId">
                                 @list.CharacterName
                             </MudListItem>
+                        }
+                        @if (lootLists.Any(ll => ll.Status == LootListStatus.Approved))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Lock"
+                                         IconColor="Color.Error"
+                                         Text="Lock All Lists"
+                                         OnClick="() => LockAllAsync(lootLists)" />
                         }
                     </MudList>
                     <MudDivider Vertical="true" FlexItem="true" />
                     @if (lootLists.FirstOrDefault(list => _characterId == list.CharacterId) is LootListDto selectedList)
                     {
-                        @if (phaseConfig.Brackets.TryGetValue(Phase, out var brackets))
-                        {
-                            <ReviewListView LootList="selectedList" Items="items" Brackets="brackets" User="User" StatusUpdated="OnStatusUpdatedAsync" />
-                        }
-                        else
-                        {
-                            <DefaultProblemView Problem="@(new() { Detail = "Phase is not valid." })" />
-                        }
+                        <ReviewListView Team="Team"
+                                        LootList="selectedList"
+                                        Items="items"
+                                        User="User"
+                                        StatusUpdated="l => OnStatusUpdatedAsync(l, lootLists)"
+                                        RosterChanged="RosterChanged" />
                     }
                 </ApiExecutor>
             </ApiExecutor>
@@ -53,20 +58,53 @@
     private long? _characterId;
     private IApiExecutor? _executor;
 
-    [Parameter] public long TeamId { get; set; }
+    [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
-    [Parameter] public EventCallback OnSwitchViewClicked { get; set; }
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
 
     protected override void OnParametersSet()
     {
         if (User is null) throw new ArgumentNullException(nameof(User));
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
     }
 
-    private Task OnStatusUpdatedAsync(LootListDto arg)
+    private Task OnStatusUpdatedAsync(LootListDto lootList, IList<LootListDto> lootLists)
     {
         StateHasChanged();
-        return StatusUpdated.InvokeAsync(arg);
+
+        if ((lootList.Status == LootListStatus.Editing || (lootList.Status == LootListStatus.Submitted && !lootList.SubmittedTo.Contains(Team.Id))) && !Team.Roster.Any(m => m.Character.Id == lootList.CharacterId))
+        {
+            lootLists.Remove(lootList);
+        }
+
+        return StatusUpdated.InvokeAsync(lootList);
+    }
+
+    private async Task LockAllAsync(IList<LootListDto> lootLists)
+    {
+        if (await DialogService.ShowMessageBox("Confirm Lock", "Are you sure you want to lock all loot lists?", "Yes", "No") == true)
+        {
+            await LockAllConfirmedAsync(lootLists);
+        }
+    }
+
+    private Task LockAllConfirmedAsync(IList<LootListDto> lootLists)
+    {
+        var tasks = new List<Task>();
+
+        foreach (var list in lootLists)
+        {
+            if (list.Status == LootListStatus.Approved)
+            {
+                tasks.Add(Api.LootLists.Lock(list)
+                    .OnSuccess(_ => StateHasChanged())
+                    .SendErrorTo(Snackbar)
+                    .ExecuteAsync());
+            }
+        }
+
+        return Task.WhenAll(tasks);
     }
 }

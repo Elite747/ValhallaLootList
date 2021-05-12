@@ -28,7 +28,7 @@ namespace ValhallaLootList.Server.Controllers
             _telemetry = telemetry;
         }
 
-        [HttpPost, Authorize(AppPolicies.RaidLeaderOrAdmin)]
+        [HttpPost, Authorize(AppPolicies.LootMasterOrAdmin)]
         public async Task<IActionResult> Post([FromBody] DonationSubmissionDto dto)
         {
             var character = await _context.Characters.FindAsync(dto.CharacterId);
@@ -38,19 +38,13 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var now = _serverTimeZone.TimeZoneNow();
-            var thisMonth = new DateTime(now.Year, now.Month, 1);
-            var nextMonth = thisMonth.AddMonths(1);
-
             _context.Donations.Add(new Donation(_idGenerator.CreateId())
             {
                 CopperAmount = dto.CopperAmount,
-                DonatedAt = now,
+                DonatedAt = _serverTimeZone.TimeZoneNow(),
                 Character = character,
                 CharacterId = character.Id,
-                EnteredById = User.GetDiscordId().GetValueOrDefault(),
-                Month = (byte)nextMonth.Month,
-                Year = (short)nextMonth.Year
+                EnteredById = User.GetDiscordId().GetValueOrDefault()
             });
 
             await _context.SaveChangesAsync();

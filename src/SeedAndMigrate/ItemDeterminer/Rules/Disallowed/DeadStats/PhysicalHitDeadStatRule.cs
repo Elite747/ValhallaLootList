@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class PhysicalHitDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.CasterDps | Specializations.Healer;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.CasterDps | SpecializationGroups.Healer;
 
         protected override int GetStat(Item item) => item.PhysicalHit;
 

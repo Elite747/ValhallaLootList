@@ -1,0 +1,65 @@
+﻿<CascadingItemContext Id="Entry.ItemId">
+    <div class="d-flex align-center">
+        @if (Entry.Won)
+        {
+            <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                <MudAvatar Rounded="true" Class="mr-2">
+                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                </MudAvatar>
+            </MudBadge>
+        }
+        else if (Entry.Rank != 0)
+        {
+            <MudTooltip>
+                <TooltipContent>
+                    <div>
+                        Rank @Entry.Rank
+                    </div>
+                    @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+                    {
+                        <div>
+                            <PriorityBonusDisplay Bonus="bonus" />
+                        </div>
+                    }
+                </TooltipContent>
+                <ChildContent>
+                    <MudBadge Content="_prio" Color="Color.Info" Overlap="true">
+                        <MudAvatar Rounded="true" Class="mr-2">
+                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                        </MudAvatar>
+                    </MudBadge>
+                </ChildContent>
+            </MudTooltip>
+        }
+        else
+        {
+            <MudAvatar Rounded="true" Class="mr-2">
+                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+            </MudAvatar>
+        }
+        <ItemLink Colorize="true" Bracketize="true" LinkEnabled="true" PlaceholderText="@Entry.ItemName" />
+    </div>
+</CascadingItemContext>
+
+@code {
+    private int _prio;
+
+    [Parameter] public LootListEntryDto Entry { get; set; } = null!;
+    [Parameter] public LootListDto LootList { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Entry is null) throw new ArgumentNullException(nameof(Entry));
+        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
+
+        if (Entry.Rank != 0)
+        {
+            _prio = Entry.Rank;
+
+            foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+            {
+                _prio += bonus.Value;
+            }
+        }
+    }
+}

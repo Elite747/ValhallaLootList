@@ -35,9 +35,11 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(item => new ItemDto
                 {
                     Id = item.Id,
+                    QuestId = item.RewardFromId.HasValue ? item.RewardFrom!.QuestId : default,
                     Name = item.Name,
                     Slot = item.Slot,
                     Type = item.Type,
+                    MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1
                 })
                 .ToDictionaryAsync(item => item.Id);
 

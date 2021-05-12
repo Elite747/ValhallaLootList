@@ -160,21 +160,6 @@ namespace ValhallaLootList.Client.Data
             return operation;
         }
 
-        public static IApiClientOperation ValidateWith(this IApiClientOperation operation, CustomValidator? validator)
-        {
-            if (validator is not null)
-            {
-                operation.ConfigureFailure(problem =>
-                {
-                    if (problem.Errors?.Count > 0)
-                    {
-                        validator.DisplayErrors(problem.Errors);
-                    }
-                });
-            }
-            return operation;
-        }
-
         public static IApiClientOperation ValidateWith(this IApiClientOperation operation, ProblemValidator? validator)
         {
             if (validator is not null)

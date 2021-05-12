@@ -19,6 +19,16 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public virtual Drop Drop { get; set; } = null!;
 
+        public long? LootListEntryId { get; set; }
+
+        public virtual LootListEntry? LootListEntry { get; set; }
+
         public int RelativePriority { get; set; }
+
+        public long? WonEntryId { get; set; }
+
+        public long? RemovalId { get; set; }
+
+        public virtual TeamRemoval? Removal { get; set; }
     }
 }

@@ -1,89 +1,124 @@
 ﻿@inject ApiClient Api
-@inject ISnackbar Snackbar  
+@inject ISnackbar Snackbar
 
-<MudCard Elevation="5">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Standings</MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            @if (ShowExternalLink)
-            {
-                <MudTooltip Text="Standings Permalink">
-                    <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Default" Link="@($"teams/{Team.Name}/standings/{SelectedEncounterId}")" />
+<MudExpansionPanels Elevation="5">
+    <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+        <MudExpansionPanelHeader DisableGutters="true" IsExpanded="!GroupByEncounter">
+            <TitleContent>
+                <MudText Typo="Typo.h6">Standings</MudText>
+            </TitleContent>
+            <ActionsContent>
+                <MudTooltip Text="@(GroupByEncounter ? "Ungroup Items" : "Group Items by Encounter")">
+                    <MudToggleIconButton Toggled="GroupByEncounter"
+                                         ToggledChanged="OnSetGroupByEncounter"
+                                         Icon="@CustomIcons.SetMerge"
+                                         ToggledIcon="@CustomIcons.SetSplit" />
                 </MudTooltip>
-            }
-            <MudTooltip Text="Refresh">
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="RefreshAsync" />
-            </MudTooltip>
-        </CardHeaderActions>
-    </MudCardHeader>
-    <div class="d-flex">
-        <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
-            <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
-                @{
-                    var (selectedEncounter, selectedInstance) = GetSelected(instances);
-                    var selectedPhase = selectedInstance?.Phase ?? phaseConfig.CurrentPhase;
-                }
-                <MudList Clickable="true">
-                    @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
-                    {
-                        <MudListItem InitiallyExpanded="phase == selectedPhase">
-                            <ChildContent>
-                                Phase @phase
-                            </ChildContent>
-                            <NestedList>
-                                @foreach (var instance in instances.Where(i => i.Phase == phase).OrderBy(i => i.Name))
-                                {
-                                    <MudListItem InitiallyExpanded="selectedInstance?.Id == instance.Id" Text="@instance.Name">
-                                        <NestedList>
-                                            @foreach (var encounter in instance.Encounters)
-                                            {
-                                                <MudListItem Class="@(encounter.Id == selectedEncounter?.Id ? "mud-selected-item" : null)" OnClick="() => SelectEncounterAsync(encounter.Id)">
-                                                    <div class="ml-2">
-                                                        @encounter.Name
-                                                    </div>
-                                                </MudListItem>
-                                            }
-                                        </NestedList>
-                                    </MudListItem>
-                                }
-                            </NestedList>
-                        </MudListItem>
-                    }
-                </MudList>
-                <MudDivider Vertical="true" FlexItem="true" />
-                @if (selectedEncounter is not null)
+                @if (ShowExternalLink)
                 {
-                    <EncounterView Standings="_standings" Encounter="selectedEncounter" />
+                    <MudTooltip Text="Open standings in a new tab">
+                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                       Color="Color.Default"
+                                       Target="_blank"
+                                       Link="@GetLink()" />
+                    </MudTooltip>
                 }
-            </ApiExecutor>
-        </ApiExecutor>
-    </div>
-</MudCard>
+                <MudTooltip Text="@(_showWon ? "Hide Won Items" : "Show Won Items")">
+                    <MudToggleIconButton @bind-Toggled="_showWon"
+                                         Icon="@Icons.Material.Filled.RemoveRedEye"
+                                         ToggledIcon="@CustomIcons.EyeOff" />
+                </MudTooltip>
+                <MudTooltip Text="Refresh">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="RefreshAsync" />
+                </MudTooltip>
+            </ActionsContent>
+            <ChildContent>
+                @if (!GroupByEncounter)
+                {
+                    <ItemsView Items="instances.Where(i => i.Phase == Phase).OrderBy(i => i.Name).SelectMany(i => i.Encounters.OrderBy(e => e.Name)).SelectMany(e => e.Items)"
+                               ShowWon="_showWon"
+                               Standings="_standings" />
+                }
+            </ChildContent>
+        </MudExpansionPanelHeader>
+        @if (GroupByEncounter)
+        {
+            foreach (var instance in instances.Where(i => i.Phase == Phase))
+            {
+                foreach (var e in instance.Encounters)
+                {
+                    var encounter = e;
+                    <MudExpansionPanel IsExpanded="string.Equals(encounter.Id, SelectedEncounterId, StringComparison.OrdinalIgnoreCase)"
+                                       IsExpandedChanged="b => OnExpandedChanged(b, encounter)"
+                                       DisableGutters="true">
+                        <TitleContent>
+                            <MudText Typo="Typo.h6">@encounter.Name</MudText>
+                            <MudText Typo="Typo.caption">@instance.Name</MudText>
+                        </TitleContent>
+                        <ChildContent>
+                            <ItemsView Items="encounter.Items" ShowWon="_showWon" Standings="_standings" />
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            }
+        }
+    </ApiExecutor>
+</MudExpansionPanels>
 
 @code {
-    private readonly Dictionary<uint, List<(string name, int? prio, bool won)>> _standings = new();
+    private readonly Dictionary<uint, List<StandingContext>> _standings = new();
+    private bool _teamOrPhaseChanged, _showWon;
+    private byte _phase;
+    private TeamDto _team = null!;
 
-    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public TeamDto Team
+    {
+        get => _team;
+        set
+        {
+            if (_team != value)
+            {
+                _team = value;
+                _teamOrPhaseChanged = true;
+            }
+        }
+    }
+
+    [Parameter] public byte Phase
+    {
+        get => _phase;
+        set
+        {
+            if (_phase != value)
+            {
+                _phase = value;
+                _teamOrPhaseChanged = true;
+            }
+        }
+    }
+
     [Parameter] public bool ShowExternalLink { get; set; }
     [Parameter] public string? SelectedEncounterId { get; set; }
     [Parameter] public EventCallback<string?> SelectedEncounterIdChanged { get; set; }
 
-    protected override void OnParametersSet()
+    private bool GroupByEncounter => !string.Equals(SelectedEncounterId, "@all", StringComparison.OrdinalIgnoreCase);
+
+    protected override Task OnParametersSetAsync()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
-    }
 
-    protected override Task OnInitializedAsync()
-    {
-        return RefreshAsync();
+        if (_teamOrPhaseChanged)
+        {
+            return RefreshAsync();
+        }
+        return Task.CompletedTask;
     }
 
     private Task RefreshAsync()
     {
-        return Api.LootLists.GetForTeam(Team.Id)
-            .OnSuccess(lootLists =>
+        _teamOrPhaseChanged = false;
+        return Api.LootLists.GetForTeam(Team.Id, Phase)
+            .OnSuccess((IList<LootListDto> lootLists) =>
             {
                 _standings.Clear();
                 foreach (var lootList in lootLists)
@@ -98,7 +133,7 @@
                                 _standings[itemId.Value] = itemStandings = new();
                             }
 
-                            itemStandings.Add((lootList.CharacterName!, entry.Prio, entry.Won));
+                            itemStandings.Add(new(lootList, entry));
                         }
                     }
                 }
@@ -108,24 +143,28 @@
         .ExecuteAsync();
     }
 
-    private (EncounterDto?, InstanceDto?) GetSelected(IEnumerable<InstanceDto> instances)
+    private Task OnExpandedChanged(bool expanded, EncounterDto encounter)
     {
-        foreach (var instance in instances)
+        if (GroupByEncounter)
         {
-            foreach (var encounter in instance.Encounters)
-            {
-                if (string.Equals(encounter.Id, SelectedEncounterId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return (encounter, instance);
-                }
-            }
+            return OnSelectedEncounterIdChanged(expanded ? encounter.Id : null);
         }
-        return (null, null);
+        return Task.CompletedTask;
     }
 
-    private Task SelectEncounterAsync(string? encounterId)
+    private Task OnSetGroupByEncounter(bool groupByEncounter)
+    {
+        return OnSelectedEncounterIdChanged(groupByEncounter ? null : "@all");
+    }
+
+    private Task OnSelectedEncounterIdChanged(string? encounterId)
     {
         SelectedEncounterId = encounterId;
         return SelectedEncounterIdChanged.InvokeAsync(encounterId);
+    }
+
+    private string GetLink()
+    {
+        return $"teams/{Team.Name}/standings/phase/{Phase}/{SelectedEncounterId}";
     }
 }

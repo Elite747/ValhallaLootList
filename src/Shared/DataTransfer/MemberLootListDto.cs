@@ -7,12 +7,12 @@ namespace ValhallaLootList.DataTransfer
     {
         public byte Phase { get; set; }
 
-        public bool Locked { get; set; }
+        public LootListStatus Status { get; set; }
 
         public Specializations MainSpec { get; set; }
 
         public bool? Approved { get; set; }
 
-        public GuildMemberDto? ApprovedBy { get; set; }
+        public string? ApprovedBy { get; set; }
     }
 }

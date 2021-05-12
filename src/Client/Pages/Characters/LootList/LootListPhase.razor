@@ -1,0 +1,46 @@
+﻿@if (!Character.Deactivated && _lootList?.Status == LootListStatus.Editing)
+{
+    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
+        <Authorized>
+            <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
+        </Authorized>
+        <NotAuthorized>
+            <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else
+{
+    <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnListUpdated="UpdateLootList" />
+}
+
+@code {
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
+    private LootListDto? _lootList;
+
+    protected override void OnParametersSet()
+    {
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+        _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase);
+    }
+
+    private void UpdateLootList(LootListDto? lootList)
+    {
+        if (lootList != _lootList)
+        {
+            if (_lootList is not null)
+            {
+                LootLists.Remove(_lootList);
+            }
+            if (lootList is not null)
+            {
+                LootLists.Add(lootList);
+            }
+            _lootList = lootList;
+        }
+        StateHasChanged();
+    }
+}

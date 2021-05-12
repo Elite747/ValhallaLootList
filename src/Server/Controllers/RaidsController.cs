@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
@@ -52,6 +53,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             return query
+                .OrderByDescending(r => r.StartedAt)
                 .Select(r => new RaidDto
                 {
                     Id = r.Id,
@@ -61,6 +63,43 @@ namespace ValhallaLootList.Server.Controllers
                     TeamName = r.RaidTeam.Name
                 })
                 .AsAsyncEnumerable();
+        }
+
+        [HttpGet("@mine")]
+        public async Task<ActionResult<IEnumerable<RaidDto>>> GetMine()
+        {
+            var userId = User.GetDiscordId();
+            var characterIds = await _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
+                .Select(claim => claim.ClaimValue)
+                .ToListAsync();
+
+            var ids = new HashSet<long>();
+
+            foreach (var characterIdString in characterIds)
+            {
+                if (long.TryParse(characterIdString, out var characterId))
+                {
+                    ids.Add(characterId);
+                }
+            }
+
+            DateTimeOffset end = DateTimeOffset.UtcNow, start = end.AddMonths(-1);
+
+            return await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.StartedAt >= start && r.StartedAt < end && r.Attendees.Any(a => ids.Contains(a.CharacterId)))
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => new RaidDto
+                {
+                    Id = r.Id,
+                    Phase = r.Phase,
+                    StartedAt = r.StartedAt,
+                    TeamId = r.RaidTeamId,
+                    TeamName = r.RaidTeam.Name
+                })
+                .ToListAsync();
         }
 
         [HttpGet("{id:long}")]
@@ -92,7 +131,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
-                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec,
+                    MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec).GetValueOrDefault(),
                     Character = new CharacterDto
                     {
                         Class = a.Character.Class,
@@ -143,7 +182,6 @@ namespace ValhallaLootList.Server.Controllers
                     d.AwardedAt,
                     AwardedBy = (long?)d.AwardedBy,
                     WinnerId = (long?)d.WinnerId,
-                    WinnerName = (string?)d.Winner!.Name,
                     d.ItemId,
                     ItemName = d.Item.Name
                 })
@@ -156,9 +194,7 @@ namespace ValhallaLootList.Server.Controllers
                     AwardedAt = drop.AwardedAt,
                     AwardedBy = drop.AwardedBy,
                     ItemId = drop.ItemId,
-                    ItemName = drop.ItemName,
-                    WinnerId = drop.WinnerId,
-                    WinnerName = drop.WinnerName
+                    WinnerId = drop.WinnerId
                 });
             }
 
@@ -256,7 +292,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
-                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec,
+                    MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec ?? Specializations.None,
                     Character = new CharacterDto
                     {
                         Id = a.CharacterId,
@@ -397,7 +433,7 @@ namespace ValhallaLootList.Server.Controllers
             var spec = await _context.CharacterLootLists
                 .AsNoTracking()
                 .Where(ll => ll.Phase == raid.Phase && ll.CharacterId == character.Id)
-                .Select(ll => (Specializations?)ll.MainSpec)
+                .Select(ll => ll.MainSpec)
                 .FirstOrDefaultAsync();
 
             return new AttendanceDto
@@ -455,6 +491,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 attendee.IgnoreAttendance = false;
                 attendee.IgnoreReason = null;
+                attendee.RemovalId = null;
             }
 
             await _context.SaveChangesAsync();
@@ -468,7 +505,7 @@ namespace ValhallaLootList.Server.Controllers
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == characterId)
-                .Select(c => new { c.Id, c.Name })
+                .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name })
                 .FirstOrDefaultAsync();
 
             _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -484,7 +521,17 @@ namespace ValhallaLootList.Server.Controllers
             return new AttendanceDto
             {
                 IgnoreAttendance = attendee.IgnoreAttendance,
-                IgnoreReason = attendee.IgnoreReason
+                IgnoreReason = attendee.IgnoreReason,
+                Character = new CharacterDto
+                {
+                    Class = character.Class,
+                    Gender = character.Gender,
+                    Id = character.Id,
+                    Name = character.Name,
+                    Race = character.Race,
+                    TeamId = character.TeamId,
+                    TeamName = character.TeamName
+                }
             };
         }
 
@@ -547,7 +594,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost("{id:long}/Kills"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
         {
             if (dto.Drops.Count == 0)
             {
@@ -641,6 +688,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var items = await _context.Items.AsTracking().Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
+            var drops = new List<(uint, string, string?)>();
 
             for (int i = 0; i < dto.Drops.Count; i++)
             {
@@ -665,6 +713,7 @@ namespace ValhallaLootList.Server.Controllers
                         Item = item,
                         ItemId = item.Id
                     });
+                    drops.Add((itemId, item.Name, null));
                 }
             }
 
@@ -675,13 +724,21 @@ namespace ValhallaLootList.Server.Controllers
 
             _context.EncounterKills.Add(kill);
 
-            await _context.SaveChangesAsync();
-
             var teamName = await _context.RaidTeams
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
                 .FirstOrDefaultAsync();
+
+            await _context.SaveChangesAsync();
+
+            var message = await dcp.SendOrUpdatePublicNotificationAsync(null, m => m.ConfigureKillMessage(Request, Url, kill, teamName, encounter.Name, drops));
+
+            if (message is not null)
+            {
+                kill.DiscordMessageId = (long)message.Id;
+                await _context.SaveChangesAsync();
+            }
 
             _telemetry.TrackEvent("KillAdded", User, props =>
             {
@@ -702,8 +759,7 @@ namespace ValhallaLootList.Server.Controllers
                     AwardedAt = d.AwardedAt,
                     AwardedBy = d.AwardedBy,
                     ItemId = d.ItemId,
-                    WinnerId = d.Winner?.Id,
-                    WinnerName = d.Winner?.Name
+                    WinnerId = d.Winner?.Id
                 }).ToList(),
                 EncounterId = kill.EncounterId,
                 EncounterName = encounter.Name
@@ -711,7 +767,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult> DeleteKill(long id, string encounterId)
+        public async Task<ActionResult> DeleteKill(long id, string encounterId, [FromServices] DiscordClientProvider dcp)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -750,6 +806,11 @@ namespace ValhallaLootList.Server.Controllers
             _context.EncounterKills.Remove(kill);
 
             await _context.SaveChangesAsync();
+
+            if (kill.DiscordMessageId > 0)
+            {
+                await dcp.DeletePublicNotificationAsync(kill.DiscordMessageId);
+            }
 
             var teamName = await _context.RaidTeams
                 .AsNoTracking()

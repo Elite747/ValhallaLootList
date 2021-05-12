@@ -4,7 +4,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Net.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -34,23 +33,20 @@ namespace ValhallaLootList.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(Configuration.GetValue<string>("RealmTimeZone")));
-            services.AddScoped<PrioCalculator>();
-            services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
-            services.AddScoped<DiscordRoleMap>();
             services.AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>();
             services.AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>();
+            services.AddScoped<IAuthorizationHandler, Authorization.AdminPolicyHandler>();
+            services.AddScoped<IAuthorizationHandler, Authorization.MemberPolicyHandler>();
+
+            services.Configure<DiscordServiceOptions>(options => Configuration.Bind("Discord", options));
+            services.AddSingleton<DiscordClientProvider>();
+            services.AddHostedService<DiscordBackgroundService>();
 
             services.AddIdGen(options =>
             {
                 options.GeneratorId = Configuration.GetValue<int?>("GeneratorId").GetValueOrDefault();
                 options.SequenceOverflowStrategy = IdGen.SequenceOverflowStrategy.SpinWait;
             });
-
-            services.AddHttpClient<DiscordService>()
-                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
-                {
-                    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
-                });
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), sql => sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
@@ -73,13 +69,13 @@ namespace ValhallaLootList.Server
                     var claims = options.IdentityResources["openid"].UserClaims;
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
-                    claims.Add(AppClaimTypes.RaidLeader);
-                    claims.Add(AppClaimTypes.Character);
+                    //claims.Add(AppClaimTypes.RaidLeader);
+                    //claims.Add(AppClaimTypes.Character);
                     claims = options.ApiResources.Single().UserClaims;
                     claims.Add(AppClaimTypes.Role);
                     claims.Add(AppClaimTypes.Name);
-                    claims.Add(AppClaimTypes.RaidLeader);
-                    claims.Add(AppClaimTypes.Character);
+                    //claims.Add(AppClaimTypes.RaidLeader);
+                    //claims.Add(AppClaimTypes.Character);
                 })
                 .AddProfileService<IdentityProfileService>();
 

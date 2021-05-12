@@ -1,0 +1,47 @@
+﻿@namespace ValhallaLootList.Client.Shared
+@typeparam T
+
+@if (_activeOperation is null)
+{
+    @NotStarted
+}
+else
+{
+    <ApiView Operation="ActiveOperation" BackgroundRefresh="BackgroundRefresh" ExecuteImmediately="ExecuteOnInitialized">
+        <Success>
+            @if (Success is not null)
+            {
+                @Success(_activeOperation.GetResult());
+            }
+            else
+            {
+                @ChildContent?.Invoke(_activeOperation.GetResult());
+            }
+        </Success>
+        <Failure>
+            @if (Failure is not null)
+            {
+                <CascadingValue Value="_activeOperation.GetProblem()">
+                    @Failure
+                </CascadingValue>
+            }
+            else
+            {
+                <DefaultProblemView Problem="_activeOperation.GetProblem()" />
+            }
+        </Failure>
+        <NotStarted>
+            @NotStarted
+        </NotStarted>
+        <Running>
+            @if (Running is not null)
+            {
+                @Running
+            }
+            else
+            {
+                <LoadingIndicator />
+            }
+        </Running>
+    </ApiView>
+}

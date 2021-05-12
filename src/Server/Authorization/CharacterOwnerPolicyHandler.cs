@@ -2,25 +2,27 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Threading.Tasks;
+using DSharpPlus.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Authorization
 {
-    public class CharacterOwnerPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
+    public class CharacterOwnerPolicyHandler : DiscordAuthorizationHandler<CharacterOwnerRequirement>
     {
         private readonly ApplicationDbContext _context;
 
-        public CharacterOwnerPolicyHandler(ApplicationDbContext context)
+        public CharacterOwnerPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : base(discordClientProvider)
         {
             _context = context;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
+        protected override async ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement, DiscordMember member)
         {
-            if (context.User.IsAdmin() && requirement.AllowAdmin)
+            if (requirement.AllowAdmin && DiscordClientProvider.HasAdminRole(member))
             {
                 context.Succeed(requirement);
                 return;
@@ -35,16 +37,11 @@ namespace ValhallaLootList.Server.Authorization
 
             if (characterId.HasValue)
             {
-                if (context.User.IsOwnerOf(characterId.Value))
-                {
-                    context.Succeed(requirement);
-                    return;
-                }
+                var discordId = (long)member.Id;
+                var characterIdString = characterId.Value.ToString();
 
-                var userId = context.User.GetDiscordId();
-                var idString = characterId.ToString();
-
-                if (userId.HasValue && await _context.UserClaims.AsNoTracking().AnyAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == idString))
+                if (context.User.HasClaim(AppClaimTypes.Character, characterIdString) ||
+                    await _context.UserClaims.AsNoTracking().CountAsync(claim => claim.UserId == discordId && claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == characterIdString) > 0)
                 {
                     context.Succeed(requirement);
                 }

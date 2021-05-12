@@ -1,0 +1,126 @@
+﻿@inject ApiClient Api  
+
+<EditForm OnValidSubmit="OnSubmitAsync" Model="_model">
+    <DataAnnotationsValidator />
+    <ProblemValidator @ref="_problemValidator" />
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">@Attendance.Character.Name</MudText>
+        </TitleContent>
+        <DialogContent>
+            <div class="d-flex">
+                <PlayerIcon Race="Attendance.Character.Race"
+                            Gender="Attendance.Character.Gender"
+                            PlayerClass="Attendance.Character.Class"
+                            Spec="Attendance.MainSpec"
+                            Class="mr-5" />
+                <div class="flex-grow-1">
+                    @if (Attendance.MainSpec != default)
+                    {
+                        <div>
+                            <MudText Typo="Typo.caption">
+                                @Attendance.MainSpec.GetDisplayName(includeClassName: true)
+                            </MudText>
+                        </div>
+                    }
+                    @if (_editing)
+                    {
+                        <MudCheckBox @bind-Checked="_model.IgnoreAttendance" For="() => _model.IgnoreAttendance">
+                            Ignore Attendance
+                        </MudCheckBox>
+
+                        <MudTextField Label="Ignore Reason"
+                                      For="() =>_model.IgnoreReason"
+                                      @bind-Value="_model.IgnoreReason"
+                                      Disabled="!_model.IgnoreAttendance"
+                                      Variant="Variant.Filled"
+                                      Lines="3" />
+                    }
+                    else if (Attendance.IgnoreAttendance)
+                    {
+                        <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Inline="false" Color="Color.Success">Attendance Counted</MudText>
+                    }
+                </div>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            @if (_editing)
+            {
+                <MudButton OnClick="() => _editing = false" Variant="Variant.Text">Cancel</MudButton>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Save</MudButton>
+            }
+            else
+            {
+                <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
+                    @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(Attendance.Character.Id)))
+                    {
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnRemoveClickedAsync">Remove</MudButton>
+                    }
+                    @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
+                    {
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="BeginEdit">Edit</MudButton>
+                    }
+                </AuthorizeView>
+                <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="() => Dialog.Cancel()">Close</MudButton>
+            }
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    private bool _editing;
+    private ProblemValidator? _problemValidator;
+    private readonly UpdateAttendanceSubmissionDto _model = new();
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+    [Parameter] public AttendanceDto Attendance { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        if (Attendance is null) throw new ArgumentNullException(nameof(Attendance));
+    }
+
+    private Task OnRemoveClickedAsync()
+    {
+        return Api.Raids.RemoveAttendee(Raid.Id, Attendance.Character.Id)
+            .OnSuccess(_ =>
+            {
+                Raid.Attendees.RemoveAll(c => c.Character.Id == Attendance.Character.Id);
+                Dialog.Close(DialogResult.Ok(true));
+            })
+            .ValidateWith(_problemValidator)
+            .ExecuteAsync();
+    }
+
+    private void BeginEdit()
+    {
+        _model.IgnoreAttendance = Attendance.IgnoreAttendance;
+        _model.IgnoreReason = Attendance.IgnoreReason;
+        _editing = true;
+    }
+
+    private Task OnSubmitAsync()
+    {
+        if (!_model.IgnoreAttendance)
+        {
+            _model.IgnoreReason = null;
+        }
+
+        return Api.Raids.UpdateAttendee(Raid.Id, Attendance.Character.Id, _model)
+            .OnSuccess(attendance =>
+            {
+                Attendance.IgnoreAttendance = attendance.IgnoreAttendance;
+                Attendance.IgnoreReason = attendance.IgnoreReason;
+                Dialog.Close(DialogResult.Ok(false));
+            })
+            .ValidateWith(_problemValidator)
+            .ExecuteAsync();
+    }
+}

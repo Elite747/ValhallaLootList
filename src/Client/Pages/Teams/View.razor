@@ -1,4 +1,5 @@
 ﻿@page "/Teams/{teamName}"
+@page "/Teams/{teamName}/Phase/{Phase:int}"
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject TeamsSource TeamsSource
@@ -13,63 +14,82 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
                 </MudTooltip>
             </AuthorizeView>
-            <MudSelect T="byte"
-                       Value="_phase ?? phaseConfig.CurrentPhase"
-                       ValueChanged="OnPhaseChanged"
-                       Label="Phase"
-                       Variant="Variant.Outlined"
-                       OffsetX="false"
-                       OffsetY="false"
-                       Class="ml-5"
-                       Dense="true"
-                       ToStringFunc="@(phase => $"Phase {phase}")">
-                @foreach (var phase in phaseConfig.Brackets.Keys.OrderBy(p => p))
-                {
-                    <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
-                }
-            </MudSelect>
         </div>
 
-        @foreach (var schedule in team.Schedules)
+        @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
         {
-            var startDate = new DateTime(schedule.RealmTimeStart.Ticks);
-            <MudText Typo="Typo.h6">
-                @(schedule.Day)s from @(startDate.ToString("t", CultureInfo.CurrentCulture)) to @(startDate.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture)) (server time)
-            </MudText>
+            <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
         }
 
-        <MudGrid Class="mt-5">
-            <AuthorizeView Policy="@AppPolicies.Administrator" Context="auth">
-                <MudItem xs="12">
-                    <AdminView Team="team" User="auth.User" />
-                </MudItem>
-            </AuthorizeView>
-            <MudItem xs="12" md="_reviewMode ? 12 : 6">
-                @if (_reviewMode)
-                {
-                    <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
-                        <Review Phase="_phase ?? phaseConfig.CurrentPhase"
-                                TeamId="team.Id"
-                                OnSwitchViewClicked="() => _reviewMode = false"
-                                User="context.User"
-                                StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)" />
-                    </AuthorizeView>
-                }
-                else
-                {
-                    <TeamMembers Team="team"
-                                 SelectedPhase="_phase"
-                                 CurrentPhase="phaseConfig.CurrentPhase"
-                                 OnSwitchViewClicked="() => _reviewMode = true"
-                                 OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-                }
+        <MudGrid Class="mb-5">
+            <MudItem xs="12" md="6">
+                <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
+                    <Success>
+                        <MudSelect T="byte"
+                                   Value="GetDisplayPhase(phaseConfig)"
+                                   ValueChanged="OnPhaseChanged"
+                                   Label="Phase"
+                                   Variant="Variant.Filled"
+                                   OffsetX="false"
+                                   OffsetY="false"
+                                   Dense="true"
+                                   ToStringFunc="@(phase => $"Phase {phase} ({string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name))})")">
+                            @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
+                            {
+                                <MudSelectItem T="byte" Value="phase">
+                                    Phase @phase (@string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </Success>
+                    <Failure>
+                        <MudSelect T="byte"
+                                   Value="GetDisplayPhase(phaseConfig)"
+                                   ValueChanged="OnPhaseChanged"
+                                   Label="Phase"
+                                   Variant="Variant.Filled"
+                                   OffsetX="false"
+                                   OffsetY="false"
+                                   Dense="true"
+                                   ToStringFunc="@(phase => $"Phase {phase}")">
+                            @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
+                            {
+                                <MudSelectItem T="byte" Value="phase">Phase @phase</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </Failure>
+                </ApiExecutor>
             </MudItem>
-            <MudItem xs="12" md="_reviewMode ? 12 : 6">
+
+            <MudItem xs="12" Class="mb-5" />
+
+            <MudItem xs="12" md="6">
+                <div class="mb-5">
+                    <LeadersView Team="team" />
+                </div>
+                <TeamMembers Team="team"
+                             SelectedPhase="GetSelectedPhase()"
+                             CurrentPhase="phaseConfig.CurrentPhase"
+                             OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <div class="mb-5">
+                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" ShowExternalLink="true" />
+                </div>
                 <TeamRaids Team="team" />
             </MudItem>
-            <MudItem xs="12">
-                <ValhallaLootList.Client.Pages.Teams.Standings.Standings ShowExternalLink="true" Team="team" />
-            </MudItem>
+
+
+            <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
+                <MudItem xs="12">
+                    <Review Phase="GetDisplayPhase(phaseConfig)"
+                            Team="team"
+                            User="context.User"
+                            StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
+                            RosterChanged="StateHasChanged" />
+                </MudItem>
+            </AuthorizeView>
         </MudGrid>
     </ApiExecutor>
 </ApiExecutor>
@@ -77,8 +97,7 @@
 @code {
     private IApiExecutor? _executor;
     private string? _teamName;
-    private bool _teamChanged, _reviewMode;
-    private byte? _phase;
+    private bool _teamChanged;
 
     [Parameter]
     public string TeamName
@@ -94,36 +113,43 @@
         }
     }
 
+    [Parameter]
+    public int? Phase { get; set; }
+
     protected override Task OnParametersSetAsync()
     {
-        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Nav.ToAbsoluteUri(Nav.Uri).Query).TryGetValue("phase", out var phaseStrings)
-            && phaseStrings.Count == 1
-            && byte.TryParse(phaseStrings[0], out var phase))
-        {
-            _phase = phase;
-        }
-        else
-        {
-            _phase = null;
-        }
-
         if (_teamChanged)
         {
             _teamChanged = false;
             if (_executor is not null)
             {
-                return _executor.RestartAsync();
+                return _executor.RestartAsync(false);
             }
         }
         return Task.CompletedTask;
     }
 
+    private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
+    {
+        var phase = GetSelectedPhase();
+        if (phase.HasValue)
+        {
+            if (phaseConfig.Phases.Contains(phase.Value))
+            {
+                return phase.Value;
+            }
+        }
+        return phaseConfig.CurrentPhase;
+    }
+
+    private byte? GetSelectedPhase()
+    {
+        return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
+    }
+
     private void OnPhaseChanged(byte phase)
     {
-        if (_phase != phase)
-        {
-            Nav.NavigateTo($"teams/{TeamName}?phase={phase}");
-        }
+        Nav.NavigateTo($"teams/{TeamName}/phase/{phase}");
     }
 
     private async Task EditAsync(TeamDto team)
@@ -144,15 +170,15 @@
 
         if (lootList is not null)
         {
-            lootList.Locked = arg.Locked;
+            lootList.Status = arg.Status;
 
             if (arg.ApprovedBy.HasValue)
             {
                 lootList.Approved = true;
-                var guildMember = user.CreateGuildMemberFromClient();
+                var guildMember = user.CreateGuildMember();
                 if (guildMember?.Id == arg.ApprovedBy)
                 {
-                    lootList.ApprovedBy = guildMember;
+                    lootList.ApprovedBy = guildMember.GetDisplayName();
                 }
             }
             else

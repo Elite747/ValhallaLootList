@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class RangedAttackPowerDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.All & ~Specializations.Hunter;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
 
         protected override int GetStat(Item item) => item.RangedAttackPower;
 
@@ -15,7 +15,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return (spec & (Specializations.MeleeDps | Specializations.Tank)) != 0 && item.MeleeAttackPower > 0;
+            return (spec & (SpecializationGroups.MeleeDps | SpecializationGroups.Tank)) != 0 && item.MeleeAttackPower > 0;
         }
     }
 }

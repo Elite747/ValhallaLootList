@@ -4,146 +4,76 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using ValhallaLootList.Helpers;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Server.Data
 {
-    public class PrioCalculator
+    public static class PrioCalculator
     {
-        public const int
-            ObservedRaidsForAttendance = 8,
-            AttendancesPerPrioPoint = 4,
-            TrialWeek1Penalty = -18,
-            TrialWeek2Penalty = -9,
-            CopperForDonationPrio = 50_00_00;
-
-        private readonly ApplicationDbContext _context;
-        private readonly TimeZoneInfo _serverTimeZone;
-
-        public PrioCalculator(ApplicationDbContext context, TimeZoneInfo serverTimeZone)
+        public static int CalculateAttendanceBonus(int attendances, PriorityScope scope)
         {
-            _context = context;
-            _serverTimeZone = serverTimeZone;
+            return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);
         }
 
-        public record PrioCalculationResult(int? Priority, bool Locked, string? Details, bool IsError);
-
-        public async Task<PrioCalculationResult> CalculatePrioAsync(long characterId, uint itemId)
+        public static IEnumerable<PriorityBonusDto> GetListBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper)
         {
-            var entries = await _context.LootListEntries
-                .AsNoTracking()
-                .Where(e => (e.ItemId == itemId || e.Item!.RewardFromId == itemId) && e.LootList.CharacterId == characterId)
-                .Select(e => new
+            yield return GetAttendanceBonus(scope, attendances);
+            yield return GetStatusBonus(scope, status);
+            yield return GetDonationBonus(scope, donatedCopper);
+
+            static PriorityBonusDto GetAttendanceBonus(PriorityScope scope, int attendances)
+            {
+                return new AttendancePriorityBonusDto
                 {
-                    e.Rank,
-                    e.LootList.Locked,
-                    e.LootList.Character.MemberStatus,
-                    e.LootList.ApprovedBy,
-                    TeamId = (long?)e.LootList.Character.Team!.Id
-                })
-                .OrderByDescending(e => e.Rank)
-                .ToListAsync();
-
-            var winCount = await _context.Drops.AsNoTracking().CountAsync(drop => drop.ItemId == itemId && drop.WinnerId == characterId);
-
-            if (winCount > 0 && winCount >= entries.Count)
-            {
-                return new(null, entries.Count > 0 && entries[0].Locked, "Already won.", true);
+                    Type = PriorityBonusTypes.Attendance,
+                    Value = (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint),
+                    AttendancePerPoint = scope.AttendancesPerPoint,
+                    Attended = attendances,
+                    ObservedAttendances = scope.ObservedAttendances
+                };
             }
 
-            if (entries.Count == 0)
+            static PriorityBonusDto GetStatusBonus(PriorityScope scope, RaidMemberStatus status)
             {
-                return new(null, false, "Not on Loot List or no submitted list.", false);
+                return new MembershipPriorityBonusDto
+                {
+                    Type = PriorityBonusTypes.Trial,
+                    Value = status switch
+                    {
+                        RaidMemberStatus.HalfTrial => scope.HalfTrialPenalty,
+                        RaidMemberStatus.FullTrial => scope.FullTrialPenalty,
+                        RaidMemberStatus.Member => 0,
+                        _ => throw new ArgumentOutOfRangeException(nameof(status))
+                    },
+                    Status = status
+                };
             }
 
-            if (!entries[0].TeamId.HasValue)
+            static PriorityBonusDto GetDonationBonus(PriorityScope scope, long donatedCopper)
             {
-                return new(null, entries[0].Locked, "Not on a raid team.", false);
+                return new DonationPriorityBonusDto
+                {
+                    Type = PriorityBonusTypes.Donation,
+                    Value = donatedCopper >= scope.RequiredDonationCopper ? 1 : 0,
+                    DonatedCopper = donatedCopper,
+                    RequiredDonations = scope.RequiredDonationCopper
+                };
             }
-
-            var entry = entries[winCount];
-
-            var lossRecords = await _context.DropPasses
-                .AsNoTracking()
-                .Where(dp => dp.Drop.ItemId == itemId && dp.CharacterId == characterId)
-                .Select(dp => dp.RelativePriority)
-                .ToListAsync();
-
-            var attendances = await _context.RaidAttendees
-                .AsNoTracking()
-                .Where(x => !x.IgnoreAttendance && x.CharacterId == characterId && x.Raid.RaidTeamId == entry.TeamId)
-                .Select(x => x.Raid.StartedAt.Date)
-                .Distinct()
-                .OrderByDescending(x => x)
-                .Take(ObservedRaidsForAttendance)
-                .CountAsync();
-
-            var lostCount = lossRecords.Count(x => x >= 0);
-            var underPrioCount = lossRecords.Count - lostCount;
-            /* var notDroppedCount = 0;await _context.BossKills
-                .AsNoTracking()
-                .Where(kill => kill.Raid.Schedule.RaidTeam.Id == entry.TeamId &&
-                               kill.Raid.Attendees.Any(a => !a.IgnoreAttendance && a.CharacterId == characterId) &&
-                               kill.Boss.Items.Any(i => i.Id == itemId))
-                .CountAsync();*/
-
-            var now = _serverTimeZone.TimeZoneNow();
-
-            var donated = await _context.Donations
-                .AsNoTracking()
-                .Where(d => d.CharacterId == characterId && d.Month == now.Month && d.Year == now.Year)
-                .SumAsync(d => (long)d.CopperAmount);
-
-            var priority = CalculatePrio(entry.Rank, attendances, entry.MemberStatus, lostCount, underPrioCount, donationThresholdMet: donated >= CopperForDonationPrio);
-
-            if (!entry.Locked)
-            {
-                return new(priority, false, "Loot List is not locked.", false);
-            }
-
-            if (!entry.ApprovedBy.HasValue)
-            {
-                return new(priority, false, "Loot List is not approved.", false);
-            }
-
-            return new(priority, true, null, false);
         }
 
-        public static int CalculateAttendanceBonus(int attendances)
+        public static IEnumerable<PriorityBonusDto> GetItemBonuses(int timesSeen)
         {
-            return (int)Math.Floor((double)Math.Min(attendances, ObservedRaidsForAttendance) / AttendancesPerPrioPoint);
-        }
-
-        /// <summary>
-        /// Calculates the priority of an item.
-        /// </summary>
-        /// <param name="playerRank">The player-assigned rank of the item. (1-18)</param>
-        /// <param name="attendances">The total number of attended raids that were tracked.</param>
-        /// <param name="memberStatus">The trial status of the player.</param>
-        /// <param name="lostCount">The number of times the player lost the item to a /roll or voluntarily passing.</param>
-        /// <param name="underPrioCount">The number of times the player was not considered for the item due to others having higher priority.</param>
-        /// <param name="donationThresholdMet">If true, the player has donated enough for this month to get a bonus.</param>
-        /// <param name="notDroppedCount">*UNUSED* The number of times the player witnessed the boss die from where the item drops from, but it did not drop.</param>
-        /// <returns>The final calculated priority of an item for a player.</returns>
-        public static int CalculatePrio(int playerRank, int attendances, RaidMemberStatus memberStatus, int lostCount, int underPrioCount, bool donationThresholdMet)//, int notDroppedCount)
-        {
-            int attendanceBonus = CalculateAttendanceBonus(attendances);
-
-            int passBonus = (lostCount + underPrioCount);
-
-            const int badLuckProtection = 0; //(int)Math.Floor((double)notDroppedCount / ??);
-
-            int trialPenalty = memberStatus switch
+            yield return new LossPriorityBonusDto
             {
-                RaidMemberStatus.Member => 0,
-                RaidMemberStatus.HalfTrial => TrialWeek2Penalty,
-                RaidMemberStatus.FullTrial => TrialWeek1Penalty,
-                _ => throw new ArgumentOutOfRangeException(nameof(memberStatus))
+                Type = PriorityBonusTypes.Lost,
+                Value = timesSeen,
+                TimesSeen = timesSeen
             };
+        }
 
-            return playerRank + attendanceBonus + passBonus + badLuckProtection + trialPenalty + (donationThresholdMet ? 1 : 0);
+        public static IEnumerable<PriorityBonusDto> GetAllBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, int timesSeen)
+        {
+            return GetListBonuses(scope, attendances, status, donatedCopper).Concat(GetItemBonuses(timesSeen));
         }
     }
 }

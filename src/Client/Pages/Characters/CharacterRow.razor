@@ -1,0 +1,31 @@
+﻿<div class="d-flex">
+    <PlayerIcon Race="Character.Race"
+                Gender="Character.Gender"
+                PlayerClass="Character.Class"
+                Size="Size.Small"
+                Class="mr-1" />
+    <MudText Inline="false">@Character.Name</MudText>
+
+    @if (Character.TeamName?.Length > 0)
+    {
+        <MudText Class="ml-2">
+            &lt;@(Character.TeamName)&gt;
+        </MudText>
+    }
+
+    @if (Character.Deactivated)
+    {
+        <MudTooltip Class="ml-2" Text="Deactivated">
+            <MudIcon Icon="@Icons.Material.Outlined.Warning" Color="Color.Error" Size="Size.Small" />
+        </MudTooltip>
+    }
+</div>
+
+@code {
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+    }
+}

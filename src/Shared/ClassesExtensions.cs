@@ -35,6 +35,20 @@ namespace ValhallaLootList
             _ => throw new ArgumentOutOfRangeException(nameof(classes))
         };
 
+        public static string GetClassColor(this Classes classes) => classes switch
+        {
+            Classes.Warrior => "#C69B6D",
+            Classes.Paladin => "#F48CBA",
+            Classes.Hunter => "#AAD372",
+            Classes.Rogue => "#FFF468",
+            Classes.Priest => "#FFFFFF",
+            Classes.Shaman => "#0070DD",
+            Classes.Mage => "#3FC7EB",
+            Classes.Warlock => "#8788EE",
+            Classes.Druid => "#FF7C0A",
+            _ => throw new ArgumentOutOfRangeException(nameof(classes))
+        };
+
         public static bool IsSingleClass(this Classes playerClass) => playerClass switch
         {
             Classes.Warrior => true,
@@ -51,15 +65,15 @@ namespace ValhallaLootList
 
         public static Specializations ToSpecializations(this Classes playerClass) => playerClass switch
         {
-            Classes.Warrior => Specializations.Warrior,
-            Classes.Paladin => Specializations.Paladin,
-            Classes.Hunter => Specializations.Hunter,
-            Classes.Rogue => Specializations.Rogue,
-            Classes.Priest => Specializations.Priest,
-            Classes.Shaman => Specializations.Shaman,
-            Classes.Mage => Specializations.Mage,
-            Classes.Warlock => Specializations.Warlock,
-            Classes.Druid => Specializations.Druid,
+            Classes.Warrior => SpecializationGroups.Warrior,
+            Classes.Paladin => SpecializationGroups.Paladin,
+            Classes.Hunter => SpecializationGroups.Hunter,
+            Classes.Rogue => SpecializationGroups.Rogue,
+            Classes.Priest => SpecializationGroups.Priest,
+            Classes.Shaman => SpecializationGroups.Shaman,
+            Classes.Mage => SpecializationGroups.Mage,
+            Classes.Warlock => SpecializationGroups.Warlock,
+            Classes.Druid => SpecializationGroups.Druid,
             _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
         };
     }

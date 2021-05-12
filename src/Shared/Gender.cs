@@ -5,7 +5,7 @@ namespace ValhallaLootList
 {
     public enum Gender
     {
-		Male,
-		Female
+        Male,
+        Female
     }
 }

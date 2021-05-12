@@ -11,8 +11,8 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using ValhallaLootList.DataTransfer;
+using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
@@ -32,15 +32,9 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<CharacterDto> Get(bool owned = false, string? team = null)
+        public IAsyncEnumerable<CharacterDto> Get(string? team = null, bool? inclDeactivated = null)
         {
             var query = _context.Characters.AsNoTracking();
-
-            if (owned)
-            {
-                //TODO
-                throw new NotSupportedException();
-            }
 
             if (team?.Length > 0)
             {
@@ -58,6 +52,11 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
+            if (inclDeactivated == false)
+            {
+                query = query.Where(c => !c.Deactivated);
+            }
+
             return query
                 .OrderBy(c => c.Name)
                 .Select(c => new CharacterDto
@@ -68,7 +67,8 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
                 })
                 .AsAsyncEnumerable();
         }
@@ -80,9 +80,47 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("ByName/{name}")]
-        public Task<ActionResult<CharacterDto>> Get(string name)
+        public Task<ActionResult<CharacterDto>> GetByName(string name)
         {
             return GetAsync(c => c.Name == name);
+        }
+
+        [HttpGet("@mine")]
+        public async Task<ActionResult<IEnumerable<CharacterDto>>> GetMine()
+        {
+            var userId = User.GetDiscordId();
+            var characterIds = await _context.UserClaims
+                .AsNoTracking()
+                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
+                .Select(claim => claim.ClaimValue)
+                .ToListAsync();
+
+            var ids = new HashSet<long>();
+
+            foreach (var characterIdString in characterIds)
+            {
+                if (long.TryParse(characterIdString, out var characterId))
+                {
+                    ids.Add(characterId);
+                }
+            }
+
+            return await _context.Characters
+                .AsNoTracking()
+                .Where(c => ids.Contains(c.Id))
+                .OrderBy(c => c.Name)
+                .Select(c => new CharacterDto
+                {
+                    Class = c.Class,
+                    Id = c.Id,
+                    Name = c.Name,
+                    Race = c.Race,
+                    TeamId = c.TeamId,
+                    TeamName = c.Team!.Name,
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
+                })
+                .ToListAsync();
         }
 
         private async Task<ActionResult<CharacterDto>> GetAsync(Expression<Func<Character, bool>> match)
@@ -98,7 +136,8 @@ namespace ValhallaLootList.Server.Controllers
                     Race = c.Race,
                     TeamId = c.Team!.Id,
                     TeamName = c.Team.Name,
-                    Gender = c.IsFemale ? Gender.Female : Gender.Male
+                    Gender = c.IsFemale ? Gender.Female : Gender.Male,
+                    Deactivated = c.Deactivated
                 })
                 .FirstOrDefaultAsync();
 
@@ -119,10 +158,9 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             Debug.Assert(dto.Name?.Length > 1);
-            Debug.Assert(dto.Class.HasValue);
             Debug.Assert(dto.Race.HasValue);
 
-            var normalizedName = NormalizeName(dto.Name);
+            var normalizedName = NameHelpers.NormalizeName(dto.Name);
 
             if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
             {
@@ -135,13 +173,13 @@ namespace ValhallaLootList.Server.Controllers
                 ModelState.AddModelError(nameof(dto.Race), "Race selection is not valid.");
             }
 
-            if (!dto.Class.Value.IsSingleClass())
+            if (!dto.Class.IsSingleClass())
             {
                 ModelState.AddModelError(nameof(dto.Class), "Class selection is not valid.");
                 return ValidationProblem();
             }
 
-            if ((dto.Class.Value & dto.Race.Value.GetClasses()) == 0)
+            if ((dto.Class & dto.Race.Value.GetClasses()) == 0)
             {
                 ModelState.AddModelError(nameof(dto.Class), "Class is not available to the selected race.");
                 return ValidationProblem();
@@ -149,7 +187,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var character = new Character(idGenerator.CreateId())
             {
-                Class = dto.Class.Value,
+                Class = dto.Class,
                 MemberStatus = RaidMemberStatus.FullTrial,
                 Name = normalizedName,
                 Race = dto.Race.Value,
@@ -182,7 +220,8 @@ namespace ValhallaLootList.Server.Controllers
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                Gender = character.IsFemale ? Gender.Female : Gender.Male
+                Gender = character.IsFemale ? Gender.Female : Gender.Male,
+                Deactivated = character.Deactivated
             });
         }
 
@@ -202,9 +241,17 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (dto.Name?.Length > 0)
+            if (dto.Name?.Length > 0 && character.Name != dto.Name)
             {
-                character.Name = dto.Name;
+                var normalizedName = NameHelpers.NormalizeName(dto.Name);
+
+                if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
+                {
+                    ModelState.AddModelError(nameof(dto.Name), "A character with that name already exists.");
+                    return ValidationProblem();
+                }
+
+                character.Name = normalizedName;
             }
 
             if (dto.Race.HasValue)
@@ -228,12 +275,13 @@ namespace ValhallaLootList.Server.Controllers
                 Name = character.Name,
                 Race = character.Race,
                 Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                TeamId = character.TeamId
+                TeamId = character.TeamId,
+                Deactivated = character.Deactivated
             };
         }
 
-        [HttpGet("{id:long}/Owner"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<CharacterOwnerDto>> GetOwner(long id, [FromServices] DiscordService discordService)
+        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters
                 .AsNoTracking()
@@ -253,11 +301,69 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(c => new { c.UserId })
                 .FirstOrDefaultAsync();
 
-            return new CharacterOwnerDto
+            var removals = await _context.TeamRemovals
+                .AsNoTracking()
+                .Where(r => r.CharacterId == id)
+                .OrderByDescending(r => r.RemovedAt)
+                .Select(r => new TeamRemovalDto
+                {
+                    Id = r.Id,
+                    RemovedAt = r.RemovedAt,
+                    TeamId = r.TeamId,
+                    TeamName = r.Team.Name,
+                    JoinedAt = r.JoinedAt
+                })
+                .ToListAsync();
+
+            return new CharacterAdminDto
             {
-                Owner = await discordService.GetGuildMemberDtoAsync(claim?.UserId),
-                VerifiedBy = await discordService.GetGuildMemberDtoAsync(character.VerifiedById)
+                TeamRemovals = removals,
+                Owner = await dcp.GetMemberDtoAsync(claim?.UserId),
+                VerifiedBy = await dcp.GetMemberDtoAsync(character.VerifiedById)
             };
+        }
+
+        [HttpDelete("{id:long}/Removals/{removalId:long}"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult> DeleteRemoval(long id, long removalId)
+        {
+            var character = await _context.Characters.FindAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            var removal = await _context.TeamRemovals.FindAsync(removalId);
+
+            if (removal is null)
+            {
+                return NotFound();
+            }
+
+            if (removal.CharacterId != character.Id)
+            {
+                return Problem("Removal is not for the specified character.");
+            }
+
+            // Other removal relationships will be set to null on save. Attendances need to also have their ignore fields cleared.
+            await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.RemovalId == removal.Id).AsAsyncEnumerable())
+            {
+                attendance.IgnoreAttendance = false;
+                attendance.IgnoreReason = null;
+                attendance.Removal = null;
+                attendance.RemovalId = null;
+            }
+
+            _context.TeamRemovals.Remove(removal);
+
+            character.TeamId = removal.TeamId;
+            character.JoinedTeamAt = removal.JoinedAt;
+
+            await _context.SaveChangesAsync();
+
+            TrackTelemetry("RemovalUndone", character);
+
+            return Ok();
         }
 
         [HttpPost("{id:long}/Verify"), Authorize(AppPolicies.Administrator)]
@@ -285,7 +391,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPut("{id:long}/OwnerId"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId)
+        public async Task<ActionResult> SetOwner(long id, [FromBody] long ownerId, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -294,9 +400,9 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var user = await _context.Users.FindAsync(ownerId);
+            var member = await dcp.GetMemberAsync(ownerId);
 
-            if (user is null)
+            if (member is null)
             {
                 return Problem("No user with that id exists.");
             }
@@ -366,6 +472,28 @@ namespace ValhallaLootList.Server.Controllers
                 .AsAsyncEnumerable();
         }
 
+        [HttpPost("{id:long}/ToggleActivated"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult> ToggleHidden(long id)
+        {
+            var character = await _context.Characters.FindAsync(id);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            if (!character.Deactivated && character.TeamId.HasValue)
+            {
+                return Problem("Can't deactivate a character who is on a raid team.");
+            }
+
+            character.Deactivated = !character.Deactivated;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpDelete("{id:long}"), Authorize(AppPolicies.Administrator)]
         public async Task<ActionResult> Delete(long id)
         {
@@ -381,6 +509,11 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't delete a character who has already won loot.");
             }
 
+            if (await _context.RaidAttendees.CountAsync(a => a.CharacterId == id) > 0)
+            {
+                return Problem("Can't delete a character who has already attended a raid.");
+            }
+
             _context.Characters.Remove(character);
 
             await _context.SaveChangesAsync();
@@ -390,17 +523,33 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
-        private static string NormalizeName(string name)
+        [HttpGet("{id:long}/Specs")]
+        public async Task<ActionResult<IEnumerable<Specializations>>> GetSpecs(long id)
         {
-            return string.Create(name.Length, name, (span, name) =>
-            {
-                span[0] = char.ToUpperInvariant(name[0]);
+            var character = await _context.Characters
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Select(c => new { c.Class })
+                .FirstOrDefaultAsync();
 
-                for (int i = 1; i < span.Length; i++)
-                {
-                    span[i] = char.ToLowerInvariant(name[i]);
-                }
-            });
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            return character.Class switch
+            {
+                Classes.Druid => new[] { Specializations.BalanceDruid, Specializations.BearDruid, Specializations.CatDruid, Specializations.RestoDruid },
+                Classes.Hunter => new[] { Specializations.BeastMasterHunter, Specializations.MarksmanHunter, Specializations.SurvivalHunter },
+                Classes.Mage => new[] { Specializations.ArcaneMage, Specializations.FireMage, Specializations.FrostMage },
+                Classes.Paladin => new[] { Specializations.HolyPaladin, Specializations.ProtPaladin, Specializations.RetPaladin },
+                Classes.Priest => new[] { Specializations.DiscPriest, Specializations.HolyPriest, Specializations.ShadowPriest },
+                Classes.Rogue => new[] { Specializations.AssassinationRogue, Specializations.CombatRogue, Specializations.SubtletyRogue },
+                Classes.Shaman => new[] { Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman },
+                Classes.Warlock => new[] { Specializations.AfflictionWarlock, Specializations.DemoWarlock, Specializations.DestroWarlock },
+                Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
+                _ => Array.Empty<Specializations>()
+            };
         }
 
         private void TrackTelemetry(string name, Character character)

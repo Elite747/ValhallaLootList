@@ -1,0 +1,27 @@
+﻿<CharacterChip Character="Member.Character" Spec="Spec" OnClick="ToggleSelected">
+    <div class="d-flex align-center">
+        @Member.Character.Name
+        @if (IsSelected)
+        {
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
+        }
+    </div>
+</CharacterChip>
+
+@code {
+    [Parameter] public MemberDto Member { get; set; } = null!;
+    [Parameter] public Specializations Spec { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback<bool> IsSelectedChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Member is null) throw new ArgumentNullException(nameof(Member));
+    }
+
+    private Task ToggleSelected()
+    {
+        IsSelected = !IsSelected;
+        return IsSelectedChanged.InvokeAsync(IsSelected);
+    }
+}

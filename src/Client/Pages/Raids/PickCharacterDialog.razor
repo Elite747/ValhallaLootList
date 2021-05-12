@@ -1,28 +1,8 @@
-﻿@inject IDialogService DialogService  
-
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
-        <ApiExecutor Operation="Operation" Context="characters" @ref="_executor">
-            <div class="d-flex align-baseline">
-                <MudAutocomplete Label="Add Member"
-                                 T="CharacterDto"
-                                 SearchFunc="text => Search(text, characters)"
-                                 @bind-Value="_selectedCharacter"
-                                 @bind-Text="_searchText"
-                                 ResetValueOnEmptyText="true"
-                                 ToStringFunc="c => c.Name"
-                                 CoerceText="true">
-                    <ItemTemplate Context="character">
-                        <ClassIcon Size="IconSize.Tiny" PlayerClass="character.Class" /> <span>@character.Name</span>
-                    </ItemTemplate>
-                </MudAutocomplete>
-                <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
-                @if (ShowAdd)
-                {
-                    <MudIconButton OnClick="() => AddAsync(characters)" Color="Color.Success" Icon="@Icons.Material.Filled.Add" />
-                }
-            </div>
-        </ApiExecutor>
+        <ApiView Operation="Operation">
+            <CharacterPicker Characters="GetCharacters()" ShowAdd="ShowAdd" @bind-SelectedCharacter="_selectedCharacter" />
+        </ApiView>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
@@ -31,12 +11,10 @@
 </MudDialog>
 
 @code {
-    private IApiExecutor? _executor;
     private CharacterDto? _selectedCharacter;
-    private string? _searchText;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
-    [Parameter] public Func<IApiClientOperation<IList<CharacterDto>>> Operation { get; set; } = null!;
+    [Parameter] public IApiClientOperation<IList<CharacterDto>> Operation { get; set; } = null!;
     [Parameter] public Func<CharacterDto, bool>? Filter { get; set; }
     [Parameter] public bool ShowAdd { get; set; }
 
@@ -46,40 +24,15 @@
         if (Operation is null) throw new ArgumentNullException(nameof(Operation));
     }
 
-    private Task<IEnumerable<CharacterDto>> Search(string? text, IEnumerable<CharacterDto> characters)
+    private IList<CharacterDto> GetCharacters()
     {
-        var results = characters;
+        var characters = Operation.GetResult();
 
         if (Filter is not null)
         {
-            results = results.Where(Filter);
+            return characters.Where(Filter).ToList();
         }
 
-        if (text?.Length > 0)
-        {
-            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
-            results = results.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, text, compareOptions) >= 0);
-        }
-
-        return Task.FromResult(results.OrderBy(c => c.Name).AsEnumerable());
-    }
-
-    private async Task AddAsync(IList<CharacterDto> characters)
-    {
-        var character = await DialogService.ShowAsync<Pages.Characters.Create, CharacterDto>(
-            "Create Character",
-            parameters: new() 
-            {
-                [nameof(Pages.Characters.Create.AllowSubmitNonOwned)] = true,
-                [nameof(Pages.Characters.Create.DefaultSenderIsOwner)] = false
-            },
-            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-
-        if (character is not null)
-        {
-            characters.Add(character);
-            _selectedCharacter = character;
-            _searchText = character.Name;
-        }
+        return characters;
     }
 }

@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class HealingPowerDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.All & ~Specializations.Healer;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Healer;
 
         protected override int GetStat(Item item) => item.HealingPower;
 
@@ -15,7 +15,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return item.SpellPower == item.HealingPower && (spec & (Specializations.CasterDps | Specializations.PhysicalCaster)) != 0;
+            return item.SpellPower == item.HealingPower && (spec & (SpecializationGroups.CasterDps | SpecializationGroups.PhysicalCaster)) != 0;
         }
     }
 }

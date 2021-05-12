@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class DodgeDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.All & ~Specializations.Tank;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
 
         protected override int GetStat(Item item) => item.Dodge;
 

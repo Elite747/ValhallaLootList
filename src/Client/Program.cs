@@ -39,7 +39,9 @@ namespace ValhallaLootList.Client
                 .AddScoped<PermissionManager>()
                 .AddScoped<UserTimeProvider>()
                 .AddScoped<IAuthorizationHandler, Authorization.CharacterOwnerPolicyHandler>()
-                .AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>();
+                .AddScoped<IAuthorizationHandler, Authorization.TeamLeaderPolicyHandler>()
+                .AddScoped<IAuthorizationHandler, Authorization.AdminPolicyHandler>()
+                .AddScoped<IAuthorizationHandler, Authorization.MemberPolicyHandler>();
 
             builder.Services.Configure<JsonSerializerOptions>(options => Serialization.SerializerOptions.ConfigureDefaultOptions(options));
 
@@ -55,8 +57,9 @@ namespace ValhallaLootList.Client
 
             builder.Services.AddMudServices(options =>
             {
-                options.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
-                options.SnackbarConfiguration.ShowCloseIcon = true;
+                options.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+                options.SnackbarConfiguration.ShowCloseIcon = false;
+                options.SnackbarConfiguration.MaxDisplayedSnackbars = 1;
             });
 
             var host = builder.Build();

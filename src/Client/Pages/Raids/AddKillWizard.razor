@@ -1,0 +1,434 @@
+﻿@using ValhallaLootList.Client.Data.Import
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialogScrollFix FixedFooter="true" />
+<WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
+    <ApiView Operation="_instancesOperation">
+        <WizardSection Name="Import" CanContinue="ImportValid">
+            <MudTextField T="string"
+                          Value="_importString"
+                          ValueChanged="ImportOrClear"
+                          FullWidth="true"
+                          Immediate="true"
+                          Label="Import Code"
+                          Variant="Variant.Filled" />
+            @if (_importString?.Length > 0 && ImportValid())
+            {
+                <MudAlert Severity="Severity.Success">Imported!</MudAlert>
+            }
+
+            @if (_importError?.Length > 0)
+            {
+                <MudAlert Severity="Severity.Error">Import failed. @_importError</MudAlert>
+            }
+
+            @if (_nonExistantCharacters.Count != 0)
+            {
+                <MudList Dense="true" Class="my-2">
+                    <MudListSubheader>
+                        The following characters were imported but are not part of this raid. Add or remove these characters to continue.
+                    </MudListSubheader>
+                    @foreach (var character in _nonExistantCharacters)
+                    {
+                        <MudListItem>
+                            <div class="d-flex align-center">
+                                <PlayerIcon Gender="character.Gender"
+                                            PlayerClass="character.Class"
+                                            Race="character.Race"
+                                            ShowTooltip="true"
+                                            Size="Size.Small" />
+                                <MudText Class="mx-3">
+                                    @character.Name
+                                </MudText>
+                                <MudTooltip Class="mr-1" Text="Add">
+                                    <MudIconButton OnClick="() => AddNonExistantAsync(character)" Color="Color.Success" Icon="@Icons.Material.Filled.AddCircleOutline" />
+                                </MudTooltip>
+                                <MudTooltip Text="Remove">
+                                    <MudIconButton OnClick="() => RemoveNonExistant(character)" Color="Color.Error" Icon="@Icons.Material.Filled.RemoveCircleOutline" />
+                                </MudTooltip>
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+
+            @if (_importEncounters.Count != 0)
+            {
+                <MudList Dense="true" Clickable="true">
+                    <MudListSubheader>
+                        More than one kill was imported. Select the kill you would like to add.
+                    </MudListSubheader>
+                    @foreach (var encounter in _importEncounters)
+                    {
+                        <MudListItem OnClick="() => SetEncounter(encounter)" Disabled="encounter.Encounter is null">
+                            <MudText Typo="Typo.h6">
+                                @if (encounter.Encounter is not null)
+                                {
+                                    @encounter.Encounter.Name
+                                }
+                                else
+                                {
+                                    @:Unknown Items
+                                }
+                            </MudText>
+                            @foreach (var item in encounter.Items)
+                            {
+                                <div>
+                                    <ItemLink Id="item" Bracketize="true" Colorize="true" />
+                                </div>
+                            }
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </WizardSection>
+        <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
+            <MudList Clickable="true" Dense="true">
+                @foreach (var instance in _instancesOperation.GetResult().Where(i => i.Phase == Raid.Phase))
+                {
+                    <MudListSubheader @key="instance.Id">
+                        @instance.Name
+                    </MudListSubheader>
+                    @foreach (var e in instance.Encounters)
+                    {
+                        var encounter = e;
+                        <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                     OnClick="() => SetEncounter(encounter)"
+                                     Text="@encounter.Name"
+                                     @key="encounter.Id" />
+                    }
+                }
+            </MudList>
+        </WizardSection>
+        <WizardSection Name="Attendees" CanContinue="() => _attendees.Count != 0">
+            @if (_attendees.Count != Raid.Attendees.Count)
+            {
+                <MudAlert Severity="Severity.Warning">
+                    One or more attendees isn't listed as present for this kill.
+                    Ensure that this is correct before proceeding!
+                    <br />
+                    <small>
+                        Characters who are not present will not recieve loss bonuses for loot that drops.
+                    </small>
+                </MudAlert>
+            }
+
+            <div class="mt-1">
+                @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
+                    @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                    {
+                        <KillerChip Attendance="attendance"
+                                    Raid="Raid"
+                                    IsSelected="_attendees.ContainsKey(attendance.Character.Id)"
+                                    IsSelectedChanged="selected => SetPresent(attendance.Character, selected)" />
+                    }
+                }
+            </div>
+        </WizardSection>
+        <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
+            @foreach (var itemId in _drops.Keys)
+            {
+                var localItemId = itemId;
+                <div class="d-flex align-center py-1" @key="itemId">
+                    <CascadingItemContext Id="itemId">
+                        <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
+                            <ItemIcon Size="IconSize.Large" Width="56" Height="56" />
+                        </MudAvatar>
+                        <div class="mr-auto">
+                            <div>
+                                <ItemLink Colorize="true" Bracketize="true" />
+                            </div>
+                            <div class="d-flex align-center">
+                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Max(0, _drops[localItemId] - 1)"
+                                               Disabled="_drops[localItemId] <= 0"
+                                               Icon="@Icons.Material.Filled.RemoveCircle"
+                                               Size="Size.Small"
+                                               Color="Color.Error" />
+
+                                <MudText Typo="Typo.h6" Class="mx-2">@_drops[localItemId]</MudText>
+
+                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Min(3, _drops[localItemId] + 1)"
+                                               Disabled="_drops[localItemId] >= 3"
+                                               Icon="@Icons.Material.Filled.AddCircle"
+                                               Size="Size.Small"
+                                               Color="Color.Success" />
+                            </div>
+                        </div>
+                    </CascadingItemContext>
+                </div>
+            }
+        </WizardSection>
+    </ApiView>
+</WizardDialog>
+
+@code {
+    private readonly Dictionary<long, CharacterDto> _attendees = new();
+    private readonly Dictionary<uint, int> _drops = new();
+    private readonly List<ImportCharacter> _nonExistantCharacters = new();
+    private readonly List<ImportEncounter> _importEncounters = new();
+    private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
+    private string? _importString, _importError;
+    private EncounterDto? _encounter;
+
+    [Parameter] public RaidDto Raid { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        _instancesOperation = Api.Instances.GetAll();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        ResetState();
+    }
+
+    private void ResetState()
+    {
+        SetEncounter(default(EncounterDto));
+
+        _attendees.Clear();
+        var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
+        foreach (var attendee in Raid.Attendees)
+        {
+            if (lastKill?.Characters.Contains(attendee.Character.Id) != false)
+            {
+                _attendees[attendee.Character.Id] = attendee.Character;
+            }
+        }
+    }
+
+    private bool ImportValid() => _nonExistantCharacters.Count == 0 && _importEncounters.Count == 0 && string.IsNullOrEmpty(_importError);
+
+    private void ImportOrClear(string importString)
+    {
+        _importString = importString;
+        _importError = null;
+        _nonExistantCharacters.Clear();
+        _importEncounters.Clear();
+        ResetState();
+
+        if (importString?.Length > 0)
+        {
+            ImportKillModel? model;
+            try
+            {
+                model = System.Text.Json.JsonSerializer.Deserialize<ImportKillModel>(importString);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _importError = ex.Message;
+                return;
+            }
+            if (model is not null)
+            {
+                if (model.Items?.Count > 0)
+                {
+                    _importEncounters.AddRange(ImportEncounter.CreateFromItems(model.Items, _instancesOperation.GetResult(), (byte)Raid.Phase));
+
+                    if (_importEncounters.Count == 1)
+                    {
+                        var singleEncounter = _importEncounters[0];
+                        SetEncounter(singleEncounter);
+
+                        if (singleEncounter.Encounter is null)
+                        {
+                            _importError = "No imported items were valid for importing.";
+                            return;
+                        }
+                    }
+                }
+
+                if (model.Characters?.Count > 0)
+                {
+                    _attendees.Clear();
+
+                    foreach (var importCharacter in model.Characters)
+                    {
+                        if (string.IsNullOrEmpty(importCharacter.Name))
+                        {
+                            _importError = "One or more characters does not have a name specified.";
+                            return;
+                        }
+
+                        if (importCharacter.Class == Classes.None || !Enum.IsDefined(importCharacter.Class))
+                        {
+                            _importError = $"One or more characters does not have a valid class.";
+                            return;
+                        }
+
+                        if (!Enum.IsDefined(importCharacter.Gender))
+                        {
+                            _importError = $"One or more characters does not have a valid gender.";
+                            return;
+                        }
+
+                        if (!Enum.IsDefined(importCharacter.Race))
+                        {
+                            _importError = $"One or more characters does not have a valid race.";
+                            return;
+                        }
+
+                        var character = Raid.Attendees.Find(a => a.Character.Name == importCharacter.Name)?.Character;
+
+                        if (character is null)
+                        {
+                            _nonExistantCharacters.Add(importCharacter);
+                        }
+                        else if (importCharacter.Class != character.Class)
+                        {
+                            _importError = $"{importCharacter.Name} was imported with class {importCharacter.Class} which doesn't match the known class of {character.Class}.";
+                            return;
+                        }
+                        else if (importCharacter.Gender != character.Gender)
+                        {
+                            _importError = $"{importCharacter.Name} was imported with gender {importCharacter.Gender} which doesn't match the known gender of {character.Gender}.";
+                            return;
+                        }
+                        else if (importCharacter.Race != character.Race)
+                        {
+                            _importError = $"{importCharacter.Name} was imported with race {importCharacter.Race} which doesn't match the known race of {character.Race}.";
+                            return;
+                        }
+                        else
+                        {
+                            SetPresent(character, true);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _importError = "Import text is not valid.";
+            }
+        }
+    }
+
+    private async Task AddNonExistantAsync(ImportCharacter character)
+    {
+        System.Diagnostics.Debug.Assert(character.Name?.Length > 0);
+
+        CharacterDto? characterDto = null;
+        bool notFound = false;
+
+        await Api.Characters.Get(character.Name!)
+            .OnSuccess(c => characterDto = c)
+            .OnFailure(problem =>
+            {
+                if (problem.Status == 404)
+                {
+                    notFound = true;
+                }
+                else
+                {
+                    Snackbar.Add(problem.GetDisplayString(), Severity.Error);
+                }
+            })
+            .ExecuteAsync();
+
+        if (notFound)
+        {
+            await Api.Characters.Create(new() { Name = character.Name, Class = character.Class, Gender = character.Gender, Race = character.Race, SenderIsOwner = false })
+                .OnSuccess(c => characterDto = c)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+
+        if (characterDto is not null)
+        {
+            await Api.Raids.AddAttendee(Raid.Id, characterDto.Id)
+                .OnSuccess(a =>
+                {
+                    Raid.Attendees.Add(a);
+                    SetPresent(a.Character, true);
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private void RemoveNonExistant(ImportCharacter character)
+    {
+        _nonExistantCharacters.Remove(character);
+    }
+
+    private void SetEncounter(ImportEncounter encounter)
+    {
+        _importEncounters.Clear();
+        SetEncounter(encounter.Encounter);
+
+        if (encounter.Encounter is not null)
+        {
+            foreach (var item in encounter.Items)
+            {
+                if (_drops.TryGetValue(item, out int count))
+                {
+                    _drops[item] = count + 1;
+                }
+            }
+        }
+    }
+
+    private void SetEncounter(EncounterDto? encounter)
+    {
+        _encounter = encounter;
+        _drops.Clear();
+
+        if (encounter is not null)
+        {
+            foreach (var drop in encounter.Items)
+            {
+                _drops.Add(drop, 0);
+            }
+        }
+    }
+
+    private void SetPresent(CharacterDto character, bool present)
+    {
+        if (_attendees.ContainsKey(character.Id))
+        {
+            if (!present)
+            {
+                _attendees.Remove(character.Id);
+            }
+        }
+        else if (present)
+        {
+            _attendees.Add(character.Id, character);
+        }
+    }
+
+    private Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    {
+        if (_encounter is null)
+        {
+            arg.Cancel = true;
+            return Task.CompletedTask;
+        }
+
+        var kill = new KillSubmissionDto
+        {
+            Characters = _attendees.Keys.ToList(),
+            EncounterId = _encounter.Id
+        };
+
+        foreach (var (id, count) in _drops)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                kill.Drops.Add(id);
+            }
+        }
+
+        return Api.Raids.AddKill(Raid.Id, kill)
+            .OnSuccess(Raid.Kills.Add)
+            .OnFailure(_ => arg.Cancel = true)
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+}

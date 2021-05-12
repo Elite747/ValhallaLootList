@@ -1,0 +1,176 @@
+﻿@namespace ValhallaLootList.Client.Shared
+
+<MudDialog>
+    <TitleContent>
+        @(Title ?? Dialog.Title)
+    </TitleContent>
+    <DialogContent>
+        <CascadingValue Value="this" IsFixed="true">
+            @ChildContent
+            <ul class="mud-breadcrumbs mud-typography-body1 mx-auto">
+                @for (int i = 0; i < Sections.Count; i++)
+                {
+                    var section = Sections[i];
+                    if (i != 0)
+                    {
+                        <li class="mud-breadcrumb-separator">/</li>
+                    }
+                    <li class="mud-breadcrumb-item">
+                        <MudButton OnClick="() => GoTo(section)" Disabled="!CanGoTo(section)" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
+                            @section.Name
+                        </MudButton>
+                    </li>
+                }
+            </ul>
+            @CurrentSection?.ChildContent
+        </CascadingValue>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="GoToNextAsync" Disabled="!CanGoNext()" Color="Color.Primary" Variant="Variant.Filled">
+            @(IsLastStep() ? "Finish" : "Next")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    internal List<WizardSection> Sections { get; } = new();
+    internal WizardSection? CurrentSection { get; set; }
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public object? State { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public EventCallback<System.ComponentModel.CancelEventArgs> OnFinish { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+
+    public void AddSection(WizardSection section)
+    {
+        if (!Sections.Contains(section))
+        {
+            Sections.Add(section);
+            if (CurrentSection is null)
+            {
+                CurrentSection = section;
+            }
+            StateHasChanged();
+        }
+    }
+
+    public void GoToStart()
+    {
+        if (Sections.Count != 0)
+        {
+            GoTo(Sections[0]);
+        }
+    }
+
+    public bool CanGoTo(WizardSection? section)
+    {
+        // Don't navigate to nothing.
+        if (section is null)
+        {
+            return false;
+        }
+
+        // Always navigate from nothing.
+        if (CurrentSection is null)
+        {
+            return true;
+        }
+
+        var currentIndex = Sections.IndexOf(CurrentSection);
+        var targetIndex = Sections.IndexOf(section);
+
+        // Don't navigate to self.
+        if (currentIndex == targetIndex)
+        {
+            return false;
+        }
+
+        // Always navigate backwards.
+        if (targetIndex < currentIndex)
+        {
+            return true;
+        }
+
+        // Don't navigate forward if something before target is invalid.
+        for (int i = currentIndex; i < targetIndex; i++)
+        {
+            if (Sections[i].CanContinue?.Invoke() == false)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public bool CanGoNext()
+    {
+        if (CurrentSection is null)
+        {
+            return true;
+        }
+
+        var index = Sections.IndexOf(CurrentSection) + 1;
+        if (index == Sections.Count)
+        {
+            return CanFinish();
+        }
+        else
+        {
+            return CanGoTo(Sections[index]);
+        }
+    }
+
+    [System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(CurrentSection))]
+    public bool IsLastStep() => Sections.Count != 0 && Sections[^1] == CurrentSection;
+
+    public void GoTo(WizardSection? section)
+    {
+        if (section is not null && section != CurrentSection && CanGoTo(section))
+        {
+            CurrentSection = section;
+            StateHasChanged();
+        }
+    }
+
+    public Task GoToNextAsync()
+    {
+        var index = CurrentSection is null ? 0 : (Sections.IndexOf(CurrentSection) + 1);
+
+        if (index == Sections.Count)
+        {
+            return FinishAsync();
+        }
+        else
+        {
+            GoTo(Sections[index]);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public bool CanFinish()
+    {
+        return Sections.All(s => s.CanContinue?.Invoke() != false);
+    }
+
+    public async Task FinishAsync()
+    {
+        if (CanFinish())
+        {
+            var arg = new System.ComponentModel.CancelEventArgs();
+            await OnFinish.InvokeAsync(arg);
+            if (!arg.Cancel)
+            {
+                Dialog.Close(DialogResult.Ok(State));
+            }
+        }
+    }
+}

@@ -1,0 +1,110 @@
+﻿<div Class="bracket mx-4 mt-2 mb-4">
+    <div class="mx-4 py-2">
+        <MudText Typo="Typo.h6">
+            Bracket @(Bracket + 1)
+            @if (ShowBracketRules)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Info" Class="ml-2" Style="font-size: 1rem" />
+                <small>Not all item ranks need to be filled.</small>
+            }
+        </MudText>
+        @if (ShowBracketRules)
+        {
+            @if (IsHighest)
+            {
+                <MudText Color="Color.Success">Highest Priority</MudText>
+            }
+            else if (IsLowest)
+            {
+                <MudText Color="Color.Error">Lowest Priority</MudText>
+            }
+            <MudText>
+                Bracket Rules:
+                <span>Up to @(_maxItemsPerRank == 1 ? "1 item" : $"{_maxItemsPerRank:N0} items") per rank</span>
+                @if (AllowOffSpec)
+                {
+                    <span>, Offspec items allowed</span>
+                }
+                else
+                {
+                    <span>, No offspec items</span>
+                }
+                @if (!AllowTypeDuplicates)
+                {
+                    <span>, Only one item per category</span>
+                    <MudTooltip>
+                        <ChildContent>
+                            <MudIcon Style="font-size: 1rem" Icon="@Icons.Material.Filled.InfoOutline" />
+                        </ChildContent>
+                        <TooltipContent>
+                            <div style="text-align: start">
+                                <p><b>Categories:</b></p>
+                                <ul>
+                                    <li>Head Armor</li>
+                                    <li>Shoulder Armor</li>
+                                    <li>Chest Armor</li>
+                                    <li>Waist Armor</li>
+                                    <li>Leg Armor</li>
+                                    <li>Foot Armor</li>
+                                    <li>Wrist Armor</li>
+                                    <li>Hand Armor</li>
+                                    <li>Rings & Necklaces</li>
+                                    <li>Trinkets</li>
+                                    <li>Cloaks</li>
+                                    <li>Weapons, Shields & Offhands</li>
+                                    <li>Wands & Relics</li>
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </MudTooltip>
+                }
+            </MudText>
+        }
+    </div>
+    @foreach (var row in _rankGroups)
+    {
+        var itemsInRow = row.Count();
+        <MudDivider DividerType="DividerType.Middle" />
+        <MudGrid Class="mx-4 py-2" Spacing="0" @key="row.Key">
+            <MudItem md="3" lg="2" Class="d-flex align-center">
+                <MudText Typo="Typo.h6">
+                    Rank @row.Key
+                </MudText>
+            </MudItem>
+            @foreach (var entry in row)
+            {
+                <MudItem xs="12" md="9 / itemsInRow" lg="10 / itemsInRow">
+                    @EntryTemplate?.Invoke(entry)
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</div>
+
+@code {
+    private readonly List<IGrouping<int, LootListEntryDto>> _rankGroups = new();
+    private int _maxItemsPerRank;
+
+    [Parameter] public int Bracket { get; set; }
+    [Parameter] public bool AllowOffSpec { get; set; }
+    [Parameter] public bool AllowTypeDuplicates { get; set; }
+    [Parameter] public IEnumerable<LootListEntryDto> BracketEntries { get; set; } = null!;
+    [Parameter] public bool IsHighest { get; set; }
+    [Parameter] public bool IsLowest { get; set; }
+    [Parameter] public RenderFragment<LootListEntryDto>? EntryTemplate { get; set; }
+    [Parameter] public bool ShowBracketRules { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (BracketEntries is null) throw new ArgumentNullException(nameof(BracketEntries));
+
+        _rankGroups.Clear();
+        _maxItemsPerRank = 1;
+
+        foreach (var group in BracketEntries.GroupBy(e => e.Rank).OrderByDescending(g => g.Key))
+        {
+            _maxItemsPerRank = Math.Max(_maxItemsPerRank, group.Count());
+            _rankGroups.Add(group);
+        }
+    }
+}

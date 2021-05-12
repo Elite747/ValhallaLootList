@@ -34,7 +34,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules
 
         protected virtual bool AppliesTo(Item item) => true;
 
-        protected virtual Specializations ApplicableSpecs() => Specializations.All;
+        protected virtual Specializations ApplicableSpecs() => SpecializationGroups.All;
 
         protected abstract ItemDetermination MakeDetermination(Item item, Specializations spec);
     }

@@ -18,11 +18,11 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable
         {
             var equippableSpecs = item.Type switch
             {
-                ItemType.Axe => Specializations.Paladin | Specializations.Shaman | Specializations.Warrior | Specializations.Hunter,
-                ItemType.Mace => Specializations.Druid | Specializations.Paladin | Specializations.Shaman | Specializations.Warrior,
-                ItemType.Sword => Specializations.Paladin | Specializations.Warrior | Specializations.Hunter,
-                ItemType.Polearm => Specializations.Paladin | Specializations.Warrior | Specializations.Hunter,
-                ItemType.Stave => Specializations.All & ~(Specializations.Paladin | Specializations.Rogue),
+                ItemType.Axe => SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+                ItemType.Mace => SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior,
+                ItemType.Sword => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+                ItemType.Polearm => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+                ItemType.Stave => SpecializationGroups.All & ~(SpecializationGroups.Paladin | SpecializationGroups.Rogue),
                 _ => throw new ArgumentException("Item is not a two-handed weapon.", nameof(item))
             };
 

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using MudBlazor;
@@ -73,7 +72,7 @@ namespace ValhallaLootList.Client.Pages.Characters
 
             if (Array.IndexOf(_raceClasses, _character.Class) < 0)
             {
-                _character.Class = null;
+                _character.Class = default;
             }
         }
     }

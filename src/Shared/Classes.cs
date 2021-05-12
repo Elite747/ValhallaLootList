@@ -6,17 +6,17 @@ using System;
 namespace ValhallaLootList
 {
     [Flags]
-	public enum Classes
-	{
+    public enum Classes
+    {
         None = 0,
-		Warrior = 0b_0000_0000_0001,
-		Paladin = 0b_0000_0000_0010,
-		Hunter = 0b_0000_0000_0100,
-		Rogue = 0b_0000_0000_1000,
-		Priest = 0b_0000_0001_0000,
-		Shaman = 0b_0000_0100_0000,
-		Mage = 0b_0000_1000_0000,
-		Warlock = 0b_0001_0000_0000,
-		Druid = 0b_0100_0000_0000
-	}
+        Warrior = 0b_0000_0000_0001,
+        Paladin = 0b_0000_0000_0010,
+        Hunter = 0b_0000_0000_0100,
+        Rogue = 0b_0000_0000_1000,
+        Priest = 0b_0000_0001_0000,
+        Shaman = 0b_0000_0100_0000,
+        Mage = 0b_0000_1000_0000,
+        Warlock = 0b_0001_0000_0000,
+        Druid = 0b_0100_0000_0000
+    }
 }

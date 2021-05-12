@@ -1,28 +1,44 @@
-﻿@page "/Characters/{character}"
+﻿@page "/Characters/{characterName}"
+@using ValhallaLootList.Client.Pages.Characters.LootList;
 @inject ApiClient Api
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @inject NavigationManager Nav 
-@inject ISnackbar Snackbar 
 
-<ApiExecutor Operation="() => Api.Characters.Get(Character)" Context="character">
+<ApiExecutor Operation="() => Api.Characters.Get(CharacterName ?? string.Empty)" Context="character" @key="CharacterName">
     <div class="d-flex align-center mb-3">
-        <MudAvatar Class="mr-2" Size="Size.Medium">
-            <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
-        </MudAvatar>
-        <MudAvatar Class="mr-2" Size="Size.Medium">
-            <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
-        </MudAvatar>
+        <PlayerIcon Race="character.Race"
+                    Gender="character.Gender"
+                    PlayerClass="character.Class"
+                    Size="Size.Medium"
+                    ShowTooltip="true"
+                    Class="mr-2" />
         <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@character.Name</MudText>
         @if (character.TeamName?.Length > 0)
         {
             <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
         }
+        @if (character.Deactivated)
+        {
+            <MudTooltip Class="ml-1" Text="Deactivated">
+                <MudIcon Icon="@Icons.Material.Outlined.Warning" Color="Color.Error" Size="Size.Medium" />
+            </MudTooltip>
+        }
         <AuthorizeView Policy="@AppPolicies.Administrator">
             <MudTooltip Text="Edit">
                 <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(character)" />
             </MudTooltip>
+            <MudTooltip Text="@(character.Deactivated ? "Reactivate" : "Deactivate")">
+                <MudIconButton Class="ml-2"
+                               Color="character.Deactivated ? Color.Success : Color.Error"
+                               Icon="@(character.Deactivated ? Icons.Material.Filled.AddCircleOutline : Icons.Material.Filled.RemoveCircleOutline)"
+                               OnClick="() => ToggleActivatedAsync(character)" />
+            </MudTooltip>
             <MudTooltip Text="Delete">
-                <MudIconButton Class="ml-2" Color="Color.Error" Icon="@Icons.Material.Filled.DeleteForever" OnClick="() => DeleteAsync(character)" />
+                <MudIconButton Class="ml-2"
+                               Color="Color.Error"
+                               Icon="@Icons.Material.Filled.DeleteForever"
+                               OnClick="() => DeleteAsync(character)" />
             </MudTooltip>
         </AuthorizeView>
     </div>
@@ -31,44 +47,34 @@
         <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 
-    <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="config">
-        <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4" @ref="_tabs" @bind-ActivePanelIndex="ActivePanelIndex">
-                @{ var index = 0;  }
-                @foreach (var phase in config.Brackets.Keys.OrderBy(p => p))
-                {
-                    <MudTabPanel Text="@($"Phase {phase}")">
-                        <LootListView Character="character" Phase="phase" LootLists="lootLists" />
-                    </MudTabPanel>
-                    @if (phase == config.CurrentPhase)
-                    {
-                        _defaultActivePanelIndex = index;
-                    }
-                    index++;
-                }
-                <MudTabPanel Text="Won Items">
-                    <WonItemsView Character="character" />
+    <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
+        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true">
+            @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderByDescending(p => p))
+            {
+                <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
+                    <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />
                 </MudTabPanel>
-                <MudTabPanel Text="Attendance">
-                    <AttendanceView Character="character" />
-                </MudTabPanel>
-            </MudTabs>
-        </ApiExecutor>
+            }
+            <MudTabPanel Text="Won Items" ID="_wonId">
+                <WonItemsView Character="character" />
+            </MudTabPanel>
+            <MudTabPanel Text="Attendance" ID="_attendanceId">
+                <AttendanceView Character="character" />
+            </MudTabPanel>
+        </MudTabs>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
-    private MudTabs? _tabs;
-    private int? _activePanelIndex;
-    private int _defaultActivePanelIndex;
+    private PhaseConfigDto? _phaseConfig;
+    private object _wonId = new(), _attendanceId = new();
 
-    private int ActivePanelIndex
+    [Parameter] public string? CharacterName { get; set; }
+
+    protected override Task OnInitializedAsync()
     {
-        get => _activePanelIndex ?? _defaultActivePanelIndex;
-        set => _activePanelIndex = value;
+        return Api.GetPhaseConfiguration().OnSuccess(config => _phaseConfig = config).ExecuteAsync();
     }
-
-    [Parameter] public string Character { get; set; } = string.Empty;
 
     private async Task EditAsync(CharacterDto character)
     {
@@ -84,11 +90,35 @@
         }
     }
 
+    private async Task ToggleActivatedAsync(CharacterDto character)
+    {
+        string title, message;
+
+        if (character.Deactivated)
+        {
+            title = "Re-Activate Character";
+            message = "Reactivating will make this character available for new raid attendances. Are you sure you want to reactivate this character?";
+        }
+        else
+        {
+            title = "Deactivate Character";
+            message = "Deactivating will make this character hidden from the characters page and new raid attendances. Are you sure you want to deactivate this character?";
+        }
+
+        if (await DialogService.ShowMessageBox(title, message, "Yes", "No") == true)
+        {
+            await Api.Characters.ToggleActivated(character.Id)
+                .OnSuccess(_ => Nav.NavigateTo("characters"))
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
     private async Task DeleteAsync(CharacterDto character)
     {
         if (await DialogService.ShowMessageBox(
             "Delete Character",
-            "Are you sure you want to delete this character?",
+            "Deleting a character can only be done if they have not won any loot or attended any raids yet. This action is irreversible! Are you sure you want to delete this character?",
             "Yes",
             "No") == true)
         {

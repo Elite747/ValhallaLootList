@@ -21,7 +21,7 @@ namespace ValhallaLootList.Client.Shared
             if (CurrentEditContext is null)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(CustomValidator)} requires a cascading " +
+                    $"{nameof(ProblemValidator)} requires a cascading " +
                     $"parameter of type {nameof(EditContext)}. " +
                     $"For example, you can use {nameof(ProblemValidator)} " +
                     $"inside an {nameof(EditForm)}.");

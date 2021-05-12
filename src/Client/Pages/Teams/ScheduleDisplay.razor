@@ -1,0 +1,22 @@
+﻿<MudText Typo="Typo" Inline="false" Class="d-block">
+    @if (ShowIcon)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1" />
+    }
+    @(Schedule.Day)s from @(_start.ToString("t", CultureInfo.CurrentCulture)) to @(_end.ToString("t", CultureInfo.CurrentCulture)) (server time)
+</MudText>
+
+@code {
+    private DateTime _start, _end;
+
+    [Parameter] public ScheduleDto Schedule { get; set; } = null!;
+    [Parameter] public Typo Typo { get; set; }
+    [Parameter] public bool ShowIcon { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Schedule is null) throw new ArgumentNullException(nameof(Schedule));
+        _start = new DateTime(Schedule.RealmTimeStart.Ticks);
+        _end = _start.Add(Schedule.Duration);
+    }
+}

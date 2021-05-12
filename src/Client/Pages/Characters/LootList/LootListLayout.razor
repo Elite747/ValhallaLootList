@@ -1,0 +1,95 @@
+﻿<div class="@Class">
+    @if (HeaderContent is not null)
+    {
+        <div class="mx-4 my-2">
+            @HeaderContent
+        </div>
+    }
+    <div class="mx-4 my-2 d-flex">
+        <MudText Typo="Typo.h6" Class="mx-auto">
+            Main Spec:
+            <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
+            @LootList.MainSpec.GetDisplayName()
+        </MudText>
+        @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
+        {
+            <MudDivider Vertical="true" FlexItem="true" />
+            <MudText Typo="Typo.h6" Class="mx-auto">
+                Off Spec:
+                <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />
+                @LootList.OffSpec.GetDisplayName()
+            </MudText>
+        }
+    </div>
+    @if (_brackets.Count == 1 && _brackets[0].All(e => e.Rank == 0))
+    {
+        <div Class="bracket mx-4 mt-2 mb-4">
+            <div class="mx-4 py-2">
+                <MudText Typo="Typo.body1">
+                    Rankings are hidden and will not be shown until the loot list has been locked.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    Items are in alphabetical order.
+                </MudText>
+            </div>
+            @foreach (var entry in LootList.Entries.Where(e => e.ItemId > 0).OrderBy(e => e.ItemName))
+            {
+                <MudDivider DividerType="DividerType.Middle" />
+                <div class="mx-4 py-2">
+                    @EntryTemplate?.Invoke(entry)
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        for (int i = 0; i < _brackets.Count; i++)
+        {
+            var bracket = _brackets[i];
+            <LootListLayoutBracket AllowOffSpec="bracket.Key.AllowsOffspec"
+                                   AllowTypeDuplicates="bracket.Key.AllowsTypeDuplicates"
+                                   Bracket="bracket.Key.Bracket"
+                                   BracketEntries="bracket"
+                                   EntryTemplate="EntryTemplate!"
+                                   IsHighest="i == 0"
+                                   IsLowest="i == _brackets.Count - 1"
+                                   ShowBracketRules="ShowBracketRules"
+                                   @key="bracket.Key.Bracket" />
+        }
+    }
+</div>
+
+@code {
+    private readonly List<IGrouping<BracketInfo, LootListEntryDto>> _brackets = new();
+
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<LootListEntryDto>? EntryTemplate { get; set; }
+    [Parameter] public LootListDto LootList { get; set; } = null!;
+    [Parameter] public bool ShowBracketRules { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
+        _brackets.Clear();
+        _brackets.AddRange(LootList.Entries.GroupBy(e => new BracketInfo(e)).OrderBy(b => b.Key.Bracket));
+    }
+
+    private readonly struct BracketInfo
+    {
+        public BracketInfo(LootListEntryDto entry)
+        {
+            Bracket = entry.Bracket;
+            AllowsOffspec = entry.BracketAllowsOffspec;
+            AllowsTypeDuplicates = entry.BracketAllowsTypeDuplicates;
+        }
+
+        public readonly int Bracket { get; }
+        public readonly bool AllowsOffspec { get; }
+        public readonly bool AllowsTypeDuplicates { get; }
+
+        public readonly override int GetHashCode() => Bracket;
+
+        public readonly override bool Equals(object? obj) => Bracket.Equals((obj as BracketInfo?)?.Bracket);
+    }
+}

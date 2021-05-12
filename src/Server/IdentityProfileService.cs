@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Data;
@@ -18,33 +17,61 @@ namespace ValhallaLootList.Server
 {
     public class IdentityProfileService : DefaultProfileService
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly DiscordService _discordService;
-        private readonly DiscordRoleMap _roles;
+        private readonly DiscordClientProvider _discordClientProvider;
         private readonly ApplicationDbContext _context;
 
-        public IdentityProfileService(UserManager<AppUser> userManager, DiscordService discordService, DiscordRoleMap roles, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
+        public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
         {
-            _userManager = userManager;
-            _discordService = discordService;
-            _roles = roles;
+            _discordClientProvider = discordClientProvider;
             _context = context;
         }
 
         public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
             await base.GetProfileDataAsync(context);
-            context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
+            //context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
 
             if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
             {
+                // add character and raid leader claims
                 var claims = await _context.UserClaims
                     .AsNoTracking()
-                    .Where(claim => claim.UserId == userId && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
+                    .Where(claim => claim.UserId == userId && claim.ClaimValue != null && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
                     .Select(claim => new Claim(claim.ClaimType, claim.ClaimValue))
                     .ToListAsync();
 
                 context.IssuedClaims.AddRange(claims);
+
+                var member = await _discordClientProvider.GetMemberAsync(userId);
+
+                if (member is not null)
+                {
+                    // add discord claims
+                    TryAddClaim(context, DiscordClaimTypes.AvatarHash, member.AvatarHash);
+                    TryAddClaim(context, DiscordClaimTypes.AvatarUrl, member.AvatarUrl);
+                    TryAddClaim(context, DiscordClaimTypes.Discriminator, member.Discriminator);
+                    TryAddClaim(context, DiscordClaimTypes.Username, member.Username);
+
+                    // add discord role claims
+                    foreach (var role in member.Roles)
+                    {
+                        TryAddClaim(context, DiscordClaimTypes.Role, role.Name);
+                    }
+
+                    // add app role claims
+                    foreach (var appRole in _discordClientProvider.GetAppRoles(member))
+                    {
+                        TryAddClaim(context, AppClaimTypes.Role, appRole);
+                    }
+                }
+            }
+        }
+
+        private static void TryAddClaim(ProfileDataRequestContext context, string claimType, string? value)
+        {
+            if (value?.Length > 0)
+            {
+                context.IssuedClaims.Add(new(claimType, value));
             }
         }
 
@@ -52,33 +79,13 @@ namespace ValhallaLootList.Server
         {
             context.IsActive = false;
 
-            string idString = context.Subject.GetSubjectId();
-
-            if (long.TryParse(idString, out var id))
+            if (long.TryParse(context.Subject.GetSubjectId(), out var id))
             {
-                var user = await _userManager.FindByIdAsync(idString);
+                var guildMember = await _discordClientProvider.GetMemberAsync(id);
 
-                if (user is not null)
+                if (guildMember is not null)
                 {
-                    var oldClaims = await _userManager.GetClaimsAsync(user);
-
-                    var guildMember = await _discordService.GetMemberInfoAsync(id);
-
-                    if (guildMember is not null)
-                    {
-                        var oldAppRoles = oldClaims.Where(claim => claim.Type == AppClaimTypes.Role).Select(claim => claim.Value).ToHashSet();
-                        var newAppRoles = new HashSet<string>();
-
-                        foreach (var (appRole, discordRole) in _roles.AllRoles)
-                        {
-                            if (guildMember.RoleNames?.Contains(discordRole) == true)
-                            {
-                                newAppRoles.Add(appRole);
-                            }
-                        }
-
-                        context.IsActive = newAppRoles.Contains(AppRoles.Member) && oldAppRoles.SetEquals(newAppRoles);
-                    }
+                    context.IsActive = _discordClientProvider.HasMemberRole(guildMember);
                 }
             }
         }

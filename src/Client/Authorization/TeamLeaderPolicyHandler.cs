@@ -19,22 +19,26 @@ namespace ValhallaLootList.Client.Authorization
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement)
         {
-            if (context.User.IsAdmin() && requirement.AllowAdmin)
+            if (requirement.AllowAdmin && context.User.HasClaim(AppClaimTypes.Role, AppRoles.Administrator))
             {
                 context.Succeed(requirement);
                 return;
             }
 
-            long? teamId = context.Resource switch
+            if ((requirement.AllowLootMaster && context.User.HasClaim(AppClaimTypes.Role, AppRoles.LootMaster)) ||
+                (requirement.AllowRaidLeader && context.User.HasClaim(AppClaimTypes.Role, AppRoles.RaidLeader)))
             {
-                long id => id,
-                TeamDto team => team.Id,
-                _ => null
-            };
+                long? teamId = context.Resource switch
+                {
+                    long id => id,
+                    TeamDto team => team.Id,
+                    _ => null
+                };
 
-            if (teamId is null || await _permissionManager.IsLeaderOfAsync(teamId.Value))
-            {
-                context.Succeed(requirement);
+                if (teamId is null || await _permissionManager.IsLeaderOfAsync(teamId.Value))
+                {
+                    context.Succeed(requirement);
+                }
             }
         }
     }

@@ -1,0 +1,180 @@
+﻿<MudDialogScrollFix FixedFooter="true" />
+<MudDialog DisableSidePadding="true">
+    <TitleContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6">Select Item</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="_searchText"
+                              Immediate="true"
+                              Label="Find Item"
+                              Variant="Variant.Filled"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Filled.Search" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-SelectedValues="_searchGroups"
+                           MultiSelection="true"
+                           Variant="Variant.Filled"
+                           Label="Item Group"
+                           ToStringFunc="group => group.Name"
+                           T="ItemGroup">
+                    @foreach (var group in ItemGroup.All)
+                    {
+                        <MudSelectItem T="ItemGroup" Value="group">@group.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="_msLevel"
+                           Variant="Variant.Filled"
+                           Label="Restriction Level"
+                           ToStringFunc='r => r switch { null => "Allowed", ItemRestrictionLevel.Restricted => "All Items", _ => "Allowed & Review" }'
+                           T="ItemRestrictionLevel?">
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@null">Allowed</MudSelectItem>
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@ItemRestrictionLevel.ManualReview" Class="mud-success-text">
+                        Allowed &amp; Review
+                    </MudSelectItem>
+                    <MudSelectItem T="ItemRestrictionLevel?" Value="@ItemRestrictionLevel.Restricted" Class="mud-success-text">All Items</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </TitleContent>
+    <DialogContent>
+        <MudList Clickable="true" Dense="true">
+            @foreach (var itemTypeGroup in EnumerateItems().GroupBy(item => new ItemGroup(item.Type, item.Slot)).OrderBy(g => g.Key))
+            {
+                bool bracketContainsGroup = GroupsInBracket.Contains(itemTypeGroup.Key);
+                <MudDivider />
+                <MudListSubheader Class="pb-1">
+                    <MudText Typo="Typo.h6">
+                        @itemTypeGroup.Key.Name
+                    </MudText>
+                    @if (bracketContainsGroup)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Error">An item of this type is already in the bracket.</MudText>
+                    }
+                </MudListSubheader>
+                @foreach (var item in itemTypeGroup.OrderBy(item => item.Name))
+                {
+                    var id = item.Id;
+                    <MudDivider Class="d-flex d-sm-none" />
+                    <MudListItem OnClick="() => LinkClicked(id)" Disabled="bracketContainsGroup">
+                        <div class="d-flex align-start flex-column flex-sm-row">
+                            <CascadingItemContext Id="item.Id">
+                                <div class="d-flex align-center align-self-stretch mr-auto">
+                                    <MudAvatar Rounded="true" Class="mr-2" Size="Size.Small">
+                                        <ItemIcon Size="IconSize.Medium" Width="24" Height="24" />
+                                    </MudAvatar>
+                                    <ItemLink PlaceholderText="@item.Name" Colorize="true" Bracketize="true" />
+                                    @if (AlreadySelectedItems.Contains(id))
+                                    {
+                                        <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Class="ml-1" />
+                                    }
+                                    else if (item.QuestId > 0 && AlreadySelectedQuests.Contains(item.QuestId))
+                                    {
+                                        <a class="ml-1 mud-error-text" data-wowhead="quest=@item.QuestId&domain=tbc">
+                                            Rewarded from a quest which may only be completed once.
+                                        </a>
+                                    }
+                                </div>
+                            </CascadingItemContext>
+
+                            @if (AllowOffspec && OffSpec != default)
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" SpecPrefix="MS" />
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & OffSpec) != 0)" SpecPrefix="OS" />
+                            }
+                            else
+                            {
+                                <RestrictionStatus Restrictions="item.Restrictions.Where(r => (r.Specs & MainSpec) != 0)" />
+                            }
+                        </div>
+                    </MudListItem>
+                }
+            }
+        </MudList>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    private string? _searchText;
+    private HashSet<ItemGroup> _searchGroups = new();
+    private ItemRestrictionLevel? _msLevel;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter] public IEnumerable<ItemDto> Items { get; set; } = null!;
+
+    [Parameter] public Specializations MainSpec { get; set; }
+
+    [Parameter] public Specializations OffSpec { get; set; }
+
+    [Parameter] public HashSet<ItemGroup> GroupsInBracket { get; set; } = null!;
+
+    [Parameter] public HashSet<uint> AlreadySelectedItems { get; set; } = null!;
+
+    [Parameter] public HashSet<uint> AlreadySelectedQuests { get; set; } = null!;
+
+    [Parameter] public bool AllowOffspec { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (GroupsInBracket is null) throw new ArgumentNullException(nameof(GroupsInBracket));
+        if (AlreadySelectedItems is null) throw new ArgumentNullException(nameof(AlreadySelectedItems));
+        if (AlreadySelectedQuests is null) throw new ArgumentNullException(nameof(AlreadySelectedQuests));
+    }
+
+    private void LinkClicked(uint itemId)
+    {
+        Dialog.Close(DialogResult.Ok(itemId));
+    }
+
+    private IEnumerable<ItemDto> EnumerateItems()
+    {
+        var items = Items;
+
+        if (_searchText?.Length > 0)
+        {
+            const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+            items = items.Where(ch => ch.Name?.Length > 0 && CultureInfo.CurrentCulture.CompareInfo.IndexOf(ch.Name, _searchText, compareOptions) >= 0);
+        }
+
+        if (_searchGroups?.Count > 0)
+        {
+            items = items.Where(item => _searchGroups.Contains(new ItemGroup(item.Type, item.Slot)));
+        }
+
+        if (_msLevel != ItemRestrictionLevel.Restricted)
+        {
+            if (AllowOffspec && OffSpec != default)
+            {
+                if (_msLevel == ItemRestrictionLevel.ManualReview)
+                {
+                    items = items.Where(item =>
+                        !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted) ||
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+                }
+                else
+                {
+                    items = items.Where(item =>
+                        !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0) ||
+                        !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0));
+                }
+            }
+            else if (_msLevel == ItemRestrictionLevel.ManualReview)
+            {
+                items = items.Where(item => !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+            }
+            else
+            {
+                items = items.Where(item => !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0));
+            }
+        }
+
+        return items;
+    }
+}

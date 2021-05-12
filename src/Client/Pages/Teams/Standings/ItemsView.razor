@@ -1,0 +1,61 @@
+﻿<MudList Dense="true">
+    @foreach (var itemId in Items)
+    {
+        if (Standings.TryGetValue(itemId, out var itemStandings) && itemStandings.Count != 0 && (ShowWon || itemStandings.Any(s => !s.Entry.Won)))
+        {
+            <MudDivider />
+            <MudListItem>
+                <div class="d-flex">
+                    <div class="mr-3 d-flex align-center">
+                        <CascadingItemContext Id="itemId">
+                            <ItemIcon Size="IconSize.Small" />
+                            <ItemLink LinkEnabled="true" Bracketize="true" Colorize="true" />
+                        </CascadingItemContext>
+                    </div>
+                    <div class="mr-auto">
+                        @foreach (var entry in itemStandings.Where(e => ShowWon || !e.Entry.Won).OrderByDescending(e => e.Prio).ThenBy(e => e.CharacterName))
+                        {
+                            <MudText Color="entry.Entry.Won ? Color.Success : Color.Default">
+                                @if (entry.Prio.HasValue && !entry.Entry.Won)
+                                {
+                                    <MudTooltip>
+                                        <TooltipContent>
+                                            <div>
+                                                Rank @entry.Entry.Rank
+                                            </div>
+                                            @foreach (var bonus in entry.Bonuses)
+                                            {
+                                                <div>
+                                                    <PriorityBonusDisplay Bonus="bonus" />
+                                                </div>
+                                            }
+                                        </TooltipContent>
+                                        <ChildContent>
+                                            @entry.CharacterName (@entry.Prio.Value)
+                                        </ChildContent>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    @entry.CharacterName
+                                }
+                            </MudText>
+                        }
+                    </div>
+                </div>
+            </MudListItem>
+        }
+    }
+</MudList>
+
+@code {
+    [Parameter] public IEnumerable<uint> Items { get; set; } = null!;
+    [Parameter] public Dictionary<uint, List<StandingContext>> Standings { get; set; } = null!;
+    [Parameter] public bool ShowWon { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Items is null) throw new ArgumentNullException(nameof(Items));
+        if (Standings is null) throw new ArgumentNullException(nameof(Standings));
+    }
+}

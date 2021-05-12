@@ -22,12 +22,12 @@ namespace ValhallaLootList.DataTransfer
             {
                 if (lootList.Phase == phase)
                 {
-                    if ((lootList.MainSpec & Specializations.Tank) != 0)
+                    if ((lootList.MainSpec & SpecializationGroups.Tank) != 0)
                     {
                         return 1;
                     }
 
-                    if ((lootList.MainSpec & Specializations.Healer) != 0)
+                    if ((lootList.MainSpec & SpecializationGroups.Healer) != 0)
                     {
                         return 2;
                     }

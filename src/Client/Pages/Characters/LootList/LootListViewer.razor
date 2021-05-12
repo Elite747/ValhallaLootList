@@ -1,0 +1,222 @@
+﻿@implements IDisposable
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject TeamsSource TeamsSource
+
+@if (LootList is null)
+{
+    <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
+        <div class="mx-4 my-2">
+            <MudButton OnClick="CreateListAsync" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        </div>
+    </AuthorizeView>
+    <p class="mx-4 my-2">
+        @Character.Name does not have a loot list for Phase @Phase.
+    </p>
+}
+else
+{
+    <LootListLayout LootList="LootList">
+        <HeaderContent>
+            <div class="mb-3">
+                <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
+                @if (!Character.Deactivated)
+                {
+                    if (!Character.TeamId.HasValue)
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
+                            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">Submit Application</MudButton>
+                        </AuthorizeView>
+                    }
+                    if (LootList.Status == LootListStatus.Submitted)
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
+                            <MudButton OnClick="RevokeAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error" Class="mr-2">Revoke Application</MudButton>
+                        </AuthorizeView>
+                    }
+                }
+            </div>
+            <div class="mb-3">
+                @if (LootList.Status == LootListStatus.Submitted)
+                {
+                    if (LootList.SubmittedTo.Count == 0)
+                    {
+                        <MudText Typo="Typo.body1" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Clear" Size="Size.Small" /> Loot List has been rejected.</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" />
+                            @GetSubmittedTeamNames()
+                        </MudText>
+                    }
+                }
+                else if (LootList.Status == LootListStatus.Approved)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Custom.Uncategorized.AlertSuccess" Size="Size.Small" /> Loot List has been approved!</MudText>
+                }
+                else if (LootList.Status == LootListStatus.Locked)
+                {
+                    <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
+                }
+            </div>
+        </HeaderContent>
+        <EntryTemplate Context="entry">
+            @if (entry.ItemId > 0)
+            {
+                <LootListViewerEntry LootList="LootList" Entry="entry" />
+            }
+        </EntryTemplate>
+    </LootListLayout>
+}
+
+@code {
+    [Parameter] public byte Phase { get; set; }
+    [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public LootListDto? LootList { get; set; }
+    [Parameter] public EventCallback<LootListDto> OnListUpdated { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+
+    public Task RefreshAsync()
+    {
+        return Api.LootLists.GetForCharacter(Character.Id, Phase)
+            .OnSuccess(lists => ChangeListRef(lists.SingleOrDefault()))
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    protected override void OnInitialized()
+    {
+        TeamsSource.Updated += StateHasChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Character is null) throw new ArgumentNullException(nameof(Character));
+    }
+
+    private Task RevokeAsync()
+    {
+        System.Diagnostics.Debug.Assert(LootList?.Status == LootListStatus.Submitted);
+        return Api.LootLists.SetEditable(LootList)
+            .OnSuccess((_, _) =>
+            {
+                return OnListUpdated.InvokeAsync(LootList);
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task ChangeListRef(LootListDto? lootList)
+    {
+        LootList = lootList;
+        return OnListUpdated.InvokeAsync(lootList);
+    }
+
+    private Task CreateListAsync()
+    {
+        System.Diagnostics.Debug.Assert(LootList is null);
+
+        return Api.Characters.GetSpecs(Character.Id)
+            .OnSuccess(async (specs, _) =>
+            {
+                if (specs.Count == 1)
+                {
+                    await Api.LootLists.Create(Character.Id, Phase, new() { MainSpec = specs[0] })
+                        .OnSuccess((list, _) => ChangeListRef(list))
+                        .SendErrorTo(Snackbar)
+                        .ExecuteAsync();
+                }
+                else
+                {
+                    var response = await DialogService.ShowAsync<CreateListDialog, LootListDto?>(
+                        string.Empty,
+                        new()
+                        {
+                            [nameof(CreateListDialog.CharacterId)] = Character.Id,
+                            [nameof(CreateListDialog.Phase)] = Phase,
+                            [nameof(CreateListDialog.Specializations)] = specs,
+                        });
+
+                    if (response is not null)
+                    {
+                        await ChangeListRef(response);
+                    }
+                }
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private async Task SubmitAsync()
+    {
+        System.Diagnostics.Debug.Assert(LootList is not null);
+        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
+            string.Empty,
+            parameters: new()
+            {
+                [nameof(PickTeamDialog.SelectedTeams)] = LootList.SubmittedTo.ToList()
+            });
+
+        if (teams is not null)
+        {
+            await Api.LootLists.Submit(LootList, teams)
+                .OnSuccess((_, _) =>
+                {
+                    return OnSubmit.InvokeAsync();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private string GetSubmittedTeamNames()
+    {
+        if (LootList?.SubmittedTo.Count > 0)
+        {
+            var sb = new System.Text.StringBuilder("Loot List has been submitted to ");
+
+            if (LootList.SubmittedTo.Any(id => !TeamsSource.Teams.Any(team => team.Id == id)))
+            {
+                if (LootList.SubmittedTo.Count == 1)
+                {
+                    sb.Append("1 team ");
+                }
+                else
+                {
+                    sb.Append(LootList.SubmittedTo.Count).Append(" teams ");
+                }
+            }
+            else
+            {
+                sb.Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[0]).Name);
+
+                if (LootList.SubmittedTo.Count > 1)
+                {
+                    if (LootList.SubmittedTo.Count != 2)
+                    {
+                        sb.Append(',');
+                    }
+
+                    for (int i = 1; i < LootList.SubmittedTo.Count - 1; i++)
+                    {
+                        sb.Append(' ').Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[i]).Name).Append(',');
+                    }
+
+                    sb.Append(" and ").Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[^1]).Name);
+                }
+            }
+
+            sb.Append(" awaiting approval.");
+
+            return sb.ToString();
+        }
+        return "Loot List is not submitted to any teams.";
+    }
+
+    void IDisposable.Dispose()
+    {
+        TeamsSource.Updated -= StateHasChanged;
+    }
+}

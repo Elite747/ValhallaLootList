@@ -9,6 +9,10 @@ namespace ValhallaLootList.DataTransfer
     {
         public uint Id { get; set; }
 
+        public uint QuestId { get; set; }
+
+        public int MaxCount { get; set; }
+
         public string? Name { get; set; }
 
         public ItemType Type { get; set; }

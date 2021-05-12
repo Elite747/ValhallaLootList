@@ -1,112 +1,130 @@
 ﻿@page "/raids"
+@page "/raids/{Year:int}/{Month:int}"
 @implements IDisposable
 @inject ApiClient Api
 @inject ISnackbar Snackbar
-@inject UserTimeProvider TimeProvider 
-@{
-    var firstDayOfWeek = (int)CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
-    var firstCalendarDay = _date.AddDays(firstDayOfWeek - (int)_date.DayOfWeek);
-}
+@inject UserTimeProvider TimeProvider
+@inject TeamsSource TeamsSource
+@inject NavigationManager Nav
 
-<MudCard Elevation="5">
-    <div class="d-flex justify-space-between align-center">
-        <MudIconButton OnClick="() => ChangeMonth(-1)" Icon="@Icons.Material.Filled.ChevronLeft" />
-        <MudText Typo="Typo.h4">
-            @TimeProvider.Convert(_date).ToString("MMMM", CultureInfo.CurrentCulture)
-        </MudText>
-        <MudIconButton OnClick="() => ChangeMonth(1)" Icon="@Icons.Material.Filled.ChevronRight" />
-    </div>
-    <MudOverlay Visible="_raidsLoading" Absolute="true">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-    </MudOverlay>
-    <SimpleTableEx Bordered="true" FixedLayout="true" Class="ma-0" Outlined="false">
-        <thead>
-            <tr>
-                @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
-                {
-                    <th>@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @for (int week = 0; week < 6; week++)
+<EventCalendar Date="_date" DateChanged="OnDateChanged" Culture="CultureInfo.CurrentCulture" Elevation="5">
+    <ChildContent>
+        <MudOverlay Visible="_raidsLoading" Absolute="true">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </MudOverlay>
+    </ChildContent>
+    <EventContent Context="date">
+        @if (!_raidsLoading)
+        {
+            if (date >= TimeProvider.Today)
             {
-                DateTime firstDayThisWeek = firstCalendarDay.AddDays(week * 7);
-
-                if (firstDayThisWeek.Month > _date.Month || firstDayThisWeek.Year > _date.Year)
+                var teamsAdded = _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == date).Select(r => r.TeamId).ToHashSet();
+                @foreach (var team in TeamsSource.Teams.Where(team => !teamsAdded.Contains(team.Id)))
                 {
-                    break;
-                }
-
-                <tr>
-                    @for (int day = 0; day < 7; day++)
+                    foreach (var schedule in team.Schedules.Select(s => new { s.Day, s.Duration, Date = TimeProvider.FromServerTimeOfDay(date, s.RealmTimeStart) }).Where(s => s.Day == s.Date.DayOfWeek))
                     {
-                        DateTime current = firstDayThisWeek.AddDays(day);
-
-                        @if (current.Month == _date.Month)
-                        {
-                            <td class="pa-1 ma-0 @(current == DateTime.Today ? "mud-theme-secondary" : "")">
-                                <div style="float: right">
-                                    @current.Day
+                        <MudTooltip>
+                            <TooltipContent>
+                                <p>Team @team.Name scheduled raid</p>
+                                <p>
+                                    @schedule.Date.ToString("t", CultureInfo.CurrentCulture)
+                                    -
+                                    @schedule.Date.Add(schedule.Duration).ToString("t", CultureInfo.CurrentCulture)
+                                </p>
+                            </TooltipContent>
+                            <ChildContent>
+                                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" class="mx-1">
+                                    <a href="teams/@team.Name"><MudIcon Style="font-size: 1rem; margin-bottom: -0.15rem" Icon="@Icons.Material.Filled.Schedule" /> @team.Name</a>
                                 </div>
-                                <div style="min-height: 6rem">
-                                    @foreach (var raid in _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == current).OrderBy(r => r.StartedAt))
-                                    {
-                                        <MudTooltip Text="@($"{raid.TeamName} Phase {raid.Phase} raid on {TimeProvider.Convert(raid.StartedAt).ToString("f", CultureInfo.CurrentCulture)}")">
-                                            <div>
-                                                <MudLink Href="@("raids/" + raid.Id)" Color="Color.Inherit">
-                                                    @raid.TeamName (P.@raid.Phase)
-                                                </MudLink>
-                                            </div>
-                                        </MudTooltip>
-                                    }
-                                </div>
-                            </td>
-                        }
-                        else
-                        {
-                            <td class="pa-0 ma-0 mud-theme-dark"></td>
-                        }
+                            </ChildContent>
+                        </MudTooltip>
                     }
-                </tr>
+                }
             }
-        </tbody>
-    </SimpleTableEx>
-</MudCard>
+            @foreach (var raid in _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == date))
+            {
+                <MudTooltip @key="raid.Id">
+                    <TooltipContent>
+                        <p>Team @raid.TeamName phase @raid.Phase raid</p>
+                        <p>Started at @TimeProvider.Convert(raid.StartedAt).ToString("t", CultureInfo.CurrentCulture)</p>
+                    </TooltipContent>
+                    <ChildContent>
+                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" class="mx-1">
+                            <a href="raids/@raid.Id"><MudIcon Style="font-size: 1rem; margin-bottom: -0.15rem" Icon="@GetNumIcon(raid.Phase)" /> @raid.TeamName</a>
+                        </div>
+                    </ChildContent>
+                </MudTooltip>
+            }
+        }
+    </EventContent>
+</EventCalendar>
 
 @code {
     private readonly List<RaidDto> _raids = new();
     private DateTime _date;
     private bool _raidsLoading;
 
-    protected override Task OnInitializedAsync()
+    [Parameter] public int Month { get; set; }
+    [Parameter] public int Year { get; set; }
+
+    protected override void OnInitialized()
     {
         TimeProvider.ModeChanged += StateHasChanged;
-        _date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        return ChangeMonth(0);
+        TeamsSource.Updated += StateHasChanged;
+        TeamsSource.EnsureStarted(Api);
     }
 
-    private Task ChangeMonth(int months)
+    protected override Task OnParametersSetAsync()
     {
-        _date = _date.AddMonths(months);
-        _raids.Clear();
-        _raidsLoading = true;
-        StateHasChanged();
-        return Api.Raids.GetForMonth(_date.Year, _date.Month)
-            .OnSuccess(raids =>
-            {
-                _raids.AddRange(raids);
-                _raidsLoading = false;
-                StateHasChanged();
-            })
-            .OnFailure(_ =>
-            {
-                _raidsLoading = false;
-                StateHasChanged();
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
+        var newDate = new DateTime(
+            year: Year is >= 1 and <= 9999 ? Year : TimeProvider.Today.Year,
+            month: Month is >= 1 and <= 12 ? Month : TimeProvider.Today.Month,
+            day: 1);
+
+        if (newDate != _date)
+        {
+            _date = newDate;
+            _raids.Clear();
+            _raidsLoading = true;
+            return Api.Raids.GetForMonth(newDate.Year, newDate.Month)
+                .OnSuccess(raids =>
+                {
+                    _raids.AddRange(raids);
+                    _raidsLoading = false;
+                })
+                .OnFailure(_ =>
+                {
+                    _raidsLoading = false;
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+
+        return Task.CompletedTask;
     }
 
-    public void Dispose() => TimeProvider.ModeChanged -= StateHasChanged;
+    private void OnDateChanged(DateTime date)
+    {
+        Nav.NavigateTo($"raids/{date.Year:D4}/{date.Month:D2}");
+    }
+
+    private string GetNumIcon(int phase)
+    {
+        return phase switch
+        {
+            1 => Icons.Material.Filled.LooksOne,
+            2 => Icons.Material.Filled.LooksTwo,
+            3 => Icons.Material.Filled.Looks3,
+            4 => Icons.Material.Filled.Looks4,
+            5 => Icons.Material.Filled.Looks5,
+            6 => Icons.Material.Filled.Looks6,
+            _ => string.Empty
+        };
+    }
+
+    public void Dispose()
+    {
+        TimeProvider.ModeChanged -= StateHasChanged;
+        TeamsSource.Updated -= StateHasChanged;
+    }
 }

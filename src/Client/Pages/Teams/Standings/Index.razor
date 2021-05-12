@@ -1,17 +1,45 @@
-﻿@page "/Teams/{team}/Standings/{encounter?}"
+﻿@page "/Teams/{team}/Standings"
+@page "/Teams/{team}/Standings/Phase/{phase:int}/{encounter?}"
 @inject ApiClient Api
-@inject NavigationManager Nav 
+@inject NavigationManager Nav
 
-<ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
-    <Standings ShowExternalLink="false" Team="team" SelectedEncounterId="@Encounter" SelectedEncounterIdChanged="OnEncounterChanged" />
-</ApiExecutor>
+@if (_phase > 0)
+{
+    <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
+        <Standings ShowExternalLink="false" Team="team" Phase="_phase" SelectedEncounterId="@Encounter" SelectedEncounterIdChanged="OnEncounterChanged" />
+    </ApiExecutor>
+}
+else
+{
+    <LoadingIndicator />
+}
 
 @code {
+    private byte _phase;
+
     [Parameter] public string Team { get; set; } = string.Empty;
+    [Parameter] public int? Phase { get; set; }
     [Parameter] public string? Encounter { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (Phase.HasValue && Phase > 0 && Phase <= byte.MaxValue)
+        {
+            _phase = (byte)Phase.Value;
+            return Task.CompletedTask;
+        }
+        else
+        {
+            return Api.GetPhaseConfiguration()
+                .OnSuccess(config => _phase = config.CurrentPhase)
+                .OnFailure(_ => _phase = 1)
+                .ExecuteAsync();
+        }
+    }
 
     private void OnEncounterChanged(string? encounterId)
     {
-        Nav.NavigateTo($"teams/{Team}/standings/{encounterId}");
+        Encounter = encounterId;
+        Nav.NavigateTo($"teams/{Team}/standings/phase/{_phase}/{encounterId}");
     }
 }

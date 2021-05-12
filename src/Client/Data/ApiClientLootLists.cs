@@ -42,29 +42,115 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation<LootListDto> Recreate(long characterId, byte phase, LootListSubmissionDto submission)
+        public IApiClientOperation<LootListDto> Reset(long characterId, byte phase)
         {
-            return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+            return Client.CreateRequest<LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/reset");
         }
 
-        public IApiClientOperation Lock(long characterId, byte phase)
+        public IApiClientOperation SetSpec(long characterId, byte phase, LootListSubmissionDto submission)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/lock");
+            return Client.CreateRequest(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
-        public IApiClientOperation Unlock(long characterId, byte phase)
+        public IApiClientOperation<TimestampDto> SetEditable(LootListDto lootList)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/unlock");
+            var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/seteditable",
+                new() { Timestamp = lootList.Timestamp });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = LootListStatus.Editing;
+                lootList.ApprovedBy = null;
+                lootList.SubmittedTo.Clear();
+            });
+
+            return request;
         }
 
-        public IApiClientOperation Approve(long characterId, byte phase)
+        public IApiClientOperation<TimestampDto> Submit(LootListDto lootList, List<long> submitTo)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/approve");
+            var request = Client.CreateRequest<SubmitLootListDto, TimestampDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/submit",
+                new() { Timestamp = lootList.Timestamp, SubmitTo = submitTo });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = LootListStatus.Submitted;
+                lootList.SubmittedTo = submitTo;
+            });
+
+            return request;
         }
 
-        public IApiClientOperation RevokeApproval(long characterId, byte phase)
+        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Approve(LootListDto lootList, long teamId, string? message)
         {
-            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}/revoke");
+            var request = Client.CreateRequest<ApproveOrRejectLootListDto, ApproveOrRejectLootListResponseDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/approveorreject",
+                new() { Timestamp = lootList.Timestamp, Approved = true, TeamId = teamId, Message = message });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = response.LootListStatus;
+                lootList.SubmittedTo.Clear();
+            });
+
+            return request;
+        }
+
+        public IApiClientOperation<ApproveOrRejectLootListResponseDto> Reject(LootListDto lootList, long teamId, string? message)
+        {
+            var request = Client.CreateRequest<ApproveOrRejectLootListDto, ApproveOrRejectLootListResponseDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/approveorreject",
+                new() { Timestamp = lootList.Timestamp, Approved = false, TeamId = teamId, Message = message });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = response.LootListStatus;
+                lootList.SubmittedTo.Remove(teamId);
+            });
+
+            return request;
+        }
+
+        public IApiClientOperation<TimestampDto> Lock(LootListDto lootList)
+        {
+            var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/lock",
+                new() { Timestamp = lootList.Timestamp });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = LootListStatus.Locked;
+            });
+
+            return request;
+        }
+
+        public IApiClientOperation<TimestampDto> Unlock(LootListDto lootList)
+        {
+            var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+                HttpMethod.Post,
+                $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/unlock",
+                new() { Timestamp = lootList.Timestamp });
+
+            request.ConfigureSuccess(response =>
+            {
+                lootList.Timestamp = response.Timestamp;
+                lootList.Status = LootListStatus.Approved;
+            });
+
+            return request;
         }
     }
 }

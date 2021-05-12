@@ -30,6 +30,7 @@ namespace ValhallaLootList.Client.Data
             Instances = new(this);
             Items = new(this);
             LootLists = new(this);
+            LootListEntries = new(this);
             Members = new(this);
             Permissions = new(this);
             Raids = new(this);
@@ -49,6 +50,8 @@ namespace ValhallaLootList.Client.Data
         public ApiClientItems Items { get; }
 
         public ApiClientLootLists LootLists { get; }
+
+        public ApiClientLootListEntries LootListEntries { get; }
 
         public ApiClientMembers Members { get; }
 

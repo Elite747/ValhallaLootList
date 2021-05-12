@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.Server.Data
 {
@@ -21,7 +22,7 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
-        [Required]
+        [Required, StringLength(24, MinimumLength = 2), GuildName]
         public string Name { get; set; } = string.Empty;
 
         public virtual ICollection<Character> Roster { get; set; } = new HashSet<Character>();
@@ -29,5 +30,9 @@ namespace ValhallaLootList.Server.Data
         public virtual ICollection<RaidTeamSchedule> Schedules { get; set; } = new HashSet<RaidTeamSchedule>();
 
         public virtual ICollection<Raid> Raids { get; set; } = new HashSet<Raid>();
+
+        public virtual ICollection<LootListTeamSubmission> Submissions { get; set; } = new HashSet<LootListTeamSubmission>();
+
+        public virtual ICollection<TeamRemoval> Removals { get; set; } = new HashSet<TeamRemoval>();
     }
 }

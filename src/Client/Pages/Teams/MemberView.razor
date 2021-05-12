@@ -2,72 +2,69 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="Team.Id">
+<MudText Typo="Typo.body1" Class="mb-2">
+    Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
+</MudText>
+
+<AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
     <Authorized>
-        <MudSelect T="RaidMemberStatus?"
+        <MudSelect T="RaidMemberStatus"
                    Value="Member.Status"
                    ValueChanged="OnStatusChangedAsync"
                    Label="Status"
                    ToStringFunc="GetDisplayString"
-                   FullWidth="true">
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus?" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
+                   FullWidth="true"
+                   Variant="Variant.Filled">
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
+            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
         </MudSelect>
 
-        @if (Member.Verified == true)
+        @if (Member.Verified == false)
         {
-            <MudText Color="Color.Success">Character is verified!</MudText>
-        }
-        else if (context.User.IsAdmin())
-        {
-            <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
-        }
-        else
-        {
-            <MudText Color="Color.Warning">Character is unverified! Have an admin verify the owner of this character to clear this message.</MudText>
-        }
-
-        @if (Member.LootLists.Find(ll => ll.Phase == Phase) is MemberLootListDto lootList)
-        {
-            if (lootList.Approved == true)
+            if (context.User.IsAdmin())
             {
-                <MudText Color="Color.Success">Loot list for phase @Phase was approved!</MudText>
-                @if (lootList.ApprovedBy is not null)
-                {
-                    <MudText>
-                        Approved by <GuildMemberDisplay Member="lootList.ApprovedBy" />
-                    </MudText>
-                }
+                <div class="my-2">
+                    <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
+                </div>
             }
             else
             {
-                <MudText Color="Color.Warning">
-                    Loot list for phase @Phase has not been approved yet! Switch to the loot list view by clicking the <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.ListAlt" /> button above to review and approve loot lists.
-                </MudText>
+                <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
             }
         }
-        else
-        {
-            <MudText Color="Color.Warning">
-                Character does not have a loot list! Have the owner create one or create it on their behalf by going to their <a href="characters/@Member.Character.Name">character page</a>.
-            </MudText>
-        }
+    </Authorized>
+    <NotAuthorized>
+        <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
+    </NotAuthorized>
+</AuthorizeView>
 
-        <DonationSummary Member="Member" />
-        <AttendanceSummary Member="Member" />
+<DonationSummary Member="Member">
+    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
+        <MudIconButton OnClick="() => AddDonationAsync(false)"
+                       Icon="@Icons.Material.Filled.AddCircle"
+                       Size="Size.Small"
+                       Color="Color.Success"
+                       Class="mx-2" />
+        <MudIconButton OnClick="() => AddDonationAsync(true)"
+                       Icon="@Icons.Material.Filled.RemoveCircle"
+                       Size="Size.Small"
+                       Color="Color.Error" />
+    </AuthorizeView>
+</DonationSummary>
 
-        <MudButton OnClick="AddDonationAsync" Color="Color.Primary" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachMoney">Add Donation</MudButton>
+<AttendanceSummary Member="Member" />
 
+<MudButton Link="@("characters/" + Member.Character.Name)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
+
+<AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
+    <Authorized>
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
-        @if (Member.Status.HasValue)
-        {
-            <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status.Value)</MudText>
-        }
-        <DonationSummary Member="Member" />
-        <AttendanceSummary Member="Member" />
+        <AuthorizeView Policy="@AppPolicies.CharacterOwner" Resource="Member.Character" Context="_">
+            <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Leave Team</MudButton>
+        </AuthorizeView>
     </NotAuthorized>
 </AuthorizeView>
 
@@ -83,35 +80,16 @@
         if (Member is null) throw new ArgumentNullException(nameof(Member));
     }
 
-    private Task OnStatusChangedAsync(RaidMemberStatus? status)
+    private Task OnStatusChangedAsync(RaidMemberStatus status)
     {
-        if (status.HasValue)
-        {
-            return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status.Value })
-                .OnSuccess((_, _) =>
-                {
-                    Member.Status = status;
-                    return MemberUpdated.InvokeAsync();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private async Task UpdateAsync()
-    {
-        var result = await DialogService.ShowAsync<UpdateMemberDialog, RaidMemberStatus?>(
-            "Update Member",
-            new() { [nameof(UpdateMemberDialog.Team)] = Team, [nameof(UpdateMemberDialog.Member)] = Member },
-            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-
-        if (result.HasValue)
-        {
-            Member.Status = result.Value;
-            await MemberUpdated.InvokeAsync();
-        }
+        return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status })
+            .OnSuccess((_, _) =>
+            {
+                Member.Status = status;
+                return MemberUpdated.InvokeAsync();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 
     private async Task RemoveAsync()
@@ -129,15 +107,22 @@
         }
     }
 
-    private async Task AddDonationAsync()
+    private async Task AddDonationAsync(bool isRemove)
     {
-        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"Add Donation ({Member.Character.Name})");
+        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})");
         if (amount.HasValue)
         {
-            await Api.Donations.Add(new(){ CopperAmount = amount.Value, CharacterId = Member.Character.Id })
+            var actualAmount = amount.Value;
+
+            if (isRemove)
+            {
+                actualAmount = -actualAmount;
+            }
+
+            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id })
                 .OnSuccess(_ =>
                 {
-                    Member.DonatedNextMonth += amount.Value;
+                    Member.DonatedNextMonth += actualAmount;
                     StateHasChanged();
                 })
                 .SendErrorTo(Snackbar)
@@ -146,13 +131,13 @@
 
     }
 
-    private static string GetDisplayString(RaidMemberStatus? status)
+    private static string GetDisplayString(RaidMemberStatus status)
     {
         return status switch
         {
-            RaidMemberStatus.FullTrial =>"Full Trial (-18 prio)",
-            RaidMemberStatus.HalfTrial =>"Half Trial (-9 prio)",
-            RaidMemberStatus.Member =>"Member (no penalty)",
+            RaidMemberStatus.FullTrial => "Full Trial (-18 prio)",
+            RaidMemberStatus.HalfTrial => "Half Trial (-9 prio)",
+            RaidMemberStatus.Member => "Member (no penalty)",
             _ => "Not Selected"
         };
     }

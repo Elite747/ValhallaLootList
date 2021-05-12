@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -12,19 +13,18 @@ using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
+using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers
 {
     public class DropsController : ApiControllerV1
     {
         private readonly ApplicationDbContext _context;
-        private readonly PrioCalculator _prioCalculator;
         private readonly TelemetryClient _telemetry;
 
-        public DropsController(ApplicationDbContext context, PrioCalculator prioCalculator, TelemetryClient telemetry)
+        public DropsController(ApplicationDbContext context, TelemetryClient telemetry)
         {
             _context = context;
-            _prioCalculator = prioCalculator;
             _telemetry = telemetry;
         }
 
@@ -46,7 +46,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPut("{id:long}"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo)
+        public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IAuthorizationService auth, [FromServices] DiscordClientProvider dcp)
         {
             var now = realmTimeZoneInfo.TimeZoneNow();
             var drop = await _context.Drops.FindAsync(id);
@@ -67,7 +67,9 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!await _context.IsLeaderOf(User, teamId.Value))
+            var authResult = await auth.AuthorizeAsync(User, teamId, AppPolicies.LootMaster);
+
+            if (!authResult.Succeeded)
             {
                 return Unauthorized();
             }
@@ -80,19 +82,52 @@ namespace ValhallaLootList.Server.Controllers
 
             drop.AwardedAt = now;
             drop.AwardedBy = User.GetDiscordId();
+            var scope = await _context.GetCurrentPriorityScopeAsync();
 
-            var killers = await _context.CharacterEncounterKills
-                .AsTracking()
-                .Where(c => c.EncounterKillEncounterId == drop.EncounterKillEncounterId && c.EncounterKillRaidId == drop.EncounterKillRaidId)
-                .Select(c => c.Character)
+            var observedDates = await _context.Raids
+                .AsNoTracking()
+                .Where(r => r.RaidTeamId == teamId)
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => r.StartedAt.Date)
+                .Distinct()
+                .Take(scope.ObservedAttendances)
                 .ToListAsync();
+
+            var presentTeamRaiders = await _context.CharacterEncounterKills
+                .AsTracking()
+                .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId)
+                .Select(c => new
+                {
+                    Id = c.CharacterId,
+                    c.Character.TeamId,
+                    c.Character.MemberStatus,
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
+                        .Select(x => x.Raid.StartedAt.Date)
+                        .Distinct()
+                        .OrderByDescending(x => x)
+                        .Take(scope.ObservedAttendances)
+                        .Count(),
+                    Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                        .OrderByDescending(e => e.Rank)
+                        .Select(e => new
+                        {
+                            e.Id,
+                            e.Rank,
+                            e.LootList.Status,
+                            Passes = e.Passes.Count(p => p.RemovalId == null)
+                        })
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
 
             await _context.Entry(drop).Collection(drop => drop.Passes).LoadAsync();
             drop.Passes.Clear();
 
             if (dto.WinnerId.HasValue)
             {
-                var winner = killers.Find(k => k.Id == dto.WinnerId);
+                var winner = presentTeamRaiders.Find(e => e.Id == dto.WinnerId);
 
                 if (winner is null)
                 {
@@ -100,60 +135,108 @@ namespace ValhallaLootList.Server.Controllers
                     return ValidationProblem();
                 }
 
-                var (winnerPrio, _, _, _) = await _prioCalculator.CalculatePrioAsync(winner.Id, drop.ItemId);
+                int? winnerPrio = null;
 
-                killers.Remove(winner);
-
-                drop.Winner = winner;
-                drop.WinnerId = winner.Id;
-
-                var lootListEntry = _context.LootListEntries
-                    .AsTracking()
-                    .Where(lle => (lle.ItemId == drop.ItemId || lle.Item!.RewardFromId == drop.ItemId) && lle.LootList.CharacterId == winner.Id && lle.DropId == null)
-                    .OrderByDescending(lle => lle.Rank)
-                    .FirstOrDefault();
-
-                if (lootListEntry is not null)
+                if (winner.Entry is not null)
                 {
-                    drop.WinningEntry = lootListEntry;
-                    lootListEntry.Drop = drop;
-                    lootListEntry.DropId = drop.Id;
+                    winnerPrio = winner.Entry.Rank;
+
+                    var passes = await _context.DropPasses
+                        .AsTracking()
+                        .Where(p => p.LootListEntryId == winner.Entry.Id && p.RemovalId == null)
+                        .ToListAsync();
+
+                    Debug.Assert(passes.Count == winner.Entry.Passes);
+
+                    var donated = donationMatrix.GetCreditForMonth(winner.Id, now);
+
+                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, winner.Attended, winner.MemberStatus, donated, passes.Count))
+                    {
+                        winnerPrio = winnerPrio.Value + bonus.Value;
+                    }
+
+                    drop.WinningEntry = await _context.LootListEntries.FindAsync(winner.Entry.Id);
+                    drop.WinningEntry.Drop = drop;
+                    drop.WinningEntry.DropId = drop.Id;
+
+                    foreach (var pass in passes)
+                    {
+                        pass.WonEntryId = winner.Entry.Id;
+                    }
                 }
 
-                foreach (var killer in killers)
-                {
-                    var (prio, locked, _, _) = await _prioCalculator.CalculatePrioAsync(killer.Id, drop.ItemId);
+                drop.WinnerId = winner.Id;
 
-                    if (locked && prio.HasValue)
+                foreach (var killer in presentTeamRaiders)
+                {
+                    if (killer.Entry is not null && killer.TeamId == teamId && killer != winner)
                     {
-                        drop.Passes.Add(new DropPass
+                        var thisPrio = (int)killer.Entry.Rank;
+
+                        var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
+
+                        foreach (var bonus in PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes))
                         {
-                            Character = killer,
-                            CharacterId = killer.Id,
+                            thisPrio += bonus.Value;
+                        }
+
+                        _context.DropPasses.Add(new DropPass
+                        {
                             Drop = drop,
-                            RelativePriority = prio.Value - (winnerPrio ?? 0)
+                            DropId = drop.Id,
+                            CharacterId = killer.Id,
+                            RelativePriority = thisPrio - (winnerPrio ?? 0),
+                            LootListEntryId = killer.Entry.Id
                         });
                     }
                 }
             }
             else
             {
+                var oldWinningEntry = await _context.LootListEntries
+                    .AsTracking()
+                    .Where(e => e.DropId == drop.Id)
+                    .SingleOrDefaultAsync();
+
                 drop.Winner = null;
                 drop.WinnerId = null;
+                drop.WinningEntry = null;
 
-                var lootListEntry = _context.LootListEntries
-                    .AsTracking()
-                    .Where(lle => lle.DropId == drop.Id)
-                    .FirstOrDefault();
-
-                if (lootListEntry is not null)
+                if (oldWinningEntry is not null)
                 {
-                    lootListEntry.Drop = null;
-                    lootListEntry.DropId = null;
+                    oldWinningEntry.Drop = null;
+                    oldWinningEntry.DropId = null;
+
+                    await foreach (var pass in _context.DropPasses
+                        .AsTracking()
+                        .Where(pass => pass.WonEntryId == oldWinningEntry.Id)
+                        .AsAsyncEnumerable())
+                    {
+                        pass.WonEntryId = null;
+                    }
                 }
             }
 
             await _context.SaveChangesAsync();
+
+            var kill = await _context.EncounterKills
+                .AsNoTracking()
+                .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId)
+                .Select(kill => new { kill.DiscordMessageId, kill.KilledAt, kill.RaidId, TeamName = kill.Raid.RaidTeam.Name, EncounterName = kill.Encounter.Name })
+                .FirstOrDefaultAsync();
+
+            var drops = new List<(uint, string, string?)>();
+
+            await foreach (var d in _context.Drops
+                .AsNoTracking()
+                .Where(d => d.EncounterKillEncounterId == drop.EncounterKillEncounterId && d.EncounterKillRaidId == drop.EncounterKillRaidId)
+                .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name })
+                .AsAsyncEnumerable())
+            {
+                drops.Add((d.ItemId, d.ItemName, d.WinnerName));
+            }
+
+            var message = await dcp.SendOrUpdatePublicNotificationAsync(kill.DiscordMessageId, m => m.ConfigureKillMessage(Request, Url, kill.RaidId, kill.KilledAt, kill.TeamName, kill.EncounterName, drops));
 
             _telemetry.TrackEvent("DropAssigned", User, props =>
             {
@@ -177,19 +260,35 @@ namespace ValhallaLootList.Server.Controllers
                 AwardedAt = drop.AwardedAt,
                 AwardedBy = drop.AwardedBy,
                 ItemId = drop.ItemId,
-                WinnerId = drop.WinnerId,
-                WinnerName = drop.Winner?.Name
+                WinnerId = drop.WinnerId
             };
         }
 
         [HttpGet("{id:long}/Ranks"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(long id)
+        public async Task<ActionResult<List<ItemPrioDto>>> GetRanks(long id, [FromServices] IAuthorizationService auth, [FromServices] TimeZoneInfo serverTimeZone)
         {
-            var drop = await _context.Drops.FindAsync(id);
+            var drop = await _context.Drops
+                .AsNoTracking()
+                .Where(d => d.Id == id)
+                .Select(d => new
+                {
+                    TeamId = d.EncounterKill.Raid.RaidTeamId,
+                    d.EncounterKillRaidId,
+                    d.EncounterKillEncounterId,
+                    d.ItemId
+                })
+                .FirstOrDefaultAsync();
 
             if (drop is null)
             {
                 return NotFound();
+            }
+
+            var authResult = await auth.AuthorizeAsync(User, drop.TeamId, AppPolicies.LootMaster);
+
+            if (!authResult.Succeeded)
+            {
+                return Unauthorized();
             }
 
             var unequippableSpecs = Specializations.None;
@@ -203,43 +302,64 @@ namespace ValhallaLootList.Server.Controllers
                 unequippableSpecs |= specs;
             }
 
-            var teamId = await _context.Raids
-                .AsNoTracking()
-                .Where(r => r.Id == drop.EncounterKillRaidId)
-                .Select(r => r.RaidTeamId)
-                .FirstOrDefaultAsync();
+            var now = serverTimeZone.TimeZoneNow();
+            var scope = await _context.GetCurrentPriorityScopeAsync();
 
-            if (!await _context.IsLeaderOf(User, teamId))
-            {
-                return Unauthorized();
-            }
-
-            var killerIds = await _context.CharacterEncounterKills
+            var observedDates = await _context.Raids
                 .AsNoTracking()
-                .Where(c => c.EncounterKillEncounterId == drop.EncounterKillEncounterId && c.EncounterKillRaidId == drop.EncounterKillRaidId)
-                .Select(c => new { Id = c.CharacterId, c.Character.Name, c.Character.Class })
+                .Where(r => r.RaidTeamId == drop.TeamId)
+                .OrderByDescending(r => r.StartedAt)
+                .Select(r => r.StartedAt.Date)
+                .Distinct()
+                .Take(scope.ObservedAttendances)
                 .ToListAsync();
+
+            var presentTeamRaiders = await _context.RaidAttendees
+                .AsNoTracking()
+                .Where(a => a.RaidId == drop.EncounterKillRaidId && a.Character.TeamId == drop.TeamId)
+                .Select(c => new
+                {
+                    Id = c.CharacterId,
+                    c.Character.Name,
+                    c.Character.TeamId,
+                    c.Character.MemberStatus,
+                    Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
+                        .Select(x => x.Raid.StartedAt.Date)
+                        .Distinct()
+                        .OrderByDescending(x => x)
+                        .Take(scope.ObservedAttendances)
+                        .Count(),
+                    Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                        .OrderByDescending(e => e.Rank)
+                        .Select(e => new
+                        {
+                            e.Id,
+                            e.Rank,
+                            e.LootList.Status,
+                            Passes = e.Passes.Count(p => p.RemovalId == null)
+                        })
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
 
             var dto = new List<ItemPrioDto>();
 
-            foreach (var character in killerIds)
+            foreach (var killer in presentTeamRaiders.Where(c => c.Entry is not null))
             {
+                Debug.Assert(killer.Entry is not null);
                 var prio = new ItemPrioDto
                 {
-                    CharacterId = character.Id,
-                    CharacterName = character.Name
+                    CharacterId = killer.Id,
+                    CharacterName = killer.Name,
+                    Status = killer.Entry.Status,
+                    Rank = killer.Entry.Rank,
                 };
 
-                if ((unequippableSpecs & character.Class.ToSpecializations()) != 0)
-                {
-                    prio.Priority = null;
-                    prio.IsError = true;
-                    prio.Details = "Cannot equip this item!";
-                }
-                else
-                {
-                    (prio.Priority, _, prio.Details, prio.IsError) = await _prioCalculator.CalculatePrioAsync(character.Id, drop.ItemId);
-                }
+                var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
+
+                prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes));
 
                 dto.Add(prio);
             }

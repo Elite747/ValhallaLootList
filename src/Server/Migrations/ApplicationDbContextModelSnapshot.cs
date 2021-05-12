@@ -16,7 +16,7 @@ namespace ValhallaLootList.Server.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.3")
+                .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
@@ -399,16 +399,22 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("Class")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Deactivated")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFemale")
                         .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("JoinedTeamAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("MemberStatus")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<int>("Race")
                         .HasColumnType("int");
@@ -460,14 +466,20 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long?>("ApprovedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("Locked")
-                        .HasColumnType("bit");
-
                     b.Property<int>("MainSpec")
                         .HasColumnType("int");
 
                     b.Property<int>("OffSpec")
                         .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("CharacterId", "Phase");
 
@@ -491,15 +503,14 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("EnteredById")
                         .HasColumnType("bigint");
 
-                    b.Property<byte>("Month")
-                        .HasColumnType("tinyint");
-
-                    b.Property<short>("Year")
-                        .HasColumnType("smallint");
+                    b.Property<long?>("RemovalId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CharacterId");
+
+                    b.HasIndex("RemovalId");
 
                     b.ToTable("Donations");
                 });
@@ -547,12 +558,25 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("LootListEntryId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("RelativePriority")
                         .HasColumnType("int");
+
+                    b.Property<long?>("RemovalId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("WonEntryId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("DropId", "CharacterId");
 
                     b.HasIndex("CharacterId");
+
+                    b.HasIndex("LootListEntryId");
+
+                    b.HasIndex("RemovalId");
 
                     b.ToTable("DropPasses");
                 });
@@ -588,6 +612,9 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<long>("RaidId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DiscordMessageId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("KilledAt")
@@ -675,6 +702,9 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("Intellect")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsUnique")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ItemLevel")
                         .HasColumnType("int");
 
@@ -689,7 +719,8 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(56)
+                        .HasColumnType("nvarchar(56)");
 
                     b.Property<int>("Parry")
                         .HasColumnType("int");
@@ -699,6 +730,9 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.Property<int>("PhysicalHit")
                         .HasColumnType("int");
+
+                    b.Property<long>("QuestId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("RangedAttackPower")
                         .HasColumnType("int");
@@ -805,6 +839,10 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long?>("ItemId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("Justification")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<long>("LootListCharacterId")
                         .HasColumnType("bigint");
 
@@ -827,6 +865,24 @@ namespace ValhallaLootList.Server.Migrations
                     b.ToTable("LootListEntries");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.LootListTeamSubmission", b =>
+                {
+                    b.Property<long>("LootListCharacterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("LootListPhase")
+                        .HasColumnType("tinyint");
+
+                    b.Property<long>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("LootListCharacterId", "LootListPhase", "TeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("LootListTeamSubmissions");
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.PhaseDetails", b =>
                 {
                     b.Property<byte>("Id")
@@ -843,6 +899,46 @@ namespace ValhallaLootList.Server.Migrations
                         new
                         {
                             Id = (byte)1,
+                            StartsAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("ValhallaLootList.Server.Data.PriorityScope", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("AttendancesPerPoint")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FullTrialPenalty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HalfTrialPenalty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ObservedAttendances")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredDonationCopper")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PriorityScopes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            AttendancesPerPoint = 4,
+                            FullTrialPenalty = -18,
+                            HalfTrialPenalty = -9,
+                            ObservedAttendances = 8,
+                            RequiredDonationCopper = 500000,
                             StartsAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
@@ -880,11 +976,17 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("IgnoreReason")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<long?>("RemovalId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("CharacterId", "RaidId");
 
                     b.HasIndex("RaidId");
+
+                    b.HasIndex("RemovalId");
 
                     b.ToTable("RaidAttendees");
                 });
@@ -896,7 +998,8 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
 
                     b.HasKey("Id");
 
@@ -928,6 +1031,32 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasIndex("RaidTeamId");
 
                     b.ToTable("RaidTeamSchedules");
+                });
+
+            modelBuilder.Entity("ValhallaLootList.Server.Data.TeamRemoval", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("RemovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamRemovals");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
@@ -985,7 +1114,8 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "Team")
                         .WithMany("Roster")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Team");
                 });
@@ -1028,7 +1158,14 @@ namespace ValhallaLootList.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ValhallaLootList.Server.Data.TeamRemoval", "Removal")
+                        .WithMany()
+                        .HasForeignKey("RemovalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Character");
+
+                    b.Navigation("Removal");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Drop", b =>
@@ -1036,12 +1173,13 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasOne("ValhallaLootList.Server.Data.Item", "Item")
                         .WithMany("Drops")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ValhallaLootList.Server.Data.Character", "Winner")
                         .WithMany()
-                        .HasForeignKey("WinnerId");
+                        .HasForeignKey("WinnerId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ValhallaLootList.Server.Data.EncounterKill", "EncounterKill")
                         .WithMany("Drops")
@@ -1059,7 +1197,7 @@ namespace ValhallaLootList.Server.Migrations
             modelBuilder.Entity("ValhallaLootList.Server.Data.DropPass", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.Character", "Character")
-                        .WithMany("Passes")
+                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1070,9 +1208,23 @@ namespace ValhallaLootList.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ValhallaLootList.Server.Data.LootListEntry", "LootListEntry")
+                        .WithMany("Passes")
+                        .HasForeignKey("LootListEntryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ValhallaLootList.Server.Data.TeamRemoval", "Removal")
+                        .WithMany()
+                        .HasForeignKey("RemovalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Character");
 
                     b.Navigation("Drop");
+
+                    b.Navigation("LootListEntry");
+
+                    b.Navigation("Removal");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Encounter", b =>
@@ -1080,7 +1232,7 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasOne("ValhallaLootList.Server.Data.Instance", "Instance")
                         .WithMany("Encounters")
                         .HasForeignKey("InstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Instance");
@@ -1091,7 +1243,7 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasOne("ValhallaLootList.Server.Data.Encounter", "Encounter")
                         .WithMany()
                         .HasForeignKey("EncounterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ValhallaLootList.Server.Data.Raid", "Raid")
@@ -1135,7 +1287,8 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.HasOne("ValhallaLootList.Server.Data.Drop", "Drop")
                         .WithOne("WinningEntry")
-                        .HasForeignKey("ValhallaLootList.Server.Data.LootListEntry", "DropId");
+                        .HasForeignKey("ValhallaLootList.Server.Data.LootListEntry", "DropId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ValhallaLootList.Server.Data.Item", "Item")
                         .WithMany()
@@ -1154,12 +1307,31 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("LootList");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.LootListTeamSubmission", b =>
+                {
+                    b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "Team")
+                        .WithMany("Submissions")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ValhallaLootList.Server.Data.CharacterLootList", "LootList")
+                        .WithMany("Submissions")
+                        .HasForeignKey("LootListCharacterId", "LootListPhase")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LootList");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.Raid", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "RaidTeam")
                         .WithMany("Raids")
                         .HasForeignKey("RaidTeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("RaidTeam");
@@ -1170,7 +1342,7 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasOne("ValhallaLootList.Server.Data.Character", "Character")
                         .WithMany("Attendances")
                         .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ValhallaLootList.Server.Data.Raid", "Raid")
@@ -1179,9 +1351,16 @@ namespace ValhallaLootList.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ValhallaLootList.Server.Data.TeamRemoval", "Removal")
+                        .WithMany()
+                        .HasForeignKey("RemovalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Character");
 
                     b.Navigation("Raid");
+
+                    b.Navigation("Removal");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.RaidTeamSchedule", b =>
@@ -1195,6 +1374,25 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("RaidTeam");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.TeamRemoval", b =>
+                {
+                    b.HasOne("ValhallaLootList.Server.Data.Character", "Character")
+                        .WithMany("Removals")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "Team")
+                        .WithMany("Removals")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.Character", b =>
                 {
                     b.Navigation("Attendances");
@@ -1205,12 +1403,14 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.Navigation("EncounterKills");
 
-                    b.Navigation("Passes");
+                    b.Navigation("Removals");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterLootList", b =>
                 {
                     b.Navigation("Entries");
+
+                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Drop", b =>
@@ -1244,6 +1444,11 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("Restrictions");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.LootListEntry", b =>
+                {
+                    b.Navigation("Passes");
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.Raid", b =>
                 {
                     b.Navigation("Attendees");
@@ -1255,9 +1460,13 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.Navigation("Raids");
 
+                    b.Navigation("Removals");
+
                     b.Navigation("Roster");
 
                     b.Navigation("Schedules");
+
+                    b.Navigation("Submissions");
                 });
 #pragma warning restore 612, 618
         }

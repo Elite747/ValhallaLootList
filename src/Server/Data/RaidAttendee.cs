@@ -21,6 +21,11 @@ namespace ValhallaLootList.Server.Data
 
         public bool IgnoreAttendance { get; set; }
 
+        [StringLength(256)]
         public string? IgnoreReason { get; set; }
+
+        public long? RemovalId { get; set; }
+
+        public virtual TeamRemoval? Removal { get; set; }
     }
 }

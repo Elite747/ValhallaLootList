@@ -1,0 +1,72 @@
+﻿@namespace ValhallaLootList.Client.Shared
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <ApiExecutor Operation="Operation" Context="members" @ref="_executor">
+            <MudAutocomplete Label="Member"
+                             T="GuildMemberDto"
+                             SearchFunc="text => Search(text, members)"
+                             @bind-Value="_selectedMember"
+                             @bind-Text="_searchText"
+                             ResetValueOnEmptyText="true"
+                             ToStringFunc="c => c.Nickname ?? c.Username"
+                             CoerceText="true">
+                <ItemTemplate Context="member">
+                    <GuildMemberDisplay Member="member" />
+                </ItemTemplate>
+            </MudAutocomplete>
+        </ApiExecutor>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_selectedMember))" Disabled="_selectedMember is null" Color="Color.Primary" Variant="Variant.Filled">Select</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private IApiExecutor? _executor;
+    private GuildMemberDto? _selectedMember;
+    private string? _searchText;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public Func<IApiClientOperation<IList<GuildMemberDto>>> Operation { get; set; } = null!;
+    [Parameter] public Func<GuildMemberDto, bool>? Filter { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Operation is null) throw new ArgumentNullException(nameof(Operation));
+    }
+
+    private Task<IEnumerable<GuildMemberDto>> Search(string? text, IEnumerable<GuildMemberDto> guildMembers)
+    {
+        var results = guildMembers;
+
+        if (Filter is not null)
+        {
+            results = results.Where(Filter);
+        }
+
+        if (text?.Length > 0)
+        {
+            results = results.Where(member => FilterMemberByName(member, text));
+        }
+
+        return Task.FromResult(results.OrderBy(c => c.Nickname ?? c.Username).AsEnumerable());
+    }
+
+    private bool FilterMemberByName(GuildMemberDto member, string searchText)
+    {
+        const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+        if (member.Nickname?.Length > 0)
+        {
+            if (CultureInfo.CurrentCulture.CompareInfo.IndexOf(member.Nickname, searchText, compareOptions) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return CultureInfo.CurrentCulture.CompareInfo.IndexOf(member.Username, searchText, compareOptions) >= 0;
+    }
+}

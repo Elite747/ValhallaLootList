@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ValhallaLootList.Helpers;
 
 namespace ValhallaLootList.Server.Data
 {
@@ -21,7 +22,7 @@ namespace ValhallaLootList.Server.Data
 
         public long Id { get; }
 
-        [Required, StringLength(16, MinimumLength = 2)]
+        [Required, StringLength(12, MinimumLength = 2), CharacterName]
         public string Name { get; set; } = string.Empty;
 
         public PlayerRace Race { get; set; }
@@ -30,9 +31,13 @@ namespace ValhallaLootList.Server.Data
 
         public bool IsFemale { get; set; }
 
+        public bool Deactivated { get; set; }
+
         public long? VerifiedById { get; set; }
 
         public RaidMemberStatus MemberStatus { get; set; }
+
+        public DateTimeOffset JoinedTeamAt { get; set; }
 
         public long? TeamId { get; set; }
 
@@ -40,12 +45,12 @@ namespace ValhallaLootList.Server.Data
 
         public virtual ICollection<RaidAttendee> Attendances { get; set; } = new HashSet<RaidAttendee>();
 
-        public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
-
         public virtual ICollection<CharacterLootList> CharacterLootLists { get; set; } = new HashSet<CharacterLootList>();
 
         public virtual ICollection<CharacterEncounterKill> EncounterKills { get; set; } = new HashSet<CharacterEncounterKill>();
 
         public virtual ICollection<Donation> Donations { get; set; } = new HashSet<Donation>();
+
+        public virtual ICollection<TeamRemoval> Removals { get; set; } = new HashSet<TeamRemoval>();
     }
 }

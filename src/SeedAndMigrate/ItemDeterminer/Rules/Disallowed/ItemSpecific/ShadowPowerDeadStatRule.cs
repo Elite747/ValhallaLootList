@@ -8,7 +8,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSp
 {
     internal class ShadowPowerDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => Specializations.All & ~(Specializations.ShadowPriest | Specializations.Warlock);
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ShadowPriest | SpecializationGroups.Warlock);
 
         protected override int GetStat(Item item)
         {

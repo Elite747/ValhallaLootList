@@ -1,4 +1,28 @@
-﻿#blazor-error-ui {
+﻿:root {
+    --classcolor-warrior: #C69B6D;
+    --classcolor-warrior-text: black;
+    --classcolor-paladin: #F48CBA;
+    --classcolor-paladin-text: black;
+    --classcolor-hunter: #AAD372;
+    --classcolor-hunter-text: black;
+    --classcolor-rogue: #FFF468;
+    --classcolor-rogue-text: black;
+    --classcolor-priest: #EEEEEE;
+    --classcolor-priest-text: black;
+    --classcolor-shaman: #0070DD;
+    --classcolor-shaman-text: white;
+    --classcolor-mage: #3FC7EB;
+    --classcolor-mage-text: black;
+    --classcolor-warlock: #8788EE;
+    --classcolor-warlock-text: black;
+    --classcolor-druid: #FF7C0A;
+    --classcolor-druid-text: black;
+    --rolecolor-tank: #001C52;
+    --rolecolor-healer: #084D42;
+    --rolecolor-dps: #6D0A0B;
+}
+
+#blazor-error-ui {
     background: lightyellow;
     color: black;
     bottom: 0;
@@ -54,3 +78,197 @@
     position: fixed;
     z-index: 100;
 }
+
+.text-bracket::before {
+    content: "[";
+}
+
+.text-bracket::after {
+    content: "]";
+}
+
+.player-icon {
+    border-radius: 50%;
+    border-style: solid;
+    overflow: hidden;
+}
+
+    .player-icon.small {
+        width: 24px;
+        height: 24px;
+        border-width: 2px;
+    }
+
+    .player-icon.medium {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+    }
+
+    .player-icon.large {
+        width: 56px;
+        height: 56px;
+        border-width: 3.5px;
+    }
+
+    .player-icon.druid {
+        border-color: var(--classcolor-druid);
+        background-color: var(--classcolor-druid);
+    }
+
+    .player-icon.hunter {
+        border-color: var(--classcolor-hunter);
+        background-color: var(--classcolor-hunter);
+    }
+
+    .player-icon.mage {
+        border-color: var(--classcolor-mage);
+        background-color: var(--classcolor-mage);
+    }
+
+    .player-icon.paladin {
+        border-color: var(--classcolor-paladin);
+        background-color: var(--classcolor-paladin);
+    }
+
+    .player-icon.priest {
+        border-color: var(--classcolor-priest);
+        background-color: var(--classcolor-priest);
+    }
+
+    .player-icon.rogue {
+        border-color: var(--classcolor-rogue);
+        background-color: var(--classcolor-rogue);
+    }
+
+    .player-icon.shaman {
+        border-color: var(--classcolor-shaman);
+        background-color: var(--classcolor-shaman);
+    }
+
+    .player-icon.warrior {
+        border-color: var(--classcolor-warrior);
+        background-color: var(--classcolor-warrior);
+    }
+
+    .player-icon.warlock {
+        border-color: var(--classcolor-warlock);
+        background-color: var(--classcolor-warlock);
+    }
+
+.player-icon-role {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    left: 70%;
+    top: 70%;
+    color: white;
+}
+
+    .player-icon-role.tank {
+        background-color: var(--rolecolor-tank);
+    }
+
+        .player-icon-role.tank svg {
+            font-size: 12px;
+        }
+
+    .player-icon-role.healer {
+        background-color: var(--rolecolor-healer);
+    }
+
+        .player-icon-role.healer svg {
+            font-size: 20px;
+        }
+
+    .player-icon-role.dps {
+        background-color: var(--rolecolor-dps);
+    }
+
+        .player-icon-role.dps svg {
+            font-size: 16px;
+        }
+
+.bracket {
+    position: relative;
+}
+
+    .bracket::before {
+        content: '';
+        width: 5%;
+        top: -5px;
+        height: 100%;
+        border-color: var(--mud-palette-divider);
+        border-width: 5px;
+        border-right-width: 0;
+        border-style: solid;
+        border-radius: 10px 0 0 10px;
+        position: absolute;
+        left: -5px;
+        pointer-events: none;
+    }
+
+    .bracket::after {
+        content: '';
+        width: 5%;
+        top: -5px;
+        height: 100%;
+        border-color: var(--mud-palette-divider);
+        border-width: 5px;
+        border-left-width: 0;
+        border-style: solid;
+        border-radius: 0 10px 10px 0;
+        position: absolute;
+        right: -5px;
+        pointer-events: none;
+    }
+
+.wow-money {
+    background: no-repeat right center;
+    display: inline-block;
+    padding-right: 15px;
+}
+
+    .wow-money.gold {
+        background-image: url(https://wow.zamimg.com/images/icons/money-gold.gif);
+    }
+
+    .wow-money.silver {
+        background-image: url(https://wow.zamimg.com/images/icons/money-silver.gif);
+    }
+
+    .wow-money.copper {
+        background-image: url(https://wow.zamimg.com/images/icons/money-copper.gif);
+    }
+
+
+.ev-cal-month, .ev-cal-week, .ev-cal-day {
+    border: 0 solid var(--mud-palette-table-lines);
+}
+
+.ev-cal-month {
+    border-top-width: 1px;
+}
+
+.ev-cal-week {
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+}
+
+.ev-cal-day {
+    margin: 0;
+    box-sizing: border-box;
+    flex-grow: 0;
+    max-width: calc(100% / 7);
+    flex-basis: calc(100% / 7);
+    min-height: 8rem;
+    border-left-width: 1px;
+}
+
+    .ev-cal-day.dow {
+        min-height: 1rem;
+    }

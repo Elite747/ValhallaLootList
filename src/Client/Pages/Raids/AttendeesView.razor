@@ -8,53 +8,18 @@
             <MudText Typo="Typo.h6">Attendees</MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudList>
-        @foreach (var attendance in Raid.Attendees.OrderBy(a => a.Character?.Name))
-        {
-            var character = attendance.Character;
-            System.Diagnostics.Debug.Assert(character is not null);
-            <MudDivider />
-            <MudListItem Class="mud-list-item-clickable" Style="cursor: auto">
-                <div class="d-flex">
-                    <MudAvatar Class="mr-2">
-                        <RaceIcon Race="character.Race" Gender="character.Gender" Size="IconSize.Medium" width="40" height="40" />
-                    </MudAvatar>
-                    <MudAvatar Class="mr-5">
-                        @if (attendance.MainSpec.HasValue)
-                        {
-                            <SpecIcon Spec="attendance.MainSpec.Value" Size="IconSize.Medium" width="40" height="40" />
-                        }
-                        else
-                        {
-                            <ClassIcon PlayerClass="character.Class" Size="IconSize.Medium" width="40" height="40" />
-                        }
-                    </MudAvatar>
-                    <div class="mr-auto">
-                        <MudText Inline="false">@character.Name</MudText>
-                        @if (attendance.IgnoreAttendance)
-                        {
-                            <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @attendance.IgnoreReason</MudText>
-                        }
-                    </div>
-                    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
-                        @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
-                        {
-                            <MudTooltip Text="Edit">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="() => OnEditClickedAsync(attendance)" />
-                            </MudTooltip>
-                        }
-                        @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(character.Id)))
-                        {
-                            <MudTooltip Text="Remove">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => OnRemoveClickedAsync(character)" />
-                            </MudTooltip>
-                        }
-                    </AuthorizeView>
-                </div>
-            </MudListItem>
-        }
-        <MudDivider />
-    </MudList>
+    <MudCardContent Class="py-0">
+        <div>
+            @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
+                @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                {
+                    <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+                }
+            }
+        </div>
+    </MudCardContent>
     <MudCardActions>
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
         {
@@ -68,7 +33,6 @@
 
 
 @code {
-
     [Parameter] public RaidDto Raid { get; set; } = null!;
 
     protected override void OnParametersSet()
@@ -81,32 +45,24 @@
         return Api.Raids.RemoveAttendee(Raid.Id, character.Id)
             .OnSuccess(_ =>
             {
-                Raid.Attendees.RemoveAll(c => c.Character?.Id == character.Id);
+                Raid.Attendees.RemoveAll(c => c.Character.Id == character.Id);
                 StateHasChanged();
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 
-    private Task OnEditClickedAsync(AttendanceDto attendance)
-    {
-        return DialogService.Show<UpdateAttendanceDialog>(
-            "Update Attendance",
-            new() { [nameof(UpdateAttendanceDialog.Attendance)] = attendance, [nameof(UpdateAttendanceDialog.Raid)] = Raid },
-            new() { MaxWidth = MaxWidth.ExtraSmall }).Result;
-    }
-
     private Task AddRosteredAsync()
     {
-        return AddAttendeeAsync(() => Api.Characters.GetByTeam(Raid.TeamId), FilterCharacters, showAdd: false);
+        return AddAttendeeAsync(Api.Characters.GetByTeam(Raid.TeamId), FilterCharacters, showAdd: false);
     }
 
     private Task AddUnrosteredAsync()
     {
-        return AddAttendeeAsync(Api.Characters.GetAll, c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
+        return AddAttendeeAsync(Api.Characters.GetActive(), c => c.TeamId != Raid.TeamId && FilterCharacters(c), showAdd: true);
     }
 
-    private async Task AddAttendeeAsync(Func<IApiClientOperation<IList<CharacterDto>>> operation, Func<CharacterDto, bool> filter, bool showAdd)
+    private async Task AddAttendeeAsync(IApiClientOperation<IList<CharacterDto>> operation, Func<CharacterDto, bool> filter, bool showAdd)
     {
         var character = await DialogService.ShowAsync<PickCharacterDialog, CharacterDto>(
             string.Empty,
@@ -129,6 +85,6 @@
 
     private bool FilterCharacters(CharacterDto character)
     {
-        return Raid.Attendees.Find(a => a.Character?.Id == character.Id) is null;
+        return Raid.Attendees.Find(a => a.Character.Id == character.Id) is null;
     }
 }

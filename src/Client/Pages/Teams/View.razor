@@ -81,7 +81,7 @@
             </MudItem>
 
 
-            <AuthorizeView Policy="@AppPolicies.RaidLeader" Resource="team.Id">
+            <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
                 <MudItem xs="12">
                     <Review Phase="GetDisplayPhase(phaseConfig)"
                             Team="team"

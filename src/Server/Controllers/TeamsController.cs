@@ -233,162 +233,8 @@ namespace ValhallaLootList.Server.Controllers
             });
         }
 
-        [HttpPost("{id:long}/members"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<ActionResult<MemberDto>> PostMember(long id, [FromBody] AddTeamMemberDto dto)
-        {
-            if (!await _context.IsLeaderOf(User, id))
-            {
-                return Unauthorized();
-            }
-
-            var team = await _context.RaidTeams.FindAsync(id);
-
-            if (team is null)
-            {
-                return NotFound();
-            }
-
-            var character = await _context.Characters.FindAsync(dto.CharacterId);
-
-            if (character is null)
-            {
-                return NotFound();
-            }
-
-            if (character.TeamId.HasValue && character.TeamId != id)
-            {
-                return Problem("Character is already a part of another team.");
-            }
-
-            var idString = character.Id.ToString();
-            var claim = await _context.UserClaims.AsNoTracking()
-                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
-                .Select(c => new { c.UserId })
-                .FirstOrDefaultAsync();
-
-            if (claim is not null)
-            {
-                var otherClaims = await _context.UserClaims.AsNoTracking()
-                    .Where(c => c.ClaimType == AppClaimTypes.Character && c.UserId == claim.UserId)
-                    .Select(c => c.ClaimValue)
-                    .ToListAsync();
-
-                var characterIds = new List<long>();
-
-                foreach (var otherClaim in otherClaims)
-                {
-                    if (long.TryParse(otherClaim, out var characterId))
-                    {
-                        characterIds.Add(characterId);
-                    }
-                }
-
-                var existingCharacterName = await _context.Characters
-                    .AsNoTracking()
-                    .Where(c => characterIds.Contains(c.Id) && c.TeamId == id)
-                    .Select(c => c.Name)
-                    .FirstOrDefaultAsync();
-
-                if (existingCharacterName?.Length > 0)
-                {
-                    return Problem($"The owner of this character is already on this team as {existingCharacterName}.");
-                }
-            }
-
-            character.TeamId = id;
-            character.MemberStatus = dto.MemberStatus;
-
-            await _context.SaveChangesAsync();
-
-            _telemetry.TrackEvent("TeamMemberAdded", User, props =>
-            {
-                props["TeamId"] = team.Id.ToString();
-                props["TeamName"] = team.Name;
-                props["CharacterId"] = character.Id.ToString();
-                props["CharacterName"] = character.Name;
-            });
-
-            var scope = await _context.GetCurrentPriorityScopeAsync();
-            var attendance = await _context.RaidAttendees
-                .AsNoTracking()
-                .Where(x => !x.IgnoreAttendance && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
-                .Select(x => x.Raid.StartedAt.Date)
-                .Distinct()
-                .OrderByDescending(x => x)
-                .Take(scope.ObservedAttendances)
-                .CountAsync();
-
-            var returnDto = new MemberDto
-            {
-                Character = new()
-                {
-                    Class = character.Class,
-                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                    Id = character.Id,
-                    Name = character.Name,
-                    Race = character.Race,
-                    TeamId = id,
-                    TeamName = null // TODO
-                },
-                JoinedAt = character.JoinedTeamAt,
-                Status = character.MemberStatus,
-                Verified = character.VerifiedById.HasValue,
-                ThisMonthRequiredDonations = scope.RequiredDonationCopper,
-                NextMonthRequiredDonations = scope.RequiredDonationCopper,
-                Attendance = attendance,
-                AttendanceMax = scope.ObservedAttendances
-            };
-
-            await foreach (var lootList in _context.CharacterLootLists
-                .AsNoTracking()
-                .Where(l => l.CharacterId == character.Id)
-                .OrderBy(l => l.Phase)
-                .Select(l => new
-                {
-                    l.MainSpec,
-                    l.Status,
-                    l.ApprovedBy,
-                    ApprovedByName = l.ApprovedBy.HasValue ? _context.Users.Where(u => u.Id == l.ApprovedBy).Select(u => u.UserName).FirstOrDefault() : null,
-                    l.Phase
-                })
-                .AsAsyncEnumerable())
-            {
-                var lootListDto = new MemberLootListDto
-                {
-                    Status = lootList.Status,
-                    MainSpec = lootList.MainSpec,
-                    Phase = lootList.Phase
-                };
-
-                if (lootList.ApprovedBy.HasValue)
-                {
-                    lootListDto.Approved = true;
-                    lootListDto.ApprovedBy = lootList.ApprovedByName;
-                }
-                else
-                {
-                    lootListDto.Approved = false;
-                }
-
-                returnDto.LootLists.Add(lootListDto);
-            }
-
-            var now = _serverTimeZone.TimeZoneNow();
-            var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == character.Id, scope);
-
-            returnDto.DonatedThisMonth = donationMatrix.GetCreditForMonth(returnDto.Character.Id, now);
-            returnDto.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(returnDto.Character.Id, now);
-
-            if (returnDto.DonatedThisMonth > scope.RequiredDonationCopper)
-            {
-                returnDto.DonatedNextMonth += returnDto.DonatedThisMonth - scope.RequiredDonationCopper;
-            }
-
-            return returnDto;
-        }
-
-        [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.RaidLeader)]
-        public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
+        [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.Recruiter)]
+        public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto, [FromServices] IAuthorizationService authService)
         {
             if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
             {
@@ -396,7 +242,9 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (!await _context.IsLeaderOf(User, id))
+            var auth = await authService.AuthorizeAsync(User, id, AppPolicies.Recruiter);
+
+            if (!auth.Succeeded)
             {
                 return Unauthorized();
             }

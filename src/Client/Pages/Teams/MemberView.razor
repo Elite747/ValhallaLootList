@@ -6,7 +6,7 @@
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
 </MudText>
 
-<AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
+<AuthorizeView Policy="@AppPolicies.Recruiter" Resource="Team">
     <Authorized>
         <MudSelect T="RaidMemberStatus"
                    Value="Member.Status"
@@ -19,25 +19,27 @@
             <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
             <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
         </MudSelect>
-
-        @if (Member.Verified == false)
-        {
-            if (context.User.IsAdmin())
-            {
-                <div class="my-2">
-                    <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
-                </div>
-            }
-            else
-            {
-                <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
-            }
-        }
     </Authorized>
     <NotAuthorized>
         <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
     </NotAuthorized>
 </AuthorizeView>
+
+@if (Member.Verified == false)
+{
+    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+        @if (context.User.IsAdmin())
+        {
+            <div class="my-2">
+                <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
+            </div>
+        }
+        else
+        {
+            <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
+        }
+    </AuthorizeView>
+}
 
 <DonationSummary Member="Member">
     <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">

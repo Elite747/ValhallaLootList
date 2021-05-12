@@ -15,6 +15,10 @@ namespace ValhallaLootList
 
         public const string LootMaster = nameof(LootMaster);
 
+        public const string Recruiter = nameof(Recruiter);
+
+        public const string Leadership = nameof(Leadership);
+
         public const string CharacterOwner = nameof(CharacterOwner);
 
         public const string CharacterOwnerOrAdmin = nameof(CharacterOwnerOrAdmin);
@@ -22,6 +26,10 @@ namespace ValhallaLootList
         public const string RaidLeaderOrAdmin = nameof(RaidLeaderOrAdmin);
 
         public const string LootMasterOrAdmin = nameof(LootMasterOrAdmin);
+
+        public const string RecruiterOrAdmin = nameof(RecruiterOrAdmin);
+
+        public const string LeadershipOrAdmin = nameof(LeadershipOrAdmin);
 
         public static void ConfigureAuthorization(AuthorizationOptions options)
         {
@@ -37,22 +45,38 @@ namespace ValhallaLootList
 
             options.AddPolicy(RaidLeader, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: true, allowLootMaster: false))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: true, allowLootMaster: false, allowRecruiter: false))
                 .Build());
 
             options.AddPolicy(RaidLeaderOrAdmin, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: true, allowLootMaster: false))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: true, allowLootMaster: false, allowRecruiter: false))
                 .Build());
 
             options.AddPolicy(LootMaster, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: false, allowLootMaster: true))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: false, allowLootMaster: true, allowRecruiter: false))
                 .Build());
 
             options.AddPolicy(LootMasterOrAdmin, new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: false, allowLootMaster: true))
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: false, allowLootMaster: true, allowRecruiter: false))
+                .Build());
+
+            options.AddPolicy(Recruiter, new AuthorizationPolicyBuilder()
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: false, allowLootMaster: false, allowRecruiter: true))
+                .Build());
+
+            options.AddPolicy(RecruiterOrAdmin, new AuthorizationPolicyBuilder()
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: false, allowLootMaster: false, allowRecruiter: true))
+                .Build());
+
+            options.AddPolicy(Leadership, new AuthorizationPolicyBuilder()
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: false, allowRaidLeader: true, allowLootMaster: true, allowRecruiter: true))
+                .Build());
+
+            options.AddPolicy(LeadershipOrAdmin, new AuthorizationPolicyBuilder()
+                .AddRequirements(new TeamLeaderRequirement(allowAdmin: true, allowRaidLeader: true, allowLootMaster: true, allowRecruiter: true))
                 .Build());
 
             options.AddPolicy(CharacterOwner, new AuthorizationPolicyBuilder()

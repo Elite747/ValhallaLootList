@@ -32,10 +32,12 @@
                         }
                         @if (lootLists.Any(ll => ll.Status == LootListStatus.Approved))
                         {
-                            <MudListItem Icon="@Icons.Material.Filled.Lock"
-                                         IconColor="Color.Error"
-                                         Text="Lock All Lists"
-                                         OnClick="() => LockAllAsync(lootLists)" />
+                            <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin">
+                                <MudListItem Icon="@Icons.Material.Filled.Lock"
+                                             IconColor="Color.Error"
+                                             Text="Lock All Lists"
+                                             OnClick="() => LockAllAsync(lootLists)" />
+                            </AuthorizeView>
                         }
                     </MudList>
                     <MudDivider Vertical="true" FlexItem="true" />

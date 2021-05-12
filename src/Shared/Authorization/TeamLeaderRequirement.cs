@@ -7,11 +7,12 @@ namespace ValhallaLootList
 {
     public class TeamLeaderRequirement : IAuthorizationRequirement
     {
-        public TeamLeaderRequirement(bool allowAdmin, bool allowRaidLeader, bool allowLootMaster)
+        public TeamLeaderRequirement(bool allowAdmin, bool allowRaidLeader, bool allowLootMaster, bool allowRecruiter)
         {
             AllowAdmin = allowAdmin;
             AllowRaidLeader = allowRaidLeader;
             AllowLootMaster = allowLootMaster;
+            AllowRecruiter = allowRecruiter;
         }
 
         public bool AllowAdmin { get; }
@@ -19,5 +20,7 @@ namespace ValhallaLootList
         public bool AllowRaidLeader { get; }
 
         public bool AllowLootMaster { get; }
+
+        public bool AllowRecruiter { get; }
     }
 }

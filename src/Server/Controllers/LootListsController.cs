@@ -376,7 +376,7 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             AuthorizationResult auth;
-            if (list.Status == LootListStatus.Submitted)
+            if (list.Status == LootListStatus.Submitted || list.Status == LootListStatus.Approved)
             {
                 auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
             }
@@ -387,7 +387,19 @@ namespace ValhallaLootList.Server.Controllers
 
             if (!auth.Succeeded)
             {
-                return Unauthorized();
+                if (list.Status == LootListStatus.Approved)
+                {
+                    var character = await _context.Characters.FindAsync(characterId);
+                    if (character?.TeamId > 0)
+                    {
+                        auth = await _authorizationService.AuthorizeAsync(User, character.TeamId.Value, AppPolicies.RaidLeader);
+                    }
+                }
+
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
             }
 
             if (!ValidateTimestamp(list, dto.Timestamp))
@@ -959,7 +971,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var characterAuthorizationLookup = new Dictionary<long, bool>();
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.RaidLeaderOrAdmin);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.LeadershipOrAdmin);
 
             var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate, scope);
 

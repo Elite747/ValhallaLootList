@@ -19,7 +19,7 @@
             <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items" @key="Phase">
                 <ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team.Id, Phase)" Context="lootLists" @ref="_executor" @key="(Team.Id, Phase)">
                     <MudList Clickable="true">
-                        @foreach (var list in lootLists.OrderBy(ll => ll.CharacterName))
+                        @foreach (var list in lootLists.OrderBy(ll => ll.MainSpec.GetSortingIndex()).ThenBy(ll => ll.CharacterName))
                         {
                             var characterId = list.CharacterId;
                             <MudListItem Class="@(_characterId == list.CharacterId ? "mud-selected-item" : null)"
@@ -27,15 +27,20 @@
                                          Icon="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Icons.Custom.Uncategorized.AlertSuccess : Icons.Material.Filled.ErrorOutline)"
                                          IconColor="@(list.Status == LootListStatus.Locked && list.TeamId == Team.Id ? Color.Success : list.Status == LootListStatus.Approved ? Color.Warning : Color.Error)"
                                          @key="characterId">
-                                @list.CharacterName
+                                <div class="d-flex align-center">
+                                    <SpecIcon Spec="list.MainSpec" Size="IconSize.Tiny" Class="mr-1" />
+                                    <span>@list.CharacterName</span>
+                                </div>
                             </MudListItem>
                         }
                         @if (lootLists.Any(ll => ll.Status == LootListStatus.Approved))
                         {
-                            <MudListItem Icon="@Icons.Material.Filled.Lock"
-                                         IconColor="Color.Error"
-                                         Text="Lock All Lists"
-                                         OnClick="() => LockAllAsync(lootLists)" />
+                            <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin">
+                                <MudListItem Icon="@Icons.Material.Filled.Lock"
+                                             IconColor="Color.Error"
+                                             Text="Lock All Lists"
+                                             OnClick="() => LockAllAsync(lootLists)" />
+                            </AuthorizeView>
                         }
                     </MudList>
                     <MudDivider Vertical="true" FlexItem="true" />

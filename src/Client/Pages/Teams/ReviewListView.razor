@@ -8,48 +8,52 @@
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
-        @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
-        {
-            <AuthorizeView Policy="@AppPolicies.Administrator">
-                <Authorized>
-                    <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings.">
+        <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
+            <Authorized>
+                @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
+                {
+                    if (auth.User.IsAdmin())
+                    {
+                        <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings.">
+                            <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                                Revoke Approval
+                            </MudButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. If the list is unlocked and approval revoked, it becomes editable.">
+                            <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1">Loot list may only be unlocked by an officer.</MudText>
+                    }
+                }
+                else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
+                {
+                    <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team.">
+                        <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                            Approve
+                        </MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Denying a loot list will allow it to be edited by the owner if the list is unlocked.">
+                        <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                            Deny
+                        </MudButton>
+                    </MudTooltip>
+                }
+                else if (LootList.Status == LootListStatus.Approved)
+                {
+                    <MudTooltip Text="Revoking an approval will allow it to be edited by the owner. This will not remove the player from the team.">
                         <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                             Revoke Approval
                         </MudButton>
                     </MudTooltip>
-                    <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. If the list is unlocked and approval revoked, it becomes editable.">
-                        <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
+                    <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
+                        <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
                     </MudTooltip>
-                </Authorized>
-                <NotAuthorized>
-                    <MudText Typo="Typo.body1">Loot list may only be unlocked by an officer.</MudText>
-                </NotAuthorized>
-            </AuthorizeView>
-        }
-        else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
-        {
-            <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team.">
-                <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
-                    Approve
-                </MudButton>
-            </MudTooltip>
-            <MudTooltip Text="Denying a loot list will allow it to be edited by the owner if the list is unlocked.">
-                <MudButton OnClick="DenyAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                    Deny
-                </MudButton>
-            </MudTooltip>
-        }
-        else if (LootList.Status == LootListStatus.Approved)
-        {
-            <MudTooltip Text="Revoking an approval will allow it to be edited by the owner. This will not remove the player from the team.">
-                <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                    Revoke Approval
-                </MudButton>
-            </MudTooltip>
-            <MudTooltip Text="Locking a loot list will make rankings visible to non-leaders and prevent editing. This should generally be done after approval of all loot lists on a team.">
-                <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
-            </MudTooltip>
-        }
+                }
+            </Authorized>
+        </AuthorizeView>
     </HeaderContent>
     <EntryTemplate Context="entry">
         @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)

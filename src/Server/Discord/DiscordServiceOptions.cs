@@ -20,5 +20,7 @@ namespace ValhallaLootList.Server.Discord
         public long RaidLeaderRoleId { get; set; }
 
         public long LootMasterRoleId { get; set; }
+
+        public long RecruiterRoleId { get; set; }
     }
 }

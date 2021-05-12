@@ -26,7 +26,8 @@ namespace ValhallaLootList.Client.Authorization
             }
 
             if ((requirement.AllowLootMaster && context.User.HasClaim(AppClaimTypes.Role, AppRoles.LootMaster)) ||
-                (requirement.AllowRaidLeader && context.User.HasClaim(AppClaimTypes.Role, AppRoles.RaidLeader)))
+                (requirement.AllowRaidLeader && context.User.HasClaim(AppClaimTypes.Role, AppRoles.RaidLeader)) ||
+                (requirement.AllowRecruiter && context.User.HasClaim(AppClaimTypes.Role, AppRoles.Recruiter)))
             {
                 long? teamId = context.Resource switch
                 {

@@ -40,6 +40,10 @@
                                     {
                                         <MudChip Size="Size.Small" Label="true" Class="mr-2">Loot Master</MudChip>
                                     }
+                                    @if (leader.AppRoles.Contains(AppRoles.Recruiter))
+                                    {
+                                        <MudChip Size="Size.Small" Label="true" Class="mr-2">Recruiter</MudChip>
+                                    }
                                 </div>
                             </div>
                             <AuthorizeView Policy="@AppPolicies.Administrator">
@@ -100,7 +104,7 @@
 
     private async Task AddLeaderAsync(IList<GuildMemberDto> leaders, AuthenticationState auth)
     {
-        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = () => Api.Members.GetInRoles(AppRoles.RaidLeader, AppRoles.LootMaster);
+        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = () => Api.Members.GetInRoles(AppRoles.RaidLeader, AppRoles.LootMaster, AppRoles.Recruiter);
         Func<GuildMemberDto, bool> filter = member => !leaders.Any(m2 => m2.Id == member.Id);
         var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
             "Select Member",

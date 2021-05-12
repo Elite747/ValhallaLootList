@@ -128,5 +128,55 @@ namespace ValhallaLootList
             }
             return RaidRole.Unknown;
         }
+
+        public static int GetSortingIndex(this Specializations spec)
+        {
+            return spec switch
+            {
+                // tanks
+                Specializations.BearDruid => 0,
+                Specializations.ProtPaladin => 1,
+                Specializations.ProtWarrior => 2,
+
+                // healers
+                Specializations.RestoDruid => 3,
+                Specializations.DiscPriest => 4,
+                Specializations.HolyPriest => 4,
+                Specializations.HolyPaladin => 6,
+                Specializations.RestoShaman => 7,
+
+                // dps
+                Specializations.BalanceDruid => 8,
+                Specializations.CatDruid => 8,
+
+                Specializations.BeastMasterHunter => 10,
+                Specializations.MarksmanHunter => 10,
+                Specializations.SurvivalHunter => 10,
+
+                Specializations.ArcaneMage => 13,
+                Specializations.FireMage => 13,
+                Specializations.FrostMage => 13,
+
+                Specializations.RetPaladin => 16,
+
+                Specializations.ShadowPriest => 17,
+
+                Specializations.AssassinationRogue => 18,
+                Specializations.CombatRogue => 18,
+                Specializations.SubtletyRogue => 18,
+
+                Specializations.EleShaman => 21,
+                Specializations.EnhanceShaman => 21,
+
+                Specializations.AfflictionWarlock => 23,
+                Specializations.DemoWarlock => 23,
+                Specializations.DestroWarlock => 23,
+
+                Specializations.ArmsWarrior => 26,
+                Specializations.FuryWarrior => 26,
+
+                _ => int.MaxValue
+            };
+        }
     }
 }

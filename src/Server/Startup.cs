@@ -63,7 +63,9 @@ namespace ValhallaLootList.Server
 
             services.RemoveAll<IUserValidator<AppUser>>(); // Don't validate usernames or emails. All of this info comes from Discord and doesn't need validation.
 
-            services.AddIdentityServer()
+            services.AddCors(options => options.AddDefaultPolicy(builder => builder.WithOrigins("https://valhalla-wow.com", "https://www.valhalla-wow.com")));
+
+            services.AddIdentityServer(options => options.IssuerUri = Configuration["IdentityServer:IssuerUri"])
                 .AddApiAuthorization<AppUser, ApplicationDbContext>(options =>
                 {
                     var claims = options.IdentityResources["openid"].UserClaims;
@@ -125,6 +127,8 @@ namespace ValhallaLootList.Server
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseIdentityServer();
             app.UseAuthentication();

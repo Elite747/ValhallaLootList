@@ -29,7 +29,8 @@ namespace ValhallaLootList.Server.Authorization
             }
 
             if ((requirement.AllowRaidLeader && DiscordClientProvider.HasRaidLeaderRole(member)) ||
-                (requirement.AllowLootMaster && DiscordClientProvider.HasLootMasterRole(member)))
+                (requirement.AllowLootMaster && DiscordClientProvider.HasLootMasterRole(member)) ||
+                (requirement.AllowRecruiter && DiscordClientProvider.HasRecruiterRole(member)))
             {
                 long? teamId = context.Resource switch
                 {

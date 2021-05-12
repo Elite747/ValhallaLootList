@@ -23,7 +23,19 @@ namespace ValhallaLootList.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddHttpClient(ApiClient.HttpClientKey, client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+            builder.Services.AddHttpClient(
+                ApiClient.HttpClientKey,
+                client =>
+                {
+                    var baseAddressBuilder = new UriBuilder(builder.HostEnvironment.BaseAddress);
+
+                    if (string.Equals(baseAddressBuilder.Host, "valhalla-wow.com", StringComparison.OrdinalIgnoreCase))
+                    {
+                        baseAddressBuilder.Host = "www.valhalla-wow.com";
+                    }
+
+                    client.BaseAddress = baseAddressBuilder.Uri;
+                })
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
             builder.Services.AddHttpClient(WowheadClient.HttpClientKey);

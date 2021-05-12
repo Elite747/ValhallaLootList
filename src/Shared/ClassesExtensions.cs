@@ -76,5 +76,22 @@ namespace ValhallaLootList
             Classes.Druid => SpecializationGroups.Druid,
             _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
         };
+
+        public static int GetSortingIndex(this Classes classes)
+        {
+            return classes switch
+            {
+                Classes.Warrior => 9,
+                Classes.Paladin => 4,
+                Classes.Hunter => 2,
+                Classes.Rogue => 6,
+                Classes.Priest => 5,
+                Classes.Shaman => 7,
+                Classes.Mage => 3,
+                Classes.Warlock => 8,
+                Classes.Druid => 1,
+                _ => int.MaxValue
+            };
+        }
     }
 }

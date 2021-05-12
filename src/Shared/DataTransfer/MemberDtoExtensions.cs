@@ -10,50 +10,20 @@ namespace ValhallaLootList.DataTransfer
     {
         public static IOrderedEnumerable<MemberDto> OrderByRoleThenClassThenName(this IEnumerable<MemberDto> characters, byte phase)
         {
-            return characters
-                .OrderBy(c => GetRoleSortedIndex(c.LootLists, phase))
-                .ThenBy(c => GetClassSortedIndex(c.Character.Class))
-                .ThenBy(c => c.Character.Name);
+            return characters.OrderBy(c => GetRoleAndClassSortedIndex(c.LootLists, phase)).ThenBy(c => c.Character.Name);
         }
 
-        private static int GetRoleSortedIndex(IEnumerable<MemberLootListDto> lootLists, byte phase)
+        private static int GetRoleAndClassSortedIndex(IEnumerable<MemberLootListDto> lootLists, byte phase)
         {
             foreach (var lootList in lootLists)
             {
                 if (lootList.Phase == phase)
                 {
-                    if ((lootList.MainSpec & SpecializationGroups.Tank) != 0)
-                    {
-                        return 1;
-                    }
-
-                    if ((lootList.MainSpec & SpecializationGroups.Healer) != 0)
-                    {
-                        return 2;
-                    }
-
-                    return 3;
+                    return lootList.MainSpec.GetSortingIndex();
                 }
             }
 
             return int.MaxValue;
-        }
-
-        private static int GetClassSortedIndex(Classes classes)
-        {
-            return classes switch
-            {
-                Classes.Warrior => 9,
-                Classes.Paladin => 4,
-                Classes.Hunter => 2,
-                Classes.Rogue => 6,
-                Classes.Priest => 5,
-                Classes.Shaman => 7,
-                Classes.Mage => 3,
-                Classes.Warlock => 8,
-                Classes.Druid => 1,
-                _ => int.MaxValue
-            };
         }
     }
 }

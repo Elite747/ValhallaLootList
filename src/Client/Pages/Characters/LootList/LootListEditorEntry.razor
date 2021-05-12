@@ -113,7 +113,7 @@ else if (!Entry.Won)
         if (Entry is null) throw new ArgumentNullException(nameof(Entry));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
         if (Editor is null) throw new ArgumentNullException(nameof(Editor));
-        _item = Entry.ItemId.HasValue ? Items.FirstOrDefault(item => item.Id == Entry.ItemId.Value) : null;
+        UpdateItem();
     }
 
     private async Task SelectAsync()
@@ -229,6 +229,7 @@ else if (!Entry.Won)
     {
         Entry.ItemId = update.ItemId;
         Entry.Justification = update.EntryJustification;
+        UpdateItem();
         if (update.SwapEntryId.HasValue)
         {
             var entry = Editor.LootList.Entries.Find(e => e.Id == update.SwapEntryId);
@@ -245,6 +246,11 @@ else if (!Entry.Won)
                 }
             }
         }
+    }
+
+    private void UpdateItem()
+    {
+        _item = Entry.ItemId.HasValue ? Items.FirstOrDefault(item => item.Id == Entry.ItemId.Value) : null;
     }
 
     private void OnDragStart(DragEventArgs args)

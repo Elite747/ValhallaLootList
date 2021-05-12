@@ -49,7 +49,7 @@ namespace ValhallaLootList.Client.Data
 
         public IApiClientOperation SetSpec(long characterId, byte phase, LootListSubmissionDto submission)
         {
-            return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+            return Client.CreateRequest(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
         }
 
         public IApiClientOperation<TimestampDto> SetEditable(LootListDto lootList)

@@ -71,6 +71,11 @@
                     <MudItem xs="12" md="4">
                         <MudCheckBox Label="Show Deactivated" @bind-Checked="_showDeactivated" />
                     </MudItem>
+                    <AuthorizeView Policy="@AppPolicies.Administrator">
+                        <MudItem xs="12" md="4">
+                            <MudCheckBox Label="Only Unverified" @bind-Checked="_onlyUnverified" />
+                        </MudItem>
+                    </AuthorizeView>
                 </MudGrid>
             </MudListSubheader>
             @foreach (var character in EnumerateCharacters(characters))
@@ -88,7 +93,7 @@
     private string _searchText = string.Empty;
     private HashSet<Classes> _searchClasses = new();
     private HashSet<TeamNameDto?> _searchTeams = new();
-    private bool _showDeactivated;
+    private bool _showDeactivated, _onlyUnverified;
     private static readonly Classes[] _allClasses = new[] {
         Classes.Druid,
         Classes.Hunter,
@@ -131,6 +136,11 @@
             if (!_showDeactivated)
             {
                 en = en.Where(ch => !ch.Deactivated);
+            }
+
+            if (_onlyUnverified)
+            {
+                en = en.Where(ch => !ch.Verified);
             }
 
             return en;

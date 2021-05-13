@@ -62,11 +62,11 @@ namespace ValhallaLootList.Server.Controllers
                         Name = character.Name,
                         Race = character.Race,
                         TeamId = teamId,
-                        TeamName = teamName
+                        TeamName = teamName,
+                        Verified = character.Verified
                     },
                     JoinedAt = character.JoinedTeamAt,
                     Status = character.MemberStatus,
-                    Verified = character.Verified,
                     ThisMonthRequiredDonations = scope.RequiredDonationCopper,
                     NextMonthRequiredDonations = scope.RequiredDonationCopper,
                     Attendance = character.Attendance,

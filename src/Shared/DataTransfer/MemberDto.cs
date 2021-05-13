@@ -27,8 +27,6 @@ namespace ValhallaLootList.DataTransfer
 
         public DateTimeOffset JoinedAt { get; set; }
 
-        public bool? Verified { get; set; }
-
         public long DonatedThisMonth { get; set; }
 
         public long DonatedNextMonth { get; set; }

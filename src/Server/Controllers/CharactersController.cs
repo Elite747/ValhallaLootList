@@ -68,7 +68,8 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
                     Gender = c.IsFemale ? Gender.Female : Gender.Male,
-                    Deactivated = c.Deactivated
+                    Deactivated = c.Deactivated,
+                    Verified = c.VerifiedById.HasValue
                 })
                 .AsAsyncEnumerable();
         }
@@ -118,7 +119,8 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = c.TeamId,
                     TeamName = c.Team!.Name,
                     Gender = c.IsFemale ? Gender.Female : Gender.Male,
-                    Deactivated = c.Deactivated
+                    Deactivated = c.Deactivated,
+                    Verified = c.VerifiedById.HasValue
                 })
                 .ToListAsync();
         }
@@ -137,7 +139,8 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = c.Team!.Id,
                     TeamName = c.Team.Name,
                     Gender = c.IsFemale ? Gender.Female : Gender.Male,
-                    Deactivated = c.Deactivated
+                    Deactivated = c.Deactivated,
+                    Verified = c.VerifiedById.HasValue
                 })
                 .FirstOrDefaultAsync();
 
@@ -221,7 +224,8 @@ namespace ValhallaLootList.Server.Controllers
                 Name = character.Name,
                 Race = character.Race,
                 Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                Deactivated = character.Deactivated
+                Deactivated = character.Deactivated,
+                Verified = character.VerifiedById.HasValue
             });
         }
 
@@ -276,7 +280,8 @@ namespace ValhallaLootList.Server.Controllers
                 Race = character.Race,
                 Gender = character.IsFemale ? Gender.Female : Gender.Male,
                 TeamId = character.TeamId,
-                Deactivated = character.Deactivated
+                Deactivated = character.Deactivated,
+                Verified = character.VerifiedById.HasValue
             };
         }
 

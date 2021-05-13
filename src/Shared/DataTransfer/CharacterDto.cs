@@ -20,5 +20,7 @@ namespace ValhallaLootList.DataTransfer
         public long? TeamId { get; set; }
 
         public string? TeamName { get; set; }
+
+        public bool Verified { get; set; }
     }
 }

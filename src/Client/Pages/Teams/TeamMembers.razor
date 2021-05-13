@@ -65,7 +65,7 @@
                                     ShowTooltip="true"
                                     Class="mr-5" />
                         <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
-                        @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || member.Verified == false)
+                        @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
                         {
                             <MudTooltip>
                                 <TooltipContent>
@@ -81,7 +81,7 @@
                                     {
                                         <p>Loot list has not been locked yet!</p>
                                     }
-                                    @if (member.Verified == false)
+                                    @if (!member.Character.Verified)
                                     {
                                         <p>Character ownership has not been verified!</p>
                                         <p>Have an officer verify the owner of this character.</p>

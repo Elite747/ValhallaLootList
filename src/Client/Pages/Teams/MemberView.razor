@@ -25,7 +25,7 @@
     </NotAuthorized>
 </AuthorizeView>
 
-@if (Member.Verified == false)
+@if (!Member.Character.Verified)
 {
     <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
         @if (context.User.IsAdmin())

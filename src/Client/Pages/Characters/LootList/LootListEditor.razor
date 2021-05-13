@@ -30,11 +30,12 @@
 
     private async Task SubmitAsync()
     {
-        if (HasCollapsibleBrackets())
+        int? collapsibleBracket = GetCollapsibleBracket();
+        if (collapsibleBracket.HasValue)
         {
             if (await DialogService.ShowMessageBox(
-                "Unfilled Ranks",
-                "Your loot list has higher ranks that could be used for items you have listed. " +
+                $"Unfilled Ranks in Bracket {collapsibleBracket}",
+                $"Your loot list has higher ranks in bracket {collapsibleBracket} that could be used for items you have listed within it. " +
                 "Submitting this list would be voluntarily accepting lower priority on these items with no benefit. " +
                 "Are you sure you want to continue to submit this list?",
                 "Continue",
@@ -63,7 +64,7 @@
         }
     }
 
-    private bool HasCollapsibleBrackets()
+    private int? GetCollapsibleBracket()
     {
         foreach (var bracket in LootList.Entries.Where(e => !e.Won).GroupBy(e => e.Bracket))
         {
@@ -76,7 +77,7 @@
                     if (hasUnselected)
                     {
                         // higher rank is not filled.
-                        return true;
+                        return bracket.Key + 1;
                     }
                     else
                     {
@@ -90,7 +91,7 @@
             }
         }
 
-        return false;
+        return null;
     }
 
     private Task ChangeSpecAsync()

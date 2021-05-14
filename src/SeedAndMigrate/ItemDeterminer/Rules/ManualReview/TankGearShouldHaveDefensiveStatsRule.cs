@@ -32,12 +32,23 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return item.BlockRating > 0
-                || item.BlockValue > 0
-                || item.Defense > 0
-                || item.Dodge > 0
-                || item.HealthPer5 > 0
-                || item.Parry > 0;
+            if (item.BlockRating > 0 ||
+                item.BlockValue > 0 ||
+                item.Defense > 0 ||
+                item.Dodge > 0 ||
+                item.HealthPer5 > 0 ||
+                item.Parry > 0)
+            {
+                return true;
+            }
+
+            if (spec == Specializations.BearDruid && item.Type == ItemType.Leather)
+            {
+                // Bear druids may use leather that has no pure-defensive stats.
+                return item.Stamina > 0;
+            }
+
+            return false;
         }
     }
 }

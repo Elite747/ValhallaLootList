@@ -13,7 +13,6 @@ namespace ValhallaLootList
             MeleeDps = CatDruid | Rogue | EnhanceShaman | RetPaladin | ArmsWarrior | FuryWarrior,
             CasterDps = BalanceDruid | Mage | ShadowPriest | EleShaman | Warlock,
             PhysicalDps = MeleeDps | Hunter,
-            PhysicalCaster = ProtPaladin | EnhanceShaman | RetPaladin,
             Dps = CasterDps | PhysicalDps,
 
             HealerPriest = DiscPriest | HolyPriest,

@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 {
     internal class SpellHasteDeadStatRule : DeadStatRule
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank | SpecializationGroups.PhysicalCaster;
+        protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank;
 
         protected override int GetStat(Item item) => item.SpellHaste;
 

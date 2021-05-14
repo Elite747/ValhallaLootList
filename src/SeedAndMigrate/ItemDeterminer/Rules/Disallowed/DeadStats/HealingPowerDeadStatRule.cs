@@ -15,7 +15,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
         protected override bool IsAllowed(Item item, Specializations spec)
         {
-            return item.SpellPower == item.HealingPower && (spec & (SpecializationGroups.CasterDps | SpecializationGroups.PhysicalCaster)) != 0;
+            return item.SpellPower == item.HealingPower && (spec & (SpecializationGroups.CasterDps | Specializations.ProtPaladin)) != 0;
         }
     }
 }

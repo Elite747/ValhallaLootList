@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
 using ValhallaLootList.Client.Data;
+using ValhallaLootList.Client.Data.Containers;
 using ValhallaLootList.Client.Data.Items;
 using ValhallaLootList.Client.Shared;
 
@@ -40,13 +41,18 @@ namespace ValhallaLootList.Client
 
             builder.Services.AddHttpClient(WowheadClient.HttpClientKey);
 
+            builder.Services.AddHttpClient(AzureClient.HttpClientKey);
+
             builder.Services.AddMemoryCache()
                 .AddTransient<LocalStorageService>()
                 .AddScoped<ApiClient>()
                 .AddScoped<WowheadClient>()
+                .AddScoped<AzureClient>()
                 .AddScoped<WowheadInterop>()
                 .AddScoped<ItemProvider>()
+                .AddScoped<AzureContainerProvider>()
                 .AddSingleton<ItemCache>()
+                .AddSingleton<AzureContainerCache>()
                 .AddSingleton<TeamsSource>()
                 .AddScoped<PermissionManager>()
                 .AddScoped<UserTimeProvider>()

@@ -1,0 +1,12 @@
+﻿@page "/me"
+
+<AuthorizeView>
+    <Authorized>
+        <MudText Typo="Typo.h4">Hello, @context.User.GetDisplayName()</MudText>
+        <MyCharactersView User="context.User" />
+        <MyRaidsView />
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Link="authentication/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large">Log in</MudButton>
+    </NotAuthorized>
+</AuthorizeView>

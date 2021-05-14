@@ -6,7 +6,7 @@ using MudBlazor.Utilities;
 
 namespace MudBlazor
 {
-    public partial class MudExpansionPanelHeader : MudExpansionPanel
+    public partial class MudExpansionPanelHeader : MudExpansionPanelEx
     {
         [CascadingParameter] private MudExpansionPanels Parent2 { get; set; } = null!;
 
@@ -15,6 +15,7 @@ namespace MudBlazor
         public MudExpansionPanelHeader()
         {
             Disabled = true;
+            CursorEnabled = true;
         }
 
         protected new string Classname =>

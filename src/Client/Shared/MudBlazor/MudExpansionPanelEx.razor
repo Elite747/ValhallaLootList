@@ -1,0 +1,37 @@
+﻿@namespace MudBlazor
+@inherits MudExpansionPanel
+
+<div class="@Classname" style="@Style">
+    <div class="mud-expand-panel-header" style="@HeaderStyle" @onclick="() => ToggleExpansion()">
+        <div class="mud-expand-panel-text">
+            @if (TitleContent != null)
+            {
+                @TitleContent 
+            }
+            else
+            {
+                @Text            
+            }
+        </div>
+        @if (!HideIcon)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.ExpandMore" class="@(IsExpanded? "mud-expand-panel-icon mud-transform" : "mud-expand-panel-icon")" />
+        }
+    </div>
+    <MudCollapse Expanded="@IsExpanded" MaxHeight="@MaxHeight">
+        <div class="@PanelContentClassname">
+            @ChildContent
+        </div>
+    </MudCollapse>
+</div>
+
+@code {
+    [Parameter] public bool DenseHeader { get; set; }
+    [Parameter] public bool CursorEnabled { get; set; }
+
+    protected string HeaderStyle => new MudBlazor.Utilities.StyleBuilder()
+        .AddStyle("user-select", "unset", CursorEnabled)
+        .AddStyle("cursor", "unset", CursorEnabled)
+        .AddStyle("padding", "8px 12px", DenseHeader)
+        .Build();
+}

@@ -1,8 +1,8 @@
 ﻿@namespace MudBlazor
-@inherits MudExpansionPanel
+@inherits MudExpansionPanelEx
 
 <div class="@Classname">
-    <div class="mud-expand-panel-header" style="user-select: unset; cursor: unset">
+    <div class="mud-expand-panel-header" style="@HeaderStyle">
         <div class="mud-expand-panel-text">
             @if (TitleContent != null)
             {
@@ -15,9 +15,4 @@
         </div>
         @ActionsContent
     </div>
-    <MudCollapse Expanded="@IsExpanded" MaxHeight="@MaxHeight">
-        <div class="@PanelContentClassname">
-            @ChildContent
-        </div>
-    </MudCollapse>
 </div>

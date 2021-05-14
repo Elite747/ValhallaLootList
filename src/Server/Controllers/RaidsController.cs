@@ -140,7 +140,8 @@ namespace ValhallaLootList.Server.Controllers
                         Name = a.Character.Name,
                         Race = a.Character.Race,
                         TeamId = a.Character.TeamId,
-                        TeamName = a.Character.Team!.Name
+                        TeamName = a.Character.Team!.Name,
+                        Verified = a.Character.VerifiedById.HasValue
                     }
                 })
                 .ToListAsync();
@@ -301,7 +302,8 @@ namespace ValhallaLootList.Server.Controllers
                         Name = a.Character.Name,
                         Race = a.Character.Race,
                         TeamId = a.Character.TeamId,
-                        TeamName = a.Character.Team?.Name
+                        TeamName = a.Character.Team?.Name,
+                        Verified = a.Character.VerifiedById.HasValue
                     }
                 }).ToList(),
                 StartedAt = raid.StartedAt,
@@ -448,7 +450,8 @@ namespace ValhallaLootList.Server.Controllers
                     Id = character.Id,
                     Name = character.Name,
                     Race = character.Race,
-                    TeamId = character.TeamId
+                    TeamId = character.TeamId,
+                    Verified = character.VerifiedById.HasValue
                 }
             };
         }
@@ -505,7 +508,7 @@ namespace ValhallaLootList.Server.Controllers
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == characterId)
-                .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name })
+                .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name, c.VerifiedById })
                 .FirstOrDefaultAsync();
 
             _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -530,7 +533,8 @@ namespace ValhallaLootList.Server.Controllers
                     Name = character.Name,
                     Race = character.Race,
                     TeamId = character.TeamId,
-                    TeamName = character.TeamName
+                    TeamName = character.TeamName,
+                    Verified = character.VerifiedById.HasValue
                 }
             };
         }

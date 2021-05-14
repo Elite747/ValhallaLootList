@@ -10,6 +10,13 @@
 
         <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
             <Authorized>
+                @if (auth.User.IsAdmin())
+                {
+                    <ApiExecutor Operation="() => Api.Characters.Get(LootList.CharacterId)" Context="character">
+                        <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="character" />
+                    </ApiExecutor>
+                }
+
                 @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
                 {
                     if (auth.User.IsAdmin())
@@ -80,11 +87,11 @@
             <ul>
                 @foreach (var restriction in GetRestrictions(item, entry))
                 {
-                <li>
-                    <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
-                        @restriction.Reason
-                    </MudText>
-                </li>
+                    <li>
+                        <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                            @restriction.Reason
+                        </MudText>
+                    </li>
                 }
             </ul>
             @if (entry.Justification?.Length > 0)
@@ -93,6 +100,13 @@
                     Justification: @entry.Justification
                 </div>
             }
+        }
+        else
+        {
+            <div class="d-flex align-center">
+                <MudAvatar Rounded="true" Class="mr-2" Color="Color.Dark" />
+                <span class="q0">[Empty Slot]</span>
+            </div>
         }
     </EntryTemplate>
 </LootListLayout>

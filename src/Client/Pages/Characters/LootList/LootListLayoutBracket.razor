@@ -71,7 +71,7 @@
                     Rank @row.Key
                 </MudText>
             </MudItem>
-            @foreach (var entry in row)
+            @foreach (var entry in row.OrderBy(e => e.Id))
             {
                 <MudItem xs="12" md="9 / itemsInRow" lg="10 / itemsInRow">
                     @EntryTemplate?.Invoke(entry)

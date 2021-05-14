@@ -48,9 +48,10 @@
                 foreach (var e in instance.Encounters)
                 {
                     var encounter = e;
-                    <MudExpansionPanel IsExpanded="string.Equals(encounter.Id, SelectedEncounterId, StringComparison.OrdinalIgnoreCase)"
-                                       IsExpandedChanged="b => OnExpandedChanged(b, encounter)"
-                                       DisableGutters="true">
+                    <MudExpansionPanelEx IsExpanded="string.Equals(encounter.Id, SelectedEncounterId, StringComparison.OrdinalIgnoreCase)"
+                                         IsExpandedChanged="b => OnExpandedChanged(b, encounter)"
+                                         DisableGutters="true"
+                                         DenseHeader="true">
                         <TitleContent>
                             <MudText Typo="Typo.h6">@encounter.Name</MudText>
                             <MudText Typo="Typo.caption">@instance.Name</MudText>
@@ -58,7 +59,7 @@
                         <ChildContent>
                             <ItemsView Items="encounter.Items" ShowWon="_showWon" Standings="_standings" />
                         </ChildContent>
-                    </MudExpansionPanel>
+                    </MudExpansionPanelEx>
                 }
             }
         }

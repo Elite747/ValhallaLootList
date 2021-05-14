@@ -57,6 +57,7 @@ namespace ValhallaLootList.Server.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null || !long.TryParse(info.ProviderKey, out var discordId))
             {
+                _logger.LogError($"Error getting external login info. Provider key returned was {info?.ProviderKey ?? "(null)"}");
                 return LocalRedirect("~/loginerror/" + LoginErrorReason.FromLoginProvider);
             }
 

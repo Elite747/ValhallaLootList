@@ -13,7 +13,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.Item
 
         protected override bool AppliesTo(Item item) => item.Id == 28789u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalCaster;
+        protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman | Specializations.RetPaladin;
 
         protected override bool IsAllowed(Item item, Specializations spec) => false;
     }

@@ -237,7 +237,6 @@ else if (!Entry.Won)
             {
                 entry.ItemId = update.SwapItemId;
                 entry.Justification = update.SwapEntryJustification;
-                Editor.NotifyStateChanged();
 
                 if (!dragged && !update.SwapItemId.HasValue && update.ItemId.HasValue)
                 {
@@ -246,6 +245,7 @@ else if (!Entry.Won)
                 }
             }
         }
+        Editor.NotifyStateChanged();
     }
 
     private void UpdateItem()

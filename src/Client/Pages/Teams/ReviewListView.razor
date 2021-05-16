@@ -12,7 +12,7 @@
             <Authorized>
                 @if (auth.User.IsAdmin())
                 {
-                    <ApiExecutor Operation="() => Api.Characters.Get(LootList.CharacterId)" Context="character">
+                    <ApiExecutor Operation="() => Api.Characters.Get(LootList.CharacterId)" Context="character" @key="LootList.CharacterId">
                         <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="character" />
                     </ApiExecutor>
                 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ValhallaLootList.DataTransfer;
@@ -75,10 +76,18 @@ namespace ValhallaLootList.Server.Discord
             return await _client.GetGuildAsync((ulong)_guildId);
         }
 
-        public async Task<DiscordMember> GetMemberAsync(long id)
+        public async Task<DiscordMember?> GetMemberAsync(long id)
         {
             var guild = await GetGuildAsync();
-            return await guild.GetMemberAsync((ulong)id);
+
+            try
+            {
+                return await guild.GetMemberAsync((ulong)id);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
         }
 
         public IEnumerable<string> GetAppRoles(DiscordMember member)
@@ -189,9 +198,13 @@ namespace ValhallaLootList.Server.Discord
             }
 
             var member = await GetMemberAsync(id);
-            var message = new DiscordMessageBuilder();
-            configureMessage(message);
-            await member.SendMessageAsync(message);
+
+            if (member is not null)
+            {
+                var message = new DiscordMessageBuilder();
+                configureMessage(message);
+                await member.SendMessageAsync(message);
+            }
         }
 
         public async Task<DiscordMessage?> SendOrUpdatePublicNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
@@ -202,32 +215,62 @@ namespace ValhallaLootList.Server.Discord
                 return null;
             }
 
-            var guild = await GetGuildAsync();
-            var channel = guild.GetChannel((ulong)_publicNotificationChannelId);
+            var channel = await GetChannelAsync(_publicNotificationChannelId);
+
+            if (channel is null)
+            {
+                return null;
+            }
 
             var messageBuilder = new DiscordMessageBuilder();
             configureMessage(messageBuilder);
 
-            if (messageId > 0)
+            try
             {
-                var message = await channel.GetMessageAsync((ulong)messageId.Value);
-
-                if (message is not null)
+                if (messageId > 0)
                 {
+                    var message = await channel.GetMessageAsync((ulong)messageId);
                     return await message.ModifyAsync(messageBuilder);
                 }
-            }
 
-            return await channel.SendMessageAsync(messageBuilder);
+                return await channel.SendMessageAsync(messageBuilder);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
         }
 
         public async Task DeletePublicNotificationAsync(long messageId)
         {
             CheckStarted();
+
+            var channel = await GetChannelAsync(_publicNotificationChannelId);
+
+            if (channel is not null)
+            {
+                try
+                {
+                    var message = await channel.GetMessageAsync((ulong)messageId);
+                    await message.DeleteAsync();
+                }
+                catch (NotFoundException)
+                {
+                }
+            }
+        }
+
+        private async Task<DiscordChannel?> GetChannelAsync(long channelId)
+        {
             var guild = await GetGuildAsync();
-            var channel = guild.GetChannel((ulong)_publicNotificationChannelId);
-            var message = await channel.GetMessageAsync((ulong)messageId);
-            await message.DeleteAsync();
+            try
+            {
+                return guild.GetChannel((ulong)channelId);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
         }
 
         private void CheckDisposed()

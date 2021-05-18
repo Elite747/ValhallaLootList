@@ -740,6 +740,11 @@ namespace ValhallaLootList.Server.Controllers
                         .Append(dto.Message);
                 }
 
+                if (dto.Approved)
+                {
+                    await dcp.AddRoleAsync(owner, team.Name, "Accepted onto the raid team.");
+                }
+
                 await dcp.SendDmAsync(owner, m => m.WithContent(sb.ToString()));
             }
 

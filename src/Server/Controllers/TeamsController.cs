@@ -284,7 +284,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/members/{characterId:long}")]
-        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService authService)
+        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService authService, [FromServices] DiscordClientProvider dcp)
         {
             var auth = await authService.AuthorizeAsync(User, id, AppPolicies.RaidLeader);
 
@@ -351,6 +351,18 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            var characterIdString = characterId.ToString();
+            var owner = await _context.UserClaims
+                .AsNoTracking()
+                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == characterIdString)
+                .Select(c => c.UserId)
+                .FirstOrDefaultAsync();
+
+            if (owner > 0)
+            {
+                await dcp.RemoveRoleAsync(owner, team.Name, "Removed from the raid team.");
+            }
 
             _telemetry.TrackEvent("TeamMemberRemoved", User, props =>
             {

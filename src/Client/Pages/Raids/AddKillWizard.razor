@@ -7,7 +7,7 @@
 <MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
     <ApiView Operation="_instancesOperation">
-        <WizardSection Name="Import" CanContinue="ImportValid">
+        <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
             <MudTextField T="string"
                           Value="_importString"
                           ValueChanged="ImportOrClear"

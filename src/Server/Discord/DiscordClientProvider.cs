@@ -207,6 +207,50 @@ namespace ValhallaLootList.Server.Discord
             }
         }
 
+        public async Task AddRoleAsync(long id, string roleName, string reason)
+        {
+            CheckStarted();
+            if (_suppressOutgoingMessages)
+            {
+                return;
+            }
+
+            var guild = await GetGuildAsync();
+            var member = await GetMemberAsync(id);
+
+            if (member is not null && !member.Roles.Any(role => role.Name == roleName))
+            {
+                var role = guild.Roles.Values.FirstOrDefault(role => role.Name == roleName);
+
+                if (role is not null)
+                {
+                    await member.GrantRoleAsync(role, reason);
+                }
+            }
+        }
+
+        public async Task RemoveRoleAsync(long id, string roleName, string reason)
+        {
+            CheckStarted();
+            if (_suppressOutgoingMessages)
+            {
+                return;
+            }
+
+            var guild = await GetGuildAsync();
+            var member = await GetMemberAsync(id);
+
+            if (member is not null)
+            {
+                var role = member.Roles.FirstOrDefault(role => role.Name == roleName);
+
+                if (role is not null)
+                {
+                    await member.RevokeRoleAsync(role, reason);
+                }
+            }
+        }
+
         public async Task<DiscordMessage?> SendOrUpdatePublicNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
         {
             CheckStarted();

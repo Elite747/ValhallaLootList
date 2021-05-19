@@ -1,0 +1,149 @@
+﻿@namespace ValhallaLootList.Client.Shared
+
+<MudTextField Label="Name"
+              HelperText="Enter the name exactly as it is spelled in-game."
+              @bind-Value="Character.Name"
+              For="() => Character.Name"
+              Variant="Variant.Filled" />
+
+<MudSelect Label="Gender"
+           Class="mt-3"
+           @bind-Value="Character.Gender"
+           For="() => Character.Gender"
+           Variant="Variant.Filled">
+    <MudSelectItem T="Gender?" Value="@Gender.Male">
+        <div class="d-flex align-center">
+            <MudAvatar Rounded="true" Image="images/male.png" Size="Size.Small" Class="mr-2" />
+            <span>Male</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem T="Gender?" Value="@Gender.Female">
+        <div class="d-flex align-center">
+            <MudAvatar Rounded="true" Image="images/female.png" Size="Size.Small" Class="mr-2" />
+            <span>Female</span>
+        </div>
+    </MudSelectItem>
+</MudSelect>
+
+<MudSelect Label="Race"
+           Class="mt-3"
+           ValueChanged="(PlayerRace? race) => RaceChanged(race)"
+           Value="@Character.Race"
+           For="() => Character.Race"
+           ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty"
+           Variant="Variant.Filled">
+    @foreach (var race in _allRaces)
+    {
+        <MudSelectItem T="PlayerRace?" Value="@race" Disabled="Array.IndexOf(_classRaces, race) < 0">
+            <div class="d-flex align-center">
+                <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                    <RaceIcon Race="race" Gender="Character.Gender ?? Gender.Male" Size="IconSize.Medium" Width="24" Height="24" />
+                </MudAvatar>
+                <span>@race.GetDisplayName()</span>
+            </div>
+        </MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Class"
+           Class="mt-3"
+           @bind-Value="Character.Class"
+           For="() => Character.Class"
+           Disabled="DisableClassChange"
+           ToStringFunc="pc => pc == default ? string.Empty : pc.GetDisplayName()"
+           Variant="Variant.Filled">
+    @foreach (var playerClass in _allClasses)
+    {
+        <MudSelectItem T="Classes" Value="@playerClass" Disabled="Array.IndexOf(GetRaceClasses(), playerClass) < 0">
+            <div class="d-flex align-center">
+                <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                    <ClassIcon PlayerClass="playerClass" Size="IconSize.Medium" Width="24" Height="24" />
+                </MudAvatar>
+                <span>@playerClass.GetDisplayName()</span>
+            </div>
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@if (AllowSubmitNonOwned)
+{
+    <MudTooltip Text="When checked, indicates that this character is owned by you. Uncheck this if you are adding a character on someone's behalf."
+                Class="mt-3">
+        <MudCheckBox @bind-Checked="Character.SenderIsOwner"
+                     Label="This character is mine"
+                     For="() => Character.SenderIsOwner" />
+    </MudTooltip>
+}
+
+@code {
+    private static readonly Dictionary<PlayerRace, Classes[]> _classLookup = new()
+    {
+        [PlayerRace.Human] = new[] { Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warlock, Classes.Warrior },
+        [PlayerRace.Dwarf] = new[] { Classes.Hunter, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warrior },
+        [PlayerRace.NightElf] = new[] { Classes.Druid, Classes.Hunter, Classes.Priest, Classes.Rogue, Classes.Warrior },
+        [PlayerRace.Gnome] = new[] { Classes.Mage, Classes.Rogue, Classes.Warlock, Classes.Warrior },
+        [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior }
+    };
+
+    private static readonly Dictionary<Classes, PlayerRace[]> _raceLookup = new()
+    {
+        [Classes.Druid] = new[] { PlayerRace.NightElf },
+        [Classes.Hunter] = new[] { PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+        [Classes.Mage] = new[] { PlayerRace.Human, PlayerRace.Gnome, PlayerRace.Draenei },
+        [Classes.Paladin] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.Draenei },
+        [Classes.Priest] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+        [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
+        [Classes.Shaman] = new[] { PlayerRace.Draenei },
+        [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
+        [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei }
+    };
+
+    private static readonly Classes[] _allClasses = new[] {
+        Classes.Druid,
+        Classes.Hunter,
+        Classes.Mage,
+        Classes.Paladin,
+        Classes.Priest,
+        Classes.Rogue,
+        Classes.Shaman,
+        Classes.Warlock,
+        Classes.Warrior
+    };
+
+    private static readonly PlayerRace[] _allRaces;
+
+    private CharacterSubmissionDto? _character;
+    private PlayerRace[] _classRaces = _allRaces;
+
+    [Parameter] public CharacterSubmissionDto Character
+    {
+        get => _character ??= new();
+        set
+        {
+            _character = value;
+            if (_raceLookup.TryGetValue(_character.Class, out var classRaces))
+            {
+                _classRaces = classRaces;
+            }
+        }
+    }
+
+    [Parameter] public bool AllowSubmitNonOwned { get; set; }
+
+    [Parameter] public bool DisableClassChange { get; set; }
+
+    private Classes[] GetRaceClasses()
+    {
+        return Character.Race.HasValue && _classLookup.TryGetValue(Character.Race.Value, out var raceClasses) ? raceClasses : _allClasses;
+    }
+
+    private void RaceChanged(PlayerRace? newValue)
+    {
+        Character.Race = newValue;
+
+        if (Array.IndexOf(GetRaceClasses(), Character.Class) < 0)
+        {
+            Character.Class = default;
+        }
+    }
+}

@@ -104,20 +104,15 @@
 
     private async Task AddLeaderAsync(IList<GuildMemberDto> leaders, AuthenticationState auth)
     {
-        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = () => Api.Members.GetInRoles(AppRoles.RaidLeader, AppRoles.LootMaster, AppRoles.Recruiter);
         Func<GuildMemberDto, bool> filter = member => !leaders.Any(m2 => m2.Id == member.Id);
-        var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
-            "Select Member",
-            new()
-            {
-                [nameof(PickGuildMemberDialog.Operation)] = operation,
-                [nameof(PickGuildMemberDialog.Filter)] = filter
-            },
+        var result = await DialogService.ShowAsync<AddLeaderDialog, AddLeaderDto>(
+            "Add Leader",
+            new() { [nameof(AddLeaderDialog.Filter)] = filter },
             new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (result is not null)
         {
-            await Api.Teams.AddLeader(Team.Id, result.Id)
+            await Api.Teams.AddLeader(Team.Id, result)
                 .OnSuccess((member, ct) =>
                 {
                     leaders.Add(member);

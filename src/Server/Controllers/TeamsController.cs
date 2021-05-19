@@ -394,8 +394,8 @@ namespace ValhallaLootList.Server.Controllers
             }
         }
 
-        [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp, [FromServices] UserManager<AppUser> userManager)
+        [HttpPost("{id:long}/leaders"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, [FromBody] AddLeaderDto dto, [FromServices] DiscordClientProvider dcp, [FromServices] UserManager<AppUser> userManager)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -404,25 +404,20 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var leader = await dcp.GetMemberAsync(userId);
+            var leader = await dcp.GetMemberAsync(dto.MemberId);
 
             if (leader is null)
             {
                 return Problem("Couldn't locate discord user.");
             }
 
-            if (!dcp.HasAnyLeadershipRole(leader))
-            {
-                return Problem($"{leader.DisplayName} does not have a leadership role assigned.");
-            }
-
             var idString = id.ToString();
-            if (await _context.UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString) > 0)
+            if (await _context.UserClaims.CountAsync(claim => claim.UserId == dto.MemberId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString) > 0)
             {
-                return Problem("User is already a leader of this team.");
+                return Problem("Member is already a leader of this team.");
             }
 
-            var userIdString = userId.ToString();
+            var userIdString = dto.MemberId.ToString();
             var user = await userManager.FindByIdAsync(userIdString);
             IdentityResult identityResult;
 
@@ -430,7 +425,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 user = new AppUser
                 {
-                    Id = userId,
+                    Id = dto.MemberId,
                     UserName = leader.DisplayName
                 };
 
@@ -456,6 +451,13 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem($"Assignment failed: {identityResult}");
             }
 
+            await dcp.AssignLeadershipRolesAsync(
+                id: dto.MemberId,
+                raidLeader: dto.RaidLeader,
+                lootMaster: dto.LootMaster,
+                recruiter: dto.Recruiter,
+                reason: $"Member was assigned as a leader of team {team.Name}.");
+
             _telemetry.TrackEvent("TeamLeaderAdded", User, props =>
             {
                 props["TeamId"] = team.Id.ToString();
@@ -468,7 +470,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<IActionResult> DeleteLeader(long id, long userId)
+        public async Task<IActionResult> DeleteLeader(long id, long userId, [FromServices] DiscordClientProvider dcp)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -486,12 +488,20 @@ namespace ValhallaLootList.Server.Controllers
 
             var idString = id.ToString();
 
-            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString);
+            var leadershipClaims = await _context.UserClaims.AsTracking().Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader).ToListAsync();
+
+            var claim = leadershipClaims.Find(claim => claim.ClaimValue == idString);
 
             if (claim is null) return NotFound();
 
             _context.UserClaims.Remove(claim);
             await _context.SaveChangesAsync();
+
+            // only unassign leadership roles if this was their only team as a leader.
+            if (leadershipClaims.Count == 1)
+            {
+                await dcp.RemoveLeadershipRolesAsync(userId, $"Member was unassigned as a leader for team {team.Name}.");
+            }
 
             _telemetry.TrackEvent("TeamLeaderRemoved", User, props =>
             {

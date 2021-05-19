@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -17,10 +18,7 @@ namespace ValhallaLootList.Server.Discord
     public sealed class DiscordClientProvider : IDisposable
     {
         private readonly DiscordClient _client;
-        private readonly long _guildId,
-            _adminRoleId, _raidLeaderRoleId, _lootMasterRoleId, _recruiterRoleId, _memberRoleId,
-            _publicNotificationChannelId;
-        private readonly bool _suppressOutgoingMessages;
+        private readonly DiscordServiceOptions _options;
         private bool _started, _disposed;
 
         public DiscordClientProvider(IOptions<DiscordServiceOptions> options, ILoggerFactory loggerFactory)
@@ -32,14 +30,7 @@ namespace ValhallaLootList.Server.Discord
                 LoggerFactory = loggerFactory,
                 Intents = DiscordIntents.GuildMembers | DiscordIntents.Guilds | DiscordIntents.GuildPresences
             });
-            _guildId = options.Value.GuildId;
-            _adminRoleId = options.Value.AdminRoleId;
-            _raidLeaderRoleId = options.Value.RaidLeaderRoleId;
-            _lootMasterRoleId = options.Value.LootMasterRoleId;
-            _recruiterRoleId = options.Value.RecruiterRoleId;
-            _memberRoleId = options.Value.MemberRoleId;
-            _publicNotificationChannelId = options.Value.PublicNotificationChannelId;
-            _suppressOutgoingMessages = options.Value.SuppressOutgoingMessages;
+            _options = options.Value;
         }
 
         public DiscordClient Client
@@ -73,7 +64,7 @@ namespace ValhallaLootList.Server.Discord
         public async Task<DiscordGuild> GetGuildAsync()
         {
             await EnsureStartedAsync();
-            return await _client.GetGuildAsync((ulong)_guildId);
+            return await _client.GetGuildAsync((ulong)_options.GuildId);
         }
 
         public async Task<DiscordMember?> GetMemberAsync(long id)
@@ -96,27 +87,27 @@ namespace ValhallaLootList.Server.Discord
             {
                 long roleId = (long)role.Id;
 
-                if (roleId == _adminRoleId)
+                if (roleId == _options.AdminRoleId)
                 {
                     yield return AppRoles.Administrator;
                 }
 
-                if (roleId == _memberRoleId)
+                if (roleId == _options.MemberRoleId)
                 {
                     yield return AppRoles.Member;
                 }
 
-                if (roleId == _raidLeaderRoleId)
+                if (roleId == _options.RaidLeaderRoleId)
                 {
                     yield return AppRoles.RaidLeader;
                 }
 
-                if (roleId == _lootMasterRoleId)
+                if (roleId == _options.LootMasterRoleId)
                 {
                     yield return AppRoles.LootMaster;
                 }
 
-                if (roleId == _recruiterRoleId)
+                if (roleId == _options.RecruiterRoleId)
                 {
                     yield return AppRoles.Recruiter;
                 }
@@ -153,19 +144,19 @@ namespace ValhallaLootList.Server.Discord
             return false;
         }
 
-        public bool HasAdminRole(DiscordMember member) => HasDiscordRole(member, _adminRoleId);
+        public bool HasAdminRole(DiscordMember member) => HasDiscordRole(member, _options.AdminRoleId);
 
-        public bool HasMemberRole(DiscordMember member) => HasDiscordRole(member, _memberRoleId);
+        public bool HasMemberRole(DiscordMember member) => HasDiscordRole(member, _options.MemberRoleId);
 
-        public bool HasLootMasterRole(DiscordMember member) => HasDiscordRole(member, _lootMasterRoleId);
+        public bool HasLootMasterRole(DiscordMember member) => HasDiscordRole(member, _options.LootMasterRoleId);
 
-        public bool HasRaidLeaderRole(DiscordMember member) => HasDiscordRole(member, _raidLeaderRoleId);
+        public bool HasRaidLeaderRole(DiscordMember member) => HasDiscordRole(member, _options.RaidLeaderRoleId);
 
-        public bool HasRecruiterRole(DiscordMember member) => HasDiscordRole(member, _recruiterRoleId);
+        public bool HasRecruiterRole(DiscordMember member) => HasDiscordRole(member, _options.RecruiterRoleId);
 
         public bool HasAnyLeadershipRole(DiscordMember member)
         {
-            ReadOnlySpan<long> leadershipIds = stackalloc[] { _raidLeaderRoleId, _lootMasterRoleId, _recruiterRoleId };
+            ReadOnlySpan<long> leadershipIds = stackalloc[] { _options.RaidLeaderRoleId, _options.LootMasterRoleId, _options.RecruiterRoleId, _options.LeadershipRoleId };
 
             foreach (var role in member.Roles)
             {
@@ -192,7 +183,7 @@ namespace ValhallaLootList.Server.Discord
         public async Task SendDmAsync(long id, Action<DiscordMessageBuilder> configureMessage)
         {
             CheckStarted();
-            if (_suppressOutgoingMessages)
+            if (_options.SuppressOutgoingMessages)
             {
                 return;
             }
@@ -207,20 +198,25 @@ namespace ValhallaLootList.Server.Discord
             }
         }
 
-        public async Task AddRoleAsync(long id, string roleName, string reason)
+        public Task AddRoleAsync(long id, string roleName, string reason)
+        {
+            return AddRoleAsync(id, reason, role => string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private async Task AddRoleAsync(long id, string reason, Func<DiscordRole, bool> predicate)
         {
             CheckStarted();
-            if (_suppressOutgoingMessages)
+            if (_options.SuppressOutgoingMessages)
             {
                 return;
             }
 
-            var guild = await GetGuildAsync();
             var member = await GetMemberAsync(id);
 
-            if (member is not null && !member.Roles.Any(role => role.Name == roleName))
+            if (member is not null && !member.Roles.Any(predicate))
             {
-                var role = guild.Roles.Values.FirstOrDefault(role => role.Name == roleName);
+                var guild = await GetGuildAsync();
+                var role = guild.Roles.Values.FirstOrDefault(predicate);
 
                 if (role is not null)
                 {
@@ -232,17 +228,16 @@ namespace ValhallaLootList.Server.Discord
         public async Task RemoveRoleAsync(long id, string roleName, string reason)
         {
             CheckStarted();
-            if (_suppressOutgoingMessages)
+            if (_options.SuppressOutgoingMessages)
             {
                 return;
             }
 
-            var guild = await GetGuildAsync();
             var member = await GetMemberAsync(id);
 
             if (member is not null)
             {
-                var role = member.Roles.FirstOrDefault(role => role.Name == roleName);
+                var role = member.Roles.FirstOrDefault(role => string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));
 
                 if (role is not null)
                 {
@@ -251,15 +246,88 @@ namespace ValhallaLootList.Server.Discord
             }
         }
 
+        public async Task AssignLeadershipRolesAsync(long id, bool raidLeader, bool lootMaster, bool recruiter, string reason)
+        {
+            CheckStarted();
+            if (_options.SuppressOutgoingMessages)
+            {
+                return;
+            }
+
+            var member = await GetMemberAsync(id);
+
+            if (member is not null)
+            {
+                var guild = await GetGuildAsync();
+
+                if (CanGrant((ulong)_options.LeadershipRoleId, guild, member, out var role))
+                {
+                    await member.GrantRoleAsync(role, reason);
+                }
+
+                if (raidLeader && CanGrant((ulong)_options.RaidLeaderRoleId, guild, member, out role))
+                {
+                    await member.GrantRoleAsync(role, reason);
+                }
+
+                if (lootMaster && CanGrant((ulong)_options.LootMasterRoleId, guild, member, out role))
+                {
+                    await member.GrantRoleAsync(role, reason);
+                }
+
+                if (recruiter && CanGrant((ulong)_options.RecruiterRoleId, guild, member, out role))
+                {
+                    await member.GrantRoleAsync(role, reason);
+                }
+            }
+
+            static bool CanGrant(ulong roleId, DiscordGuild guild, DiscordMember member, [NotNullWhen(true)] out DiscordRole? role)
+            {
+                if (guild.Roles.TryGetValue(roleId, out role))
+                {
+                    return !member.Roles.Any(r => r.Id == roleId);
+                }
+                return false;
+            }
+        }
+
+        public async Task RemoveLeadershipRolesAsync(long id, string reason)
+        {
+            CheckStarted();
+            if (_options.SuppressOutgoingMessages)
+            {
+                return;
+            }
+
+            var member = await GetMemberAsync(id);
+
+            if (member is not null)
+            {
+                foreach (var role in member.Roles.Where(IsLeadershipRole).ToList())
+                {
+                    await member.RevokeRoleAsync(role, reason);
+                }
+            }
+        }
+
+        private bool IsLeadershipRole(DiscordRole role)
+        {
+            long roleId = (long)role.Id;
+            return roleId == _options.LeadershipRoleId
+                || roleId == _options.LootMasterRoleId
+                || roleId == _options.RaidLeaderRoleId
+                || roleId == _options.RecruiterRoleId;
+        }
+
         public async Task<DiscordMessage?> SendOrUpdatePublicNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
         {
             CheckStarted();
-            if (_suppressOutgoingMessages || _publicNotificationChannelId == 0L)
+            if (_options.SuppressOutgoingMessages || _options.PublicNotificationChannelId == 0L)
             {
                 return null;
             }
 
-            var channel = await GetChannelAsync(_publicNotificationChannelId);
+            var channel = await GetChannelAsync(_options.PublicNotificationChannelId);
 
             if (channel is null)
             {
@@ -289,7 +357,7 @@ namespace ValhallaLootList.Server.Discord
         {
             CheckStarted();
 
-            var channel = await GetChannelAsync(_publicNotificationChannelId);
+            var channel = await GetChannelAsync(_options.PublicNotificationChannelId);
 
             if (channel is not null)
             {

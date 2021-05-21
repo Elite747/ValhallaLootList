@@ -2,7 +2,14 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudText Typo="Typo.body1" Class="mb-2">
+@if (!Member.Character.Verified)
+{
+    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+        <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" HideRemovals="true" />
+    </AuthorizeView>
+}
+
+<MudText Typo="Typo.body1">
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
 </MudText>
 
@@ -24,22 +31,6 @@
         <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
     </NotAuthorized>
 </AuthorizeView>
-
-@if (!Member.Character.Verified)
-{
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        @if (context.User.IsAdmin())
-        {
-            <div class="my-2">
-                <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" />
-            </div>
-        }
-        else
-        {
-            <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
-        }
-    </AuthorizeView>
-}
 
 <DonationSummary Member="Member">
     <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">

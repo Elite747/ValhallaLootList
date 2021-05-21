@@ -285,7 +285,7 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
+        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.LeadershipOrAdmin)]
         public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters

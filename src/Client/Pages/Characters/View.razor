@@ -43,7 +43,7 @@
         </AuthorizeView>
     </div>
 
-    <AuthorizeView Policy="@AppPolicies.Administrator">
+    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin">
         <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 

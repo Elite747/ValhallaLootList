@@ -350,6 +350,8 @@ namespace ValhallaLootList.Server.Controllers
                 pass.RemovalId = removal.Id;
             }
 
+            _context.TeamRemovals.Add(removal);
+
             await _context.SaveChangesAsync();
 
             var characterIdString = characterId.ToString();

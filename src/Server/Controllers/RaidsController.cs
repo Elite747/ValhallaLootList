@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -66,30 +67,15 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("@mine")]
-        public async Task<ActionResult<IEnumerable<RaidDto>>> GetMine()
+        public IAsyncEnumerable<RaidDto> GetMine()
         {
             var userId = User.GetDiscordId();
-            var characterIds = await _context.UserClaims
-                .AsNoTracking()
-                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
-                .Select(claim => claim.ClaimValue)
-                .ToListAsync();
-
-            var ids = new HashSet<long>();
-
-            foreach (var characterIdString in characterIds)
-            {
-                if (long.TryParse(characterIdString, out var characterId))
-                {
-                    ids.Add(characterId);
-                }
-            }
-
+            Debug.Assert(userId.HasValue);
             DateTimeOffset end = DateTimeOffset.UtcNow, start = end.AddMonths(-1);
 
-            return await _context.Raids
+            return _context.Raids
                 .AsNoTracking()
-                .Where(r => r.StartedAt >= start && r.StartedAt < end && r.Attendees.Any(a => ids.Contains(a.CharacterId)))
+                .Where(r => r.StartedAt >= start && r.StartedAt < end && r.Attendees.Any(a => a.Character.OwnerId == userId))
                 .OrderByDescending(r => r.StartedAt)
                 .Select(r => new RaidDto
                 {
@@ -99,7 +85,7 @@ namespace ValhallaLootList.Server.Controllers
                     TeamId = r.RaidTeamId,
                     TeamName = r.RaidTeam.Name
                 })
-                .ToListAsync();
+                .AsAsyncEnumerable();
         }
 
         [HttpGet("{id:long}")]
@@ -203,8 +189,23 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPost, Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult<RaidDto>> Post([FromServices] TimeZoneInfo realmTimeZoneInfo, [FromBody] RaidSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+        public async Task<ActionResult<RaidDto>> Post([FromBody] RaidSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService auth)
         {
+            var team = await _context.RaidTeams.FindAsync(dto.TeamId);
+
+            if (team is null)
+            {
+                ModelState.AddModelError(nameof(dto.TeamId), "Raid Team does not exist.");
+                return ValidationProblem();
+            }
+
+            var authResult = await auth.AuthorizeAsync(User, team, AppPolicies.LootMaster);
+
+            if (!authResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
             var phaseDetails = await _context.PhaseDetails.FindAsync((byte)dto.Phase);
 
             if (phaseDetails is null)
@@ -217,19 +218,6 @@ namespace ValhallaLootList.Server.Controllers
             {
                 ModelState.AddModelError(nameof(dto.Phase), "Phase is not yet active.");
                 return ValidationProblem();
-            }
-
-            var team = await _context.RaidTeams.FindAsync(dto.TeamId);
-
-            if (team is null)
-            {
-                ModelState.AddModelError(nameof(dto.TeamId), "Raid Team does not exist.");
-                return ValidationProblem();
-            }
-
-            if (!await _context.IsLeaderOf(User, team.Id))
-            {
-                return Unauthorized();
             }
 
             var raid = new Raid(idGenerator.CreateId())

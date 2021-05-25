@@ -57,12 +57,6 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult<LootListDto>> PostLootList(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
-            if (!authorizationResult.Succeeded)
-            {
-                return Unauthorized();
-            }
-
             var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
 
             if (bracketTemplates.Count == 0)
@@ -70,16 +64,17 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem();
-            }
-
             var character = await _context.Characters.FindAsync(characterId);
 
             if (character is null)
             {
                 return NotFound();
+            }
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwnerOrAdmin);
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
             }
 
             if (character.Deactivated)
@@ -214,10 +209,22 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}/Reset")]
         public async Task<ActionResult<LootListDto>> ResetLootList(long characterId, byte phase, [FromServices] IdGen.IIdGenerator<long> idGenerator)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (character.Deactivated)
+            {
+                return Problem("Character has been deactivated.");
             }
 
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -230,18 +237,6 @@ namespace ValhallaLootList.Server.Controllers
             if (list.Status != LootListStatus.Editing)
             {
                 return Problem("Loot list is not editable.");
-            }
-
-            var character = await _context.Characters.FindAsync(characterId);
-
-            if (character is null)
-            {
-                return NotFound();
-            }
-
-            if (character.Deactivated)
-            {
-                return Problem("Character has been deactivated.");
             }
 
             var entriesToRemove = await _context.LootListEntries
@@ -313,29 +308,20 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPut("Phase{phase:int}/{characterId:long}")]
         public async Task<ActionResult> PostSpec(long characterId, byte phase, [FromBody] LootListSubmissionDto dto)
         {
-            Debug.Assert(dto.MainSpec != default);
+            var character = await _context.Characters.FindAsync(characterId);
+            if (character is null)
+            {
+                return NotFound();
+            }
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwnerOrAdmin);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwnerOrAdmin);
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
             }
 
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
-
             if (list is null)
-            {
-                return NotFound();
-            }
-
-            if (list.Status != LootListStatus.Editing)
-            {
-                return Problem("Loot List cannot be edited.");
-            }
-
-            var character = await _context.Characters.FindAsync(characterId);
-
-            if (character is null)
             {
                 return NotFound();
             }
@@ -343,6 +329,11 @@ namespace ValhallaLootList.Server.Controllers
             if (character.Deactivated)
             {
                 return Problem("Character has been deactivated.");
+            }
+
+            if (list.Status != LootListStatus.Editing)
+            {
+                return Problem("Loot List cannot be edited.");
             }
 
             if (!dto.MainSpec.IsClass(character.Class))
@@ -437,12 +428,6 @@ namespace ValhallaLootList.Server.Controllers
         [HttpPost("Phase{phase:int}/{characterId:long}/Submit")]
         public async Task<ActionResult<TimestampDto>> PostSubmit(long characterId, byte phase, [FromBody] SubmitLootListDto dto, [FromServices] DiscordClientProvider dcp)
         {
-            if (dto.SubmitTo.Count == 0)
-            {
-                ModelState.AddModelError(nameof(dto.SubmitTo), "Loot List must be submitted to at least one raid team.");
-                return ValidationProblem();
-            }
-
             var character = await _context.Characters.FindAsync(characterId);
 
             if (character is null)
@@ -450,9 +435,22 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
+            var auth = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwnerOrAdmin);
+
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
             if (character.Deactivated)
             {
                 return Problem("Character has been deactivated.");
+            }
+
+            if (dto.SubmitTo.Count == 0)
+            {
+                ModelState.AddModelError(nameof(dto.SubmitTo), "Loot List must be submitted to at least one raid team.");
+                return ValidationProblem();
             }
 
             var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
@@ -460,13 +458,6 @@ namespace ValhallaLootList.Server.Controllers
             if (list is null)
             {
                 return NotFound();
-            }
-
-            var auth = await _authorizationService.AuthorizeAsync(User, list.CharacterId, AppPolicies.CharacterOwnerOrAdmin);
-
-            if (!auth.Succeeded)
-            {
-                return Unauthorized();
             }
 
             if (!ValidateTimestamp(list, dto.Timestamp))
@@ -535,17 +526,14 @@ namespace ValhallaLootList.Server.Controllers
 
             const string format = "You have a new application to {0} from {1}. ({2} {3})";
 
-            await foreach (var claim in _context.UserClaims
+            await foreach (var leader in _context.RaidTeamLeaders
                 .AsNoTracking()
-                .Where(claim => claim.ClaimType == AppClaimTypes.RaidLeader)
-                .Select(claim => new { claim.UserId, claim.ClaimValue })
+                .Select(rtl => new { rtl.UserId, rtl.RaidTeamId })
                 .AsAsyncEnumerable())
             {
-                if (long.TryParse(claim.ClaimValue, out var teamId) &&
-                    teams.TryGetValue(teamId, out var team) &&
-                    submissions.Find(s => s.TeamId == teamId) is null) // Don't notify when submission status doesn't change.
+                if (teams.TryGetValue(leader.RaidTeamId, out var team) && submissions.Find(s => s.TeamId == leader.RaidTeamId) is null) // Don't notify when submission status doesn't change.
                 {
-                    await dcp.SendDmAsync(claim.UserId, m => m.WithContent(string.Format(
+                    await dcp.SendDmAsync(leader.UserId, m => m.WithContent(string.Format(
                         format,
                         team.Name,
                         character.Name,
@@ -626,32 +614,11 @@ namespace ValhallaLootList.Server.Controllers
                 }
                 else
                 {
-                    var idString = character.Id.ToString();
-                    var claim = await _context.UserClaims.AsNoTracking()
-                        .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
-                        .Select(c => new { c.UserId })
-                        .FirstOrDefaultAsync();
-
-                    if (claim is not null)
+                    if (character.OwnerId > 0)
                     {
-                        var otherClaims = await _context.UserClaims.AsNoTracking()
-                            .Where(c => c.ClaimType == AppClaimTypes.Character && c.UserId == claim.UserId)
-                            .Select(c => c.ClaimValue)
-                            .ToListAsync();
-
-                        var characterIds = new List<long>();
-
-                        foreach (var otherClaim in otherClaims)
-                        {
-                            if (long.TryParse(otherClaim, out var cid))
-                            {
-                                characterIds.Add(cid);
-                            }
-                        }
-
                         var existingCharacterName = await _context.Characters
                             .AsNoTracking()
-                            .Where(c => characterIds.Contains(c.Id) && c.TeamId == team.Id)
+                            .Where(c => c.OwnerId == character.OwnerId && c.TeamId == team.Id)
                             .Select(c => c.Name)
                             .FirstOrDefaultAsync();
 
@@ -714,14 +681,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["Method"] = "ApproveOrReject";
             });
 
-            var characterIdString = characterId.ToString();
-            var owner = await _context.UserClaims
-                .AsNoTracking()
-                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == characterIdString)
-                .Select(c => c.UserId)
-                .FirstOrDefaultAsync();
-
-            if (owner > 0)
+            if (character.OwnerId > 0)
             {
                 var sb = new StringBuilder("Your application to ")
                     .Append(team.Name)
@@ -742,10 +702,10 @@ namespace ValhallaLootList.Server.Controllers
 
                 if (dto.Approved)
                 {
-                    await dcp.AddRoleAsync(owner, team.Name, "Accepted onto the raid team.");
+                    await dcp.AddRoleAsync(character.OwnerId.Value, team.Name, "Accepted onto the raid team.");
                 }
 
-                await dcp.SendDmAsync(owner, m => m.WithContent(sb.ToString()));
+                await dcp.SendDmAsync(character.OwnerId.Value, m => m.WithContent(sb.ToString()));
             }
 
             return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member, LootListStatus = list.Status };

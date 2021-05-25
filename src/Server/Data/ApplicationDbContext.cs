@@ -51,6 +51,7 @@ namespace ValhallaLootList.Server.Data
         public virtual DbSet<Raid> Raids { get; set; } = null!;
         public virtual DbSet<RaidAttendee> RaidAttendees { get; set; } = null!;
         public virtual DbSet<RaidTeam> RaidTeams { get; set; } = null!;
+        public virtual DbSet<RaidTeamLeader> RaidTeamLeaders { get; set; } = null!;
         public virtual DbSet<RaidTeamSchedule> RaidTeamSchedules { get; set; } = null!;
         public virtual DbSet<TeamRemoval> TeamRemovals { get; set; } = null!;
         public virtual DbSet<Bracket> Brackets { get; set; } = null!;
@@ -60,13 +61,6 @@ namespace ValhallaLootList.Server.Data
         public Task<PriorityScope> GetCurrentPriorityScopeAsync(CancellationToken cancellationToken = default)
         {
             return PriorityScopes.OrderByDescending(ps => ps.StartsAt).FirstAsync(cancellationToken);
-        }
-
-        public async Task<bool> IsLeaderOf(ClaimsPrincipal user, long teamId)
-        {
-            var userId = user.GetDiscordId();
-            var teamIdString = teamId.ToString();
-            return await UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamIdString) > 0;
         }
 
         public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, PriorityScope scope, CancellationToken cancellationToken = default)
@@ -103,6 +97,7 @@ namespace ValhallaLootList.Server.Data
                 e.HasIndex(character => character.Name).IsUnique();
                 e.Property(character => character.Id).ValueGeneratedNever();
                 e.HasOne(character => character.Team).WithMany(team => team!.Roster).OnDelete(DeleteBehavior.SetNull);
+                e.HasOne(character => character.Owner).WithMany().OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<CharacterEncounterKill>(e =>
@@ -191,6 +186,13 @@ namespace ValhallaLootList.Server.Data
             {
                 e.Property(schedule => schedule.Id).ValueGeneratedNever();
                 e.HasOne(schedule => schedule.RaidTeam).WithMany(team => team.Schedules).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<RaidTeamLeader>(e =>
+            {
+                e.HasKey(rtl => new { rtl.RaidTeamId, rtl.UserId });
+                e.HasOne(rtl => rtl.RaidTeam).WithMany(team => team.Leaders).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(rtl => rtl.User).WithMany().OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<ItemRestriction>(e =>

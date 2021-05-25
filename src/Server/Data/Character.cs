@@ -35,6 +35,8 @@ namespace ValhallaLootList.Server.Data
 
         public long? VerifiedById { get; set; }
 
+        public long? OwnerId { get; set; }
+
         public RaidMemberStatus MemberStatus { get; set; }
 
         public DateTimeOffset JoinedTeamAt { get; set; }
@@ -42,6 +44,8 @@ namespace ValhallaLootList.Server.Data
         public long? TeamId { get; set; }
 
         public virtual RaidTeam? Team { get; set; }
+
+        public virtual AppUser? Owner { get; set; }
 
         public virtual ICollection<RaidAttendee> Attendances { get; set; } = new HashSet<RaidAttendee>();
 

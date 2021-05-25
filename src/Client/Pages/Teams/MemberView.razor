@@ -2,12 +2,9 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-@if (!Member.Character.Verified)
-{
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" HideRemovals="true" />
-    </AuthorizeView>
-}
+<AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+    <ValhallaLootList.Client.Pages.Characters.AdminView User="context.User" Character="Member.Character" HideRemovals="true" />
+</AuthorizeView>
 
 <MudText Typo="Typo.body1">
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />

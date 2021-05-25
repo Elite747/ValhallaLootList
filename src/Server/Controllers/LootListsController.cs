@@ -35,11 +35,11 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, byte? phase = null)
+        public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, byte? phase = null, bool? includeApplicants = null)
         {
             try
             {
-                var lootLists = await CreateDtosAsync(characterId, teamId, phase);
+                var lootLists = await CreateDtosAsync(characterId, teamId, phase, includeApplicants);
 
                 if (lootLists is null)
                 {
@@ -300,7 +300,7 @@ namespace ValhallaLootList.Server.Controllers
                 props["Phase"] = list.Phase.ToString();
             });
 
-            var lootLists = await CreateDtosAsync(characterId, null, phase);
+            var lootLists = await CreateDtosAsync(characterId, null, phase, null);
             Debug.Assert(lootLists?.Count == 1);
             return lootLists[0];
         }
@@ -831,7 +831,7 @@ namespace ValhallaLootList.Server.Controllers
             return true;
         }
 
-        private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase)
+        private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase, bool? includeApplicants)
         {
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
             var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null);
@@ -871,8 +871,17 @@ namespace ValhallaLootList.Server.Controllers
                     return null;
                 }
 
-                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.Submissions.Any(s => s.TeamId == teamId));
-                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.Submissions.Any(s => s.TeamId == teamId));
+                if (includeApplicants == true)
+                {
+                    lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.Submissions.Any(s => s.TeamId == teamId));
+                    entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.Submissions.Any(s => s.TeamId == teamId));
+                }
+                else
+                {
+                    lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId);
+                    entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId);
+                }
+
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
                 attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
                 donationPredicate = d => d.Character.TeamId == teamId;

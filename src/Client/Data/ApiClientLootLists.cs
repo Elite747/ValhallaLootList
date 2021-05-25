@@ -25,13 +25,18 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
         }
 
-        public IApiClientOperation<IList<LootListDto>> GetForTeam(long id, byte? phase = null)
+        public IApiClientOperation<IList<LootListDto>> GetForTeam(long id, byte? phase = null, bool? includeApplicants = null)
         {
             string path = "api/v1/lootlists?teamId=" + id;
 
             if (phase.HasValue)
             {
                 path += "&phase=" + phase;
+            }
+
+            if (includeApplicants.HasValue)
+            {
+                path += "&includeApplicants=" + includeApplicants;
             }
 
             return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);

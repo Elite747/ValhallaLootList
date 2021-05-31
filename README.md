@@ -2,7 +2,7 @@
 
 Integration: https://valhallalootlistdev.azurewebsites.net
 
-Production: https://valhallalootlist.azurewebsites.net
+Production: https://www.valhalla-wow.com
 
 ## Building Instructions
 

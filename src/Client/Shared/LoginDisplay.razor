@@ -6,9 +6,8 @@
 
 <AuthorizeView>
     <Authorized>
-        @{ 
+        @{
             var guildMember = context.User.CreateGuildMember();
-            System.Diagnostics.Debug.Assert(guildMember is not null);
         }
         <MudHidden Breakpoint="Breakpoint.Xs">@guildMember.GetDisplayName()</MudHidden>
         <MudAvatar Class="mx-1" Color="Color.Transparent">

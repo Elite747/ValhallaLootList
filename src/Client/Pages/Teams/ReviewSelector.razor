@@ -1,0 +1,46 @@
+﻿<MudListItem Class="@(Selected ? "mud-selected-item" : null)" OnClick="OnClick" Icon="@_icon" IconColor="_iconColor">
+    <div class="d-flex align-center">
+        <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" Class="mr-1" />
+        <span>@LootList.CharacterName</span>
+    </div>
+</MudListItem>
+
+@code {
+    private string _icon = string.Empty;
+    private Color _iconColor = Color.Default;
+
+    [Parameter] public LootListDto LootList { get; set; } = null!;
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public bool Selected { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+
+        if (LootList.TeamId != Team.Id)
+        {
+            _icon = Icons.Material.Outlined.FiberNew;
+            _iconColor = Color.Info;
+        }
+        else if (LootList.Status == LootListStatus.Locked)
+        {
+            _icon = Icons.Custom.Uncategorized.AlertSuccess;
+            _iconColor = Color.Success;
+        }
+        else
+        {
+            _icon = Icons.Material.Filled.ErrorOutline;
+
+            if (LootList.Status == LootListStatus.Approved)
+            {
+                _iconColor = Color.Warning;
+            }
+            else
+            {
+                _iconColor = Color.Error;
+            }
+        }
+    }
+}

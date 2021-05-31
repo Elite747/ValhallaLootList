@@ -53,9 +53,9 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest<IList<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");
         }
 
-        public IApiClientOperation<GuildMemberDto> AddLeader(long teamId, long userId)
+        public IApiClientOperation<GuildMemberDto> AddLeader(long teamId, AddLeaderDto dto)
         {
-            return Client.CreateRequest<GuildMemberDto>(HttpMethod.Post, "api/v1/teams/" + teamId + "/leaders/" + userId);
+            return Client.CreateRequest<AddLeaderDto, GuildMemberDto>(HttpMethod.Post, "api/v1/teams/" + teamId + "/leaders", dto);
         }
 
         public IApiClientOperation RemoveLeader(long teamId, long userId)

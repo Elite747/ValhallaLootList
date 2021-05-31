@@ -1,16 +1,11 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server
@@ -18,30 +13,18 @@ namespace ValhallaLootList.Server
     public class IdentityProfileService : DefaultProfileService
     {
         private readonly DiscordClientProvider _discordClientProvider;
-        private readonly ApplicationDbContext _context;
 
-        public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger, ApplicationDbContext context) : base(logger)
+        public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger) : base(logger)
         {
             _discordClientProvider = discordClientProvider;
-            _context = context;
         }
 
         public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
-            await base.GetProfileDataAsync(context);
-            //context.IssuedClaims.AddRange(context.Subject.Claims.Where(claim => claim.Type.StartsWith(DiscordClaimTypes.ClaimPrefix)));
+            context.LogProfileRequest(Logger);
 
             if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
             {
-                // add character and raid leader claims
-                var claims = await _context.UserClaims
-                    .AsNoTracking()
-                    .Where(claim => claim.UserId == userId && claim.ClaimValue != null && (claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader))
-                    .Select(claim => new Claim(claim.ClaimType, claim.ClaimValue))
-                    .ToListAsync();
-
-                context.IssuedClaims.AddRange(claims);
-
                 var member = await _discordClientProvider.GetMemberAsync(userId);
 
                 if (member is not null)
@@ -51,6 +34,7 @@ namespace ValhallaLootList.Server
                     TryAddClaim(context, DiscordClaimTypes.AvatarUrl, member.AvatarUrl);
                     TryAddClaim(context, DiscordClaimTypes.Discriminator, member.Discriminator);
                     TryAddClaim(context, DiscordClaimTypes.Username, member.Username);
+                    TryAddClaim(context, DiscordClaimTypes.Nickname, member.Nickname);
 
                     // add discord role claims
                     foreach (var role in member.Roles)
@@ -65,6 +49,8 @@ namespace ValhallaLootList.Server
                     }
                 }
             }
+
+            context.LogIssuedClaims(Logger);
         }
 
         private static void TryAddClaim(ProfileDataRequestContext context, string claimType, string? value)

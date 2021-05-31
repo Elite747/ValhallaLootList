@@ -28,23 +28,30 @@ namespace ValhallaLootList.Server.Authorization
                 return;
             }
 
-            long? characterId = context.Resource switch
-            {
-                long id => id,
-                CharacterDto character => character.Id,
-                _ => null
-            };
+            long characterId;
+            long discordId = (long)member.Id;
 
-            if (characterId.HasValue)
+            switch (context.Resource)
             {
-                var discordId = (long)member.Id;
-                var characterIdString = characterId.Value.ToString();
+                case long l:
+                    characterId = l;
+                    break;
+                case CharacterDto dto:
+                    characterId = dto.Id;
+                    break;
+                case Character character:
+                    if (character.OwnerId == discordId)
+                    {
+                        context.Succeed(requirement);
+                    }
+                    return;
+                default:
+                    return;
+            }
 
-                if (context.User.HasClaim(AppClaimTypes.Character, characterIdString) ||
-                    await _context.UserClaims.AsNoTracking().CountAsync(claim => claim.UserId == discordId && claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == characterIdString) > 0)
-                {
-                    context.Succeed(requirement);
-                }
+            if (await _context.Characters.AsNoTracking().CountAsync(c => c.Id == characterId && c.OwnerId == discordId) > 0)
+            {
+                context.Succeed(requirement);
             }
         }
     }

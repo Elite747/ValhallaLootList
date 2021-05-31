@@ -1,22 +1,51 @@
-﻿<MudDialog>
+﻿@inject ApiClient Api 
+
+<MudDialog>
     <DialogContent>
         <ApiView Operation="Operation">
-            <CharacterPicker Characters="GetCharacters()" ShowAdd="ShowAdd" @bind-SelectedCharacter="_selectedCharacter" />
+            @if (_addNew)
+            {
+                <CascadingValue Value="_editContext" IsFixed="true">
+                    <DataAnnotationsValidator />
+                    <ProblemValidator @ref="_problemValidator" />
+                    <CharacterSubmissionEditor Character="_createCharacter" AllowSubmitNonOwned="true" DisableClassChange="false" />
+                </CascadingValue>
+            }
+            else
+            {
+                <CharacterPicker @bind-SelectedCharacter="_selectedCharacter" Characters="GetCharacters()" />
+            }
         </ApiView>
     </DialogContent>
     <DialogActions>
+        @if (ShowAdd)
+        {
+            <MudButton OnClick="() => _addNew = !_addNew" Variant="Variant.Text" Color="Color.Secondary">@(_addNew ? "Select Existing" : "Add New")</MudButton>
+        }
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_selectedCharacter))" Disabled="_selectedCharacter is null" Color="Color.Primary" Variant="Variant.Filled">Select</MudButton>
+        <MudButton OnClick="SubmitAsync" Disabled="!CanSubmit()" Color="Color.Primary" Variant="Variant.Filled">
+            @(_addNew ? "Create" : "Select")
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
+    private readonly CharacterSubmissionDto _createCharacter;
+    private readonly EditContext _editContext;
+    private ProblemValidator? _problemValidator;
+    private bool _addNew;
     private CharacterDto? _selectedCharacter;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public IApiClientOperation<IList<CharacterDto>> Operation { get; set; } = null!;
     [Parameter] public Func<CharacterDto, bool>? Filter { get; set; }
     [Parameter] public bool ShowAdd { get; set; }
+
+    public PickCharacterDialog()
+    {
+        _createCharacter = new() { SenderIsOwner = false };
+        _editContext = new(_createCharacter);
+    }
 
     protected override void OnParametersSet()
     {
@@ -34,5 +63,39 @@
         }
 
         return characters;
+    }
+
+    private bool CanSubmit()
+    {
+        if (_addNew)
+        {
+            return true;
+        }
+        else
+        {
+            return _selectedCharacter is not null;
+        }
+    }
+
+    private Task SubmitAsync()
+    {
+        if (_addNew)
+        {
+            if (_editContext.Validate())
+            {
+                return Api.Characters.Create(_createCharacter)
+                    .OnSuccess(character =>
+                    {
+                        Dialog.Close(DialogResult.Ok(character));
+                    })
+                    .ValidateWith(_problemValidator)
+                    .ExecuteAsync();
+            }
+        }
+        else if (_selectedCharacter is not null)
+        {
+            Dialog.Close(DialogResult.Ok(_selectedCharacter));
+        }
+        return Task.CompletedTask;
     }
 }

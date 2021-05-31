@@ -87,28 +87,13 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("@mine")]
-        public async Task<ActionResult<IEnumerable<CharacterDto>>> GetMine()
+        public IAsyncEnumerable<CharacterDto> GetMine()
         {
             var userId = User.GetDiscordId();
-            var characterIds = await _context.UserClaims
+            Debug.Assert(userId.HasValue);
+            return _context.Characters
                 .AsNoTracking()
-                .Where(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.Character)
-                .Select(claim => claim.ClaimValue)
-                .ToListAsync();
-
-            var ids = new HashSet<long>();
-
-            foreach (var characterIdString in characterIds)
-            {
-                if (long.TryParse(characterIdString, out var characterId))
-                {
-                    ids.Add(characterId);
-                }
-            }
-
-            return await _context.Characters
-                .AsNoTracking()
-                .Where(c => ids.Contains(c.Id))
+                .Where(c => c.OwnerId == userId)
                 .OrderBy(c => c.Name)
                 .Select(c => new CharacterDto
                 {
@@ -122,7 +107,7 @@ namespace ValhallaLootList.Server.Controllers
                     Deactivated = c.Deactivated,
                     Verified = c.VerifiedById.HasValue
                 })
-                .ToListAsync();
+                .AsAsyncEnumerable();
         }
 
         private async Task<ActionResult<CharacterDto>> GetAsync(Expression<Func<Character, bool>> match)
@@ -199,15 +184,11 @@ namespace ValhallaLootList.Server.Controllers
 
             if (dto.SenderIsOwner)
             {
-                var userId = User.GetDiscordId();
-
-                Debug.Assert(userId.HasValue);
-
-                _context.UserClaims.Add(new() { UserId = userId.Value, ClaimType = AppClaimTypes.Character, ClaimValue = character.Id.ToString() });
+                character.OwnerId = User.GetDiscordId();
 
                 if (User.IsAdmin())
                 {
-                    character.VerifiedById = userId;
+                    character.VerifiedById = character.OwnerId;
                 }
             }
 
@@ -285,26 +266,19 @@ namespace ValhallaLootList.Server.Controllers
             };
         }
 
-        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.Administrator)]
+        [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.LeadershipOrAdmin)]
         public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordClientProvider dcp)
         {
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == id)
-                .Select(c => new { c.VerifiedById })
+                .Select(c => new { c.VerifiedById, c.OwnerId })
                 .FirstOrDefaultAsync();
 
             if (character is null)
             {
                 return NotFound();
             }
-
-            var idString = id.ToString();
-
-            var claim = await _context.UserClaims.AsNoTracking()
-                .Where(c => c.ClaimType == AppClaimTypes.Character && c.ClaimValue == idString)
-                .Select(c => new { c.UserId })
-                .FirstOrDefaultAsync();
 
             var removals = await _context.TeamRemovals
                 .AsNoTracking()
@@ -323,7 +297,7 @@ namespace ValhallaLootList.Server.Controllers
             return new CharacterAdminDto
             {
                 TeamRemovals = removals,
-                Owner = await dcp.GetMemberDtoAsync(claim?.UserId),
+                Owner = await dcp.GetMemberDtoAsync(character.OwnerId),
                 VerifiedBy = await dcp.GetMemberDtoAsync(character.VerifiedById)
             };
         }
@@ -412,15 +386,7 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("No user with that id exists.");
             }
 
-            var idString = id.ToString();
-
-            var existingClaims = await _context.UserClaims
-                .AsTracking()
-                .Where(claim => claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == idString)
-                .ToListAsync();
-
-            _context.UserClaims.RemoveRange(existingClaims);
-            _context.UserClaims.Add(new() { ClaimType = AppClaimTypes.Character, ClaimValue = idString, UserId = ownerId });
+            character.OwnerId = ownerId;
             character.VerifiedById = User.GetDiscordId();
 
             await _context.SaveChangesAsync();
@@ -440,15 +406,7 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var idString = id.ToString();
-
-            var existingClaims = await _context.UserClaims
-                .AsTracking()
-                .Where(claim => claim.ClaimType == AppClaimTypes.Character && claim.ClaimValue == idString)
-                .ToListAsync();
-
-            _context.UserClaims.RemoveRange(existingClaims);
-
+            character.OwnerId = null;
             character.VerifiedById = null;
 
             await _context.SaveChangesAsync();

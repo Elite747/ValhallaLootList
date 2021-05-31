@@ -5,12 +5,8 @@ namespace ValhallaLootList
 {
     public static class AppClaimTypes
     {
-        public const string Name = "name";
+        public const string Id = "sub";
 
         public const string Role = "role";
-
-        public const string RaidLeader = nameof(RaidLeader);
-
-        public const string Character = nameof(Character);
     }
 }

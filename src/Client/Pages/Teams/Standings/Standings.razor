@@ -118,7 +118,7 @@
     private Task RefreshAsync()
     {
         _teamOrPhaseChanged = false;
-        return Api.LootLists.GetForTeam(Team.Id, Phase)
+        return Api.LootLists.GetForTeam(Team.Id, Phase, includeApplicants: false)
             .OnSuccess((IList<LootListDto> lootLists) =>
             {
                 _standings.Clear();

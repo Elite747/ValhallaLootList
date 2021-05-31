@@ -8,15 +8,15 @@
         <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
+        @if (_character is not null)
+        {
+            <AuthorizeView Context="auth">
+                <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" HideRemovals="true" @key="_character" />
+            </AuthorizeView>
+        }
+
         <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
             <Authorized>
-                @if (auth.User.IsAdmin())
-                {
-                    <ApiExecutor Operation="() => Api.Characters.Get(LootList.CharacterId)" Context="character" @key="LootList.CharacterId">
-                        <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="character" />
-                    </ApiExecutor>
-                }
-
                 @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
                 {
                     if (auth.User.IsAdmin())
@@ -116,6 +116,8 @@
     private int _rowSize;
     private Color _messageColor;
     private string? _message;
+    private long _characterId;
+    private CharacterDto? _character;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public LootListDto LootList { get; set; } = null!;
@@ -124,7 +126,7 @@
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
     [Parameter] public EventCallback RosterChanged { get; set; }
 
-    protected override void OnParametersSet()
+    protected override Task OnParametersSetAsync()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
@@ -133,6 +135,22 @@
         _rows = LootList.Entries.GroupBy(e => e.Rank);
         _rowSize = _rows.Select(row => row.Count()).Max();
         SetMessage();
+
+        if (_characterId != LootList.CharacterId)
+        {
+            _characterId = LootList.CharacterId;
+            _character = Team.Roster.Find(m => m.Character.Id == _characterId)?.Character;
+
+            if (_character is null)
+            {
+                return Api.Characters.Get(_characterId)
+                    .OnSuccess(c => _character = c)
+                    .SendErrorTo(Snackbar)
+                    .ExecuteAsync();
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     private void SetMessage()

@@ -36,16 +36,15 @@ namespace ValhallaLootList.Server.Authorization
                 {
                     long id => id,
                     TeamDto team => team.Id,
+                    RaidTeam team => team.Id,
                     _ => null
                 };
 
                 if (teamId.HasValue)
                 {
                     var discordId = (long)member.Id;
-                    var teamIdString = teamId.Value.ToString();
 
-                    if (context.User.HasClaim(AppClaimTypes.RaidLeader, teamIdString) ||
-                        await _context.UserClaims.AsNoTracking().CountAsync(claim => claim.UserId == discordId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == teamIdString) > 0)
+                    if (await _context.RaidTeamLeaders.AsNoTracking().CountAsync(rtl => rtl.UserId == discordId && rtl.RaidTeamId == teamId) > 0)
                     {
                         context.Succeed(requirement);
                     }

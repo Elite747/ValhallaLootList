@@ -24,12 +24,14 @@ namespace ValhallaLootList.Server.Controllers
         private readonly ApplicationDbContext _context;
         private readonly TimeZoneInfo _serverTimeZone;
         private readonly TelemetryClient _telemetry;
+        private readonly IAuthorizationService _authorizationService;
 
-        public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry)
+        public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry, IAuthorizationService authorizationService)
         {
             _context = context;
             _serverTimeZone = serverTimeZone;
             _telemetry = telemetry;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet]
@@ -89,11 +91,11 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            bool isLeader = await _context.IsLeaderOf(User, team.Id);
+            var leaderResult = await _authorizationService.AuthorizeAsync(User, team, AppPolicies.Leadership);
             var scope = await _context.GetCurrentPriorityScopeAsync();
             var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-            foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, isLeader))
+            foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, leaderResult.Succeeded))
             {
                 team.Roster.Add(member);
             }
@@ -234,7 +236,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.Recruiter)]
-        public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto, [FromServices] IAuthorizationService authService)
+        public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
         {
             if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
             {
@@ -242,7 +244,7 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            var auth = await authService.AuthorizeAsync(User, id, AppPolicies.Recruiter);
+            var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.Recruiter);
 
             if (!auth.Succeeded)
             {
@@ -284,19 +286,8 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/members/{characterId:long}")]
-        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] IAuthorizationService authService)
+        public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
         {
-            var auth = await authService.AuthorizeAsync(User, id, AppPolicies.RaidLeader);
-
-            if (!auth.Succeeded)
-            {
-                auth = await authService.AuthorizeAsync(User, characterId, AppPolicies.CharacterOwner);
-                if (!auth.Succeeded)
-                {
-                    return Unauthorized();
-                }
-            }
-
             var team = await _context.RaidTeams.FindAsync(id);
 
             if (team is null)
@@ -314,6 +305,17 @@ namespace ValhallaLootList.Server.Controllers
             if (character.TeamId != id)
             {
                 return Problem("Character is not assigned to this team.");
+            }
+
+            var auth = await _authorizationService.AuthorizeAsync(User, team, AppPolicies.RaidLeader);
+
+            if (!auth.Succeeded)
+            {
+                auth = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwner);
+                if (!auth.Succeeded)
+                {
+                    return Unauthorized();
+                }
             }
 
             var removal = new TeamRemoval(idGenerator.CreateId())
@@ -350,7 +352,14 @@ namespace ValhallaLootList.Server.Controllers
                 pass.RemovalId = removal.Id;
             }
 
+            _context.TeamRemovals.Add(removal);
+
             await _context.SaveChangesAsync();
+
+            if (character.OwnerId > 0)
+            {
+                await dcp.RemoveRoleAsync(character.OwnerId.Value, team.Name, "Removed from the raid team.");
+            }
 
             _telemetry.TrackEvent("TeamMemberRemoved", User, props =>
             {
@@ -365,12 +374,12 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpGet("{id:long}/leaders"), Authorize]
-        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(string id, [FromServices] DiscordClientProvider dcp)
+        public async IAsyncEnumerable<GuildMemberDto> GetLeaders(long id, [FromServices] DiscordClientProvider dcp)
         {
-            await foreach (var userId in _context.UserClaims
+            await foreach (var userId in _context.RaidTeamLeaders
                 .AsNoTracking()
-                .Where(c => c.ClaimType == AppClaimTypes.RaidLeader && c.ClaimValue == id)
-                .Select(c => c.UserId)
+                .Where(rtl => rtl.RaidTeamId == id)
+                .Select(rtl => rtl.UserId)
                 .AsAsyncEnumerable())
             {
                 var member = await dcp.GetMemberAsync(userId);
@@ -382,8 +391,8 @@ namespace ValhallaLootList.Server.Controllers
             }
         }
 
-        [HttpPost("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, long userId, [FromServices] DiscordClientProvider dcp, [FromServices] UserManager<AppUser> userManager)
+        [HttpPost("{id:long}/leaders"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<GuildMemberDto>> PostLeader(long id, [FromBody] AddLeaderDto dto, [FromServices] DiscordClientProvider dcp, [FromServices] UserManager<AppUser> userManager)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -392,37 +401,30 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var leader = await dcp.GetMemberAsync(userId);
+            var leader = await dcp.GetMemberAsync(dto.MemberId);
 
             if (leader is null)
             {
                 return Problem("Couldn't locate discord user.");
             }
 
-            if (!dcp.HasAnyLeadershipRole(leader))
+            if (await _context.RaidTeamLeaders.AsNoTracking().CountAsync(rtl => rtl.UserId == dto.MemberId && rtl.RaidTeamId == id) > 0)
             {
-                return Problem($"{leader.DisplayName} does not have a leadership role assigned.");
+                return Problem("Member is already a leader of this team.");
             }
 
-            var idString = id.ToString();
-            if (await _context.UserClaims.CountAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString) > 0)
-            {
-                return Problem("User is already a leader of this team.");
-            }
-
-            var userIdString = userId.ToString();
+            var userIdString = dto.MemberId.ToString();
             var user = await userManager.FindByIdAsync(userIdString);
-            IdentityResult identityResult;
 
             if (user is null)
             {
                 user = new AppUser
                 {
-                    Id = userId,
+                    Id = dto.MemberId,
                     UserName = leader.DisplayName
                 };
 
-                identityResult = await userManager.CreateAsync(user);
+                var identityResult = await userManager.CreateAsync(user);
 
                 if (!identityResult.Succeeded)
                 {
@@ -437,12 +439,15 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
-            identityResult = await userManager.AddClaimAsync(user, new(AppClaimTypes.RaidLeader, idString));
+            _context.RaidTeamLeaders.Add(new() { RaidTeamId = team.Id, UserId = user.Id });
+            await _context.SaveChangesAsync();
 
-            if (!identityResult.Succeeded)
-            {
-                return Problem($"Assignment failed: {identityResult}");
-            }
+            await dcp.AssignLeadershipRolesAsync(
+                id: dto.MemberId,
+                raidLeader: dto.RaidLeader,
+                lootMaster: dto.LootMaster,
+                recruiter: dto.Recruiter,
+                reason: $"Member was assigned as a leader of team {team.Name}.");
 
             _telemetry.TrackEvent("TeamLeaderAdded", User, props =>
             {
@@ -456,7 +461,7 @@ namespace ValhallaLootList.Server.Controllers
         }
 
         [HttpDelete("{id:long}/leaders/{userId:long}"), Authorize(AppPolicies.Administrator)]
-        public async Task<IActionResult> DeleteLeader(long id, long userId)
+        public async Task<IActionResult> DeleteLeader(long id, long userId, [FromServices] DiscordClientProvider dcp)
         {
             var team = await _context.RaidTeams.FindAsync(id);
 
@@ -472,14 +477,26 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var idString = id.ToString();
+            var leaderships = await _context.RaidTeamLeaders
+                .AsTracking()
+                .Where(rtl => rtl.UserId == userId)
+                .ToListAsync();
 
-            var claim = await _context.UserClaims.FirstOrDefaultAsync(claim => claim.UserId == userId && claim.ClaimType == AppClaimTypes.RaidLeader && claim.ClaimValue == idString);
+            var thisLeadership = leaderships.Find(rtl => rtl.RaidTeamId == id);
 
-            if (claim is null) return NotFound();
+            if (thisLeadership is null)
+            {
+                return NotFound();
+            }
 
-            _context.UserClaims.Remove(claim);
+            _context.RaidTeamLeaders.Remove(thisLeadership);
             await _context.SaveChangesAsync();
+
+            // only unassign leadership roles if this was their only team as a leader.
+            if (leaderships.Count == 1)
+            {
+                await dcp.RemoveLeadershipRolesAsync(userId, $"Member was unassigned as a leader for team {team.Name}.");
+            }
 
             _telemetry.TrackEvent("TeamLeaderRemoved", User, props =>
             {

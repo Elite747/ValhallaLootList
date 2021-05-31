@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -21,26 +22,25 @@ namespace ValhallaLootList.Server.Controllers
         public async Task<PermissionsDto> Get()
         {
             var dto = new PermissionsDto();
-
             var userId = User.GetDiscordId();
+            Debug.Assert(userId.HasValue);
 
-            await foreach (var claim in _context.UserClaims
+            await foreach (var characterId in _context.Characters
                 .AsNoTracking()
-                .Where(claim => claim.UserId == userId)
-                .Where(claim => claim.ClaimType == AppClaimTypes.Character || claim.ClaimType == AppClaimTypes.RaidLeader)
+                .Where(c => c.OwnerId == userId)
+                .Select(c => c.Id)
                 .AsAsyncEnumerable())
             {
-                if (long.TryParse(claim.ClaimValue, out var resourceId))
-                {
-                    if (claim.ClaimType == AppClaimTypes.Character)
-                    {
-                        dto.Characters.Add(resourceId);
-                    }
-                    else if (claim.ClaimType == AppClaimTypes.RaidLeader)
-                    {
-                        dto.Teams.Add(resourceId);
-                    }
-                }
+                dto.Characters.Add(characterId);
+            }
+
+            await foreach (var teamId in _context.RaidTeamLeaders
+                .AsNoTracking()
+                .Where(rtl => rtl.UserId == userId)
+                .Select(rtl => rtl.RaidTeamId)
+                .AsAsyncEnumerable())
+            {
+                dto.Teams.Add(teamId);
             }
 
             return dto;

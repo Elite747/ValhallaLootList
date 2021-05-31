@@ -38,27 +38,20 @@ else
                 }
             </div>
             <div class="mb-3">
-                @if (LootList.Status == LootListStatus.Submitted)
-                {
-                    if (LootList.SubmittedTo.Count == 0)
-                    {
-                        <MudText Typo="Typo.body1" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Clear" Size="Size.Small" /> Loot List has been rejected.</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body1">
-                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" />
-                            @GetSubmittedTeamNames()
-                        </MudText>
-                    }
-                }
-                else if (LootList.Status == LootListStatus.Approved)
+                @if (LootList.Status == LootListStatus.Approved)
                 {
                     <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Custom.Uncategorized.AlertSuccess" Size="Size.Small" /> Loot List has been approved!</MudText>
                 }
                 else if (LootList.Status == LootListStatus.Locked)
                 {
                     <MudText Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> Loot List is locked.</MudText>
+                }
+                @if (LootList.SubmittedTo.Count != 0 || LootList.Status == LootListStatus.Editing)
+                {
+                    <MudText Typo="Typo.body1">
+                        <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" />
+                        @GetSubmittedTeamNames()
+                    </MudText>
                 }
             </div>
         </HeaderContent>

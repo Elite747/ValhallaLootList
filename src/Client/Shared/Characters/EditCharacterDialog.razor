@@ -1,0 +1,75 @@
+﻿@inject ApiClient Api
+@inject PermissionManager Permissions
+
+<AuthorizeView Context="auth">
+    <EditForm OnValidSubmit="OnSubmit" Model="_character">
+        <DataAnnotationsValidator />
+        <ProblemValidator @ref="_problemValidator" />
+
+        <MudDialog>
+            <TitleContent>
+                @if (EditingCharacter is null)
+                {
+                    <MudText Typo="Typo.h6">New Character</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">Edit @EditingCharacter.Name</MudText>
+                }
+            </TitleContent>
+            <DialogContent>
+                <CharacterSubmissionEditor AllowSubmitNonOwned="AllowSubmitNonOwned"
+                                           Character="_character"
+                                           DisableClassChange="EditingCharacter is not null" />
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+</AuthorizeView>
+
+@code {
+    private CharacterSubmissionDto _character = new();
+    private ProblemValidator? _problemValidator;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public CharacterDto? EditingCharacter { get; set; }
+    [Parameter] public bool AllowSubmitNonOwned { get; set; }
+    [Parameter] public bool DefaultSenderIsOwner { get; set; } = true;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+
+        if (EditingCharacter is not null)
+        {
+            _character = new()
+            {
+                Class = EditingCharacter.Class,
+                Gender = EditingCharacter.Gender,
+                Name = EditingCharacter.Name,
+                Race = EditingCharacter.Race
+            };
+        }
+
+        _character.SenderIsOwner = DefaultSenderIsOwner;
+    }
+
+    private Task OnSubmit()
+    {
+        return (EditingCharacter is null ? Api.Characters.Create(_character) : Api.Characters.Update(EditingCharacter.Id, _character))
+            .OnSuccess((CharacterDto character, System.Threading.CancellationToken ct) =>
+            {
+                Dialog.Close(DialogResult.Ok(character));
+                if (_character.SenderIsOwner)
+                {
+                    return Permissions.RefreshAsync(ct);
+                }
+                return Task.CompletedTask;
+            })
+            .ValidateWith(_problemValidator)
+            .ExecuteAsync();
+    }
+}

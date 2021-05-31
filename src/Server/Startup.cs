@@ -53,12 +53,7 @@ namespace ValhallaLootList.Server
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services
-                .AddDefaultIdentity<AppUser>(options =>
-                {
-                    options.ClaimsIdentity.RoleClaimType = AppClaimTypes.Role;
-                    options.ClaimsIdentity.UserNameClaimType = AppClaimTypes.Name;
-                })
+            services.AddDefaultIdentity<AppUser>(options => options.ClaimsIdentity.RoleClaimType = AppClaimTypes.Role)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.RemoveAll<IUserValidator<AppUser>>(); // Don't validate usernames or emails. All of this info comes from Discord and doesn't need validation.
@@ -66,19 +61,7 @@ namespace ValhallaLootList.Server
             services.AddCors(options => options.AddDefaultPolicy(builder => builder.WithOrigins("https://valhalla-wow.com", "https://www.valhalla-wow.com")));
 
             services.AddIdentityServer(options => options.IssuerUri = Configuration["IdentityServer:IssuerUri"])
-                .AddApiAuthorization<AppUser, ApplicationDbContext>(options =>
-                {
-                    var claims = options.IdentityResources["openid"].UserClaims;
-                    claims.Add(AppClaimTypes.Role);
-                    claims.Add(AppClaimTypes.Name);
-                    //claims.Add(AppClaimTypes.RaidLeader);
-                    //claims.Add(AppClaimTypes.Character);
-                    claims = options.ApiResources.Single().UserClaims;
-                    claims.Add(AppClaimTypes.Role);
-                    claims.Add(AppClaimTypes.Name);
-                    //claims.Add(AppClaimTypes.RaidLeader);
-                    //claims.Add(AppClaimTypes.Character);
-                })
+                .AddApiAuthorization<AppUser, ApplicationDbContext>()
                 .AddProfileService<IdentityProfileService>();
 
             services.AddAuthentication()

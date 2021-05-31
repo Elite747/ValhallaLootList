@@ -15,7 +15,14 @@
                 <div>Owner: <GuildMemberDisplay Member="adminInfo.Owner" /></div>
                 @if (adminInfo.VerifiedBy is null)
                 {
-                    <MudText Color="Color.Error">Unverified!</MudText>
+                    if (User.IsAdmin())
+                    {
+                        <MudText Color="Color.Warning">Unverified!</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Warning">Character is unverified! Have an officer verify the owner of this character to clear this message.</MudText>
+                    }
                 }
                 else
                 {
@@ -23,25 +30,36 @@
                 }
             }
 
-            <MudDivider DividerType="DividerType.Middle" Class="my-2" />
-
-            @foreach (var r in adminInfo.TeamRemovals)
+            @if (!HideRemovals)
             {
-                var removal = r;
-                <MudText>
-                    Removed from @removal.TeamName on <DateTimeDisplay Date="removal.RemovedAt" Format="F" />
-                    <MudIconButton OnClick="() => DeleteRemovalAsync(adminInfo, removal)" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" Size="Size.Small" />
-                </MudText>
+                <MudDivider DividerType="DividerType.Middle" Class="my-2" />
+
+                @foreach (var r in adminInfo.TeamRemovals)
+                {
+                    var removal = r;
+                    <MudText>
+                        Removed from @removal.TeamName on <DateTimeDisplay Date="removal.RemovedAt" Format="F" />
+
+                        @if (User.IsAdmin())
+                        {
+                            <MudIconButton OnClick="() => DeleteRemovalAsync(adminInfo, removal)" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" Size="Size.Small" />
+                        }
+                    </MudText>
+                }
             }
+
         </MudCardContent>
-        <MudCardActions>
-            <MudButton OnClick="() => SetOwnerAsync(adminInfo.Owner)" Color="Color.Primary">@(adminInfo.Owner is null ? "Set" : "Change") Owner</MudButton>
+        @if (User.IsAdmin())
+        {
+            <MudCardActions>
+                <MudButton OnClick="() => SetOwnerAsync(adminInfo.Owner)" Color="Color.Primary">@(adminInfo.Owner is null ? "Set" : "Change") Owner</MudButton>
 
-            @if (adminInfo.VerifiedBy is null && adminInfo.Owner is not null)
-            {
-                <MudButton OnClick="() => VerifyOwnerAsync(adminInfo.Owner)" Color="Color.Primary">Verify Owner</MudButton>
-            }
-        </MudCardActions>
+                @if (adminInfo.VerifiedBy is null && adminInfo.Owner is not null)
+                {
+                    <MudButton OnClick="() => VerifyOwnerAsync(adminInfo.Owner)" Color="Color.Primary">Verify Owner</MudButton>
+                }
+            </MudCardActions>
+        }
     </MudCard>
 </ApiExecutor>
 
@@ -50,6 +68,7 @@
 
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
+    [Parameter] public bool HideRemovals { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -59,14 +78,7 @@
 
     private async Task SetOwnerAsync(GuildMemberDto? oldOwner)
     {
-        Func<IApiClientOperation<IList<GuildMemberDto>>> operation = () => Api.Members.GetInRole(AppRoles.Member);
-        var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>(
-            "Select Member",
-            new()
-            {
-                [nameof(PickGuildMemberDialog.Operation)] = operation
-            },
-            new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var result = await DialogService.ShowAsync<PickGuildMemberDialog, GuildMemberDto>("Select Member", new(), new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
         if (result is not null)
         {

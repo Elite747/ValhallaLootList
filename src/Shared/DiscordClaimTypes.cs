@@ -15,6 +15,8 @@ namespace ValhallaLootList
 
         public const string Username = ClaimPrefix + "user:name";
 
+        public const string Nickname = ClaimPrefix + "nickname";
+
         public const string Role = ClaimPrefix + "role";
     }
 }

@@ -1,0 +1,61 @@
+﻿@namespace  ValhallaLootList.Client.Shared
+@inject ApiClient Api
+
+<ApiView Operation="_operation">
+    <MudAutocomplete Label="Member"
+                     T="GuildMemberDto"
+                     SearchFunc="Search"
+                     Value="SelectedMember"
+                     ValueChanged="SelectedMemberChanged"
+                     ResetValueOnEmptyText="true"
+                     ToStringFunc="c => c.Nickname ?? c.Username"
+                     CoerceText="true">
+        <ItemTemplate Context="member">
+            <GuildMemberDisplay Member="member" />
+        </ItemTemplate>
+    </MudAutocomplete>
+</ApiView>
+
+@code {
+    private IApiClientOperation<IList<GuildMemberDto>>? _operation;
+
+    [Parameter] public Func<GuildMemberDto, bool>? Filter { get; set; }
+    [Parameter] public GuildMemberDto? SelectedMember { get; set; }
+    [Parameter] public EventCallback<GuildMemberDto?> SelectedMemberChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _operation = Api.Members.GetInRole(AppRoles.Member);
+    }
+
+    private Task<IEnumerable<GuildMemberDto>> Search(string? text)
+    {
+        IEnumerable<GuildMemberDto> results = _operation?.GetResult() ?? Array.Empty<GuildMemberDto>();
+
+        if (Filter is not null)
+        {
+            results = results.Where(Filter);
+        }
+
+        if (text?.Length > 0)
+        {
+            results = results.Where(member => FilterMemberByName(member, text));
+        }
+
+        return Task.FromResult(results.OrderBy(c => c.Nickname ?? c.Username).AsEnumerable());
+    }
+
+    private bool FilterMemberByName(GuildMemberDto member, string searchText)
+    {
+        const CompareOptions compareOptions = CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreCase;
+        if (member.Nickname?.Length > 0)
+        {
+            if (CultureInfo.CurrentCulture.CompareInfo.IndexOf(member.Nickname, searchText, compareOptions) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return CultureInfo.CurrentCulture.CompareInfo.IndexOf(member.Username, searchText, compareOptions) >= 0;
+    }
+}

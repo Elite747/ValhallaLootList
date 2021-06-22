@@ -354,6 +354,11 @@ namespace ValhallaLootList.Server.Controllers
 
             _context.TeamRemovals.Add(removal);
 
+            await foreach (var lootList in _context.CharacterLootLists.AsTracking().Where(ll => ll.CharacterId == character.Id && ll.Status != LootListStatus.Locked).AsAsyncEnumerable())
+            {
+                lootList.Status = LootListStatus.Editing;
+            }
+
             await _context.SaveChangesAsync();
 
             if (character.OwnerId > 0)

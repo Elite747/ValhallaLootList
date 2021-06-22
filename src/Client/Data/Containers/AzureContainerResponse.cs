@@ -2,17 +2,19 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace ValhallaLootList.Client.Data.Containers
 {
-    [XmlRoot("EnumerationResults")]
     public class AzureContainerResponse
     {
-        public string ContainerName { get; set; }
+        public AzureContainerResponse(string containerName, List<Blob> blobs)
+        {
+            ContainerName = containerName;
+            Blobs = blobs;
+        }
 
-        [XmlArray("Blobs")]
-        [XmlArrayItem("Blob")]
-        public List<Blob> Blobs { get; set; }
+        public string ContainerName { get; }
+
+        public List<Blob> Blobs { get; }
     }
 }

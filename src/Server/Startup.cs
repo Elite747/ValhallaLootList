@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MudBlazor.Services;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
@@ -87,6 +88,10 @@ namespace ValhallaLootList.Server
                 options.AccessDeniedPath = "/accessdenied";
             });
             services.AddApplicationInsightsTelemetry();
+
+            services.AddSingleton(_ => new Client.Shared.RenderLocation { IsServer = true });
+            services.AddServerSideBlazor();
+            services.AddMudServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -121,7 +126,7 @@ namespace ValhallaLootList.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapFallbackToFile("index.html");
+                endpoints.MapFallbackToPage("/_Host");
             });
         }
     }

@@ -22,7 +22,6 @@ namespace ValhallaLootList.Client
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("#app");
 
             builder.Services.AddHttpClient(
                 ApiClient.HttpClientKey,
@@ -79,6 +78,9 @@ namespace ValhallaLootList.Client
                 options.SnackbarConfiguration.ShowCloseIcon = false;
                 options.SnackbarConfiguration.MaxDisplayedSnackbars = 1;
             });
+
+            builder.Services.AddSingleton(_ => new RenderLocation { IsServer = false });
+            builder.Services.AddSingleton<IThemeProvider, ThemeProvider>();
 
             var host = builder.Build();
 

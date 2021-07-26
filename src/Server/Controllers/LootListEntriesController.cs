@@ -96,6 +96,21 @@ namespace ValhallaLootList.Server.Controllers
                 swapEntry.ItemId = oldItemId;
                 swapEntry.Justification = oldJustification;
 
+                await _context.Entry(entry).Collection(e => e.Passes).LoadAsync();
+                await _context.Entry(swapEntry).Collection(e => e.Passes).LoadAsync();
+
+                var swapPasses = swapEntry.Passes.ToList();
+
+                foreach (var pass in entry.Passes)
+                {
+                    pass.LootListEntryId = swapEntry.Id;
+                }
+
+                foreach (var pass in swapPasses)
+                {
+                    pass.LootListEntryId = entry.Id;
+                }
+
                 (allowed, reason) = await CheckAllowedAsync(entry, swapEntry, dto.RemoveIfInvalid);
 
                 if (!allowed)

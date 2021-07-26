@@ -524,7 +524,8 @@ namespace ValhallaLootList.Server.Controllers
                 props["Method"] = "Submit";
             });
 
-            const string format = "You have a new application to {0} from {1}. ({2} {3})";
+            const string newAppFormat = "You have a new application to {0} from {1}. ({2} {3})";
+            const string currentMemberFormat = "{1} ({2} {3}) has submitted a new phase {4} loot list for team {0}.";
 
             await foreach (var leader in _context.RaidTeamLeaders
                 .AsNoTracking()
@@ -533,12 +534,14 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (teams.TryGetValue(leader.RaidTeamId, out var team) && submissions.Find(s => s.TeamId == leader.RaidTeamId) is null) // Don't notify when submission status doesn't change.
                 {
+                    string format = leader.RaidTeamId == character.TeamId ? currentMemberFormat : newAppFormat;
                     await dcp.SendDmAsync(leader.UserId, m => m.WithContent(string.Format(
                         format,
-                        team.Name,
-                        character.Name,
-                        character.Race.GetDisplayName(),
-                        list.MainSpec.GetDisplayName(true))));
+                        team.Name, // 0
+                        character.Name, // 1
+                        character.Race.GetDisplayName(), // 2
+                        list.MainSpec.GetDisplayName(includeClassName: true), // 3
+                        list.Phase))); // 4
                 }
             }
 

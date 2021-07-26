@@ -68,6 +68,12 @@
             </MudList>
         </WizardSection>
         <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
+            @if (State.Attendees.Count != Team.Roster.Count)
+            {
+                <MudText Color="Color.Warning">
+                    Absent: @string.Join(", ", Team.Roster.Where(m => !State.Attendees.ContainsKey(m.Character.Id)).Select(m => m.Character.Name))
+                </MudText>
+            }
             <div>
                 @foreach (var roleGroup in Team.Roster.GroupBy(a => (a.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec).GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
                 {

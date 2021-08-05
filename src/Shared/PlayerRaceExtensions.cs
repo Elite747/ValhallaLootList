@@ -16,7 +16,7 @@ namespace ValhallaLootList
                 PlayerRace.NightElf => "Night Elf",
                 PlayerRace.Gnome => "Gnome",
                 PlayerRace.Draenei => "Draenei",
-                _ => throw new ArgumentOutOfRangeException(nameof(race))
+                _ => "Unknown"
             };
         }
 

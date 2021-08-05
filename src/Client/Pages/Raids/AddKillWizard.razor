@@ -25,6 +25,11 @@
                 <MudAlert Severity="Severity.Error">Import failed. @_importError</MudAlert>
             }
 
+            @foreach (var warning in _importWarnings)
+            {
+                <MudAlert Severity="Severity.Warning">@warning</MudAlert>
+            }
+
             @if (_nonExistantCharacters.Count != 0)
             {
                 <MudList Dense="true" Class="my-2">
@@ -171,6 +176,7 @@
     private readonly Dictionary<uint, int> _drops = new();
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
     private readonly List<ImportEncounter> _importEncounters = new();
+    private readonly List<string> _importWarnings = new();
     private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
     private string? _importString, _importError;
     private EncounterDto? _encounter;
@@ -209,6 +215,7 @@
     {
         _importString = importString;
         _importError = null;
+        _importWarnings.Clear();
         _nonExistantCharacters.Clear();
         _importEncounters.Clear();
         ResetState();
@@ -256,47 +263,38 @@
                             return;
                         }
 
-                        if (importCharacter.Class == Classes.None || !Enum.IsDefined(importCharacter.Class))
-                        {
-                            _importError = $"One or more characters does not have a valid class.";
-                            return;
-                        }
-
-                        if (!Enum.IsDefined(importCharacter.Gender))
-                        {
-                            _importError = $"One or more characters does not have a valid gender.";
-                            return;
-                        }
-
-                        if (!Enum.IsDefined(importCharacter.Race))
-                        {
-                            _importError = $"One or more characters does not have a valid race.";
-                            return;
-                        }
-
                         var character = Raid.Attendees.Find(a => a.Character.Name == importCharacter.Name)?.Character;
 
                         if (character is null)
                         {
+                            if (importCharacter.Class == Classes.None || !Enum.IsDefined(importCharacter.Class))
+                            {
+                                _importError = $"One or more characters does not have a valid class.";
+                                return;
+                            }
+
+                            if (!Enum.IsDefined(importCharacter.Gender))
+                            {
+                                _importError = $"One or more characters does not have a valid gender.";
+                                return;
+                            }
+
+                            if (!Enum.IsDefined(importCharacter.Race))
+                            {
+                                _importError = $"One or more characters does not have a valid race.";
+                                return;
+                            }
+
                             _nonExistantCharacters.Add(importCharacter);
-                        }
-                        else if (importCharacter.Class != character.Class)
-                        {
-                            _importError = $"{importCharacter.Name} was imported with class {importCharacter.Class} which doesn't match the known class of {character.Class}.";
-                            return;
-                        }
-                        else if (importCharacter.Gender != character.Gender)
-                        {
-                            _importError = $"{importCharacter.Name} was imported with gender {importCharacter.Gender} which doesn't match the known gender of {character.Gender}.";
-                            return;
-                        }
-                        else if (importCharacter.Race != character.Race)
-                        {
-                            _importError = $"{importCharacter.Name} was imported with race {importCharacter.Race} which doesn't match the known race of {character.Race}.";
-                            return;
                         }
                         else
                         {
+                            if (importCharacter.Class != character.Class || importCharacter.Gender != character.Gender || importCharacter.Race != character.Race)
+                            {
+                                _importWarnings.Add($"{character.Name} was imported as a {importCharacter.Gender} {importCharacter.Race.GetDisplayName()} {importCharacter.Class.GetDisplayName()}, " +
+                                    $"but is supposed to be a {character.Gender} {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
+                            }
+
                             SetPresent(character, true);
                         }
                     }

@@ -4,7 +4,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiView Operations="new IApiClientOperation[] { _phaseConfigOperation, _instancesOperation, _charactersOperation }">
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">

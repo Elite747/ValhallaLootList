@@ -4,7 +4,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
     <ApiView Operation="_instancesOperation">
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">

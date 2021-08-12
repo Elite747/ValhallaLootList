@@ -44,26 +44,19 @@
         --mud-palette-divider-light: rgba(255,255,255, 0.06);
     }
 
-.mud-dialog-scrollable {
+.mud-dialog {
     overflow: hidden;
     max-height: calc(100% - 2rem);
 }
 
-    .mud-dialog-scrollable > :not(.mud-dialog-title) {
+    .mud-dialog > :not(.mud-dialog-title) {
         display: flex;
         flex-direction: column;
         max-height: 100%;
+        overflow: hidden;
     }
 
-.mud-dialog-scrollable-1 > :not(.mud-dialog-title) {
-    overflow: auto;
-}
-
-.mud-dialog-scrollable-2 > :not(.mud-dialog-title) {
-    overflow: hidden;
-}
-
-.mud-dialog-scrollable-2 .mud-dialog-content {
+.mud-dialog-content {
     display: flex;
     flex-direction: column;
     max-height: 100%;

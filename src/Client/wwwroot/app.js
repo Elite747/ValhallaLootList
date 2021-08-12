@@ -32,13 +32,6 @@
             localStorage.removeItem('theme');
         }
         this.updateTheme();
-    },
-    makeDialogScrollable: function (id, mode) {
-        let element = document.getElementById(id);
-        if (element) {
-            element.classList.add('mud-dialog-scrollable');
-            element.classList.add(`mud-dialog-scrollable-${mode}`);
-        }
     }
 };
 

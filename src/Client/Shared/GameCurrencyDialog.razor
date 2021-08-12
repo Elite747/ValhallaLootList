@@ -1,9 +1,9 @@
 ﻿@inject IDialogService DialogService
 
-<EditForm OnValidSubmit="() => Dialog.Close(DialogResult.Ok(_model.GetAmount()))" Model="_model">
-    <DataAnnotationsValidator />
-    <MudDialog>
-        <DialogContent>
+<MudDialog>
+    <DialogContent>
+        <EditForm OnValidSubmit="() => Dialog.Close(DialogResult.Ok(_model.GetAmount()))" Model="_model" id="currencyForm">
+            <DataAnnotationsValidator />
             <MudGrid>
                 <MudItem xs="12" sm="4">
                     <MudTextField @bind-Value="_model.Gold" For="() => _model.Gold" Variant="Variant.Filled" Label="Gold" Immediate="true" />
@@ -15,13 +15,13 @@
                     <MudTextField @bind-Value="_model.Copper" For="() => _model.Copper" Variant="Variant.Filled" Label="Copper" Immediate="true" />
                 </MudItem>
             </MudGrid>
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Disabled="_model.GetAmount() == 0" Color="Color.Primary" Variant="Variant.Filled">Ok</MudButton>
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Disabled="_model.GetAmount() == 0" Color="Color.Primary" Variant="Variant.Filled" form="currencyForm">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     private readonly InputModel _model = new();

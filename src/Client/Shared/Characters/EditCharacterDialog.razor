@@ -2,32 +2,31 @@
 @inject PermissionManager Permissions
 
 <AuthorizeView Context="auth">
-    <EditForm OnValidSubmit="OnSubmit" Model="_character">
-        <DataAnnotationsValidator />
-        <ProblemValidator @ref="_problemValidator" />
-
-        <MudDialog>
-            <TitleContent>
-                @if (EditingCharacter is null)
-                {
-                    <MudText Typo="Typo.h6">New Character</MudText>
-                }
-                else
-                {
-                    <MudText Typo="Typo.h6">Edit @EditingCharacter.Name</MudText>
-                }
-            </TitleContent>
-            <DialogContent>
+    <MudDialog>
+        <TitleContent>
+            @if (EditingCharacter is null)
+            {
+                <MudText Typo="Typo.h6">New Character</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">Edit @EditingCharacter.Name</MudText>
+            }
+        </TitleContent>
+        <DialogContent>
+            <EditForm OnValidSubmit="OnSubmit" Model="_character" id="editCharacterForm">
+                <DataAnnotationsValidator />
+                <ProblemValidator @ref="_problemValidator" />
                 <CharacterSubmissionEditor AllowSubmitNonOwned="AllowSubmitNonOwned"
                                            Character="_character"
                                            DisableClassChange="EditingCharacter is not null" />
-            </DialogContent>
-            <DialogActions>
-                <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
-            </DialogActions>
-        </MudDialog>
-    </EditForm>
+            </EditForm>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="editCharacterForm">Submit</MudButton>
+        </DialogActions>
+    </MudDialog>
 </AuthorizeView>
 
 @code {

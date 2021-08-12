@@ -2,12 +2,11 @@
 @inject PermissionManager Permissions
 
 <AuthorizeView Context="auth">
-    <EditForm OnValidSubmit="OnSubmit" Model="_character">
-        <DataAnnotationsValidator />
-        <ProblemValidator @ref="_problemValidator" />
-
-        <MudDialog>
-            <DialogContent>
+    <MudDialog>
+        <DialogContent>
+            <EditForm OnValidSubmit="OnSubmit" Model="_character" id="createCharacterForm">
+                <DataAnnotationsValidator />
+                <ProblemValidator @ref="_problemValidator" />
                 <MudTextField Label="Name"
                               HelperText="Enter the name exactly as it is spelled in-game."
                               @bind-Value="_character.Name"
@@ -78,13 +77,13 @@
                                      For="() => _character.SenderIsOwner" />
                     </MudTooltip>
                 }
-            </DialogContent>
-            <DialogActions>
-                <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
-            </DialogActions>
-        </MudDialog>
-    </EditForm>
+            </EditForm>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="createCharacterForm">Submit</MudButton>
+        </DialogActions>
+    </MudDialog>
 </AuthorizeView>
 
 @code {

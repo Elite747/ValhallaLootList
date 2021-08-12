@@ -1,11 +1,11 @@
 ﻿@inject ApiClient Api
 
-<EditForm OnValidSubmit="OnSubmit" Model="_team">
-    <DataAnnotationsValidator />
-    <ProblemValidator @ref="_problemValidator" />
+<MudDialog>
+    <DialogContent>
+        <EditForm OnValidSubmit="OnSubmit" Model="_team" id="createTeamForm">
+            <DataAnnotationsValidator />
+            <ProblemValidator @ref="_problemValidator" />
 
-    <MudDialog>
-        <DialogContent>
             <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" Variant="Variant.Filled" />
 
             @for (int i = 0; i < _team.Schedules.Count; i++)
@@ -15,9 +15,9 @@
                     <MudItem xs="12" sm="3">
                         <MudSelect Label="Day" @bind-Value="_team.Schedules[dayIndex].Day" Variant="Variant.Text">
                             @foreach (var day in ValhallaLootList.Helpers.DayOfWeekHelpers.EnumerateDaysByCulture(CultureInfo.CurrentCulture))
-                            {
+                                {
                                 <MudSelectItem T="DayOfWeek?" Value="day">@CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day)</MudSelectItem>
-                            }
+                                }
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="5">
@@ -32,16 +32,16 @@
                 </MudGrid>
             }
             <MudValidationSummary />
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="AddScheduleClicked" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success">
-                Add Schedule
-            </MudButton>
-            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Submit</MudButton>
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="AddScheduleClicked" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success">
+            Add Schedule
+        </MudButton>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="createTeamForm">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     private readonly TeamSubmissionDto _team = new();

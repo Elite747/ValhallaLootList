@@ -151,9 +151,9 @@ namespace ValhallaLootList.Server.Controllers
             var observedDates = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.RaidTeamId == character.TeamId)
-                .OrderByDescending(r => r.StartedAt)
                 .Select(r => r.StartedAt.Date)
                 .Distinct()
+                .OrderByDescending(date => date)
                 .Take(scope.ObservedAttendances)
                 .ToListAsync();
 
@@ -928,9 +928,9 @@ namespace ValhallaLootList.Server.Controllers
             var observedDates = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.RaidTeamId == teamId)
-                .OrderByDescending(r => r.StartedAt)
                 .Select(r => r.StartedAt.Date)
                 .Distinct()
+                .OrderByDescending(date => date)
                 .Take(scope.ObservedAttendances)
                 .ToListAsync();
 

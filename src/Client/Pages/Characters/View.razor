@@ -48,7 +48,7 @@
     </AuthorizeView>
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
-        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true">
+        <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
             @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
@@ -66,6 +66,7 @@
 </ApiExecutor>
 
 @code {
+    private int _panelIndex;
     private PhaseConfigDto? _phaseConfig;
     private object _wonId = new(), _attendanceId = new();
 
@@ -73,7 +74,13 @@
 
     protected override Task OnInitializedAsync()
     {
-        return Api.GetPhaseConfiguration().OnSuccess(config => _phaseConfig = config).ExecuteAsync();
+        return Api.GetPhaseConfiguration()
+            .OnSuccess(config =>
+            {
+                _phaseConfig = config;
+                _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase);
+            })
+            .ExecuteAsync();
     }
 
     private async Task EditAsync(CharacterDto character)

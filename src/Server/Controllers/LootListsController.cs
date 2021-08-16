@@ -470,6 +470,16 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't submit a list that is not editable.");
             }
 
+            var phaseDetails = await _context.PhaseDetails.FindAsync(list.Phase);
+
+            Debug.Assert(phaseDetails is not null);
+
+            if (phaseDetails.StartsAt > DateTimeOffset.UtcNow)
+            {
+                ModelState.AddModelError(nameof(list.Phase), "Phase is not yet active.");
+                return ValidationProblem();
+            }
+
             var teams = await _context.RaidTeams
                 .AsNoTracking()
                 .Where(t => dto.SubmitTo.Contains(t.Id))

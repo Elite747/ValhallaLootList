@@ -5,8 +5,8 @@
 
 <ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
     <LootListLayout LootList="LootList" ShowBracketRules="true">
-        <HeaderContent>
-            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">
+        <HeaderContent> 
+            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1" Disabled="!PhaseActive">
                 @if (LootList.TeamId.HasValue)
                 {
                     <span>Submit to @(string.IsNullOrEmpty(LootList.TeamName) ? "your team" : LootList.TeamName)</span>
@@ -25,6 +25,7 @@
 </ApiExecutor>
 
 @code {
+    [Parameter] public bool PhaseActive { get; set; }
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public EventCallback OnSubmit { get; set; }
 

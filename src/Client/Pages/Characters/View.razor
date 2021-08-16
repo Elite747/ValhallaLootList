@@ -49,10 +49,25 @@
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
         <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
-            @foreach (var phase in (_phaseConfig?.Phases ?? lootLists.Select(ll => ll.Phase).Distinct()).OrderByDescending(p => p))
+            @{ 
+                byte currentPhase;
+                IEnumerable<byte> phases;
+
+                if (_phaseConfig is null)
+                {
+                    currentPhase = lootLists.Max(ll => ll.Phase);
+                    phases = lootLists.Select(ll => ll.Phase).Distinct();
+                }
+                else
+                {
+                    currentPhase = _phaseConfig.CurrentPhase;
+                    phases = _phaseConfig.Phases;
+                }
+            }
+            @foreach (var phase in phases.OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                    <LootListPhase Character="character" Phase="phase" LootLists="lootLists" />
+                    <LootListPhase Character="character" Phase="phase" LootLists="lootLists" PhaseActive="phase <= currentPhase" />
                 </MudTabPanel>
             }
             <MudTabPanel Text="Won Items" ID="_wonId">

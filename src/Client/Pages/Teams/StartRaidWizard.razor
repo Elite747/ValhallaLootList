@@ -61,11 +61,14 @@
         </WizardSection>
         <WizardSection Name="Select Phase" CanContinue="() => _phaseConfigOperation.GetResult().Phases.Contains(State.Phase)">
             <MudList Clickable="true" Dense="true">
-                @foreach (var p in _phaseConfigOperation.GetResult().Phases)
+                @{
+                    var phaseConfig = _phaseConfigOperation.GetResult();
+                }
+                @foreach (var phase in phaseConfig.Phases)
                 {
-                    var phase = p;
                     <MudListItem Icon="@(phase == State.Phase ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                    OnClick="() => State.Phase = phase">
+                                 Disabled="phase > phaseConfig.CurrentPhase"
+                                 OnClick="() => State.Phase = phase">
                         Phase @phase (@string.Join(", ", _instancesOperation.GetResult().Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
                     </MudListItem>
                 }

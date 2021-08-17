@@ -1,19 +1,51 @@
 ﻿@inject ApiClient Api
 
-<MudDialogScrollFix />
 <MudDialog DisableSidePadding="true">
     <TitleContent>
         Assigning <ItemLink Id="Drop.ItemId" Bracketize="true" Colorize="true" LinkEnabled="true" PlaceholderText="Drop" />
     </TitleContent>
     <DialogContent>
-        <ApiExecutor Operation="() => Api.Drops.GetPriorityRankings(Drop.Id)" Context="prios">
-            <MudList Clickable="true" Dense="true">
-                @foreach (var context in EnumerateRows(prios))
+        <ApiView Operation="_prioOperation" ExecuteImmediately="true">
+            <MudList>
+                @foreach (var prioGroup in _prioGroups)
                 {
-                    <AssignLootDialogRow Context="context" />
+                    <MudListItem @key="prioGroup.Key ?? int.MinValue">
+                        <div class="d-flex align-center">
+                            @if (prioGroup.Key.HasValue)
+                            {
+                                @if (prioGroup.Count() > 1)
+                                {
+                                    <MudTooltip Text="Tied Priority">
+                                        <MudAvatar Color="Color.Warning" Size="Size.Small">
+                                            @prioGroup.Key
+                                        </MudAvatar>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudAvatar Color="Color.Success" Size="Size.Small">
+                                        @prioGroup.Key
+                                    </MudAvatar>
+                                }
+                            }
+                            else
+                            {
+                                <MudAvatar Color="Color.Error" Size="Size.Small">
+                                    X
+                                </MudAvatar>
+                            }
+                            <div class="mr-auto">
+                                @foreach (var context in prioGroup)
+                                {
+                                    <AssignLootDialogChip Context="context" />
+                                }
+                            </div>
+                        </div>
+                    </MudListItem>
+                    <MudDivider />
                 }
             </MudList>
-        </ApiExecutor>
+        </ApiView>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
@@ -21,39 +53,29 @@
 </MudDialog>
 
 @code {
+    private readonly List<IGrouping<int?, AssignEntryContext>> _prioGroups = new();
+    private IApiClientOperation<IList<ItemPrioDto>> _prioOperation = null!;
+
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
     [Parameter] public EncounterDropDto Drop { get; set; } = null!;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
         if (Drop is null) throw new ArgumentNullException(nameof(Drop));
         if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        _prioOperation = Api.Drops.GetPriorityRankings(Drop.Id).OnSuccess(ConfigureRows);
     }
 
-    private IEnumerable<AssignEntryContext> EnumerateRows(IList<ItemPrioDto> prios)
+    private void ConfigureRows(IList<ItemPrioDto> prios)
     {
-        var contexts = new List<AssignEntryContext>();
-
-        foreach (var attendee in Raid.Attendees)
-        {
-            contexts.Add(new AssignEntryContext(Raid, Drop, attendee.Character, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)));
-        }
-
-        foreach (var group in contexts.Where(e => e.Prio.HasValue).GroupBy(e => e.Prio))
-        {
-            if (group.Count() > 1)
-            {
-                foreach (var entry in group)
-                {
-                    entry.SetTied();
-                }
-            }
-        }
-
-        return contexts.OrderByDescending(c => c.Prio ?? int.MinValue).ThenBy(e => e.Character.Name);
+        _prioGroups.Clear();
+        _prioGroups.AddRange(Raid.Attendees
+            .Select(attendee => new AssignEntryContext(Raid, Drop, attendee.Character, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)))
+            .GroupBy(context => context.Prio)
+            .OrderByDescending(g => g.Key));
     }
 }

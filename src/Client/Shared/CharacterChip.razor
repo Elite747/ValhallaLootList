@@ -39,6 +39,7 @@
     [Parameter] public bool Clickable { get; set; }
     [Parameter] public bool Closeable { get; set; }
     [Parameter] public bool HideIcon { get; set; }
+    [Parameter] public bool Disabled { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
@@ -53,6 +54,7 @@
         .AddClass("mud-chip-outlined")
         .AddClass("mud-clickable", Clickable || OnClick.HasDelegate)
         .AddClass($"mud-ripple", Clickable || OnClick.HasDelegate)
+        .AddClass("mud-disabled", Disabled)
         .AddClass(Class)
         .Build();
 

@@ -2,7 +2,7 @@
 {
     <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="Character.Id">
         <Authorized>
-            <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
+            <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" PhaseActive="PhaseActive" />
         </Authorized>
         <NotAuthorized>
             <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
@@ -15,6 +15,7 @@ else
 }
 
 @code {
+    [Parameter] public bool PhaseActive { get; set; }
     [Parameter] public byte Phase { get; set; }
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;

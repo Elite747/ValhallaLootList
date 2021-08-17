@@ -1,124 +1,51 @@
 ﻿@inherits LayoutComponentBase
-@inject LocalStorageService LocalStorage
+@inject RenderLocation Location
 
-<MudThemeProvider Theme="GetTheme()" />
-<MudDialogProvider FullWidth="true"
-                   MaxWidth="MaxWidth.Small"
-                   Position="DialogPosition.Center"
-                   DisableBackdropClick="false"
-                   CloseButton="true"
-                   NoHeader="false" />
-<MudSnackbarProvider />
-<ThemeInterop ThemeChanged="SystemThemeChanged" />
+<MudThemeProvider Theme="DefaultMudTheme.Value" />
+@if (!Location.IsServer)
+{
+    <MudDialogProvider FullWidth="true"
+                       MaxWidth="MaxWidth.Small"
+                       Position="DialogPosition.Center"
+                       DisableBackdropClick="false"
+                       CloseButton="true"
+                       NoHeader="false" />
+    <MudSnackbarProvider />
+}
 
 <MudLayout>
     <MudAppBar Elevation="5">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _navOpen = !_navOpen" />
-        <img src="valhallatrans.png" width="48" height="48" alt="Valhalla" />
-        <MudHidden Breakpoint="Breakpoint.Xs">
-            <MudText Typo="Typo.h6" Class="ml-1">Valhalla</MudText>
-        </MudHidden>
-        <MudAppBarSpacer />
-        <LoginDisplay />
-        <SettingsDisplay SelectedTheme="@_currentTheme" SelectedThemeChanged="SetThemeAsync" />
+        <img src="/valhallatrans.png" width="48" height="48" alt="Valhalla" />
+        <MudText Typo="Typo.h6" Class="ml-1 d-none d-sm-block">Valhalla</MudText>
+        <MudSpacer />
+        @if (Location.IsServer)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Disabled="true" />
+        }
+        else
+        {
+            <LoginDisplay />
+            <SettingsDisplay />
+        }
     </MudAppBar>
     <MudDrawer @bind-Open="@_navOpen" Elevation="5" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive">
         <NavMenu />
     </MudDrawer>
     <MudMainContent Class="py-16 px-4">
         <MudContainer Class="mt-6">
-            @Body
+            @if (Location.IsServer)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else
+            {
+                @Body
+            }
         </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code{
-    private readonly MudTheme _light, _dark;
-    private bool _navOpen = true, _autoIsDark = false;
-    private string? _currentTheme;
-
-    public MainLayout()
-    {
-        _light = new() { Palette = new() };
-        _dark = new()
-        {
-            Palette = new()
-            {
-                Black = "#27272f",
-                Background = "#32333d",
-                BackgroundGrey = "#27272f",
-                Surface = "#373740",
-                DrawerBackground = "#27272f",
-                DrawerText = "rgba(255,255,255, 0.50)",
-                DrawerIcon = "rgba(255,255,255, 0.50)",
-                AppbarBackground = "#27272f",
-                AppbarText = "rgba(255,255,255, 0.70)",
-                TextPrimary = "rgba(255,255,255, 0.70)",
-                TextSecondary = "rgba(255,255,255, 0.50)",
-                ActionDefault = "#adadb1",
-                ActionDisabled = "rgba(255,255,255, 0.26)",
-                ActionDisabledBackground = "rgba(255,255,255, 0.12)",
-                Divider = "rgba(255,255,255, 0.12)",
-                DividerLight = "rgba(255,255,255, 0.06)",
-                TableLines = "rgba(255,255,255, 0.12)",
-                LinesDefault = "rgba(255,255,255, 0.12)",
-                LinesInputs = "rgba(255,255,255, 0.3)",
-                TextDisabled = "rgba(255,255,255, 0.2)"
-            }
-        };
-
-        ApplyGlobalThemeValues(_light);
-        ApplyGlobalThemeValues(_dark);
-
-        static void ApplyGlobalThemeValues(MudTheme theme)
-        {
-            theme.Palette.Primary = Colors.Green.Darken2;
-            theme.Palette.Secondary = Colors.Blue.Accent1;
-            theme.Palette.Tertiary = Colors.Orange.Darken3;
-            theme.Palette.AppbarBackground = theme.Palette.Primary;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        _currentTheme = await LocalStorage.GetAsync("theme");
-    }
-
-    private MudTheme GetTheme()
-    {
-        return _currentTheme switch
-        {
-            "dark" => _dark,
-            "light" => _light,
-            _ => _autoIsDark ? _dark : _light
-        };
-    }
-
-    private string GetIcon()
-    {
-        return _currentTheme switch
-        {
-            "dark" => Icons.Material.Filled.Brightness3,
-            "light" => Icons.Material.Filled.Brightness5,
-            _ => _autoIsDark ? Icons.Material.Filled.Brightness3 : Icons.Material.Filled.Brightness5
-        };
-    }
-
-    private async Task SetThemeAsync(string? theme)
-    {
-        _currentTheme = theme;
-        await LocalStorage.SetAsync("theme", theme);
-    }
-
-    private void SystemThemeChanged(bool isDark)
-    {
-        if (_autoIsDark != isDark)
-        {
-            _autoIsDark = isDark;
-            if (_currentTheme is null)
-            {
-                StateHasChanged();
-            }
-        }
-    }
+    private bool _navOpen = true;
 }

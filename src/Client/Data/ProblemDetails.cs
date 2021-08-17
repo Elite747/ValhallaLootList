@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace ValhallaLootList.Client.Data
@@ -31,6 +32,10 @@ namespace ValhallaLootList.Client.Data
 
         public string GetDisplayString()
         {
+            if (Errors?.Count == 1 && Errors.Values.Single() is { Count: 1 } singleErrorList)
+            {
+                return singleErrorList[0];
+            }
             if (Detail?.Length > 0)
             {
                 return Detail;

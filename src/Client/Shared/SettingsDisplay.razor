@@ -1,17 +1,17 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager Nav
 @inject SignOutSessionStateManager SignOutManager
+@inject IThemeProvider ThemeProvider
 
 <MudMenu Direction="Direction.Left" OffsetX="true" OffsetY="true" Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" IconColor="Color.Inherit" Class="ml-1">
     <MudListSubheader>
         Theme
     </MudListSubheader>
-    @foreach (var tuple in _themes)
+    @foreach ((Theme? theme, string themeName) in _themes)
     {
-        var (themeId, themeName) = tuple;
-        <MudMenuItem OnClick="() => SetThemeAsync(themeId)">
+        <MudMenuItem OnClick="() => ThemeProvider.SelectedTheme = theme">
             <div class="d-flex align-center">
-                <MudIcon Class="mr-2" Icon="@(themeId == (SelectedTheme ?? string.Empty) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" />
+                <MudIcon Class="mr-2" Icon="@(theme == ThemeProvider.SelectedTheme ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" />
                 <div>@themeName</div>
             </div>
         </MudMenuItem>
@@ -32,25 +32,12 @@
 </MudMenu>
 
 @code {
-    [Parameter] public string? SelectedTheme { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string?> SelectedThemeChanged { get; set; }
-
-    private static readonly List<(string, string)> _themes = new()
+    private static readonly List<(Theme?, string)> _themes = new()
     {
-        (string.Empty, "System Default"),
-        ("light", "Light"),
-        ("dark", "Dark")
+        (null, "System Default"),
+        (Theme.Light, "Light"),
+        (Theme.Dark, "Dark")
     };
-
-    private Task SetThemeAsync(string? theme)
-    {
-        if (SelectedTheme != theme)
-        {
-            SelectedTheme = theme;
-            return SelectedThemeChanged.InvokeAsync(theme);
-        }
-        return Task.CompletedTask;
-    }
 
     private async Task BeginSignOut()
     {

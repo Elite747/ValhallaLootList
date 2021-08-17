@@ -151,9 +151,9 @@ namespace ValhallaLootList.Server.Controllers
             var observedDates = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.RaidTeamId == character.TeamId)
-                .OrderByDescending(r => r.StartedAt)
                 .Select(r => r.StartedAt.Date)
                 .Distinct()
+                .OrderByDescending(date => date)
                 .Take(scope.ObservedAttendances)
                 .ToListAsync();
 
@@ -470,6 +470,16 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't submit a list that is not editable.");
             }
 
+            var phaseDetails = await _context.PhaseDetails.FindAsync(list.Phase);
+
+            Debug.Assert(phaseDetails is not null);
+
+            if (phaseDetails.StartsAt > DateTimeOffset.UtcNow)
+            {
+                ModelState.AddModelError(nameof(list.Phase), "Phase is not yet active.");
+                return ValidationProblem();
+            }
+
             var teams = await _context.RaidTeams
                 .AsNoTracking()
                 .Where(t => dto.SubmitTo.Contains(t.Id))
@@ -524,7 +534,8 @@ namespace ValhallaLootList.Server.Controllers
                 props["Method"] = "Submit";
             });
 
-            const string format = "You have a new application to {0} from {1}. ({2} {3})";
+            const string newAppFormat = "You have a new application to {0} from {1}. ({2} {3})";
+            const string currentMemberFormat = "{1} ({2} {3}) has submitted a new phase {4} loot list for team {0}.";
 
             await foreach (var leader in _context.RaidTeamLeaders
                 .AsNoTracking()
@@ -533,12 +544,14 @@ namespace ValhallaLootList.Server.Controllers
             {
                 if (teams.TryGetValue(leader.RaidTeamId, out var team) && submissions.Find(s => s.TeamId == leader.RaidTeamId) is null) // Don't notify when submission status doesn't change.
                 {
+                    string format = leader.RaidTeamId == character.TeamId ? currentMemberFormat : newAppFormat;
                     await dcp.SendDmAsync(leader.UserId, m => m.WithContent(string.Format(
                         format,
-                        team.Name,
-                        character.Name,
-                        character.Race.GetDisplayName(),
-                        list.MainSpec.GetDisplayName(true))));
+                        team.Name, // 0
+                        character.Name, // 1
+                        character.Race.GetDisplayName(), // 2
+                        list.MainSpec.GetDisplayName(includeClassName: true), // 3
+                        list.Phase))); // 4
                 }
             }
 
@@ -925,9 +938,9 @@ namespace ValhallaLootList.Server.Controllers
             var observedDates = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.RaidTeamId == teamId)
-                .OrderByDescending(r => r.StartedAt)
                 .Select(r => r.StartedAt.Date)
                 .Distinct()
+                .OrderByDescending(date => date)
                 .Take(scope.ObservedAttendances)
                 .ToListAsync();
 

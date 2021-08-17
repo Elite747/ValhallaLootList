@@ -2,7 +2,14 @@
 
 <MudDialog>
     <DialogContent>
-        <GuildMemberPicker @bind-SelectedMember="_selectedMember" Filter="Filter!" />
+        @if (Filter is null)
+        {
+            <GuildMemberPicker @bind-SelectedMember="_selectedMember" />
+        }
+        else
+        {
+            <GuildMemberPicker @bind-SelectedMember="_selectedMember" Filter="dto => Filter(dto)" />
+        }
         <MudCheckBox @bind-Checked="_raidLeader" Label="Raid Leader" />
         <MudCheckBox @bind-Checked="_lootMaster" Label="Loot Master" />
         <MudCheckBox @bind-Checked="_recruiter" Label="Recruiter" />

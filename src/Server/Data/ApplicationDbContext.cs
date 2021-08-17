@@ -223,7 +223,12 @@ namespace ValhallaLootList.Server.Data
                     new(phase: 1, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
                     new(phase: 1, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
                     new(phase: 1, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                    new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
+                    new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true),
+                    // Phase 2 brackets
+                    new(phase: 2, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 2, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 2, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
+                    new(phase: 2, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
                     );
             });
 
@@ -231,7 +236,8 @@ namespace ValhallaLootList.Server.Data
             {
                 e.Property(phase => phase.Id).ValueGeneratedNever();
                 e.HasData(
-                    new PhaseDetails(id: 1, startsAt: default)
+                    new PhaseDetails(id: 1, startsAt: default),
+                    new PhaseDetails(id: 2, startsAt: DateTimeOffset.Parse("8/31/2021 00:00:00 -04:00")) // TODO: Start date should be updated once a solid release date is set.
                     );
             });
 

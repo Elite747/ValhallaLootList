@@ -5,8 +5,17 @@
 
 <ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
     <LootListLayout LootList="LootList" ShowBracketRules="true">
-        <HeaderContent>
-            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Submit Application</MudButton>
+        <HeaderContent> 
+            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1" Disabled="!PhaseActive">
+                @if (LootList.TeamId.HasValue)
+                {
+                    <span>Submit to @(string.IsNullOrEmpty(LootList.TeamName) ? "your team" : LootList.TeamName)</span>
+                }
+                else
+                {
+                    <span>Submit Application</span>
+                }
+            </MudButton>
             <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
         </HeaderContent>
         <EntryTemplate Context="entry">
@@ -16,6 +25,7 @@
 </ApiExecutor>
 
 @code {
+    [Parameter] public bool PhaseActive { get; set; }
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public EventCallback OnSubmit { get; set; }
 
@@ -28,7 +38,16 @@
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
     }
 
-    private async Task SubmitAsync()
+    private Task SubmitAsync()
+    {
+        if (LootList.TeamId.HasValue)
+        {
+            return SendSubmissionAsync(new() { LootList.TeamId.Value });
+        }
+        return SubmitNewAsync();
+    }
+
+    private async Task SubmitNewAsync()
     {
         int? collapsibleBracket = GetCollapsibleBracket();
         if (collapsibleBracket.HasValue)
@@ -54,14 +73,19 @@
 
         if (teams is not null)
         {
-            await Api.LootLists.Submit(LootList, teams)
-                .OnSuccess((_, _) =>
-                {
-                    return OnSubmit.InvokeAsync();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
+            await SendSubmissionAsync(teams);
         }
+    }
+
+    private Task SendSubmissionAsync(List<long> teams)
+    {
+        return Api.LootLists.Submit(LootList, teams)
+            .OnSuccess((_, _) =>
+            {
+                return OnSubmit.InvokeAsync();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 
     private int? GetCollapsibleBracket()

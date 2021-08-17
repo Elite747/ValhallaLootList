@@ -1,13 +1,13 @@
 ﻿@inject ApiClient Api
 
-<EditForm OnValidSubmit="OnSubmitAsync" Model="_model">
-    <DataAnnotationsValidator />
-    <ProblemValidator @ref="_problemValidator" />
-    <MudDialog>
-        <TitleContent>
-            Select Your Specialization
-        </TitleContent>
-        <DialogContent>
+<MudDialog>
+    <TitleContent>
+        Select Your Specialization
+    </TitleContent>
+    <DialogContent>
+        <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="createListForm">
+            <DataAnnotationsValidator />
+            <ProblemValidator @ref="_problemValidator" />
             <MudSelect Label="Main Spec"
                        For="() => _model.MainSpec"
                        @bind-Value="@_model.MainSpec"
@@ -46,13 +46,13 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Save</MudButton>
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="createListForm">Save</MudButton>
+    </DialogActions>
+</MudDialog>
 
 
 @code {

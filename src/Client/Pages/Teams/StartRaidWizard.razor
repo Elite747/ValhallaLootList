@@ -4,7 +4,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudDialogScrollFix FixedFooter="true" />
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiView Operations="new IApiClientOperation[] { _phaseConfigOperation, _instancesOperation, _charactersOperation }">
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
@@ -23,6 +22,11 @@
             @if (_importError?.Length > 0)
             {
                 <MudAlert Severity="Severity.Error">Import failed. @_importError</MudAlert>
+            }
+
+            @foreach (var warning in _importWarnings)
+            {
+                <MudAlert Severity="Severity.Warning">@warning</MudAlert>
             }
 
             @if (_nonExistantCharacters.Count != 0)
@@ -57,17 +61,26 @@
         </WizardSection>
         <WizardSection Name="Select Phase" CanContinue="() => _phaseConfigOperation.GetResult().Phases.Contains(State.Phase)">
             <MudList Clickable="true" Dense="true">
-                @foreach (var p in _phaseConfigOperation.GetResult().Phases)
+                @{
+                    var phaseConfig = _phaseConfigOperation.GetResult();
+                }
+                @foreach (var phase in phaseConfig.Phases)
                 {
-                    var phase = p;
                     <MudListItem Icon="@(phase == State.Phase ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                    OnClick="() => State.Phase = phase">
+                                 Disabled="phase > phaseConfig.CurrentPhase"
+                                 OnClick="() => State.Phase = phase">
                         Phase @phase (@string.Join(", ", _instancesOperation.GetResult().Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
                     </MudListItem>
                 }
             </MudList>
         </WizardSection>
         <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
+            @if (State.Attendees.Count != Team.Roster.Count)
+            {
+                <MudText Color="Color.Warning">
+                    Absent: @string.Join(", ", Team.Roster.Where(m => !State.Attendees.ContainsKey(m.Character.Id)).Select(m => m.Character.Name))
+                </MudText>
+            }
             <div>
                 @foreach (var roleGroup in Team.Roster.GroupBy(a => (a.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec).GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
                 {
@@ -104,6 +117,7 @@
     private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
     private IApiClientOperation<IList<CharacterDto>> _charactersOperation = null!;
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
+    private readonly List<string> _importWarnings = new();
     private string? _importString, _importError;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
@@ -138,6 +152,7 @@
     {
         _importString = importString;
         _importError = null;
+        _importWarnings.Clear();
         _nonExistantCharacters.Clear();
         ResetState();
 
@@ -180,47 +195,38 @@
                             return;
                         }
 
-                        if (importCharacter.Class == Classes.None || !Enum.IsDefined(importCharacter.Class))
-                        {
-                            _importError = $"One or more characters does not have a valid class.";
-                            return;
-                        }
-
-                        if (!Enum.IsDefined(importCharacter.Gender))
-                        {
-                            _importError = $"One or more characters does not have a valid gender.";
-                            return;
-                        }
-
-                        if (!Enum.IsDefined(importCharacter.Race))
-                        {
-                            _importError = $"One or more characters does not have a valid race.";
-                            return;
-                        }
-
                         var character = allCharacters.FirstOrDefault(c => c.Name == importCharacter.Name);
 
                         if (character is null)
                         {
+                            if (importCharacter.Class == Classes.None || !Enum.IsDefined(importCharacter.Class))
+                            {
+                                _importError = $"One or more characters does not have a valid class.";
+                                return;
+                            }
+
+                            if (!Enum.IsDefined(importCharacter.Gender))
+                            {
+                                _importError = $"One or more characters does not have a valid gender.";
+                                return;
+                            }
+
+                            if (!Enum.IsDefined(importCharacter.Race))
+                            {
+                                _importError = $"One or more characters does not have a valid race.";
+                                return;
+                            }
+
                             _nonExistantCharacters.Add(importCharacter);
-                        }
-                        else if (importCharacter.Class != character.Class)
-                        {
-                            _importError = $"{character.Name} was imported with class {importCharacter.Class} which doesn't match the known class of {character.Class}.";
-                            return;
-                        }
-                        else if (importCharacter.Gender != character.Gender)
-                        {
-                            _importError = $"{character.Name} was imported with gender {importCharacter.Gender} which doesn't match the known gender of {character.Gender}.";
-                            return;
-                        }
-                        else if (importCharacter.Race != character.Race)
-                        {
-                            _importError = $"{character.Name} was imported with race {importCharacter.Race} which doesn't match the known race of {character.Race}.";
-                            return;
                         }
                         else
                         {
+                            if (importCharacter.Class != character.Class || importCharacter.Gender != character.Gender || importCharacter.Race != character.Race)
+                            {
+                                _importWarnings.Add($"{character.Name} was imported as a {importCharacter.Gender} {importCharacter.Race.GetDisplayName()} {importCharacter.Class.GetDisplayName()}, " +
+                                    $"but is supposed to be a {character.Gender} {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
+                            }
+
                             State.Attendees[character.Id] = character;
                         }
                     }

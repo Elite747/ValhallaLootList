@@ -22,50 +22,41 @@
     --rolecolor-dps: #6D0A0B;
 }
 
-#blazor-error-ui {
-    background: lightyellow;
-    color: black;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 10000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+    :root[theme="dark"] {
+        --mud-palette-black: #27272f;
+        --mud-palette-text-primary: rgba(255,255,255, 0.70);
+        --mud-palette-text-secondary: rgba(255,255,255, 0.50);
+        --mud-palette-text-disabled: rgba(255,255,255, 0.2);
+        --mud-palette-action-default: #adadb1;
+        --mud-palette-action-disabled: rgba(255,255,255, 0.26);
+        --mud-palette-action-disabled-background: rgba(255,255,255, 0.12);
+        --mud-palette-surface: #373740;
+        --mud-palette-background: #32333d;
+        --mud-palette-background-grey: #27272f;
+        --mud-palette-drawer-background: #27272f;
+        --mud-palette-drawer-text: rgba(255,255,255, 0.50);
+        --mud-palette-drawer-icon: rgba(255,255,255, 0.50);
+        --mud-palette-appbar-text: rgba(255,255,255, 0.70);
+        --mud-palette-lines-default: rgba(255,255,255, 0.12);
+        --mud-palette-lines-inputs: rgba(255,255,255, 0.3);
+        --mud-palette-table-lines: rgba(255,255,255, 0.12);
+        --mud-palette-divider: rgba(255,255,255, 0.12);
+        --mud-palette-divider-light: rgba(255,255,255, 0.06);
     }
 
-    #blazor-error-ui .reload {
-        color: cornflowerblue;
-    }
-
-.mud-dialog-scrollable {
+.mud-dialog {
     overflow: hidden;
     max-height: calc(100% - 2rem);
 }
 
-    .mud-dialog-scrollable > :not(.mud-dialog-title) {
+    .mud-dialog > :not(.mud-dialog-title) {
         display: flex;
         flex-direction: column;
         max-height: 100%;
+        overflow: hidden;
     }
 
-.mud-dialog-scrollable-1 > :not(.mud-dialog-title) {
-    overflow: auto;
-}
-
-.mud-dialog-scrollable-2 > :not(.mud-dialog-title) {
-    overflow: hidden;
-}
-
-.mud-dialog-scrollable-2 .mud-dialog-content {
+.mud-dialog-content {
     display: flex;
     flex-direction: column;
     max-height: 100%;

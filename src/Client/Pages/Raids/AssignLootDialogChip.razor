@@ -1,0 +1,44 @@
+﻿@inject ApiClient Api
+
+<MudTooltip Text="@Context.Message">
+    <TooltipContent>
+        @if (Context.Message.Length > 0)
+        {
+            <span>@Context.Message</span>
+        }
+        else
+        {
+            <div>
+                Rank @Context.Rank
+            </div>
+            @foreach (var bonus in Context.Bonuses)
+            {
+                <div>
+                    <PriorityBonusDisplay Bonus="bonus" />
+                </div>
+            }
+        }
+    </TooltipContent>
+    <ChildContent>
+        <CharacterChip Character="Context.Character" OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))" Disabled="Context.Disabled">
+            <div class="d-flex align-center">
+                @Context.Character.Name
+                @if (Context.Message.Length > 0)
+                {
+                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
+                }
+            </div>
+        </CharacterChip>
+    </ChildContent>
+</MudTooltip>
+
+@code {
+    [Parameter] public AssignEntryContext Context { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Context is null) throw new ArgumentNullException(nameof(Context));
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+}

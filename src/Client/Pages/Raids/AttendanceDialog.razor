@@ -1,75 +1,74 @@
-﻿@inject ApiClient Api  
+﻿@inject ApiClient Api
 
-<EditForm OnValidSubmit="OnSubmitAsync" Model="_model">
-    <DataAnnotationsValidator />
-    <ProblemValidator @ref="_problemValidator" />
-    <MudDialog>
-        <TitleContent>
-            <MudText Typo="Typo.h6">@Attendance.Character.Name</MudText>
-        </TitleContent>
-        <DialogContent>
-            <div class="d-flex">
-                <PlayerIcon Race="Attendance.Character.Race"
-                            Gender="Attendance.Character.Gender"
-                            PlayerClass="Attendance.Character.Class"
-                            Spec="Attendance.MainSpec"
-                            Class="mr-5" />
-                <div class="flex-grow-1">
-                    @if (Attendance.MainSpec != default)
-                    {
-                        <div>
-                            <MudText Typo="Typo.caption">
-                                @Attendance.MainSpec.GetDisplayName(includeClassName: true)
-                            </MudText>
-                        </div>
-                    }
-                    @if (_editing)
-                    {
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Attendance.Character.Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex">
+            <PlayerIcon Race="Attendance.Character.Race"
+                        Gender="Attendance.Character.Gender"
+                        PlayerClass="Attendance.Character.Class"
+                        Spec="Attendance.MainSpec"
+                        Class="mr-5" />
+            <div class="flex-grow-1">
+                @if (Attendance.MainSpec != default)
+                {
+                    <div>
+                        <MudText Typo="Typo.caption">
+                            @Attendance.MainSpec.GetDisplayName(includeClassName: true)
+                        </MudText>
+                    </div>
+                }
+                @if (_editing)
+                {
+                    <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="attendanceForm">
+                        <DataAnnotationsValidator />
+                        <ProblemValidator @ref="_problemValidator" />
                         <MudCheckBox @bind-Checked="_model.IgnoreAttendance" For="() => _model.IgnoreAttendance">
                             Ignore Attendance
                         </MudCheckBox>
-
                         <MudTextField Label="Ignore Reason"
                                       For="() =>_model.IgnoreReason"
                                       @bind-Value="_model.IgnoreReason"
                                       Disabled="!_model.IgnoreAttendance"
                                       Variant="Variant.Filled"
                                       Lines="3" />
-                    }
-                    else if (Attendance.IgnoreAttendance)
-                    {
-                        <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Inline="false" Color="Color.Success">Attendance Counted</MudText>
-                    }
-                </div>
+                    </EditForm>
+                }
+                else if (Attendance.IgnoreAttendance)
+                {
+                    <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Inline="false" Color="Color.Success">Attendance Counted</MudText>
+                }
             </div>
-        </DialogContent>
-        <DialogActions>
-            @if (_editing)
-            {
-                <MudButton OnClick="() => _editing = false" Variant="Variant.Text">Cancel</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit">Save</MudButton>
-            }
-            else
-            {
-                <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
-                    @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(Attendance.Character.Id)))
-                    {
-                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnRemoveClickedAsync">Remove</MudButton>
-                    }
-                    @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
-                    {
-                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="BeginEdit">Edit</MudButton>
-                    }
-                </AuthorizeView>
-                <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="() => Dialog.Cancel()">Close</MudButton>
-            }
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @if (_editing)
+        {
+            <MudButton OnClick="() => _editing = false" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="attendanceForm">Save</MudButton>
+        }
+        else
+        {
+            <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Context="auth">
+                @if (Raid.LocksAt > DateTimeOffset.UtcNow && !Raid.Kills.Any(kill => kill.Characters.Contains(Attendance.Character.Id)))
+                {
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnRemoveClickedAsync">Remove</MudButton>
+                }
+                @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
+                {
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="BeginEdit">Edit</MudButton>
+                }
+            </AuthorizeView>
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="() => Dialog.Cancel()">Close</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
 
 @code {
     private bool _editing;

@@ -213,7 +213,7 @@ namespace ValhallaLootList.Server.Discord
 
             var member = await GetMemberAsync(id);
 
-            if (member is not null && !member.Roles.Any(predicate))
+            if (member?.Roles.Any(predicate) == false)
             {
                 var guild = await GetGuildAsync();
                 var role = guild.Roles.Values.FirstOrDefault(predicate);

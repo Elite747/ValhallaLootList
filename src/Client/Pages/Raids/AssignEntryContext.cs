@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using MudBlazor;
 using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Raids
@@ -31,18 +30,17 @@ namespace ValhallaLootList.Client.Pages.Raids
                     }
                 }
 
-                (Color, Message) = entry.Status switch
+                Message = entry.Status switch
                 {
-                    LootListStatus.Editing => (Color.Error, "Loot List has not been submitted!"),
-                    LootListStatus.Submitted => (Color.Error, "Loot List has not been approved!"),
-                    LootListStatus.Approved => (Color.Error, "Loot List is not locked!"),
-                    LootListStatus.Locked => (Color.Success, string.Empty),
-                    _ => (Color.Error, "Unknown Loot List status!")
+                    LootListStatus.Editing => "Loot List has not been submitted!",
+                    LootListStatus.Submitted => "Loot List has not been approved!",
+                    LootListStatus.Approved => "Loot List is not locked!",
+                    LootListStatus.Locked => string.Empty,
+                    _ => "Unknown Loot List status!"
                 };
             }
             else
             {
-                Color = Color.Error;
                 Bonuses = Array.Empty<PriorityBonusDto>();
 
                 if (character.TeamId == raid.TeamId)
@@ -57,7 +55,6 @@ namespace ValhallaLootList.Client.Pages.Raids
 
             if (!kill.Characters.Contains(character.Id))
             {
-                Color = Color.Error;
                 Message = "Not present for this kill!";
                 Disabled = true;
             }
@@ -71,23 +68,10 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         public CharacterDto Character { get; }
 
-        public Color Color { get; private set; }
-
-        public string Message { get; private set; }
-
-        public string Icon => Color == Color.Success ? Icons.Material.Filled.CheckCircleOutline : Icons.Material.Filled.ErrorOutline;
+        public string Message { get; }
 
         public int? Rank { get; set; }
 
         public IList<PriorityBonusDto> Bonuses { get; }
-
-        public void SetTied()
-        {
-            if (!Disabled)
-            {
-                Color = Color.Secondary;
-                Message = "Tied Priority!";
-            }
-        }
     }
 }

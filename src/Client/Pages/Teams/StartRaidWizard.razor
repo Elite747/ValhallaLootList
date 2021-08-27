@@ -75,7 +75,7 @@
             </MudList>
         </WizardSection>
         <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
-            @if (State.Attendees.Count != Team.Roster.Count)
+            @if (Team.Roster.Any(m => !State.Attendees.ContainsKey(m.Character.Id)))
             {
                 <MudText Color="Color.Warning">
                     Absent: @string.Join(", ", Team.Roster.Where(m => !State.Attendees.ContainsKey(m.Character.Id)).Select(m => m.Character.Name))

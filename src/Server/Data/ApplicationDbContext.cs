@@ -237,7 +237,7 @@ namespace ValhallaLootList.Server.Data
                 e.Property(phase => phase.Id).ValueGeneratedNever();
                 e.HasData(
                     new PhaseDetails(id: 1, startsAt: default),
-                    new PhaseDetails(id: 2, startsAt: DateTimeOffset.Parse("8/31/2021 00:00:00 -04:00")) // TODO: Start date should be updated once a solid release date is set.
+                    new PhaseDetails(id: 2, startsAt: DateTimeOffset.Parse("8/27/2021 00:00:00 -04:00"))
                     );
             });
 

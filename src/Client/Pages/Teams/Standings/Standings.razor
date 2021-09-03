@@ -1,12 +1,9 @@
 ﻿@inject ApiClient Api
 @inject ISnackbar Snackbar
 
-<MudExpansionPanels Elevation="5">
+<MudExpansionPanels Elevation="5" Class="mt-3">
     <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
         <MudExpansionPanelHeader DisableGutters="true" IsExpanded="!GroupByEncounter">
-            <TitleContent>
-                <MudText Typo="Typo.h6">Standings</MudText>
-            </TitleContent>
             <ActionsContent>
                 <MudTooltip Text="@(GroupByEncounter ? "Ungroup Items" : "Group Items by Encounter")">
                     <MudToggleIconButton Toggled="GroupByEncounter"
@@ -14,22 +11,10 @@
                                          Icon="@CustomIcons.SetMerge"
                                          ToggledIcon="@CustomIcons.SetSplit" />
                 </MudTooltip>
-                @if (ShowExternalLink)
-                {
-                    <MudTooltip Text="Open standings in a new tab">
-                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                       Color="Color.Default"
-                                       Target="_blank"
-                                       Link="@GetLink()" />
-                    </MudTooltip>
-                }
                 <MudTooltip Text="@(_showWon ? "Hide Won Items" : "Show Won Items")">
                     <MudToggleIconButton @bind-Toggled="_showWon"
                                          Icon="@Icons.Material.Filled.RemoveRedEye"
                                          ToggledIcon="@CustomIcons.EyeOff" />
-                </MudTooltip>
-                <MudTooltip Text="Refresh">
-                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="RefreshAsync" />
                 </MudTooltip>
             </ActionsContent>
             <ChildContent>
@@ -98,7 +83,6 @@
         }
     }
 
-    [Parameter] public bool ShowExternalLink { get; set; }
     [Parameter] public string? SelectedEncounterId { get; set; }
     [Parameter] public EventCallback<string?> SelectedEncounterIdChanged { get; set; }
 
@@ -115,7 +99,7 @@
         return Task.CompletedTask;
     }
 
-    private Task RefreshAsync()
+    public Task RefreshAsync()
     {
         _teamOrPhaseChanged = false;
         return Api.LootLists.GetForTeam(Team.Id, Phase, includeApplicants: false)

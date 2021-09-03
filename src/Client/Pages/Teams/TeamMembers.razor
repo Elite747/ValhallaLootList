@@ -1,113 +1,64 @@
-﻿@using ValhallaLootList.Client.Pages.Teams.Graphs
-@inject ApiClient Api
+﻿@inject ApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudExpansionPanels Elevation="5" Dense="true">
-    <div class="mud-expand-panel mud-elevation-5 mud-expand-panel-border">
-        <div class="mud-expand-panel-text">
-            <div class="mud-card-header">
-                <div class="mud-card-header-content">
-                    <MudText Typo="Typo.h6">Roster (@Team.Roster.Count/25)</MudText>
-                </div>
-                <div class="mud-card-header-actions">
-                    <MudTooltip Text="@(_graphMode ? "Member View" : "Graph View")">
-                        <MudToggleIconButton Icon="@Icons.Material.Filled.PieChart"
-                                             ToggledIcon="@Icons.Material.Filled.ViewList"
-                                             @bind-Toggled="_graphMode" />
-                    </MudTooltip>
-                    <MudTooltip Text="Refresh">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="OnRefreshClicked" />
-                    </MudTooltip>
-                </div>
-            </div>
-        </div>
-    </div>
-    @if (_graphMode)
+<MudExpansionPanels Elevation="5" Dense="true" Class="mt-3">
+    @foreach (var m in Team.Roster.OrderByRoleThenClassThenName(_phase))
     {
-        <div class="mud-expand-panel mud-elevation-5 mud-expand-panel-border">
-            <MudTabs>
-                <MudTabPanel Text="Roles">
-                    <CompByRoleGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-                <MudTabPanel Text="Classes">
-                    <CompByClassGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-                <MudTabPanel Text="Damage Types">
-                    <CompByDamageTypeGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-                <MudTabPanel Text="Position">
-                    <CompByPositionGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-                <MudTabPanel Text="Armor Types">
-                    <CompByArmorGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-                <MudTabPanel Text="Tokens">
-                    <CompByTokenGraph Team="Team" Phase="_phase" />
-                </MudTabPanel>
-            </MudTabs>
-        </div>
-    }
-    else
-    {
-        foreach (var m in Team.Roster.OrderByRoleThenClassThenName(_phase))
-        {
-            var member = m;
-            var selected = member.Character.Id == _selectedMemberId;
-            var phaseLootList = member.LootLists.Find(ll => ll.Phase == _phase);
-            <MudExpansionPanelEx DenseHeader="true" IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null" @key="member.Character.Id">
-                <TitleContent>
-                    <div class="d-flex align-center">
-                        <PlayerIcon Race="member.Character.Race"
-                                    Gender="member.Character.Gender"
-                                    PlayerClass="member.Character.Class"
-                                    Spec="phaseLootList?.MainSpec ?? Specializations.None"
-                                    ShowTooltip="true"
-                                    Class="mr-5 mb-1" />
-                        <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
-                        @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
-                        {
-                            <MudTooltip>
-                                <TooltipContent>
-                                    @if (phaseLootList is null)
-                                    {
-                                        <p>No loot list for this phase!</p>
-                                    }
-                                    else if (phaseLootList.Approved == false)
-                                    {
-                                        <p>Loot list has not been approved yet!</p>
-                                    }
-                                    else if (phaseLootList.Status != LootListStatus.Locked)
-                                    {
-                                        <p>Loot list has not been locked yet!</p>
-                                    }
-                                    @if (!member.Character.Verified)
-                                    {
-                                        <p>Character ownership has not been verified!</p>
-                                        <p>Have an officer verify the owner of this character.</p>
-                                    }
-                                </TooltipContent>
-                                <ChildContent>
-                                    <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
-                                </ChildContent>
-                            </MudTooltip>
-                        }
-                        @if (member.Status != RaidMemberStatus.Member)
-                        {
-                            <MudText Inline="true" Color="Color.Warning">Trial (@(member.Status == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
-                        }
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MemberView Team="Team" Member="member" Phase="_phase" MemberUpdated="StateHasChanged" />
-                </ChildContent>
-            </MudExpansionPanelEx>
-        }
+        var member = m;
+        var selected = member.Character.Id == _selectedMemberId;
+        var phaseLootList = member.LootLists.Find(ll => ll.Phase == _phase);
+        <MudExpansionPanelEx DenseHeader="true" IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null" @key="member.Character.Id">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <PlayerIcon Race="member.Character.Race"
+                                Gender="member.Character.Gender"
+                                PlayerClass="member.Character.Class"
+                                Spec="phaseLootList?.MainSpec ?? Specializations.None"
+                                ShowTooltip="true"
+                                Class="mr-5 mb-1" />
+                    <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
+                    @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
+                    {
+                        <MudTooltip>
+                            <TooltipContent>
+                                @if (phaseLootList is null)
+                                {
+                                    <p>No loot list for this phase!</p>
+                                }
+                                else if (phaseLootList.Approved == false)
+                                {
+                                    <p>Loot list has not been approved yet!</p>
+                                }
+                                else if (phaseLootList.Status != LootListStatus.Locked)
+                                {
+                                    <p>Loot list has not been locked yet!</p>
+                                }
+                                @if (!member.Character.Verified)
+                                {
+                                    <p>Character ownership has not been verified!</p>
+                                    <p>Have an officer verify the owner of this character.</p>
+                                }
+                            </TooltipContent>
+                            <ChildContent>
+                                <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                            </ChildContent>
+                        </MudTooltip>
+                    }
+                    @if (member.Status != RaidMemberStatus.Member)
+                    {
+                        <MudText Inline="true" Color="Color.Warning">Trial (@(member.Status == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>
+                    }
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MemberView Team="Team" Member="member" Phase="_phase" MemberUpdated="StateHasChanged" />
+            </ChildContent>
+        </MudExpansionPanelEx>
     }
 </MudExpansionPanels>
 
 @code {
-    private bool _graphMode;
     private byte _phase;
     private long? _selectedMemberId;
 

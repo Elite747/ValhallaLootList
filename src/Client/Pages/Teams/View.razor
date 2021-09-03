@@ -1,5 +1,5 @@
 ﻿@page "/Teams/{teamName}"
-@page "/Teams/{teamName}/Phase/{Phase:int}"
+@page "/Teams/{teamName}/Phase/{Phase:int}/{Tab?}"
 @inject ApiClient Api
 @inject IDialogService DialogService
 @inject TeamsSource TeamsSource
@@ -7,21 +7,22 @@
 
 <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
     <ApiExecutor Operation="() => Api.Teams.Get(TeamName)" Context="team" @ref="_executor" BackgroundRefresh="true">
-        <div class="d-flex align-center mb-3">
-            <MudText Typo="Typo.h4" GutterBottom="false">@team.Name</MudText>
-            <AuthorizeView Policy="@AppPolicies.Administrator">
-                <MudTooltip Text="Edit" Class="ml-2">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
-                </MudTooltip>
-            </AuthorizeView>
-        </div>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <div class="d-flex align-center mb-3">
+                    <MudText Typo="Typo.h4" GutterBottom="false">@team.Name</MudText>
+                    <AuthorizeView Policy="@AppPolicies.Administrator">
+                        <MudTooltip Text="Edit" Class="ml-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />
+                        </MudTooltip>
+                    </AuthorizeView>
+                </div>
+                @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
+                {
+                    <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
+                }
+            </MudItem>
 
-        @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
-        {
-            <ScheduleDisplay Schedule="schedule" Typo="Typo.h6" ShowIcon="true" />
-        }
-
-        <MudGrid Class="mb-5">
             <MudItem xs="12" md="6">
                 <ApiExecutor Operation="Api.Instances.GetAll" Context="instances">
                     <Success>
@@ -29,7 +30,7 @@
                                    Value="GetDisplayPhase(phaseConfig)"
                                    ValueChanged="OnPhaseChanged"
                                    Label="Phase"
-                                   Variant="Variant.Filled"
+                                   Variant="Variant.Outlined"
                                    OffsetX="false"
                                    OffsetY="false"
                                    Dense="true"
@@ -60,42 +61,53 @@
                     </Failure>
                 </ApiExecutor>
             </MudItem>
-
-            <MudItem xs="12" Class="mb-5" />
-
-            <MudItem xs="12" md="6">
-                <div class="mb-5">
-                    <LeadersView Team="team" />
-                </div>
-                <TeamMembers Team="team"
-                             SelectedPhase="GetSelectedPhase()"
-                             CurrentPhase="phaseConfig.CurrentPhase"
-                             OnRefreshClicked="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-            </MudItem>
-
-            <MudItem xs="12" md="6">
-                <TeamRaids Team="team" />
-                <div class="mt-5">
-                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" ShowExternalLink="true" />
-                </div>
-            </MudItem>
-
-
-            <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
-                <MudItem xs="12">
-                    <Review Phase="GetDisplayPhase(phaseConfig)"
-                            Team="team"
-                            User="context.User"
-                            StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
-                            RosterChanged="StateHasChanged" />
-                </MudItem>
-            </AuthorizeView>
         </MudGrid>
+
+        <MudTabs Class="my-5" KeepPanelsAlive="false" Elevation="5" Rounded ActivePanelIndex="GetTabIndex()" ActivePanelIndexChanged="i => OnTabChanged(i, phaseConfig)">
+            <Header>
+                <MudTooltip Text="Refresh">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="OnRefreshClickedAsync" />
+                </MudTooltip>
+            </Header>
+            <ChildContent>
+                <MudTabPanel Text=@($"Roster ({team.Roster.Count}/25)")>
+                    <TeamMembers Team="team"
+                                 SelectedPhase="GetSelectedPhase()"
+                                 CurrentPhase="phaseConfig.CurrentPhase" />
+                </MudTabPanel>
+                <MudTabPanel Text="Leaders">
+                    <LeadersView Team="team" @ref="_leadersView" />
+                </MudTabPanel>
+                <MudTabPanel Text="Charts">
+                    <ChartsView Team="team" Phase="GetSelectedPhase() ?? phaseConfig.CurrentPhase" />
+                </MudTabPanel>
+                <MudTabPanel Text="Standings">
+                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" @ref="_standings" />
+                </MudTabPanel>
+                <MudTabPanel Text="Recent Raids">
+                    <TeamRaids Team="team" @ref="_teamRaids" />
+                </MudTabPanel>
+                <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
+                    <MudTabPanel Text="Loot List Review">
+                        <Review Phase="GetDisplayPhase(phaseConfig)"
+                                Team="team"
+                                User="context.User"
+                                StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
+                                RosterChanged="StateHasChanged"
+                                @ref="_review" />
+                    </MudTabPanel>
+                </AuthorizeView>
+            </ChildContent>
+        </MudTabs>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
+    private ValhallaLootList.Client.Pages.Teams.Standings.Standings? _standings;
     private IApiExecutor? _executor;
+    private TeamRaids? _teamRaids;
+    private Review? _review;
+    private LeadersView? _leadersView;
     private string? _teamName;
     private bool _teamChanged;
 
@@ -116,6 +128,9 @@
     [Parameter]
     public int? Phase { get; set; }
 
+    [Parameter]
+    public string? Tab { get; set; }
+
     protected override Task OnParametersSetAsync()
     {
         if (_teamChanged)
@@ -127,6 +142,52 @@
             }
         }
         return Task.CompletedTask;
+    }
+
+    private int GetTabIndex()
+    {
+        if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1;
+        }
+        if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+        if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
+        {
+            return 3;
+        }
+        if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
+        {
+            return 4;
+        }
+        if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
+        {
+            return 5;
+        }
+        return 0;
+    }
+
+    private string GetTabFromIndex(int index) => index switch
+    {
+        1 => "leaders",
+        2 => "charts",
+        3 => "standings",
+        4 => "raids",
+        5 => "review",
+        _ => "roster"
+    };
+
+    private void OnTabChanged(int index, PhaseConfigDto phaseConfig)
+    {
+        string tabName = GetTabFromIndex(index);
+
+        if (!string.Equals(tabName, Tab, StringComparison.OrdinalIgnoreCase))
+        {
+            Tab = tabName;
+            Nav.NavigateTo($"teams/{TeamName}/phase/{GetSelectedPhase() ?? phaseConfig.CurrentPhase}/{GetTabFromIndex(index)}");
+        }
     }
 
     private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
@@ -149,7 +210,31 @@
 
     private void OnPhaseChanged(byte phase)
     {
-        Nav.NavigateTo($"teams/{TeamName}/phase/{phase}");
+        Nav.NavigateTo($"teams/{TeamName}/phase/{phase}/{Tab}");
+    }
+
+    private async Task OnRefreshClickedAsync()
+    {
+        if (_executor is not null)
+        {
+            await _executor.RestartAsync();
+        }
+        if (_leadersView is not null)
+        {
+            await _leadersView.RefreshAsync();
+        }
+        if (_standings is not null)
+        {
+            await _standings.RefreshAsync();
+        }
+        if (_teamRaids is not null)
+        {
+            await _teamRaids.RefreshAsync();
+        }
+        if (_review is not null)
+        {
+            await _review.RefreshAsync();
+        }
     }
 
     private async Task EditAsync(TeamDto team)

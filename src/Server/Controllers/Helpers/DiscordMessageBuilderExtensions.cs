@@ -37,7 +37,7 @@ namespace ValhallaLootList.Server.Controllers
             List<(uint, string, string?)> drops)
         {
             var builder = new DiscordEmbedBuilder()
-                .WithColor(new DiscordColor("#388E3C"))
+                .WithColor(new DiscordColor("#8E24AA"))
                 .WithTitle($"{teamName} :skull_crossbones:{encounterName}:skull_crossbones:")
                 .WithUrl(request.Scheme + "://" + request.Host + url.Content($"~/raids/{raidId}"))
                 .WithDescription($"{teamName} killed {encounterName} on {killedAt:D} at {killedAt:t}")

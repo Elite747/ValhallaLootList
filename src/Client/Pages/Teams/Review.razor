@@ -1,19 +1,8 @@
 ﻿@inject ApiClient Api
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService 
-  
-<MudCard Elevation="5">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Phase @Phase Loot Lists</MudText> 
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <MudTooltip Text="Refresh">
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-            </MudTooltip>
-        </CardHeaderActions>
-    </MudCardHeader>
-    <MudDivider />
+ 
+<MudCard Elevation="5" Class="mt-3">
     <div class="d-flex">
         <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
             <ApiExecutor Operation="() => Api.Items.Get(Phase)" Context="items" @key="Phase">
@@ -65,6 +54,8 @@
         if (User is null) throw new ArgumentNullException(nameof(User));
         if (Team is null) throw new ArgumentNullException(nameof(Team));
     }
+
+    public Task RefreshAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 
     private Task OnStatusUpdatedAsync(LootListDto lootList, IList<LootListDto> lootLists)
     {

@@ -34,12 +34,6 @@ namespace ValhallaLootList.DataTransfer
         public long ThisMonthRequiredDonations { get; set; }
 
         public long NextMonthRequiredDonations { get; set; }
-
-        public int Attendance { get; set; }
-
-        public int AttendanceMax { get; set; }
-
-        public int AttendanceBonus { get; set; }
     }
 
     public class DonationSubmissionDto

@@ -3,69 +3,53 @@
 @inject ISnackbar Snackbar
 @inject PermissionManager Permissions
 
-<MudCard Elevation="5">
+<MudPaper Elevation="5" Class="mt-3">
     <ApiExecutor Operation="() => Api.Teams.GetLeaders(Team.Id)" Context="leaders" @ref="_executor" BackgroundRefresh="true">
-        <Success>
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leaders</MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <AuthorizeView Policy="@AppPolicies.Administrator">
-                        <MudTooltip Text="Add Leader">
-                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="() => AddLeaderAsync(leaders, context)" />
-                        </MudTooltip>
-                    </AuthorizeView>
-                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudList Dense="true">
-                @foreach (var leader in leaders)
-                {
-                    <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="leader.Id">
-                        <div class="d-flex align-center">
-                            <MudAvatar Class="mr-2">
-                                <GuildMemberAvatar Member="leader" Size="40" />
-                            </MudAvatar>
-                            <div class="mr-auto">
-                                <MudText Typo="Typo.h6" Inline="false">
-                                    <GuildMemberDisplay Member="leader" />
-                                </MudText>
-                                <div class="d-flex">
-                                    @if (leader.AppRoles.Contains(AppRoles.RaidLeader))
-                                    {
-                                        <MudChip Size="Size.Small" Label="true" Class="mr-2">Raid Leader</MudChip>
-                                    }
-                                    @if (leader.AppRoles.Contains(AppRoles.LootMaster))
-                                    {
-                                        <MudChip Size="Size.Small" Label="true" Class="mr-2">Loot Master</MudChip>
-                                    }
-                                    @if (leader.AppRoles.Contains(AppRoles.Recruiter))
-                                    {
-                                        <MudChip Size="Size.Small" Label="true" Class="mr-2">Recruiter</MudChip>
-                                    }
-                                </div>
+        <MudList Dense="true">
+            <AuthorizeView Policy="@AppPolicies.Administrator">
+                <MudListItem Class="mud-list-item-clickable mud-ripple"
+                             Icon="@Icons.Material.Filled.AddCircle"
+                             IconColor="Color.Success"
+                             Text="Add Leader"
+                             OnClick="() => AddLeaderAsync(leaders, context)" />
+            </AuthorizeView>
+            @foreach (var leader in leaders)
+            {
+                <MudListItem Class="mud-list-item-clickable" Style="cursor: auto" @key="leader.Id">
+                    <div class="d-flex align-center">
+                        <MudAvatar Class="mr-2">
+                            <GuildMemberAvatar Member="leader" Size="40" />
+                        </MudAvatar>
+                        <div class="mr-auto">
+                            <MudText Typo="Typo.h6" Inline="false">
+                                <GuildMemberDisplay Member="leader" />
+                            </MudText>
+                            <div class="d-flex">
+                                @if (leader.AppRoles.Contains(AppRoles.RaidLeader))
+                                {
+                                    <MudChip Size="Size.Small" Label="true" Class="mr-2">Raid Leader</MudChip>
+                                }
+                                @if (leader.AppRoles.Contains(AppRoles.LootMaster))
+                                {
+                                    <MudChip Size="Size.Small" Label="true" Class="mr-2">Loot Master</MudChip>
+                                }
+                                @if (leader.AppRoles.Contains(AppRoles.Recruiter))
+                                {
+                                    <MudChip Size="Size.Small" Label="true" Class="mr-2">Recruiter</MudChip>
+                                }
                             </div>
-                            <AuthorizeView Policy="@AppPolicies.Administrator">
-                                <MudTooltip Text="Remove">
-                                    <MudIconButton OnClick="() => RemoveLeaderAsync(leaders, leader, context)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
-                                </MudTooltip>
-                            </AuthorizeView>
                         </div>
-                    </MudListItem>
-                }
-            </MudList>
-        </Success>
-        <Running>
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leaders</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <LoadingIndicator />
-        </Running>
+                        <AuthorizeView Policy="@AppPolicies.Administrator">
+                            <MudTooltip Text="Remove">
+                                <MudIconButton OnClick="() => RemoveLeaderAsync(leaders, leader, context)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                            </MudTooltip>
+                        </AuthorizeView>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
     </ApiExecutor>
-</MudCard>
+</MudPaper>
 
 @code {
     private IApiExecutor? _executor;
@@ -85,6 +69,8 @@
             }
         }
     }
+
+    public Task RefreshAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 
     protected override Task OnParametersSetAsync()
     {

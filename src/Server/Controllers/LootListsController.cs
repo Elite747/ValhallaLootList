@@ -668,11 +668,6 @@ namespace ValhallaLootList.Server.Controllers
             {
                 _context.LootListTeamSubmissions.Remove(teamSubmission);
 
-                if (character.TeamId == team.Id)
-                {
-                    character.TeamId = null;
-                }
-
                 if (submissions.Count == 1)
                 {
                     if (list.Status != LootListStatus.Locked)

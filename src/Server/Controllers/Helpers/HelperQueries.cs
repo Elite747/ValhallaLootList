@@ -41,13 +41,6 @@ namespace ValhallaLootList.Server.Controllers
                         l.Status,
                         l.Phase
                     }).ToList(),
-
-                    Attendance = c.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId)
-                        .Select(x => x.Raid.StartedAt.Date)
-                        .Distinct()
-                        .OrderByDescending(x => x)
-                        .Take(scope.ObservedAttendances)
-                        .Count()
                 })
                 .AsSingleQuery()
                 .AsAsyncEnumerable())
@@ -68,9 +61,7 @@ namespace ValhallaLootList.Server.Controllers
                     JoinedAt = character.JoinedTeamAt,
                     Status = character.MemberStatus,
                     ThisMonthRequiredDonations = scope.RequiredDonationCopper,
-                    NextMonthRequiredDonations = scope.RequiredDonationCopper,
-                    Attendance = character.Attendance,
-                    AttendanceMax = scope.ObservedAttendances
+                    NextMonthRequiredDonations = scope.RequiredDonationCopper
                 };
 
                 foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))

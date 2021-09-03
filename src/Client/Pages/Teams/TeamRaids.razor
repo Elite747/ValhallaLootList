@@ -1,22 +1,13 @@
 ﻿@inject ApiClient Api
 @inject IDialogService DialogService
- 
-<MudCard Elevation="5">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Recent Raids</MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Team.Id">
-                <MudTooltip Text="Start New Raid">
-                    <MudIconButton Icon="@Icons.Material.Filled.AddCircle" Color="Color.Success" OnClick="StartRaid" />
-                </MudTooltip>
-            </AuthorizeView>
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
-        </CardHeaderActions>
-    </MudCardHeader>
+
+<MudCard Elevation="5" Class="mt-3">
     <ApiExecutor Operation="() => Api.Raids.GetRecentForTeam(Team.Id)" Context="raids" @ref="_executor">
         <MudList Clickable="true">
+            <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Team.Id">
+                <MudListItem Icon="@Icons.Material.Filled.AddCircle" IconColor="Color.Success" Text="Start New Raid" OnClick="StartRaid" />
+            </AuthorizeView>
+
             @foreach (var raid in raids.OrderByDescending(r => r.StartedAt))
             {
                 <MudListItem Href="@("raids/" + raid.Id)" @key="raid.Id">
@@ -41,4 +32,6 @@
     {
         DialogService.Show<StartRaidWizard>("Start Raid", parameters: new() { [nameof(StartRaidWizard.Team)] = Team });
     }
+
+    public Task RefreshAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 }

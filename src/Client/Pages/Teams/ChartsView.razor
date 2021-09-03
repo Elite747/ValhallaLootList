@@ -1,0 +1,86 @@
+﻿@using ValhallaLootList.Client.Pages.Teams.Graphs
+
+<MudGrid Spacing="3" Class="mt-3">
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Roles</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByRoleGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Classes</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByClassGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Damage Types</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByDamageTypeGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Position</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByPositionGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Armor Types</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByArmorGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Tokens</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <CompByTokenGraph Team="Team" Phase="Phase" />
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public byte Phase { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+    }
+}

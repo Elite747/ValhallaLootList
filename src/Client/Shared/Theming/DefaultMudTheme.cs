@@ -11,10 +11,10 @@ namespace ValhallaLootList.Client.Shared
         {
             Palette =
             {
-                Primary = Colors.Green.Darken2,
+                Primary = Colors.Purple.Darken1,
                 Secondary = Colors.Blue.Accent1,
                 Tertiary = Colors.Orange.Darken3,
-                AppbarBackground = Colors.Green.Darken2
+                AppbarBackground = Colors.Purple.Darken1
             }
         };
     }

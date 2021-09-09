@@ -1,0 +1,41 @@
+﻿@charset "utf-8";
+
+%borderBase {
+    border: 0 solid var(--mud-palette-table-lines);
+}
+
+.ev-cal {
+    &-month {
+        @extend %borderBase;
+        border-top-width: 1px;
+    }
+
+    &-week {
+        @extend %borderBase;
+        border-bottom-width: 1px;
+        border-right-width: 1px;
+    }
+
+    &-day {
+        @extend %borderBase;
+        border-left-width: 1px;
+        margin: 0;
+        box-sizing: border-box;
+        flex-grow: 0;
+        max-width: calc(100% / 7);
+        flex-basis: calc(100% / 7);
+        min-height: 8rem;
+
+        &.dow {
+            min-height: 1rem;
+        }
+
+        button {
+            width: 100% !important;
+            height: 100% !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            border-radius: 0 !important;
+        }
+    }
+}

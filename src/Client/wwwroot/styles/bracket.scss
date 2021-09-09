@@ -1,0 +1,29 @@
+﻿.bracket {
+    position: relative;
+
+    @mixin bracketpseudo {
+        content: "";
+        width: 5%;
+        top: -5px;
+        height: 100%;
+        border-color: var(--mud-palette-divider);
+        border-width: 5px;
+        border-style: solid;
+        position: absolute;
+        pointer-events: none;
+    }
+
+    &::before {
+        @include bracketpseudo;
+        border-right-width: 0;
+        border-radius: 10px 0 0 10px;
+        left: -5px;
+    }
+
+    &::after {
+        @include bracketpseudo;
+        border-left-width: 0;
+        border-radius: 0 10px 10px 0;
+        right: -5px;
+    }
+}

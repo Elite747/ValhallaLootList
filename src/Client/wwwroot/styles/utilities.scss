@@ -1,0 +1,16 @@
+﻿.text-bracket {
+    &::before {
+        content: "[";
+    }
+
+    &::after {
+        content: "]";
+    }
+}
+
+.fab-container-fixed {
+    bottom: 16px;
+    right: 16px;
+    position: fixed;
+    z-index: 100;
+}

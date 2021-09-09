@@ -1,0 +1,29 @@
+﻿@import "_variables.scss";
+
+:root {
+    @each $classname, $classcolor in $classcolors {
+        --classcolor-#{$classname}: #{$classcolor};
+    }
+
+    &[theme=dark] {
+        --mud-palette-black: #27272f;
+        --mud-palette-text-primary: rgba(255,255,255, 0.70);
+        --mud-palette-text-secondary: rgba(255,255,255, 0.50);
+        --mud-palette-text-disabled: rgba(255,255,255, 0.2);
+        --mud-palette-action-default: #adadb1;
+        --mud-palette-action-disabled: rgba(255,255,255, 0.26);
+        --mud-palette-action-disabled-background: rgba(255,255,255, 0.12);
+        --mud-palette-surface: #373740;
+        --mud-palette-background: #32333d;
+        --mud-palette-background-grey: #27272f;
+        --mud-palette-drawer-background: #27272f;
+        --mud-palette-drawer-text: rgba(255,255,255, 0.50);
+        --mud-palette-drawer-icon: rgba(255,255,255, 0.50);
+        --mud-palette-appbar-text: rgba(255,255,255, 0.70);
+        --mud-palette-lines-default: rgba(255,255,255, 0.12);
+        --mud-palette-lines-inputs: rgba(255,255,255, 0.3);
+        --mud-palette-table-lines: rgba(255,255,255, 0.12);
+        --mud-palette-divider: rgba(255,255,255, 0.12);
+        --mud-palette-divider-light: rgba(255,255,255, 0.06);
+    }
+}

@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Compiled static assets
+*.min.*
+
+# Node.js lock file
+package-lock.json
+
 # User-specific files
 *.rsuser
 *.suo

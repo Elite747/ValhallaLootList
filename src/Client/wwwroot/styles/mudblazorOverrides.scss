@@ -16,3 +16,15 @@
         overflow: auto;
     }
 }
+
+#blazor-error-ui {
+    color: black;
+
+    & > .reload {
+        color: black;
+    }
+
+    & > .dismiss {
+        color: black;
+    }
+}

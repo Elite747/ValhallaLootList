@@ -7,6 +7,7 @@
 
 <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
     <ApiExecutor Operation="() => Api.Teams.Get(TeamName)" Context="team" @ref="_executor" BackgroundRefresh="true">
+        <PageTitle Title="@GetTitle(team)" />
         <MudGrid>
             <MudItem xs="12" md="6">
                 <div class="d-flex align-center mb-3">
@@ -142,6 +143,43 @@
             }
         }
         return Task.CompletedTask;
+    }
+
+    private string GetTitle(TeamDto team)
+    {
+        if (Tab?.Length > 0)
+        {
+            string? tabName = null;
+            if (string.Equals(Tab, "roster", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Roster";
+            }
+            else if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Leaders";
+            }
+            else if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Charts";
+            }
+            else if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Standings";
+            }
+            else if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Raids";
+            }
+            else if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
+            {
+                tabName = "Review";
+            }
+            if (tabName?.Length > 0)
+            {
+                return $"{tabName} - {team.Name}";
+            }
+        }
+        return team.Name;
     }
 
     private int GetTabIndex()

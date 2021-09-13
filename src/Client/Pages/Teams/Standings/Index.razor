@@ -6,7 +6,8 @@
 @if (_phase > 0)
 {
     <ApiExecutor Operation="() => Api.Teams.Get(Team)" Context="team">
-        <Standings ShowExternalLink="false" Team="team" Phase="_phase" SelectedEncounterId="@Encounter" SelectedEncounterIdChanged="OnEncounterChanged" />
+        <PageTitle Title=@($"Standings - {team.Name}") />
+        <Standings Team="team" Phase="_phase" SelectedEncounterId="@Encounter" SelectedEncounterIdChanged="OnEncounterChanged" />
     </ApiExecutor>
 }
 else

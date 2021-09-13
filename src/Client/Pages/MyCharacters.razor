@@ -1,5 +1,7 @@
 ﻿@page "/me"
 
+<PageTitle Title="Me" />
+
 <AuthorizeView>
     <Authorized>
         <MudText Typo="Typo.h4">Hello, @context.User.GetDisplayName()</MudText>

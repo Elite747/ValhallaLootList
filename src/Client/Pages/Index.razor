@@ -1,6 +1,7 @@
-﻿@inject Data.Containers.AzureContainerProvider AzureContainerProvider
+﻿@page "/"
+@inject Data.Containers.AzureContainerProvider AzureContainerProvider
 
-@page "/"
+<PageTitle />
 
 <MudContainer Class="d-flex justify-center">
     <MudHidden Breakpoint="Breakpoint.LgAndUp" Invert="true">
@@ -8,7 +9,7 @@
             <MudCarousel ItemsSource="@progress" SelectedIndex="@progressIndex" ShowDelimiters="false" AutoCycleTime="@timespan" Style="height:600px;">
                 <ItemTemplate>
                     <img src=@context.progressUrl height="600" style="grid-area: 1 / 1 / 2 / 2; object-fit: cover; width: 100%" />
-                    <img src=@context.logoUrl height="150" style="position: absolute; bottom: 0; right: 0"/>
+                    <img src=@context.logoUrl height="150" style="position: absolute; bottom: 0; right: 0" />
                 </ItemTemplate>
             </MudCarousel>
         </MudPaper>
@@ -65,7 +66,8 @@
 </MudExpansionPanels>
 
 @code {
-    class Progress {
+    class Progress
+    {
         public string progressUrl;
         public string logoUrl;
 
@@ -79,7 +81,7 @@
     private static Random random = new Random();
     private TimeSpan timespan = TimeSpan.FromSeconds(60);
     private static IList<Progress> progress = new List<Progress>()
-    {
+{
         new Progress("Ragnaros", "Fenrir"),
         new Progress("Ragnaros", "Nidhogg"),
         new Progress("Ragnaros", "Sleipnir"),
@@ -110,7 +112,7 @@
     };
     private int progressIndex = random.Next(progress.Count);
     private static IList<Data.Containers.Blob> selfies = new List<Data.Containers.Blob>()
-    {
+{
         new Data.Containers.Blob("Placeholder", "https://valhallalootliststorage.blob.core.windows.net/selfies/Lirah.png")
     };
     private int selfieIndex = 0;

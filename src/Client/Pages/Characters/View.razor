@@ -6,6 +6,7 @@
 @inject NavigationManager Nav 
 
 <ApiExecutor Operation="() => Api.Characters.Get(CharacterName ?? string.Empty)" Context="character" @key="CharacterName">
+    <PageTitle Title="@character.Name" />
     <div class="d-flex align-center mb-3">
         <PlayerIcon Race="character.Race"
                     Gender="character.Gender"
@@ -49,7 +50,7 @@
 
     <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
         <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
-            @{ 
+            @{
                 byte currentPhase;
                 IEnumerable<byte> phases;
 

@@ -82,6 +82,9 @@ namespace ValhallaLootList.Client
             builder.Services.AddSingleton(_ => new RenderLocation { IsServer = false });
             builder.Services.AddSingleton<IThemeProvider, ThemeProvider>();
 
+            builder.Services.AddSingleton<TitleManager>();
+            builder.Services.Configure<TitleManagerOptions>(options => options.PrimaryTitle = "Valhalla Loot List");
+
             var host = builder.Build();
 
             await host.RunAsync();

@@ -1,0 +1,51 @@
+﻿.layout-container {
+    display: flex;
+
+    > .content {
+        flex-grow: 1;
+    }
+
+    &.horizontal {
+        flex-direction: row;
+
+        > .content {
+            min-width: 0;
+            overflow-x: auto;
+        }
+    }
+
+    &:not(.horizontal) {
+        flex-direction: column;
+
+        > .content {
+            min-height: 0;
+            overflow-y: auto;
+        }
+    }
+
+    &.content {
+        &.horizontal {
+            overflow-x: visible;
+        }
+
+        &:not(.horizontal) {
+            overflow-y: visible;
+        }
+    }
+
+    &.padded::before {
+        content: "-";
+        width: 24px;
+        height: 24px;
+        color: transparent;
+        background-color: transparent;
+    }
+
+    &.padded::after {
+        content: "-";
+        width: 24px;
+        height: 24px;
+        color: transparent;
+        background-color: transparent;
+    }
+}

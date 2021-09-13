@@ -26,3 +26,15 @@
 .w-100 {
     width: 100%;
 }
+
+ol.default, ul.default {
+    padding-inline-start: 40px;
+}
+
+ol.default {
+    list-style: decimal;
+}
+
+ul.default {
+    list-style: disc;
+}

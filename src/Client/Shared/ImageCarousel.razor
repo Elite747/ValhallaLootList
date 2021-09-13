@@ -1,0 +1,65 @@
+﻿@using Data.Containers;
+@inject AzureContainerProvider AzureContainerProvider
+
+@if (_loading || _blobs?.Count > 0)
+{
+    <MudPaper Class="image-carousel">
+        @if (_loading)
+        {
+            <div class="d-flex h-100">
+                <MudProgressCircular Indeterminate Class="ma-auto" Color="Color.Primary" />
+            </div>
+        }
+        else if (_blobs?.Count > 0)
+        {
+            <MudCarousel Class="h-100"
+                         ItemsSource="_blobs"
+                         SelectedIndex="@_index"
+                         ShowDelimiters="false"
+                         AutoCycleTime="TimeSpan.FromMinutes(1)">
+                <ItemTemplate>
+                    <img src="@context.Url" class="carousel-image" />
+                    @if (ShowLogo && context.TryGetLogoUrl(out var logoUrl))
+                    {
+                        <img src="@logoUrl" class="carousel-logo" />
+                    }
+                    @if (ShowTitle)
+                    {
+                        <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary" Class="carousel-text">@context.GetTitle()</MudText>
+                    }
+                </ItemTemplate>
+            </MudCarousel>
+        }
+    </MudPaper>
+}
+
+@code {
+    private int _index;
+    private bool _loading;
+    private List<Blob>? _blobs;
+
+    [Parameter] public string Container { get; set; } = string.Empty;
+    [Parameter] public bool ShowLogo { get; set; }
+    [Parameter] public bool ShowTitle { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Container)) throw new ArgumentNullException(nameof(Container));
+
+        try
+        {
+            _loading = true;
+            AzureContainerResponse result = await AzureContainerProvider.GetContainerAsync(Container);
+            _blobs = result?.Blobs;
+
+            if (_blobs?.Count > 0)
+            {
+                _index = new Random().Next(_blobs.Count);
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -24,21 +24,18 @@ namespace ValhallaLootList.Client.Data.Import
 
         public List<uint> Items { get; }
 
-        public static IEnumerable<ImportEncounter> CreateFromItems(IEnumerable<uint> items, IList<InstanceDto> instances, byte phase)
+        public static IEnumerable<ImportEncounter> CreateFromItems(IEnumerable<uint> items, IList<InstanceDto> instances)
         {
             var itemsHashSet = items.ToHashSet();
 
             foreach (var instance in instances)
             {
-                if (phase == instance.Phase)
+                foreach (var encounter in instance.Encounters)
                 {
-                    foreach (var encounter in instance.Encounters)
+                    if (encounter.Items.Any(itemsHashSet.Contains))
                     {
-                        if (encounter.Items.Any(itemsHashSet.Contains))
-                        {
-                            itemsHashSet.ExceptWith(encounter.Items);
-                            yield return new ImportEncounter(encounter, items.Where(encounter.Items.Contains));
-                        }
+                        itemsHashSet.ExceptWith(encounter.Items);
+                        yield return new ImportEncounter(encounter, items.Where(encounter.Items.Contains));
                     }
                 }
             }

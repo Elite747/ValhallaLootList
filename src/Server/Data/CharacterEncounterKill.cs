@@ -16,6 +16,8 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public string EncounterKillEncounterId { get; set; } = null!;
 
+        public byte EncounterKillTrashIndex { get; set; }
+
         [Required]
         public Character Character { get; set; } = null!;
 

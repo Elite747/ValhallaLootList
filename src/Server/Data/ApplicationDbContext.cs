@@ -103,7 +103,7 @@ namespace ValhallaLootList.Server.Data
             builder.Entity<CharacterEncounterKill>(e =>
             {
                 e.ToTable("CharacterEncounterKill");
-                e.HasKey(cek => new { cek.EncounterKillRaidId, cek.EncounterKillEncounterId, cek.CharacterId });
+                e.HasKey(cek => new { cek.EncounterKillRaidId, cek.EncounterKillEncounterId, cek.EncounterKillTrashIndex, cek.CharacterId });
                 e.HasOne(cek => cek.Character).WithMany(c => c.EncounterKills).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(cek => cek.EncounterKill).WithMany(ek => ek.Characters).OnDelete(DeleteBehavior.Cascade);
             });
@@ -146,7 +146,7 @@ namespace ValhallaLootList.Server.Data
 
             builder.Entity<EncounterKill>(e =>
             {
-                e.HasKey(kill => new { kill.EncounterId, kill.RaidId });
+                e.HasKey(kill => new { kill.EncounterId, kill.RaidId, kill.TrashIndex });
                 e.HasOne(ek => ek.Encounter).WithMany().OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(ek => ek.Raid).WithMany(r => r.Kills).OnDelete(DeleteBehavior.Cascade);
             });

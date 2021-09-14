@@ -11,7 +11,7 @@
             @foreach (var raid in raids.OrderByDescending(r => r.StartedAt))
             {
                 <MudListItem Href="@("raids/" + raid.Id)" @key="raid.Id">
-                    Phase @raid.Phase Raid (<DateTimeDisplay Date="raid.StartedAt" Format="D" />)
+                    <DateTimeDisplay Date="raid.StartedAt" Format="D" />
                 </MudListItem>
             }
         </MudList>
@@ -22,6 +22,7 @@
     private IApiExecutor? _executor;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public byte Phase { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -30,7 +31,7 @@
 
     private void StartRaid()
     {
-        DialogService.Show<StartRaidWizard>("Start Raid", parameters: new() { [nameof(StartRaidWizard.Team)] = Team });
+        DialogService.Show<StartRaidWizard>("Start Raid", parameters: new() { [nameof(StartRaidWizard.Team)] = Team, [nameof(StartRaidWizard.Phase)] = Phase });
     }
 
     public Task RefreshAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;

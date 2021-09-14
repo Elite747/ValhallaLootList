@@ -1,4 +1,4 @@
-﻿<CharacterChip Character="Member.Character" Spec="Spec" OnClick="ToggleSelected">
+﻿<CharacterChip Character="Member.Character" Spec="_spec" OnClick="ToggleSelected">
     <div class="d-flex align-center">
         @Member.Character.Name
         @if (IsSelected)
@@ -9,14 +9,22 @@
 </CharacterChip>
 
 @code {
+    private Specializations _spec = Specializations.None;
+
     [Parameter] public MemberDto Member { get; set; } = null!;
-    [Parameter] public Specializations Spec { get; set; }
+    [Parameter] public byte Phase { get; set; }
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public EventCallback<bool> IsSelectedChanged { get; set; }
 
     protected override void OnParametersSet()
     {
         if (Member is null) throw new ArgumentNullException(nameof(Member));
+
+        var lootList = Member.LootLists.Find(ll => ll.Phase == Phase) ??
+            Member.LootLists.Where(ll => ll.Status == LootListStatus.Locked).OrderByDescending(ll => ll.Phase).FirstOrDefault() ??
+            Member.LootLists.OrderByDescending(ll => ll.Phase).FirstOrDefault();
+
+        _spec = lootList?.MainSpec ?? Specializations.None;
     }
 
     private Task ToggleSelected()

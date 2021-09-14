@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210914202117_AddTrashIndex")]
+    partial class AddTrashIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -488,13 +490,13 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<string>("EncounterKillEncounterId")
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<byte>("EncounterKillTrashIndex")
-                        .HasColumnType("tinyint");
-
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "EncounterKillTrashIndex", "CharacterId");
+                    b.Property<byte>("EncounterKillTrashIndex")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "CharacterId");
 
                     b.HasIndex("CharacterId");
 

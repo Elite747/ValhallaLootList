@@ -2,23 +2,21 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudCard Elevation="3">
+<MudCard Elevation="3" Class="content layout-container ma-3">
     <MudCardHeader>
         <CardHeaderContent>
             <MudText Typo="Typo.h6">Attendees</MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudCardContent Class="py-0">
-        <div>
-            @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
+    <MudCardContent Class="py-0 content">
+        @foreach (var classGroup in Raid.Attendees.GroupBy(a => a.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
+            @foreach (var attendance in classGroup.OrderBy(a => a.Character.Name))
             {
-                <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
-                @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
-                {
-                    <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
-                }
+                <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
             }
-        </div>
+        }
     </MudCardContent>
     <MudCardActions>
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)

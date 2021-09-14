@@ -46,12 +46,12 @@
             {
                 <MudTooltip @key="raid.Id">
                     <TooltipContent>
-                        <p>Team @raid.TeamName phase @raid.Phase raid</p>
+                        <p>Team @raid.TeamName</p>
                         <p>Started at @TimeProvider.Convert(raid.StartedAt).ToString("t", CultureInfo.CurrentCulture)</p>
                     </TooltipContent>
                     <ChildContent>
                         <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" class="mx-1">
-                            <a href="raids/@raid.Id"><MudIcon Style="font-size: 1rem; margin-bottom: -0.15rem" Icon="@GetNumIcon(raid.Phase)" /> @raid.TeamName</a>
+                            <a href="raids/@raid.Id"><MudIcon Style="font-size: 1rem; margin-bottom: -0.15rem" Icon="@Icons.Material.Filled.CheckCircleOutline" /> @raid.TeamName</a>
                         </div>
                     </ChildContent>
                 </MudTooltip>
@@ -107,20 +107,6 @@
     private void OnDateChanged(DateTime date)
     {
         Nav.NavigateTo($"raids/{date.Year:D4}/{date.Month:D2}");
-    }
-
-    private string GetNumIcon(int phase)
-    {
-        return phase switch
-        {
-            1 => Icons.Material.Filled.LooksOne,
-            2 => Icons.Material.Filled.LooksTwo,
-            3 => Icons.Material.Filled.Looks3,
-            4 => Icons.Material.Filled.Looks4,
-            5 => Icons.Material.Filled.Looks5,
-            6 => Icons.Material.Filled.Looks6,
-            _ => string.Empty
-        };
     }
 
     public void Dispose()

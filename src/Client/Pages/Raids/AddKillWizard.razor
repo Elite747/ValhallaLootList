@@ -5,7 +5,7 @@
 @inject IDialogService DialogService
 
 <WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
-    <ApiView Operation="_instancesOperation">
+    <ApiView Operations="_apiOperations">
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
             <MudTextField T="string"
                           Value="_importString"
@@ -90,18 +90,21 @@
             }
         </WizardSection>
         <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
-            <MudList Clickable="true" Dense="true">
-                @foreach (var instance in _instancesOperation.GetResult().Where(i => i.Phase == Raid.Phase))
+            <MudList Clickable Dense>
+                @foreach (var instance in _instancesOperation.GetResult()
+                    .Where(i => _phaseConfigOperation.GetResult().Phases.Contains(i.Phase))
+                    .OrderByDescending(i => i.Phase)
+                    .ThenBy(i => i.Name))
                 {
                     <MudListSubheader @key="instance.Id">
                         @instance.Name
                     </MudListSubheader>
-                    @foreach (var e in instance.Encounters)
+                    @foreach (var encounter in instance.Encounters)
                     {
-                        var encounter = e;
                         <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
                                      OnClick="() => SetEncounter(encounter)"
                                      Text="@encounter.Name"
+                                     Disabled='!encounter.IsTrash && Raid.Kills.Any(k => k.EncounterId == encounter.Id)'
                                      @key="encounter.Id" />
                     }
                 }
@@ -124,7 +127,7 @@
                 @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
                 {
                     <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
-                    @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                    @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Name))
                     {
                         <KillerChip Attendance="attendance"
                                     Raid="Raid"
@@ -137,7 +140,6 @@
         <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
             @foreach (var itemId in _drops.Keys)
             {
-                var localItemId = itemId;
                 <div class="d-flex align-center py-1" @key="itemId">
                     <CascadingItemContext Id="itemId">
                         <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
@@ -148,16 +150,16 @@
                                 <ItemLink Colorize="true" Bracketize="true" />
                             </div>
                             <div class="d-flex align-center">
-                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Max(0, _drops[localItemId] - 1)"
-                                               Disabled="_drops[localItemId] <= 0"
+                                <MudIconButton OnClick="() => _drops[itemId] = Math.Max(0, _drops[itemId] - 1)"
+                                               Disabled="_drops[itemId] <= 0"
                                                Icon="@Icons.Material.Filled.RemoveCircle"
                                                Size="Size.Small"
                                                Color="Color.Error" />
 
-                                <MudText Typo="Typo.h6" Class="mx-2">@_drops[localItemId]</MudText>
+                                <MudText Typo="Typo.h6" Class="mx-2">@_drops[itemId]</MudText>
 
-                                <MudIconButton OnClick="() => _drops[localItemId] = Math.Min(3, _drops[localItemId] + 1)"
-                                               Disabled="_drops[localItemId] >= 3"
+                                <MudIconButton OnClick="() => _drops[itemId] = Math.Min(3, _drops[itemId] + 1)"
+                                               Disabled="_drops[itemId] >= 3"
                                                Icon="@Icons.Material.Filled.AddCircle"
                                                Size="Size.Small"
                                                Color="Color.Success" />
@@ -177,6 +179,8 @@
     private readonly List<ImportEncounter> _importEncounters = new();
     private readonly List<string> _importWarnings = new();
     private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
+    private IApiClientOperation<PhaseConfigDto> _phaseConfigOperation = null!;
+    private IApiClientOperation[] _apiOperations = null!;
     private string? _importString, _importError;
     private EncounterDto? _encounter;
 
@@ -185,6 +189,8 @@
     protected override void OnInitialized()
     {
         _instancesOperation = Api.Instances.GetAll();
+        _phaseConfigOperation = Api.GetPhaseConfiguration();
+        _apiOperations = new IApiClientOperation[] { _instancesOperation, _phaseConfigOperation };
     }
 
     protected override void OnParametersSet()
@@ -235,7 +241,7 @@
             {
                 if (model.Items?.Count > 0)
                 {
-                    _importEncounters.AddRange(ImportEncounter.CreateFromItems(model.Items, _instancesOperation.GetResult(), (byte)Raid.Phase));
+                    _importEncounters.AddRange(ImportEncounter.CreateFromItems(model.Items, _instancesOperation.GetResult()));
 
                     if (_importEncounters.Count == 1)
                     {

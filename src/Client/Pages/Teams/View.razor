@@ -80,13 +80,13 @@
                     <LeadersView Team="team" @ref="_leadersView" />
                 </MudTabPanel>
                 <MudTabPanel Text="Charts">
-                    <ChartsView Team="team" Phase="GetSelectedPhase() ?? phaseConfig.CurrentPhase" />
+                    <ChartsView Team="team" Phase="GetDisplayPhase(phaseConfig)" />
                 </MudTabPanel>
                 <MudTabPanel Text="Standings">
                     <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" @ref="_standings" />
                 </MudTabPanel>
                 <MudTabPanel Text="Recent Raids">
-                    <TeamRaids Team="team" @ref="_teamRaids" />
+                    <TeamRaids Team="team" Phase="GetDisplayPhase(phaseConfig)" @ref="_teamRaids" />
                 </MudTabPanel>
                 <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
                     <MudTabPanel Text="Loot List Review">

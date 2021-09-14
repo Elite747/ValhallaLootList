@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Shared;
@@ -16,12 +17,12 @@ namespace ValhallaLootList.Client.Pages.Raids
             if (Raid is null) throw new ArgumentNullException(nameof(Raid));
         }
 
-        private async Task DeleteAsync(string encounterId)
+        private async Task DeleteAsync(string encounterId, byte trashIndex)
         {
-            await Api.Raids.Delete(Raid.Id, encounterId)
+            await Api.Raids.Delete(Raid.Id, encounterId, trashIndex)
                 .OnSuccess(_ =>
                 {
-                    Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId);
+                    Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId && kill.TrashIndex == trashIndex);
                     StateHasChanged();
                 })
                 .SendErrorTo(Snackbar)
@@ -45,6 +46,17 @@ namespace ValhallaLootList.Client.Pages.Raids
                 return Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name ?? "Unknown";
             }
             return "nobody";
+        }
+
+        private IEnumerable<string> GetIneligible(EncounterKillDto kill)
+        {
+            foreach (var attendee in Raid.Attendees)
+            {
+                if (!kill.Characters.Contains(attendee.Character.Id))
+                {
+                    yield return attendee.Character.Name;
+                }
+            }
         }
 
         private async Task BeginAssignAsync(EncounterDropDto drop)

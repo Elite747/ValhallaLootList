@@ -8,7 +8,5 @@ namespace ValhallaLootList.Client.Data.Import
     public class ImportRaidStartModel
     {
         public List<ImportCharacter>? Characters { get; set; }
-
-        public string? InstanceId { get; set; }
     }
 }

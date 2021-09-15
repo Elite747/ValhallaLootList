@@ -2,29 +2,44 @@
 @inject ApiClient Api
 
 <ApiExecutor Operation="() => Api.Raids.Get(RaidId)" Context="raid" @ref="_executor" BackgroundRefresh="true">
-    <MudText Typo="Typo.h4" Inline="false">Team @raid.TeamName Raid</MudText>
-    <MudText Typo="Typo.h6" Inline="false">Phase @raid.Phase</MudText>
-    <MudText Typo="Typo.subtitle1" Inline="false"><DateTimeDisplay Date="raid.StartedAt" Format="f" /></MudText>
-    <AuthorizeView Resource="raid.TeamId" Policy="@AppPolicies.LootMaster">
-        @if (raid.LocksAt > DateTimeOffset.UtcNow)
-        {
-            <MudText Typo="Typo.subtitle1" Color="Color.Warning">
-                Locks <DateTimeDisplay Date="raid.LocksAt" Format="f" />
-            </MudText>
-        }
-        else
-        {
-            <MudText Typo="Typo.subtitle1" Color="Color.Error">Locked</MudText>
-        }
-    </AuthorizeView>
+    <div class="content layout-container">
+        <PageTitle Title=@($"Team {raid.TeamName} Raid - {raid.StartedAt:d}") />
+        <div class="d-flex align-center mb-3">
+            <MudText Typo="Typo.h4" GutterBottom="false">Team @raid.TeamName Raid</MudText>
+            <MudTooltip Text="Refresh" Class="ml-2">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
+            </MudTooltip>
+        </div>
+        <MudText Typo="Typo.subtitle1" Inline="false"><DateTimeDisplay Date="raid.StartedAt" Format="f" /></MudText>
+        <AuthorizeView Resource="raid.TeamId" Policy="@AppPolicies.LootMaster">
+            @if (raid.LocksAt > DateTimeOffset.UtcNow)
+            {
+                <MudText Typo="Typo.subtitle1" Color="Color.Warning">
+                    Locks <DateTimeDisplay Date="raid.LocksAt" Format="f" />
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Color="Color.Error">Locked</MudText>
+            }
+        </AuthorizeView>
 
-    <AttendeesView Raid="raid" />
-    <KillsView Raid="raid" />
-
-    <div class="fab-container-fixed">
-        <MudFabProgress Icon="@Icons.Material.Filled.Refresh"
-                        Color="Color.Primary"
-                        OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" />
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudGrid Spacing="0" Class="content flex-grow-1">
+                <MudItem xs="6" Class="layout-container h-100">
+                    <KillsView Raid="raid" @key=@("kills") />
+                </MudItem>
+                <MudItem xs="6" Class="layout-container h-100">
+                    <AttendeesView Raid="raid" @key=@("attendees") />
+                </MudItem>
+            </MudGrid>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <div class="content">
+                <AttendeesView Raid="raid" @key=@("attendees") />
+                <KillsView Raid="raid" @key=@("kills") />
+            </div>
+        </MudHidden>
     </div>
 </ApiExecutor>
 

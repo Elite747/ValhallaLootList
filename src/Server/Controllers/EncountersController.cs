@@ -47,6 +47,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     Id = e.Id,
                     Name = e.Name,
+                    IsTrash = e.Index < 0,
                     Items = e.Items.Where(item => item.RewardFromId == null).Select(item => item.Id).ToList()
                 })
                 .AsAsyncEnumerable());

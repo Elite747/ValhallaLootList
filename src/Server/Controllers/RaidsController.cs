@@ -141,10 +141,11 @@ namespace ValhallaLootList.Server.Controllers
                     KilledAt = k.KilledAt,
                     EncounterId = k.EncounterId,
                     EncounterName = k.Encounter.Name,
+                    TrashIndex = k.TrashIndex
                 })
                 .ToListAsync();
 
-            var killDictionary = dto.Kills.ToDictionary(k => k.EncounterId);
+            var killDictionary = dto.Kills.ToDictionary(k => (k.EncounterId, k.TrashIndex));
 
             await foreach (var kek in _context.CharacterEncounterKills
                 .AsNoTracking()
@@ -152,11 +153,12 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(kek => new
                 {
                     kek.EncounterKillEncounterId,
+                    kek.EncounterKillTrashIndex,
                     kek.CharacterId
                 })
                 .AsAsyncEnumerable())
             {
-                killDictionary[kek.EncounterKillEncounterId].Characters.Add(kek.CharacterId);
+                killDictionary[(kek.EncounterKillEncounterId, kek.EncounterKillTrashIndex)].Characters.Add(kek.CharacterId);
             }
 
             await foreach (var drop in _context.Drops
@@ -166,6 +168,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     d.Id,
                     d.EncounterKillEncounterId,
+                    d.EncounterKillTrashIndex,
                     d.AwardedAt,
                     AwardedBy = (long?)d.AwardedBy,
                     WinnerId = (long?)d.WinnerId,
@@ -175,7 +178,7 @@ namespace ValhallaLootList.Server.Controllers
                 .OrderBy(d => d.ItemName)
                 .AsAsyncEnumerable())
             {
-                killDictionary[drop.EncounterKillEncounterId].Drops.Add(new EncounterDropDto
+                killDictionary[(drop.EncounterKillEncounterId, drop.EncounterKillTrashIndex)].Drops.Add(new EncounterDropDto
                 {
                     Id = drop.Id,
                     AwardedAt = drop.AwardedAt,
@@ -619,15 +622,10 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
-            if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId) > 0)
-            {
-                return Problem("That boss already has a recorded kill for this raid.");
-            }
-
             var encounter = await _context.Encounters
                 .AsTracking()
                 .Where(e => e.Id == dto.EncounterId)
-                .Select(e => new { e.Id, e.Name, e.Instance.Phase })
+                .Select(e => new { e.Id, e.Name, e.Instance.Phase, e.Index })
                 .FirstOrDefaultAsync();
 
             if (encounter is null)
@@ -636,10 +634,15 @@ namespace ValhallaLootList.Server.Controllers
                 return ValidationProblem();
             }
 
-            if (encounter.Phase != raid.Phase)
+            var existingKillIndex = await _context.EncounterKills
+                .Where(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId)
+                .OrderByDescending(ek => ek.TrashIndex)
+                .Select(ek => (byte?)ek.TrashIndex)
+                .FirstOrDefaultAsync();
+
+            if (encounter.Index >= 0 && existingKillIndex.HasValue)
             {
-                ModelState.AddModelError(nameof(dto.EncounterId), "Encounter is not part of the same phase as the raid.");
-                return ValidationProblem();
+                return Problem("That boss already has a recorded kill for this raid.");
             }
 
             var kill = new EncounterKill
@@ -647,7 +650,8 @@ namespace ValhallaLootList.Server.Controllers
                 KilledAt = realmTimeZoneInfo.TimeZoneNow(),
                 EncounterId = encounter.Id,
                 Raid = raid,
-                RaidId = raid.Id
+                RaidId = raid.Id,
+                TrashIndex = existingKillIndex.HasValue ? (byte)(existingKillIndex.Value + 1) : default
             };
 
             var characters = await _context.Characters.AsTracking().Where(c => dto.Characters.Contains(c.Id)).ToListAsync();
@@ -669,7 +673,8 @@ namespace ValhallaLootList.Server.Controllers
                         CharacterId = character.Id,
                         EncounterKill = kill,
                         EncounterKillEncounterId = kill.EncounterId,
-                        EncounterKillRaidId = kill.RaidId
+                        EncounterKillRaidId = kill.RaidId,
+                        EncounterKillTrashIndex = kill.TrashIndex
                     });
                 }
             }
@@ -702,6 +707,7 @@ namespace ValhallaLootList.Server.Controllers
                         EncounterKill = kill,
                         EncounterKillEncounterId = kill.EncounterId,
                         EncounterKillRaidId = kill.RaidId,
+                        EncounterKillTrashIndex = kill.TrashIndex,
                         Item = item,
                         ItemId = item.Id
                     });
@@ -754,12 +760,13 @@ namespace ValhallaLootList.Server.Controllers
                     WinnerId = d.Winner?.Id
                 }).ToList(),
                 EncounterId = kill.EncounterId,
-                EncounterName = encounter.Name
+                EncounterName = encounter.Name,
+                TrashIndex = kill.TrashIndex
             };
         }
 
-        [HttpDelete("{id:long}/Kills/{encounterId}"), Authorize(AppPolicies.LootMaster)]
-        public async Task<ActionResult> DeleteKill(long id, string encounterId, [FromServices] DiscordClientProvider dcp)
+        [HttpDelete("{id:long}/Kills/{encounterId}/{trashIndex}"), Authorize(AppPolicies.LootMaster)]
+        public async Task<ActionResult> DeleteKill(long id, string encounterId, byte trashIndex, [FromServices] DiscordClientProvider dcp)
         {
             var raid = await _context.Raids.FindAsync(id);
 
@@ -780,14 +787,14 @@ namespace ValhallaLootList.Server.Controllers
                 return Problem("Can't alter a raid that has been active for more than 6 hours.");
             }
 
-            var kill = await _context.EncounterKills.FindAsync(encounterId, id);
+            var kill = await _context.EncounterKills.FindAsync(encounterId, id, trashIndex);
 
             if (kill is null)
             {
                 return NotFound();
             }
 
-            var drops = await _context.Drops.AsTracking().Where(drop => drop.EncounterKillEncounterId == encounterId && drop.EncounterKillRaidId == id).ToListAsync();
+            var drops = await _context.Drops.AsTracking().Where(drop => drop.EncounterKillEncounterId == encounterId && drop.EncounterKillRaidId == id && drop.EncounterKillTrashIndex == trashIndex).ToListAsync();
 
             if (drops.Any(d => d.WinnerId is not null))
             {

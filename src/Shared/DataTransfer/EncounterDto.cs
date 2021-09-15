@@ -13,6 +13,8 @@ namespace ValhallaLootList.DataTransfer
 
         public string Name { get; set; } = string.Empty;
 
+        public bool IsTrash { get; set; }
+
         public IList<uint> Items
         {
             get => _items ??= new List<uint>();

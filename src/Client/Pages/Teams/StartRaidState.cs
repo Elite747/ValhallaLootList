@@ -8,8 +8,6 @@ namespace ValhallaLootList.Client.Pages.Teams
 {
     public class StartRaidState
     {
-        public byte Phase { get; set; }
-
         public Dictionary<long, CharacterDto> Attendees { get; } = new();
     }
 }

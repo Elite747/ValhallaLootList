@@ -1,0 +1,344 @@
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudCard Elevation="5" Class="mt-3 layout-container content horizontal">
+    <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedModeItem is not null ? "d-none d-md-flex" : null)">
+        <MudList Dense Clickable Class="content" SelectedItem="_selectedModeItem" SelectedItemChanged="SelectMode">
+            <MudListItem Tag="_byBossTag">Items By Encounter</MudListItem>
+            @*<MudListItem Tag="_byItemGroupTag">Items By Item Group</MudListItem>*@ @*TODO: Items by group not working well with tokens.*@
+            <MudListItem Tag="_byCharacterTag">Items By Character</MudListItem>
+        </MudList>
+    </div>
+    <MudDivider Vertical FlexItem Class="d-none d-md-block" />
+    @if (_selectedModeItem?.Tag is not null)
+    {
+        <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedFilterItem is not null ? "d-none d-md-flex" : null)">
+            <MudIconButton OnClick="() => _selectedModeItem = null" Icon="@Icons.Material.Filled.ArrowBack" Class="d-md-none mr-auto" />
+            @if (_filtersLoading)
+            {
+                <MudProgressCircular Indeterminate Class="ma-auto" />
+            }
+            else if (_filterItems is not null)
+            {
+                <MudList Dense Clickable Class="content" SelectedItem="_selectedFilterItem" SelectedItemChanged="SelectFilter">
+                    @{  bool hasItems = false; }
+                    @foreach (var filter in _filterItems)
+                    {
+                        @if (filter.Header)
+                        {
+                            @if (hasItems)
+                            {
+                                <MudDivider />
+                            }
+                            <MudListSubheader>@filter.Text</MudListSubheader>
+                        }
+                        else
+                        {
+                            <MudListItem Tag="filter.Tag" @key="filter.Tag">@filter.Text</MudListItem>
+                        }
+                        hasItems = true;
+                    }
+                </MudList>
+            }
+        </div>
+        <MudDivider Vertical FlexItem Class="d-none d-md-block" />
+        @if (_selectedFilterItem?.Tag is not null)
+        {
+            <div class="content layout-container">
+                <MudIconButton OnClick="() => _selectedFilterItem = null" Icon="@Icons.Material.Filled.ArrowBack" Class="d-md-none mr-auto" />
+
+                @if (_lootListsLoading)
+                {
+                    <MudProgressCircular Indeterminate Class="ma-auto" />
+                }
+                else if (_viewItems is not null)
+                {
+                    <MudList Dense Class="content">
+                        @foreach (var itemId in _viewItems)
+                        {
+                            <MudListItem @key="itemId">
+                                <CascadingItemContext Id="itemId">
+                                    <ItemIcon />
+                                    <ItemLink Bracketize Colorize LinkEnabled />
+                                </CascadingItemContext>
+                                @if (_standings.TryGetValue(itemId, out var itemStandings))
+                                {
+                                    <table>
+                                        <tbody>
+                                            @foreach (var prioGroup in itemStandings.GroupBy(i => i.GetPriority()).OrderByDescending(g => g.Key))
+                                            {
+                                                <tr @key="(itemId, prioGroup.Key)">
+                                                    <td><span class="mr-3">@prioGroup.First().GetPriorityDisplay():</span></td>
+                                                    <td>
+                                                        <div class="d-flex flex-wrap align-center">
+                                                            @foreach (var itemStanding in prioGroup)
+                                                            {
+                                                                <MudTooltip>
+                                                                    <TooltipContent>
+                                                                        @if (itemStanding.Won)
+                                                                        {
+                                                                            <span>Won</span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div>
+                                                                                Rank @itemStanding.Rank
+                                                                            </div>
+                                                                            @foreach (var bonus in itemStanding.Bonuses)
+                                                                            {
+                                                                                <div>
+                                                                                    <PriorityBonusDisplay Bonus="bonus" />
+                                                                                </div>
+                                                                            }
+                                                                        }
+                                                                    </TooltipContent>
+                                                                    <ChildContent>
+                                                                        <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem.Tag as long?  ? "mud-success-text" : null)">
+                                                                            @itemStanding.CharacterName
+                                                                        </span>
+                                                                    </ChildContent>
+                                                                </MudTooltip>
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            </MudListItem>
+                            <MudDivider />
+                        }
+                    </MudList>
+                }
+            </div>
+        }
+    }
+</MudCard>
+
+@code {
+    private const int _byBossTag = 0, _byItemGroupTag = 1, _byCharacterTag = 2;
+    private readonly Dictionary<uint, List<ItemStanding>> _standings = new();
+
+    private readonly List<FilterItem> _encounterFilterItems = new(),
+        _characterFilterItems = new(),
+        _groupFilterItems = ItemGroup.All.Select(g => new FilterItem() { Tag = g, Text = g.Name }).ToList();
+
+    private List<FilterItem>? _filterItems;
+    private IList<uint>? _viewItems;
+
+    private readonly Dictionary<string, IList<uint>> _itemsByEncounter = new();
+    private readonly Dictionary<long, List<uint>> _itemsByCharacter = new();
+    private readonly Dictionary<ItemGroup, List<uint>> _itemsByGroup = new();
+
+    private IList<ItemDto>? _items;
+    private MudListItem? _selectedModeItem, _selectedFilterItem;
+    private bool _filtersLoading, _lootListsLoading, _teamOrPhaseChanged;
+    private byte _phase;
+    private TeamDto _team = null!;
+
+    [Parameter] public TeamDto Team
+    {
+        get => _team;
+        set
+        {
+            if (_team != value)
+            {
+                _team = value;
+                _teamOrPhaseChanged = true;
+            }
+        }
+    }
+
+    [Parameter] public byte Phase
+    {
+        get => _phase;
+        set
+        {
+            if (_phase != value)
+            {
+                _phase = value;
+                _teamOrPhaseChanged = true;
+            }
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        _teamOrPhaseChanged = false;
+        _items = null;
+        _encounterFilterItems.Clear();
+        _characterFilterItems.Clear();
+        _itemsByEncounter.Clear();
+        _itemsByCharacter.Clear();
+        _itemsByGroup.Clear();
+        _filtersLoading = true;
+        _lootListsLoading = true;
+
+        foreach (var itemStandings in _standings.Values)
+        {
+            itemStandings.Clear();
+        }
+
+        await Api.Items.Get(Phase).OnSuccess(ConfigureItems).SendErrorTo(Snackbar).ExecuteAsync();
+        await Api.Instances.GetAll().OnSuccess(ConfigureInstances).SendErrorTo(Snackbar).ExecuteAsync();
+        _filtersLoading = false;
+
+        await Api.LootLists.GetForTeam(Team.Id, Phase, includeApplicants: false).OnSuccess(ConfigureLootLists).SendErrorTo(Snackbar).ExecuteAsync();
+        _lootListsLoading = false;
+
+        SelectMode(_selectedModeItem);
+        SelectFilter(_selectedFilterItem);
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+
+        if (_teamOrPhaseChanged)
+        {
+            return RefreshAsync();
+        }
+        return Task.CompletedTask;
+    }
+
+    private void ConfigureItems(IList<ItemDto> items)
+    {
+        _items = items;
+        foreach (var itemsByGroup in items.Where(item => item.RewardFromId is null).GroupBy(item => new ItemGroup(item.Type, item.Slot)))
+        {
+            _itemsByGroup[itemsByGroup.Key] = itemsByGroup.Select(item => item.Id).ToList();
+        }
+        StateHasChanged();
+    }
+
+    private void ConfigureInstances(IList<InstanceDto> instances)
+    {
+        foreach (var instance in instances.Where(i => i.Phase == Phase))
+        {
+            _encounterFilterItems.Add(new()
+            {
+                Header = true,
+                Tag = null,
+                Text = instance.Name ?? string.Empty
+            });
+
+            foreach (var encounter in instance.Encounters)
+            {
+                _itemsByEncounter[encounter.Id] = encounter.Items;
+                _encounterFilterItems.Add(new()
+                {
+                    Header = false,
+                    Tag = encounter.Id,
+                    Text = encounter.Name
+                });
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ConfigureLootLists(IList<LootListDto> lootLists)
+    {
+        _lootListsLoading = false;
+
+        foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName))
+        {
+            _characterFilterItems.Add(new()
+            {
+                Tag = lootList.CharacterId,
+                Text = lootList.CharacterName
+            });
+            List<uint> characterItems = _itemsByCharacter[lootList.CharacterId] = new();
+            foreach (var entry in lootList.Entries)
+            {
+                if (entry.ItemId.HasValue)
+                {
+                    var sourceItemId = _items?.FirstOrDefault(item => item.Id == entry.ItemId.Value)?.RewardFromId ?? entry.ItemId.Value;
+                    if (!characterItems.Contains(sourceItemId))
+                    {
+                        characterItems.Add(sourceItemId);
+                    }
+                    if (!_standings.TryGetValue(sourceItemId, out var itemStandings))
+                    {
+                        _standings[sourceItemId] = itemStandings = new();
+                    }
+
+                    itemStandings.Add(new()
+                    {
+                        Bonuses = lootList.Bonuses.Concat(entry.Bonuses).ToList(),
+                        CharacterId = lootList.CharacterId,
+                        CharacterName = lootList.CharacterName,
+                        ItemId = sourceItemId,
+                        Rank = entry.Rank,
+                        Won = entry.Won
+                    });
+                }
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void SelectMode(MudListItem? selectedModeItem)
+    {
+        _selectedModeItem = selectedModeItem;
+        _viewItems = null;
+
+        _filterItems = selectedModeItem?.Tag switch
+        {
+            _byBossTag => _encounterFilterItems,
+            _byCharacterTag => _characterFilterItems,
+            _byItemGroupTag => _groupFilterItems,
+            _ => null
+        };
+    }
+
+    private void SelectFilter(MudListItem? selectedFilterItem)
+    {
+        _selectedFilterItem = selectedFilterItem;
+        _viewItems = selectedFilterItem?.Tag switch
+        {
+            string encounterId when _selectedModeItem?.Tag is _byBossTag => _itemsByEncounter.GetValueOrDefault(encounterId),
+            ItemGroup itemGroup when _selectedModeItem?.Tag is _byItemGroupTag => _itemsByGroup.GetValueOrDefault(itemGroup),
+            long characterId when _selectedModeItem?.Tag is _byCharacterTag => _itemsByCharacter.GetValueOrDefault(characterId),
+            _ => null
+        };
+    }
+
+    private readonly struct FilterItem
+    {
+        public object? Tag { get; init; }
+        public string Text { get; init; }
+        public bool Header { get; init; }
+    }
+
+    private class ItemStanding
+    {
+        public uint ItemId { get; init; }
+        public long CharacterId { get; init; }
+        public string CharacterName { get; init; } = string.Empty;
+        public bool Won { get; init; }
+        public int Rank { get; init; }
+        public IEnumerable<PriorityBonusDto> Bonuses { get; init; } = Array.Empty<PriorityBonusDto>();
+
+        public string GetPriorityDisplay()
+        {
+            if (Won)
+            {
+                return "Won";
+            }
+            else
+            {
+                return GetPriority().ToString();
+            }
+        }
+
+        public int GetPriority()
+        {
+            if (Won)
+            {
+                return int.MinValue;
+            }
+            return Rank + Bonuses.Sum(b => b.Value);
+        }
+    }
+}

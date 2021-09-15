@@ -1,0 +1,40 @@
+﻿.text-bracket {
+    &::before {
+        content: "[";
+    }
+
+    &::after {
+        content: "]";
+    }
+}
+
+.fab-container-fixed {
+    bottom: 16px;
+    right: 16px;
+    position: fixed;
+    z-index: 100;
+}
+
+.scrollable {
+    overflow-y: auto;
+}
+
+.h-100 {
+    height: 100%;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+ol.default, ul.default {
+    padding-inline-start: 40px;
+}
+
+ol.default {
+    list-style: decimal;
+}
+
+ul.default {
+    list-style: disc;
+}

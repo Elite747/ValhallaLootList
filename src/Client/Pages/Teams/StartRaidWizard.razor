@@ -5,7 +5,7 @@
 @inject IDialogService DialogService
 
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
-    <ApiView Operations="new IApiClientOperation[] { _phaseConfigOperation, _instancesOperation, _charactersOperation }">
+    <ApiView Operations="new IApiClientOperation[] { _instancesOperation, _charactersOperation }">
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
             <MudTextField T="string"
                           Value="_importString"
@@ -59,21 +59,6 @@
                 </MudList>
             }
         </WizardSection>
-        <WizardSection Name="Select Phase" CanContinue="() => _phaseConfigOperation.GetResult().Phases.Contains(State.Phase)">
-            <MudList Clickable="true" Dense="true">
-                @{
-                    var phaseConfig = _phaseConfigOperation.GetResult();
-                }
-                @foreach (var phase in phaseConfig.Phases)
-                {
-                    <MudListItem Icon="@(phase == State.Phase ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                 Disabled="phase > phaseConfig.CurrentPhase"
-                                 OnClick="() => State.Phase = phase">
-                        Phase @phase (@string.Join(", ", _instancesOperation.GetResult().Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name)))
-                    </MudListItem>
-                }
-            </MudList>
-        </WizardSection>
         <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
             @if (Team.Roster.Any(m => !State.Attendees.ContainsKey(m.Character.Id)))
             {
@@ -82,13 +67,14 @@
                 </MudText>
             }
             <div>
-                @foreach (var roleGroup in Team.Roster.GroupBy(a => (a.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec).GetValueOrDefault().GetRole()).OrderBy(g => g.Key))
+                @foreach (var classGroup in Team.Roster.GroupBy(m => m.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
                 {
-                    <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
-                    @foreach (var member in roleGroup.OrderBy(a => a.Character.Class.GetLowercaseName()).ThenBy(a => a.Character.Name))
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
+
+                    @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
                     {
                         <MemberChip Member="member"
-                                    Spec="member.LootLists.Find(ll => ll.Phase == State.Phase)?.MainSpec ?? Specializations.None"
+                                    Phase="Phase"
                                     IsSelected="State.Attendees.ContainsKey(member.Character.Id)"
                                     IsSelectedChanged="selected => SetAttending(member.Character, selected)" />
                     }
@@ -100,8 +86,8 @@
                 @foreach (var character in State.Attendees.Values.Where(c => c.TeamId != Team.Id).OrderBy(c => c.Name))
                 {
                     <CharacterChip Character="character"
-                                    Closeable="true"
-                                    OnClose="() => SetAttending(character, false)" />
+                                   Closeable="true"
+                                   OnClose="() => SetAttending(character, false)" />
                 }
                 <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
                                 Color="Color.Success"
@@ -113,7 +99,6 @@
 </WizardDialog>
 
 @code {
-    private IApiClientOperation<PhaseConfigDto> _phaseConfigOperation = null!;
     private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
     private IApiClientOperation<IList<CharacterDto>> _charactersOperation = null!;
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
@@ -121,11 +106,11 @@
     private string? _importString, _importError;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public byte Phase { get; set; }
     private StartRaidState State { get; } = new();
 
     protected override void OnInitialized()
     {
-        _phaseConfigOperation = Api.GetPhaseConfiguration();
         _instancesOperation = Api.Instances.GetAll();
         _charactersOperation = Api.Characters.GetActive();
         ResetState();
@@ -139,7 +124,6 @@
     private void ResetState()
     {
         State.Attendees.Clear();
-        State.Phase = 0;
         foreach (var attendee in Team.Roster)
         {
             State.Attendees[attendee.Character.Id] = attendee.Character;
@@ -170,18 +154,6 @@
             }
             if (model is not null)
             {
-                if (model.InstanceId?.Length > 0)
-                {
-                    var instance = _instancesOperation.GetResult().FirstOrDefault(i => i.Id == model.InstanceId);
-                    if (instance is null)
-                    {
-                        _importError = $"Instance with Id {model.InstanceId} does not exist.";
-                        return;
-                    }
-
-                    State.Phase = instance.Phase;
-                }
-
                 if (model.Characters?.Count > 0)
                 {
                     var allCharacters = _charactersOperation.GetResult();
@@ -277,7 +249,7 @@
         var dto = new RaidSubmissionDto
         {
             Attendees = State.Attendees.Values.Select(a => a.Id).ToList(),
-            Phase = State.Phase,
+            Phase = Phase,
             TeamId = Team.Id
         };
         return Api.Raids.Create(dto)

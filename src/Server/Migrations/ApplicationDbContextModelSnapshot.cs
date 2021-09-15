@@ -16,7 +16,7 @@ namespace ValhallaLootList.Server.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.9")
+                .HasAnnotation("ProductVersion", "5.0.10")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
@@ -488,14 +488,17 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<string>("EncounterKillEncounterId")
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<byte>("EncounterKillTrashIndex")
+                        .HasColumnType("tinyint");
+
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "CharacterId");
+                    b.HasKey("EncounterKillRaidId", "EncounterKillEncounterId", "EncounterKillTrashIndex", "CharacterId");
 
                     b.HasIndex("CharacterId");
 
-                    b.HasIndex("EncounterKillEncounterId", "EncounterKillRaidId");
+                    b.HasIndex("EncounterKillEncounterId", "EncounterKillRaidId", "EncounterKillTrashIndex");
 
                     b.ToTable("CharacterEncounterKill");
                 });
@@ -578,6 +581,9 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("EncounterKillRaidId")
                         .HasColumnType("bigint");
 
+                    b.Property<byte>("EncounterKillTrashIndex")
+                        .HasColumnType("tinyint");
+
                     b.Property<long>("ItemId")
                         .HasColumnType("bigint");
 
@@ -590,7 +596,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasIndex("WinnerId");
 
-                    b.HasIndex("EncounterKillEncounterId", "EncounterKillRaidId");
+                    b.HasIndex("EncounterKillEncounterId", "EncounterKillRaidId", "EncounterKillTrashIndex");
 
                     b.ToTable("Drops");
                 });
@@ -659,13 +665,16 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("RaidId")
                         .HasColumnType("bigint");
 
+                    b.Property<byte>("TrashIndex")
+                        .HasColumnType("tinyint");
+
                     b.Property<long>("DiscordMessageId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("KilledAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("EncounterId", "RaidId");
+                    b.HasKey("EncounterId", "RaidId", "TrashIndex");
 
                     b.HasIndex("RaidId");
 
@@ -1202,7 +1211,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasOne("ValhallaLootList.Server.Data.EncounterKill", "EncounterKill")
                         .WithMany("Characters")
-                        .HasForeignKey("EncounterKillEncounterId", "EncounterKillRaidId")
+                        .HasForeignKey("EncounterKillEncounterId", "EncounterKillRaidId", "EncounterKillTrashIndex")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1255,7 +1264,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasOne("ValhallaLootList.Server.Data.EncounterKill", "EncounterKill")
                         .WithMany("Drops")
-                        .HasForeignKey("EncounterKillEncounterId", "EncounterKillRaidId")
+                        .HasForeignKey("EncounterKillEncounterId", "EncounterKillRaidId", "EncounterKillTrashIndex")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

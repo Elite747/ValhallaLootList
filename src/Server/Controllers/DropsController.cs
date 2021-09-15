@@ -95,7 +95,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var presentTeamRaiders = await _context.CharacterEncounterKills
                 .AsTracking()
-                .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId)
+                .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId && cek.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
                 .Select(c => new
                 {
                     Id = c.CharacterId,
@@ -221,7 +221,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var kill = await _context.EncounterKills
                 .AsNoTracking()
-                .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId)
+                .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId && kill.TrashIndex == drop.EncounterKillTrashIndex)
                 .Select(kill => new { kill.DiscordMessageId, kill.KilledAt, kill.RaidId, TeamName = kill.Raid.RaidTeam.Name, EncounterName = kill.Encounter.Name })
                 .FirstOrDefaultAsync();
 
@@ -229,7 +229,7 @@ namespace ValhallaLootList.Server.Controllers
 
             await foreach (var d in _context.Drops
                 .AsNoTracking()
-                .Where(d => d.EncounterKillEncounterId == drop.EncounterKillEncounterId && d.EncounterKillRaidId == drop.EncounterKillRaidId)
+                .Where(d => d.EncounterKillEncounterId == drop.EncounterKillEncounterId && d.EncounterKillRaidId == drop.EncounterKillRaidId && d.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
                 .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name })
                 .AsAsyncEnumerable())
             {

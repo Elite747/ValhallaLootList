@@ -1,40 +1,21 @@
-﻿@inject Data.Containers.AzureContainerProvider AzureContainerProvider
+﻿@page "/"
 
-@page "/"
+<PageTitle />
 
-<MudContainer Class="d-flex justify-center">
-    <MudHidden Breakpoint="Breakpoint.LgAndUp" Invert="true">
-        <MudPaper Class="ma-1 pa-1" Width="75%">
-            <MudCarousel ItemsSource="@progress" SelectedIndex="@progressIndex" ShowDelimiters="false" AutoCycleTime="@timespan" Style="height:600px;">
-                <ItemTemplate>
-                    <img src=@context.progressUrl height="600" style="grid-area: 1 / 1 / 2 / 2; object-fit: cover; width: 100%" />
-                    <img src=@context.logoUrl height="150" style="position: absolute; bottom: 0; right: 0"/>
-                </ItemTemplate>
-            </MudCarousel>
-        </MudPaper>
-    </MudHidden>
-    <MudHidden Breakpoint="Breakpoint.LgAndUp" Invert="true">
-        <MudPaper Class="ma-1 pa-1" Width="25%">
-            <MudCarousel ItemsSource="@selfies" SelectedIndex="@selfieIndex" ShowDelimiters="false" AutoCycleTime="@timespan" Style="height:600px;">
-                <ItemTemplate>
-                    <img src=@context.Url height="600" style="grid-area: 1 / 1 / 2 / 2; object-fit: cover; width: 100%" />
-                    <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary" Style="position: absolute; top: 0; left: 0; right: 0; text-shadow: 0px 3px 3px #000000;">@context.Simple</MudText>
-                </ItemTemplate>
-            </MudCarousel>
-        </MudPaper>
-    </MudHidden>
-    <MudHidden Breakpoint="Breakpoint.Md" Invert="true">
-        <MudPaper Class="ma-1 pa-1" Width="100%">
-            <MudCarousel ItemsSource="@progress" SelectedIndex="@progressIndex" ShowDelimiters="false" AutoCycleTime="@timespan" Style="height:600px;">
-                <ItemTemplate>
-                    <img src=@context.progressUrl height="600" style="grid-area: 1 / 1 / 2 / 2; object-fit: cover; width: 100%" />
-                    <img src=@context.logoUrl height="150" style="position: absolute; bottom: 0; right: 0" />
-                </ItemTemplate>
-            </MudCarousel>
-        </MudPaper>
-    </MudHidden>
-</MudContainer>
-<MudDivider Class="ma-4" />
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+    <MudGrid Spacing="3">
+        <MudItem xs="12" lg="9">
+            <ImageCarousel ShowLogo Container="progress" />
+        </MudItem>
+        <MudHidden Breakpoint="Breakpoint.MdAndDown">
+            <MudItem xs="3" Class="d-none d-lg-block">
+                <ImageCarousel ShowTitle Container="selfies" />
+            </MudItem>
+        </MudHidden>
+    </MudGrid>
+    <MudDivider Class="ma-4" />
+</MudHidden>
+
 <MudText Typo="Typo.h5" Color="Color.Primary">Our Motto</MudText>
 <MudText Typo="Typo.body1">Valhalla aims to create a friendly and fair environment that strives to support players in their PVE endeavors while maintaining a steady progression path.</MudText>
 <MudDivider Class="ma-4" />
@@ -63,68 +44,3 @@
         </ChildContent>
     </MudExpansionPanel>
 </MudExpansionPanels>
-
-@code {
-    class Progress {
-        public string progressUrl;
-        public string logoUrl;
-
-        public Progress(string boss, string team)
-        {
-            this.progressUrl = "https://valhallalootliststorage.blob.core.windows.net/progress/" + boss + "-" + team + ".png";
-            this.logoUrl = "https://valhallalootliststorage.blob.core.windows.net/logos/" + team + "AlphaCropped.png";
-        }
-    }
-
-    private static Random random = new Random();
-    private TimeSpan timespan = TimeSpan.FromSeconds(60);
-    private static IList<Progress> progress = new List<Progress>()
-    {
-        new Progress("Ragnaros", "Fenrir"),
-        new Progress("Ragnaros", "Nidhogg"),
-        new Progress("Ragnaros", "Sleipnir"),
-        new Progress("Ragnaros", "Jormungand"),
-        new Progress("Ragnaros", "Valkyrie"),
-        new Progress("Onyxia", "Fenrir"),
-        new Progress("Onyxia", "Nidhogg"),
-        new Progress("Onyxia", "Sleipnir"),
-        new Progress("Onyxia", "Jormungand"),
-        new Progress("Onyxia", "Valkyrie"),
-        new Progress("Nefarian", "Fenrir"),
-        new Progress("Nefarian", "Nidhogg"),
-        new Progress("Nefarian", "Sleipnir"),
-        new Progress("Nefarian", "Jormungand"),
-        new Progress("Nefarian", "Valkyrie"),
-        new Progress("C'thun", "Fenrir"),
-        new Progress("C'thun", "Nidhogg"),
-        new Progress("C'thun", "Sleipnir"),
-        new Progress("C'thun", "Jormungand"),
-        new Progress("C'thun", "Valkyrie"),
-        new Progress("Kel'Thuzad", "Nidhogg"),
-        new Progress("Kel'Thuzad", "Sleipnir"),
-        new Progress("Kel'Thuzad", "Jormungand"),
-
-        new Progress("Vanilla1", "Vanilla"),
-        new Progress("Vanilla2", "Vanilla"),
-        new Progress("Vanilla3", "Vanilla")
-    };
-    private int progressIndex = random.Next(progress.Count);
-    private static IList<Data.Containers.Blob> selfies = new List<Data.Containers.Blob>()
-    {
-        new Data.Containers.Blob("Placeholder", "https://valhallalootliststorage.blob.core.windows.net/selfies/Lirah.png")
-    };
-    private int selfieIndex = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-        Data.Containers.AzureContainerResponse result = await AzureContainerProvider.GetContainerAsync("selfies");
-        selfies.Clear();
-        foreach (Data.Containers.Blob blob in result.Blobs)
-        {
-            selfies.Add(blob);
-        }
-        StateHasChanged();
-        selfieIndex = random.Next(selfies.Count);
-        StateHasChanged();
-    }
-}

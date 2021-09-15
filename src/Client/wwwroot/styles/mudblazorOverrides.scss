@@ -1,0 +1,34 @@
+﻿.mud-dialog {
+    overflow: hidden;
+    max-height: calc(100% - 2rem);
+
+    > :not(.mud-dialog-title) {
+        display: flex;
+        flex-direction: column;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    &-content {
+        display: flex;
+        flex-direction: column;
+        max-height: 100%;
+        overflow: auto;
+    }
+}
+
+.mud-layout {
+    height: 100vh;
+}
+
+#blazor-error-ui {
+    color: black;
+
+    & > .reload {
+        color: black;
+    }
+
+    & > .dismiss {
+        color: black;
+    }
+}

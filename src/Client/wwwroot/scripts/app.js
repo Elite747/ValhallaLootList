@@ -32,6 +32,12 @@
             localStorage.removeItem('theme');
         }
         this.updateTheme();
+    },
+    getTitle: function () {
+        return document.title;
+    },
+    setTitle: function (title) {
+        document.title = title;
     }
 };
 

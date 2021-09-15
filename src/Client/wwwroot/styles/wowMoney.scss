@@ -1,0 +1,17 @@
+﻿.wow-money {
+    background: no-repeat right center;
+    display: inline-block;
+    padding-right: 15px;
+
+    &.gold {
+        background-image: url(https://wow.zamimg.com/images/icons/money-gold.gif);
+    }
+
+    &.silver {
+        background-image: url(https://wow.zamimg.com/images/icons/money-silver.gif);
+    }
+
+    &.copper {
+        background-image: url(https://wow.zamimg.com/images/icons/money-copper.gif);
+    }
+}

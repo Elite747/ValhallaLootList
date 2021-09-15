@@ -15,6 +15,8 @@ namespace ValhallaLootList.DataTransfer
 
         public string EncounterName { get; set; } = string.Empty;
 
+        public byte TrashIndex { get; set; }
+
         public DateTimeOffset KilledAt { get; set; }
 
         public List<EncounterDropDto> Drops

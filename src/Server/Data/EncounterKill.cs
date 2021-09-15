@@ -17,6 +17,8 @@ namespace ValhallaLootList.Server.Data
         [Required]
         public string EncounterId { get; set; } = null!;
 
+        public byte TrashIndex { get; set; }
+
         [Required]
         public virtual Raid Raid { get; set; } = null!;
 

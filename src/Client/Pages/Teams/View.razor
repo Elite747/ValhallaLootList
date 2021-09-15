@@ -72,179 +72,197 @@
             </Header>
             <ChildContent>
                 <MudTabPanel Text=@($"Roster ({team.Roster.Count}/25)")>
-                    <TeamMembers Team="team"
-                                 SelectedPhase="GetSelectedPhase()"
-                                 CurrentPhase="phaseConfig.CurrentPhase" />
                 </MudTabPanel>
                 <MudTabPanel Text="Leaders">
-                    <LeadersView Team="team" @ref="_leadersView" />
                 </MudTabPanel>
                 <MudTabPanel Text="Charts">
-                    <ChartsView Team="team" Phase="GetDisplayPhase(phaseConfig)" />
                 </MudTabPanel>
                 <MudTabPanel Text="Standings">
-                    <ValhallaLootList.Client.Pages.Teams.Standings.Standings Phase="GetDisplayPhase(phaseConfig)" Team="team" @ref="_standings" />
                 </MudTabPanel>
                 <MudTabPanel Text="Recent Raids">
-                    <TeamRaids Team="team" Phase="GetDisplayPhase(phaseConfig)" @ref="_teamRaids" />
                 </MudTabPanel>
                 <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
                     <MudTabPanel Text="Loot List Review">
+                    </MudTabPanel>
+                </AuthorizeView>
+            </ChildContent>
+        </MudTabs>
+
+        <div class="content layout-container">
+            @switch (GetTabIndex())
+            {
+                case 0:
+                    <TeamMembers Team="team" SelectedPhase="GetSelectedPhase()" CurrentPhase="phaseConfig.CurrentPhase" />
+                    break;
+                case 1:
+                    <LeadersView Team="team" @ref="_leadersView" />
+                    break;
+                case 2:
+                    <ChartsView Team="team" Phase="GetDisplayPhase(phaseConfig)" />
+                    break;
+                case 3:
+                    <StandingsView Team="team" Phase="GetDisplayPhase(phaseConfig)" @ref="_standings" />
+                    break;
+                case 4:
+                    <TeamRaids Team="team" Phase="GetDisplayPhase(phaseConfig)" @ref="_teamRaids" />
+                    break;
+                case 5:
+                    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="team.Id">
                         <Review Phase="GetDisplayPhase(phaseConfig)"
                                 Team="team"
                                 User="context.User"
                                 StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
                                 RosterChanged="StateHasChanged"
                                 @ref="_review" />
-                    </MudTabPanel>
-                </AuthorizeView>
-            </ChildContent>
-        </MudTabs>
+                    </AuthorizeView>
+                    break;
+            }
+        </div>
     </ApiExecutor>
 </ApiExecutor>
 
 @code {
-    private ValhallaLootList.Client.Pages.Teams.Standings.Standings? _standings;
-    private IApiExecutor? _executor;
-    private TeamRaids? _teamRaids;
-    private Review? _review;
-    private LeadersView? _leadersView;
-    private string? _teamName;
-    private bool _teamChanged;
+    private StandingsView? _standings;
+            private IApiExecutor? _executor;
+            private TeamRaids? _teamRaids;
+            private Review? _review;
+            private LeadersView? _leadersView;
+            private string? _teamName;
+            private bool _teamChanged;
 
-    [Parameter]
-    public string TeamName
-    {
-        get => _teamName ?? string.Empty;
-        set
-        {
-            if (_teamName != value)
+            [Parameter]
+            public string TeamName
             {
-                _teamName = value;
-                _teamChanged = true;
+                get => _teamName ?? string.Empty;
+                set
+                {
+                    if (_teamName != value)
+                    {
+                        _teamName = value;
+                        _teamChanged = true;
+                    }
+                }
             }
-        }
-    }
 
-    [Parameter]
-    public int? Phase { get; set; }
+            [Parameter]
+            public int? Phase { get; set; }
 
-    [Parameter]
-    public string? Tab { get; set; }
+            [Parameter]
+            public string? Tab { get; set; }
 
-    protected override Task OnParametersSetAsync()
-    {
-        if (_teamChanged)
-        {
-            _teamChanged = false;
-            if (_executor is not null)
+            protected override Task OnParametersSetAsync()
             {
-                return _executor.RestartAsync(false);
+                if (_teamChanged)
+                {
+                    _teamChanged = false;
+                    if (_executor is not null)
+                    {
+                        return _executor.RestartAsync(false);
+                    }
+                }
+                return Task.CompletedTask;
             }
-        }
-        return Task.CompletedTask;
-    }
 
-    private string GetTitle(TeamDto team)
-    {
-        if (Tab?.Length > 0)
-        {
-            string? tabName = null;
-            if (string.Equals(Tab, "roster", StringComparison.OrdinalIgnoreCase))
+            private string GetTitle(TeamDto team)
             {
-                tabName = "Roster";
+                if (Tab?.Length > 0)
+                {
+                    string? tabName = null;
+                    if (string.Equals(Tab, "roster", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Roster";
+                    }
+                    else if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Leaders";
+                    }
+                    else if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Charts";
+                    }
+                    else if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Standings";
+                    }
+                    else if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Raids";
+                    }
+                    else if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tabName = "Review";
+                    }
+                    if (tabName?.Length > 0)
+                    {
+                        return $"{tabName} - {team.Name}";
+                    }
+                }
+                return team.Name;
             }
-            else if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
-            {
-                tabName = "Leaders";
-            }
-            else if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
-            {
-                tabName = "Charts";
-            }
-            else if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
-            {
-                tabName = "Standings";
-            }
-            else if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
-            {
-                tabName = "Raids";
-            }
-            else if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
-            {
-                tabName = "Review";
-            }
-            if (tabName?.Length > 0)
-            {
-                return $"{tabName} - {team.Name}";
-            }
-        }
-        return team.Name;
-    }
 
-    private int GetTabIndex()
-    {
-        if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
-        {
-            return 1;
-        }
-        if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
-        {
-            return 2;
-        }
-        if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
-        {
-            return 3;
-        }
-        if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
-        {
-            return 4;
-        }
-        if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
-        {
-            return 5;
-        }
-        return 0;
-    }
-
-    private string GetTabFromIndex(int index) => index switch
-    {
-        1 => "leaders",
-        2 => "charts",
-        3 => "standings",
-        4 => "raids",
-        5 => "review",
-        _ => "roster"
-    };
-
-    private void OnTabChanged(int index, PhaseConfigDto phaseConfig)
-    {
-        string tabName = GetTabFromIndex(index);
-
-        if (!string.Equals(tabName, Tab, StringComparison.OrdinalIgnoreCase))
-        {
-            Tab = tabName;
-            Nav.NavigateTo($"teams/{TeamName}/phase/{GetSelectedPhase() ?? phaseConfig.CurrentPhase}/{GetTabFromIndex(index)}");
-        }
-    }
-
-    private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
-    {
-        var phase = GetSelectedPhase();
-        if (phase.HasValue)
-        {
-            if (phaseConfig.Phases.Contains(phase.Value))
+            private int GetTabIndex()
             {
-                return phase.Value;
+                if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 1;
+                }
+                if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 2;
+                }
+                if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 3;
+                }
+                if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 4;
+                }
+                if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 5;
+                }
+                return 0;
             }
-        }
-        return phaseConfig.CurrentPhase;
-    }
 
-    private byte? GetSelectedPhase()
-    {
-        return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
-    }
+            private string GetTabFromIndex(int index) => index switch
+            {
+                1 => "leaders",
+                2 => "charts",
+                3 => "standings",
+                4 => "raids",
+                5 => "review",
+                _ => "roster"
+            };
+
+            private void OnTabChanged(int index, PhaseConfigDto phaseConfig)
+            {
+                string tabName = GetTabFromIndex(index);
+
+                if (!string.Equals(tabName, Tab, StringComparison.OrdinalIgnoreCase))
+                {
+                    Tab = tabName;
+                    Nav.NavigateTo($"teams/{TeamName}/phase/{GetSelectedPhase() ?? phaseConfig.CurrentPhase}/{GetTabFromIndex(index)}");
+                }
+            }
+
+            private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
+            {
+                var phase = GetSelectedPhase();
+                if (phase.HasValue)
+                {
+                    if (phaseConfig.Phases.Contains(phase.Value))
+                    {
+                        return phase.Value;
+                    }
+                }
+                return phaseConfig.CurrentPhase;
+            }
+
+            private byte? GetSelectedPhase()
+            {
+                return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
+            }
 
     private void OnPhaseChanged(byte phase)
     {

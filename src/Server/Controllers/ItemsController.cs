@@ -35,6 +35,7 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(item => new ItemDto
                 {
                     Id = item.Id,
+                    RewardFromId = item.RewardFromId,
                     QuestId = item.RewardFromId.HasValue ? item.RewardFrom!.QuestId : default,
                     Name = item.Name,
                     Slot = item.Slot,

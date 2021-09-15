@@ -20,5 +20,7 @@ namespace ValhallaLootList.DataTransfer
         public InventorySlot Slot { get; set; }
 
         public ICollection<RestrictionDto> Restrictions { get; set; } = new List<RestrictionDto>();
+
+        public uint? RewardFromId { get; set; }
     }
 }

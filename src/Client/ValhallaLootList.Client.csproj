@@ -15,4 +15,9 @@
     <ProjectReference Include="..\Shared\ValhallaLootList.Shared.csproj" />
   </ItemGroup>
 
+  <Target Name="Minify" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet run --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="dotnet run --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
+  </Target>
+
 </Project>

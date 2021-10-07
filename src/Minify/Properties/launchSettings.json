@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "ValhallaLootList.Minify.Scss": {
+      "commandName": "Project",
+      "workingDirectory": "../Client",
+      "commandLineArgs": "scss wwwroot/styles/app.scss"
+    },
+    "ValhallaLootList.Minify.Js": {
+      "commandName": "Project",
+      "workingDirectory": "../Client",
+      "commandLineArgs": "js wwwroot/scripts/app.js"
+    }
+  }
+}

@@ -1,4 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptNoImplicitAny>True</TypeScriptNoImplicitAny>
+    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
+    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+    <TypeScriptOutFile>wwwroot/scripts/app.js</TypeScriptOutFile>
+    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+    <TypeScriptSourceMap>True</TypeScriptSourceMap>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="**/*.gitignore" />
+    <None Include="**/*.gitignore" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.*" />
@@ -7,6 +22,10 @@
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.4.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MudBlazor" Version="5.1.2" />
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
   </ItemGroup>
@@ -15,9 +34,12 @@
     <ProjectReference Include="..\Shared\ValhallaLootList.Shared.csproj" />
   </ItemGroup>
 
-  <Target Name="Minify" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet run --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
+  <Target Name="MinifyJs" AfterTargets="CompileTypeScript">
     <Exec Command="dotnet run --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
+  </Target>
+
+  <Target Name="MinifyScss" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet run --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
   </Target>
 
 </Project>

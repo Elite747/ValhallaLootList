@@ -6,15 +6,7 @@ using CommandLine;
 namespace ValhallaLootList.Minify
 {
     [Verb("js", HelpText = "Minifies JavaScript files.")]
-    internal class JsOptions
+    internal class JsOptions : OptionsBase
     {
-        [Value(0, Required = true, HelpText = "The file to process.")]
-        public string Input { get; set; } = string.Empty;
-
-        [Option('o', "output", HelpText = "The file to create. If not specified, the input is used with the .min.js extension.")]
-        public string? Output { get; set; }
-
-        [Option('m', "map", HelpText = "The map file to create. If not specified, the input is used with the .min.css.map extension.")]
-        public string? Map { get; set; }
     }
 }

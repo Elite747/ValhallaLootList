@@ -8,7 +8,7 @@
     "ValhallaLootList.Minify.Js": {
       "commandName": "Project",
       "workingDirectory": "../Client",
-      "commandLineArgs": "js wwwroot/scripts/app.js"
+      "commandLineArgs": "js wwwroot/scripts/*.js -x **/*.min.js"
     }
   }
 }

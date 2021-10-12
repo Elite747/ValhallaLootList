@@ -74,7 +74,7 @@
     {
         _prioGroups.Clear();
         _prioGroups.AddRange(Raid.Attendees
-            .Select(attendee => new AssignEntryContext(Raid, Drop, attendee.Character, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)))
+            .Select(attendee => new AssignEntryContext(Raid, Drop, attendee, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)))
             .GroupBy(context => context.Prio)
             .OrderByDescending(g => g.Key));
     }

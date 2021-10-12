@@ -14,7 +14,7 @@
             <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
             @foreach (var attendance in classGroup.OrderBy(a => a.Character.Name))
             {
-                <AttendanceChip Attendance="attendance" Raid="Raid" OnRemoved="StateHasChanged" />
+                <AttendanceChip Attendance="attendance" Raid="Raid" OnChanged="StateHasChanged" />
             }
         }
     </MudCardContent>
@@ -69,7 +69,7 @@
 
         if (character is not null)
         {
-            await Api.Raids.AddAttendee(Raid.Id, character.Id)
+            await Api.Raids.AddAttendee(Raid.Id, character.Id, false)
                 .OnSuccess(attendance =>
                 {
                     attendance.Character = character;

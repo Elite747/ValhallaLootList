@@ -9,5 +9,7 @@ namespace ValhallaLootList.Client.Pages.Teams
     public class StartRaidState
     {
         public Dictionary<long, CharacterDto> Attendees { get; } = new();
+
+        public Dictionary<long, CharacterDto> Rto { get; } = new();
     }
 }

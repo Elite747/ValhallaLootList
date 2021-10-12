@@ -6,6 +6,33 @@
 
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiView Operations="new IApiClientOperation[] { _instancesOperation, _charactersOperation }">
+        <WizardSection Name="RTO">
+            <MudText Color="Color.Info">
+                RTO: 
+                @if (_rto.Count != 0)
+                {
+                    @string.Join(", ", _rto.Values.OrderBy(c => c.Name).Select(c => c.Name))
+                }
+                else
+                {
+                    @:None
+                }
+            </MudText>
+            <div>
+                @foreach (var classGroup in Team.Roster.GroupBy(m => m.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
+
+                    @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
+                    {
+                        <MemberChip Member="member"
+                                    Phase="Phase"
+                                    IsSelected="_rto.ContainsKey(member.Character.Id)"
+                                    IsSelectedChanged="selected => SetRto(member.Character, selected)" />
+                    }
+                }
+            </div>
+        </WizardSection>
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
             <MudTextField T="string"
                           Value="_importString"
@@ -16,7 +43,23 @@
                           Variant="Variant.Filled" />
             @if (_importString?.Length > 0 && ImportValid())
             {
-                <MudAlert Severity="Severity.Success">Imported!</MudAlert>
+                <MudAlert Severity="Severity.Success">
+                    <div>Imported!</div>
+                    <br />
+                    @if (_absent.Count == 0)
+                    {
+                        <div>All Raiders Present</div>
+                    }
+                    else
+                    {
+                        <div>Absent: @GetAbsent()</div>
+                    }
+                    @if (_unrostered.Count != 0)
+                    {
+                        <br />
+                        <div>Unrostered: @string.Join(", ", _unrostered.Values.OrderBy(c => c.Name).Select(c => c.Name))</div>
+                    }
+                </MudAlert>
             }
 
             @if (_importError?.Length > 0)
@@ -59,11 +102,11 @@
                 </MudList>
             }
         </WizardSection>
-        <WizardSection Name="Roster" CanContinue="() => State.Attendees.Any(a => a.Value.TeamId == Team.Id)">
-            @if (Team.Roster.Any(m => !State.Attendees.ContainsKey(m.Character.Id)))
+        <WizardSection Name="Roster" CanContinue="() => _absent.Count < Team.Roster.Count">
+            @if (_absent.Count > 0)
             {
                 <MudText Color="Color.Warning">
-                    Absent: @string.Join(", ", Team.Roster.Where(m => !State.Attendees.ContainsKey(m.Character.Id)).Select(m => m.Character.Name))
+                    Absent: @GetAbsent()
                 </MudText>
             }
             <div>
@@ -73,26 +116,31 @@
 
                     @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
                     {
-                        <MemberChip Member="member"
-                                    Phase="Phase"
-                                    IsSelected="State.Attendees.ContainsKey(member.Character.Id)"
-                                    IsSelectedChanged="selected => SetAttending(member.Character, selected)" />
+                        @if (_rto.ContainsKey(member.Character.Id))
+                        {
+                            <MemberChip Disabled IsSelected Member="member" Phase="Phase" />
+                        }
+                        else
+                        {
+                            <MemberChip Member="member"
+                                        Phase="Phase"
+                                        IsSelected="!_absent.ContainsKey(member.Character.Id)"
+                                        IsSelectedChanged="selected => SetAttending(member.Character, selected)" />
+                        }
                     }
                 }
             </div>
         </WizardSection>
         <WizardSection Name="Additional Attendees">
             <div>
-                @foreach (var character in State.Attendees.Values.Where(c => c.TeamId != Team.Id).OrderBy(c => c.Name))
+                @foreach (var character in _unrostered.Values.OrderBy(c => c.Name))
                 {
-                    <CharacterChip Character="character"
-                                   Closeable="true"
-                                   OnClose="() => SetAttending(character, false)" />
+                    <CharacterChip Closeable Character="character" OnClose="() => _unrostered.Remove(character.Id)" />
                 }
                 <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
-                                Color="Color.Success"
-                                Size="Size.Small"
-                                OnClick="AddAttendeeAsync" />
+                               Color="Color.Success"
+                               Size="Size.Small"
+                               OnClick="AddAttendeeAsync" />
             </div>
         </WizardSection>
     </ApiView>
@@ -104,30 +152,22 @@
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
     private readonly List<string> _importWarnings = new();
     private string? _importString, _importError;
+    private readonly Dictionary<long, CharacterDto> _absent = new();
+    private readonly Dictionary<long, CharacterDto> _rto = new();
+    private readonly Dictionary<long, CharacterDto> _unrostered = new();
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
-    private StartRaidState State { get; } = new();
 
     protected override void OnInitialized()
     {
         _instancesOperation = Api.Instances.GetAll();
         _charactersOperation = Api.Characters.GetActive();
-        ResetState();
     }
 
     protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
-    }
-
-    private void ResetState()
-    {
-        State.Attendees.Clear();
-        foreach (var attendee in Team.Roster)
-        {
-            State.Attendees[attendee.Character.Id] = attendee.Character;
-        }
     }
 
     private bool ImportValid() => _nonExistantCharacters.Count == 0 && string.IsNullOrEmpty(_importError);
@@ -138,7 +178,6 @@
         _importError = null;
         _importWarnings.Clear();
         _nonExistantCharacters.Clear();
-        ResetState();
 
         if (importString?.Length > 0)
         {
@@ -157,7 +196,14 @@
                 if (model.Characters?.Count > 0)
                 {
                     var allCharacters = _charactersOperation.GetResult();
-                    State.Attendees.Clear();
+                    _absent.Clear();
+                    _unrostered.Clear();
+
+                    // When importing, default all characters as absent.
+                    foreach (var member in Team.Roster)
+                    {
+                        SetAttending(member.Character, false);
+                    }
 
                     foreach (var importCharacter in model.Characters)
                     {
@@ -199,7 +245,7 @@
                                     $"but is supposed to be a {character.Gender} {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
                             }
 
-                            State.Attendees[character.Id] = character;
+                            SetAttending(character, true);
                         }
                     }
                 }
@@ -218,7 +264,8 @@
             {
                 _nonExistantCharacters.Remove(character);
                 _charactersOperation.GetResult().Add(c);
-                State.Attendees[c.Id] = c;
+                SetAttending(c, true);
+                StateHasChanged();
             })
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
@@ -231,28 +278,72 @@
 
     private void SetAttending(CharacterDto character, bool attending)
     {
-        if (State.Attendees.ContainsKey(character.Id))
+        if (!_rto.ContainsKey(character.Id))
         {
-            if (!attending)
+            if (attending)
             {
-                State.Attendees.Remove(character.Id);
+                if (character.TeamId == Team.Id)
+                {
+                    _absent.Remove(character.Id);
+                }
+                else
+                {
+                    _unrostered[character.Id] = character;
+                }
             }
-        }
-        else if (attending)
-        {
-            State.Attendees[character.Id] = character;
+            else if (character.TeamId == Team.Id)
+            {
+                _absent[character.Id] = character;
+            }
+            else
+            {
+                _unrostered.Remove(character.Id);
+            }
         }
     }
 
-    private Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    private void SetRto(CharacterDto character, bool rto)
     {
+        System.Diagnostics.Debug.Assert(character.TeamId == Team.Id);
+
+        if (_rto.ContainsKey(character.Id))
+        {
+            if (!rto)
+            {
+                _rto.Remove(character.Id);
+                _absent[character.Id] = character;
+            }
+        }
+        else if (rto)
+        {
+            _rto[character.Id] = character;
+            _absent.Remove(character.Id);
+        }
+    }
+
+    private async Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    {
+        var attendees = new List<long>();
+
+        foreach (var rosteredId in Team.Roster.Select(m => m.Character.Id))
+        {
+            if (!_rto.ContainsKey(rosteredId) && !_absent.ContainsKey(rosteredId))
+            {
+                attendees.Add(rosteredId);
+            }
+        }
+
+        attendees.AddRange(_unrostered.Keys);
+
         var dto = new RaidSubmissionDto
         {
-            Attendees = State.Attendees.Values.Select(a => a.Id).ToList(),
+            Attendees = attendees,
+            Rto = _rto.Keys.ToList(),
             Phase = Phase,
             TeamId = Team.Id
         };
-        return Api.Raids.Create(dto)
+
+        await Api.Raids.Create(dto)
             .OnSuccess(raid => Nav.NavigateTo("/raids/" + raid.Id))
             .OnFailure(_ => arg.Cancel = true)
             .SendErrorTo(Snackbar)
@@ -272,7 +363,9 @@
 
         if (character is not null)
         {
-            State.Attendees[character.Id] = character;
+            SetAttending(character, true);
         }
     }
+
+    private string GetAbsent() => string.Join(", ", _absent.Values.OrderBy(c => c.Name).Select(c => c.Name));
 }

@@ -8,14 +8,17 @@
         {
             <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
         }
+        else if (Attendance.Rto)
+        {
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info" Color="Color.Info" Style="margin-left: 4px; margin-right: -12px" />
+        }
     </div>
 </CharacterChip>
 
 @code {
-
     [Parameter] public RaidDto Raid { get; set; } = null!;
     [Parameter] public AttendanceDto Attendance { get; set; } = null!;
-    [Parameter] public EventCallback OnRemoved { get; set; }
+    [Parameter] public EventCallback OnChanged { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -25,7 +28,7 @@
 
     private async Task OpenDetailsAsync()
     {
-        var removed = await DialogService.ShowAsync<AttendanceDialog, bool>(
+        bool? removed = await DialogService.ShowAsync<AttendanceDialog, bool?>(
             string.Empty,
             new()
             {
@@ -33,9 +36,10 @@
                 [nameof(AttendanceDialog.Raid)] = Raid
             });
 
-        if (removed)
+        // removed value is currently unused. If the dialog returns a not-null result, the attendance state has changed.
+        if (removed.HasValue)
         {
-            await OnRemoved.InvokeAsync();
+            await OnChanged.InvokeAsync();
         }
     }
 }

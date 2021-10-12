@@ -16,7 +16,36 @@
                           Variant="Variant.Filled" />
             @if (_importString?.Length > 0 && ImportValid())
             {
-                <MudAlert Severity="Severity.Success">Imported!</MudAlert>
+                <MudAlert Severity="Severity.Success">
+                    @if (_encounter is not null)
+                    {
+                        <div>Imported @_encounter.Name</div>
+                    }
+                    else
+                    {
+                        <div>Imported!</div>
+                    }
+                    <br />
+                    @foreach ((uint itemId, int count) in _drops.Where(d => d.Value > 0))
+                    {
+                        <div>
+                            <ItemLink Colorize Bracketize Id="itemId" />
+                            @if (count > 1)
+                            {
+                                @($" x{count}")
+                            }
+                        </div>
+                    }
+                    <br />
+                    @if (_attendees.Count == Raid.Attendees.Count)
+                    {
+                        <div>All Raiders Present</div>
+                    }
+                    else
+                    {
+                        <div>Not Present: @GetNotPresent()</div>
+                    }
+                </MudAlert>
             }
 
             @if (_importError?.Length > 0)
@@ -114,8 +143,15 @@
             @if (_attendees.Count != Raid.Attendees.Count)
             {
                 <MudAlert Severity="Severity.Warning">
-                    One or more attendees isn't listed as present for this kill.
-                    Ensure that this is correct before proceeding!
+                    <div>
+                        The following raiders are not listed as present for this kill:
+                    </div>
+                    <div>
+                        @GetNotPresent()
+                    </div>
+                    <div>
+                        Ensure that this is correct before proceeding!
+                    </div>
                     <br />
                     <small>
                         Characters who are not present will not recieve loss bonuses for loot that drops.
@@ -124,10 +160,10 @@
             }
 
             <div class="mt-1">
-                @foreach (var roleGroup in Raid.Attendees.GroupBy(a => a.MainSpec.GetRole()).OrderBy(g => g.Key))
+                @foreach (var classGroup in Raid.Attendees.GroupBy(m => m.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
                 {
-                    <MudText Typo="Typo.subtitle2" Class="mt-1">@roleGroup.Key.GetDisplayName()</MudText>
-                    @foreach (var attendance in roleGroup.OrderBy(a => a.Character.Name))
+                    <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
+                    @foreach (var attendance in classGroup.OrderBy(a => a.Character.Name))
                     {
                         <KillerChip Attendance="attendance"
                                     Raid="Raid"
@@ -203,14 +239,11 @@
     {
         SetEncounter(default(EncounterDto));
 
-        _attendees.Clear();
         var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
         foreach (var attendee in Raid.Attendees)
         {
-            if (lastKill?.Characters.Contains(attendee.Character.Id) != false)
-            {
-                _attendees[attendee.Character.Id] = attendee.Character;
-            }
+            // Unless importing, default characters as present if: 1. is RTO, 2. they were present for the last raid encounter kill, or 3. this is the first raid encounter.
+            SetPresent(attendee.Character, attendee.Rto || lastKill?.Characters.Contains(attendee.Character.Id) != false);
         }
     }
 
@@ -258,7 +291,11 @@
 
                 if (model.Characters?.Count > 0)
                 {
-                    _attendees.Clear();
+                    // When importing, default all non-rto raiders as absent, and all rto raiders as present.
+                    foreach (var attendee in Raid.Attendees)
+                    {
+                        SetPresent(attendee.Character, attendee.Rto);
+                    }
 
                     foreach (var importCharacter in model.Characters)
                     {
@@ -344,7 +381,7 @@
 
         if (characterDto is not null)
         {
-            await Api.Raids.AddAttendee(Raid.Id, characterDto.Id)
+            await Api.Raids.AddAttendee(Raid.Id, characterDto.Id, false)
                 .OnSuccess(a =>
                 {
                     Raid.Attendees.Add(a);
@@ -433,5 +470,10 @@
             .OnFailure(_ => arg.Cancel = true)
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
+    }
+
+    private string GetNotPresent()
+    {
+        return string.Join(", ", Raid.Attendees.Where(a => !_attendees.ContainsKey(a.Character.Id)).OrderBy(a => a.Character.Name).Select(a => a.Character.Name));
     }
 }

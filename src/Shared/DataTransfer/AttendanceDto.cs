@@ -15,6 +15,8 @@ namespace ValhallaLootList.DataTransfer
             set => _character = value;
         }
 
+        public bool Rto { get; set; }
+
         public bool IgnoreAttendance { get; set; }
 
         public string? IgnoreReason { get; set; }

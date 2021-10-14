@@ -39,7 +39,7 @@
   </Target>
 
   <Target Name="MinifyScss" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet run --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="dotnet run --no-build --no-restore --configuration $(Configuration) --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
   </Target>
 
 </Project>

@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Server", "src\Server\ValhallaLootList.Server.csproj", "{1944253D-1B64-4F32-90C6-B0E096CD0D83}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Client", "src\Client\ValhallaLootList.Client.csproj", "{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6693FEFD-C156-4925-A36A-FB396BAFEAB2} = {6693FEFD-C156-4925-A36A-FB396BAFEAB2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Shared", "src\Shared\ValhallaLootList.Shared.csproj", "{235034AF-95C5-437F-9D6F-E437144332E0}"
 EndProject

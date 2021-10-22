@@ -53,25 +53,26 @@ namespace ValhallaLootList.Client.Pages.Raids
                 }
             }
 
-            if (attendance.Rto || !kill.Characters.Contains(attendance.Character.Id))
+            Rto = attendance.Rto;
+
+            if (!kill.Characters.Contains(attendance.Character.Id))
             {
-                const string notPresentMessage = "Not present for this kill!", rtoMessage = notPresentMessage + " (RTO)";
-                Message = attendance.Rto ? rtoMessage : notPresentMessage;
+                Message = "Not present for this kill!";
                 Disabled = true;
             }
         }
 
         public int? Prio { get; }
 
-        public bool IsError { get; }
+        public bool Disabled { get; }
 
-        public bool Disabled { get; set; }
+        public bool Rto { get; }
 
         public CharacterDto Character { get; }
 
         public string Message { get; }
 
-        public int? Rank { get; set; }
+        public int? Rank { get; }
 
         public IList<PriorityBonusDto> Bonuses { get; }
     }

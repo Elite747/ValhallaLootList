@@ -2,6 +2,10 @@
 
 <MudTooltip Text="@Context.Message">
     <TooltipContent>
+        @if (Context.Rto)
+        {
+            <div><b>RTO</b></div>
+        }
         @if (Context.Message.Length > 0)
         {
             <span>@Context.Message</span>
@@ -23,9 +27,9 @@
         <CharacterChip Character="Context.Character" OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))" Disabled="Context.Disabled">
             <div class="d-flex align-center">
                 @Context.Character.Name
-                @if (Context.Message.Length > 0)
+                @if (Context.Rto || Context.Message.Length > 0)
                 {
-                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
+                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Error" Color="Context.Rto ? Color.Info : Color.Error" Style="margin-left: 4px; margin-right: -12px" />
                 }
             </div>
         </CharacterChip>

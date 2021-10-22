@@ -118,6 +118,7 @@ namespace ValhallaLootList.Server.Controllers
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
                     MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec).GetValueOrDefault(),
+                    Rto = a.Rto,
                     Character = new CharacterDto
                     {
                         Class = a.Character.Class,
@@ -231,7 +232,9 @@ namespace ValhallaLootList.Server.Controllers
                 StartedAt = realmTimeZoneInfo.TimeZoneNow()
             };
 
-            var characters = await _context.Characters.AsTracking().Where(c => dto.Attendees.Contains(c.Id)).ToListAsync();
+            var allCharacterIds = dto.Attendees.Concat(dto.Rto).ToList();
+
+            var characters = await _context.Characters.AsTracking().Where(c => allCharacterIds.Contains(c.Id)).ToListAsync();
 
             for (int i = 0; i < dto.Attendees.Count; i++)
             {
@@ -262,6 +265,32 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
+            for (int i = 0; i < dto.Rto.Count; i++)
+            {
+                var charId = dto.Rto[i];
+                var character = characters.Find(c => c.Id == charId);
+
+                if (character is null)
+                {
+                    ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character does not exist.");
+                }
+                else if (character.TeamId != team.Id)
+                {
+                    ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character is not part of this team.");
+                }
+                else
+                {
+                    raid.Attendees.Add(new()
+                    {
+                        Character = character,
+                        CharacterId = character.Id,
+                        Raid = raid,
+                        RaidId = raid.Id,
+                        Rto = true
+                    });
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return ValidationProblem();
@@ -285,6 +314,7 @@ namespace ValhallaLootList.Server.Controllers
                     IgnoreAttendance = a.IgnoreAttendance,
                     IgnoreReason = a.IgnoreReason,
                     MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec ?? Specializations.None,
+                    Rto = a.Rto,
                     Character = new CharacterDto
                     {
                         Id = a.CharacterId,
@@ -394,7 +424,8 @@ namespace ValhallaLootList.Server.Controllers
                 IgnoreAttendance = false,
                 IgnoreReason = null,
                 Raid = raid,
-                RaidId = raid.Id
+                RaidId = raid.Id,
+                Rto = dto.Rto
             };
 
             if (character.TeamId != raid.RaidTeamId)
@@ -434,6 +465,7 @@ namespace ValhallaLootList.Server.Controllers
                 IgnoreAttendance = attendee.IgnoreAttendance,
                 IgnoreReason = attendee.IgnoreReason,
                 MainSpec = spec,
+                Rto = attendee.Rto,
                 Character = new CharacterDto
                 {
                     Class = character.Class,
@@ -488,6 +520,8 @@ namespace ValhallaLootList.Server.Controllers
                 attendee.RemovalId = null;
             }
 
+            attendee.Rto = dto.Rto;
+
             await _context.SaveChangesAsync();
 
             var teamName = await _context.RaidTeams
@@ -516,6 +550,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 IgnoreAttendance = attendee.IgnoreAttendance,
                 IgnoreReason = attendee.IgnoreReason,
+                Rto = attendee.Rto,
                 Character = new CharacterDto
                 {
                     Class = character.Class,

@@ -27,8 +27,16 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="GoToNextAsync" Disabled="!CanGoNext()" Color="Color.Primary" Variant="Variant.Filled">
-            @GetContinueText()
+        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+            <MudButton OnClick="GoToPrevious" Disabled="!CanGoPrevious()" StartIcon="@Icons.Material.Filled.ChevronLeft">
+                Back
+            </MudButton>
+            <MudButton OnClick="GoToNext" Disabled="!CanGoNext()" EndIcon="@Icons.Material.Filled.ChevronRight">
+                @GetContinueText()
+            </MudButton>
+        </MudButtonGroup>
+        <MudButton OnClick="FinishAsync" Disabled="!CanFinish()" Color="Color.Success" Variant="Variant.Filled">
+            Finish
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -117,19 +125,28 @@
             return true;
         }
 
-        var index = Sections.IndexOf(CurrentSection) + 1;
-        if (index == Sections.Count)
+        int nextIndex = Sections.IndexOf(CurrentSection) + 1;
+        if (nextIndex == Sections.Count)
         {
-            return CanFinish();
+            return false;
         }
-        else
-        {
-            return CanGoTo(Sections[index]);
-        }
+        return CanGoTo(Sections[nextIndex]);
     }
 
-    [System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(CurrentSection))]
-    public bool IsLastStep() => Sections.Count != 0 && Sections[^1] == CurrentSection;
+    public bool CanGoPrevious()
+    {
+        if (CurrentSection is null)
+        {
+            return false;
+        }
+
+        int previousIndex = Sections.IndexOf(CurrentSection) - 1;
+        if (previousIndex < 0)
+        {
+            return false;
+        }
+        return CanGoTo(Sections[previousIndex]);
+    }
 
     public void GoTo(WizardSection? section)
     {
@@ -140,20 +157,27 @@
         }
     }
 
-    public Task GoToNextAsync()
+    public void GoToNext()
     {
         var index = CurrentSection is null ? 0 : (Sections.IndexOf(CurrentSection) + 1);
 
-        if (index == Sections.Count)
-        {
-            return FinishAsync();
-        }
-        else
+        if (index < Sections.Count)
         {
             GoTo(Sections[index]);
         }
+    }
 
-        return Task.CompletedTask;
+    public void GoToPrevious()
+    {
+        if (CurrentSection is not null)
+        {
+            var index = Sections.IndexOf(CurrentSection) - 1;
+
+            if (index >= 0)
+            {
+                GoTo(Sections[index]);
+            }
+        }
     }
 
     public bool CanFinish()
@@ -183,11 +207,6 @@
         if (text?.Length > 0)
         {
             return text;
-        }
-
-        if (IsLastStep())
-        {
-            return "Finish";
         }
 
         return "Next";

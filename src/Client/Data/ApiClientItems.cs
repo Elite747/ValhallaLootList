@@ -14,9 +14,9 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<ItemDto>> Get(byte phase)
+        public IApiClientOperation<IList<ItemDto>> Get(byte phase, bool includeTokens = false)
         {
-            return Client.CreateRequest<IList<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}").CacheFor(TimeSpan.FromHours(1));
+            return Client.CreateRequest<IList<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}&includeTokens={includeTokens}").CacheFor(TimeSpan.FromHours(1));
         }
 
         public IApiClientOperation<IList<RestrictionDto>> GetRestrictions(uint itemId)

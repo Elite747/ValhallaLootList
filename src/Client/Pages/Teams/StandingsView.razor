@@ -5,7 +5,7 @@
     <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedModeItem is not null ? "d-none d-md-flex" : null)">
         <MudList Dense Clickable Class="content" SelectedItem="_selectedModeItem" SelectedItemChanged="SelectMode">
             <MudListItem Tag="_byBossTag">Items By Encounter</MudListItem>
-            @*<MudListItem Tag="_byItemGroupTag">Items By Item Group</MudListItem>*@ @*TODO: Items by group not working well with tokens.*@
+            <MudListItem Tag="_byItemGroupTag">Items By Item Group</MudListItem>
             <MudListItem Tag="_byCharacterTag">Items By Character</MudListItem>
         </MudList>
     </div>
@@ -79,6 +79,10 @@
                                                                         {
                                                                             <span>Won</span>
                                                                         }
+                                                                        else if (itemStanding.Rank == 0)
+                                                                        {
+                                                                            <span>Rank Hidden</span>
+                                                                        }
                                                                         else
                                                                         {
                                                                             <div>
@@ -122,7 +126,9 @@
 
     private readonly List<FilterItem> _encounterFilterItems = new(),
         _characterFilterItems = new(),
-        _groupFilterItems = ItemGroup.All.Select(g => new FilterItem() { Tag = g, Text = g.Name }).ToList();
+        _groupFilterItems = ItemGroup.All.Select(g => new FilterItem() { Tag = g, Text = g.Name })
+                                         .Concat(new[] { new FilterItem() { Tag = new ItemGroup(), Text = "Tokens & Quest Items" } })
+                                         .ToList();
 
     private List<FilterItem>? _filterItems;
     private IList<uint>? _viewItems;
@@ -180,7 +186,7 @@
             itemStandings.Clear();
         }
 
-        await Api.Items.Get(Phase).OnSuccess(ConfigureItems).SendErrorTo(Snackbar).ExecuteAsync();
+        await Api.Items.Get(Phase, includeTokens: true).OnSuccess(ConfigureItems).SendErrorTo(Snackbar).ExecuteAsync();
         await Api.Instances.GetAll().OnSuccess(ConfigureInstances).SendErrorTo(Snackbar).ExecuteAsync();
         _filtersLoading = false;
 
@@ -207,7 +213,8 @@
         _items = items;
         foreach (var itemsByGroup in items.Where(item => item.RewardFromId is null).GroupBy(item => new ItemGroup(item.Type, item.Slot)))
         {
-            _itemsByGroup[itemsByGroup.Key] = itemsByGroup.Select(item => item.Id).ToList();
+            var itemsList = itemsByGroup.Select(item => item.Id).ToList();
+            _itemsByGroup[itemsByGroup.Key] = itemsList;
         }
         StateHasChanged();
     }
@@ -326,6 +333,10 @@
             {
                 return "Won";
             }
+            else if (Rank == 0)
+            {
+                return "Rank Hidden";
+            }
             else
             {
                 return GetPriority().ToString();
@@ -337,6 +348,10 @@
             if (Won)
             {
                 return int.MinValue;
+            }
+            if (Rank == 0)
+            {
+                return int.MinValue + 1;
             }
             return Rank + Bonuses.Sum(b => b.Value);
         }

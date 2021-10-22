@@ -152,7 +152,9 @@ namespace ValhallaLootList.Server.Controllers
 
             if (await _context.Characters.AsNoTracking().AnyAsync(c => c.Name.Equals(normalizedName)))
             {
-                ModelState.AddModelError(nameof(dto.Name), "A character with that name already exists.");
+                ModelState.AddModelError(
+                    nameof(dto.Name),
+                    "A character with that name already exists. If this is your character, message an officer to have it added to your account.");
                 return ValidationProblem();
             }
 

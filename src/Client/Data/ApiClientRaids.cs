@@ -53,9 +53,9 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/raids/{raidId}/Kills/{encounterId}/{trashIndex}");
         }
 
-        public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId)
+        public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId, bool rto)
         {
-            return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId });
+            return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId, Rto = rto });
         }
 
         public IApiClientOperation<AttendanceDto> UpdateAttendee(long raidId, long characterId, UpdateAttendanceSubmissionDto dto)

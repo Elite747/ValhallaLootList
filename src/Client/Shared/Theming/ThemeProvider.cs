@@ -25,7 +25,7 @@ namespace ValhallaLootList.Client.Shared
                 {
                     _initialized = true;
 
-                    var theme = _js.Invoke<string>("valhallaLootList.getTheme");
+                    var theme = _js.Invoke<string>("themeManager.getTheme");
 
                     if (string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase))
                     {
@@ -47,7 +47,7 @@ namespace ValhallaLootList.Client.Shared
                 if (_selectedTheme != value)
                 {
                     _selectedTheme = value;
-                    _js.InvokeVoid("valhallaLootList.setTheme", value switch
+                    _js.InvokeVoid("themeManager.setTheme", value switch
                     {
                         Theme.Light => "light",
                         Theme.Dark => "dark",

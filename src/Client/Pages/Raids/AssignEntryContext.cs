@@ -9,9 +9,9 @@ namespace ValhallaLootList.Client.Pages.Raids
 {
     public class AssignEntryContext
     {
-        public AssignEntryContext(RaidDto raid, EncounterDropDto drop, CharacterDto character, ItemPrioDto? entry)
+        public AssignEntryContext(RaidDto raid, EncounterDropDto drop, AttendanceDto attendance, ItemPrioDto? entry)
         {
-            Character = character;
+            Character = attendance.Character;
 
             var kill = raid.Kills.Find(k => k.Drops.Contains(drop));
             System.Diagnostics.Debug.Assert(kill is not null);
@@ -43,7 +43,7 @@ namespace ValhallaLootList.Client.Pages.Raids
             {
                 Bonuses = Array.Empty<PriorityBonusDto>();
 
-                if (character.TeamId == raid.TeamId)
+                if (attendance.Character.TeamId == raid.TeamId)
                 {
                     Message = "Not on loot list!";
                 }
@@ -53,7 +53,9 @@ namespace ValhallaLootList.Client.Pages.Raids
                 }
             }
 
-            if (!kill.Characters.Contains(character.Id))
+            Rto = attendance.Rto;
+
+            if (!kill.Characters.Contains(attendance.Character.Id))
             {
                 Message = "Not present for this kill!";
                 Disabled = true;
@@ -62,15 +64,15 @@ namespace ValhallaLootList.Client.Pages.Raids
 
         public int? Prio { get; }
 
-        public bool IsError { get; }
+        public bool Disabled { get; }
 
-        public bool Disabled { get; set; }
+        public bool Rto { get; }
 
         public CharacterDto Character { get; }
 
         public string Message { get; }
 
-        public int? Rank { get; set; }
+        public int? Rank { get; }
 
         public IList<PriorityBonusDto> Bonuses { get; }
     }

@@ -13,6 +13,8 @@ namespace ValhallaLootList.DataTransfer
 
         public string? IgnoreReason { get; set; }
 
+        public bool Rto { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (IgnoreAttendance && string.IsNullOrWhiteSpace(IgnoreReason))

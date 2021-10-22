@@ -22,7 +22,7 @@ namespace ValhallaLootList.Client.Shared
         {
             if (_originalTitle is null)
             {
-                _originalTitle = _js.Invoke<string>("valhallaLootList.getTitle") ?? string.Empty;
+                _originalTitle = _js.Invoke<string>("titleManager.getTitle") ?? string.Empty;
                 _currentTitle = _originalTitle;
             }
 
@@ -32,7 +32,7 @@ namespace ValhallaLootList.Client.Shared
 
             if (string.CompareOrdinal(_currentTitle, newTitle) != 0)
             {
-                _js.InvokeVoid("valhallaLootList.setTitle", newTitle);
+                _js.InvokeVoid("titleManager.setTitle", newTitle);
                 _currentTitle = newTitle;
             }
         }

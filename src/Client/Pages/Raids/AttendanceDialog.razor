@@ -25,13 +25,16 @@
                     <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="attendanceForm">
                         <DataAnnotationsValidator />
                         <ProblemValidator @ref="_problemValidator" />
-                        <MudCheckBox @bind-Checked="_model.IgnoreAttendance" For="() => _model.IgnoreAttendance">
+                        <MudCheckBox T="bool" Checked="_model.Rto" CheckedChanged="ToggleRto">
+                            RTO
+                        </MudCheckBox>
+                        <MudCheckBox @bind-Checked="_model.IgnoreAttendance" Disabled="_model.Rto">
                             Ignore Attendance
                         </MudCheckBox>
                         <MudTextField Label="Ignore Reason"
-                                      For="() =>_model.IgnoreReason"
+                                      For="() => _model.IgnoreReason"
                                       @bind-Value="_model.IgnoreReason"
-                                      Disabled="!_model.IgnoreAttendance"
+                                      Disabled="!_model.IgnoreAttendance || _model.Rto"
                                       Variant="Variant.Filled"
                                       Lines="3" />
                     </EditForm>
@@ -39,6 +42,10 @@
                 else if (Attendance.IgnoreAttendance)
                 {
                     <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
+                }
+                else if (Attendance.Rto)
+                {
+                    <MudText Typo="Typo.caption" Inline="false" Color="Color.Info">Attendance Counted: RTO</MudText>
                 }
                 else
                 {
@@ -98,10 +105,21 @@
             .ExecuteAsync();
     }
 
+    private void ToggleRto(bool rto)
+    {
+        _model.Rto = rto;
+        if (rto)
+        {
+            _model.IgnoreAttendance = false;
+            _model.IgnoreReason = null;
+        }
+    }
+
     private void BeginEdit()
     {
         _model.IgnoreAttendance = Attendance.IgnoreAttendance;
         _model.IgnoreReason = Attendance.IgnoreReason;
+        _model.Rto = Attendance.Rto;
         _editing = true;
     }
 
@@ -117,6 +135,7 @@
             {
                 Attendance.IgnoreAttendance = attendance.IgnoreAttendance;
                 Attendance.IgnoreReason = attendance.IgnoreReason;
+                Attendance.Rto = attendance.Rto;
                 Dialog.Close(DialogResult.Ok(false));
             })
             .ValidateWith(_problemValidator)

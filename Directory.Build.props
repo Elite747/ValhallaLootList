@@ -6,6 +6,7 @@
     <VersionPrefix>0.1.0</VersionPrefix>
     <LangVersion>Latest</LangVersion>
     <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <UserSecretsId>ValhallaLootList</UserSecretsId>
   </PropertyGroup>
 

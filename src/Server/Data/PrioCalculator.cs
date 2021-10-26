@@ -15,11 +15,12 @@ namespace ValhallaLootList.Server.Data
             return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);
         }
 
-        public static IEnumerable<PriorityBonusDto> GetListBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper)
+        public static IEnumerable<PriorityBonusDto> GetListBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, bool enchanted)
         {
             yield return GetAttendanceBonus(scope, attendances);
             yield return GetStatusBonus(scope, status);
             yield return GetDonationBonus(scope, donatedCopper);
+            yield return GetEnchantedBonus(enchanted);
 
             static PriorityBonusDto GetAttendanceBonus(PriorityScope scope, int attendances)
             {
@@ -59,6 +60,15 @@ namespace ValhallaLootList.Server.Data
                     RequiredDonations = scope.RequiredDonationCopper
                 };
             }
+
+            static PriorityBonusDto GetEnchantedBonus(bool enchanted)
+            {
+                return new PriorityBonusDto
+                {
+                    Type = PriorityBonusTypes.Enchanted,
+                    Value = enchanted ? 2 : 0
+                };
+            }
         }
 
         public static IEnumerable<PriorityBonusDto> GetItemBonuses(int timesSeen)
@@ -71,9 +81,9 @@ namespace ValhallaLootList.Server.Data
             };
         }
 
-        public static IEnumerable<PriorityBonusDto> GetAllBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, int timesSeen)
+        public static IEnumerable<PriorityBonusDto> GetAllBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, int timesSeen, bool enchanted)
         {
-            return GetListBonuses(scope, attendances, status, donatedCopper).Concat(GetItemBonuses(timesSeen));
+            return GetListBonuses(scope, attendances, status, donatedCopper, enchanted).Concat(GetItemBonuses(timesSeen));
         }
     }
 }

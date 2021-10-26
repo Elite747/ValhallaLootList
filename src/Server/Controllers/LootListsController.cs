@@ -172,7 +172,7 @@ namespace ValhallaLootList.Server.Controllers
             var returnDto = new LootListDto
             {
                 ApprovedBy = null,
-                Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations).ToList(),
+                Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations, character.Enchanted).ToList(),
                 CharacterId = character.Id,
                 CharacterMemberStatus = character.MemberStatus,
                 CharacterName = character.Name,
@@ -545,13 +545,13 @@ namespace ValhallaLootList.Server.Controllers
                 if (teams.TryGetValue(leader.RaidTeamId, out var team) && submissions.Find(s => s.TeamId == leader.RaidTeamId) is null) // Don't notify when submission status doesn't change.
                 {
                     string format = leader.RaidTeamId == character.TeamId ? currentMemberFormat : newAppFormat;
-                    await dcp.SendDmAsync(leader.UserId, m => m.WithContent(string.Format(
+                    await dcp.SendDmAsync(leader.UserId, string.Format(
                         format,
                         team.Name, // 0
                         character.Name, // 1
                         character.Race.GetDisplayName(), // 2
                         list.MainSpec.GetDisplayName(includeClassName: true), // 3
-                        list.Phase))); // 4
+                        list.Phase)); // 4
                 }
             }
 
@@ -713,7 +713,7 @@ namespace ValhallaLootList.Server.Controllers
                     await dcp.AddRoleAsync(character.OwnerId.Value, team.Name, "Accepted onto the raid team.");
                 }
 
-                await dcp.SendDmAsync(character.OwnerId.Value, m => m.WithContent(sb.ToString()));
+                await dcp.SendDmAsync(character.OwnerId.Value, sb.ToString());
             }
 
             return new ApproveOrRejectLootListResponseDto { Timestamp = list.Timestamp, Member = member, LootListStatus = list.Status };
@@ -906,20 +906,23 @@ namespace ValhallaLootList.Server.Controllers
             }
 
             var dtos = await lootListQuery
-                .Select(ll => new LootListDto
+                .Select(ll => new
                 {
-                    ApprovedBy = ll.ApprovedBy,
-                    CharacterId = ll.CharacterId,
+                    ll.ApprovedBy,
+                    ll.CharacterId,
                     CharacterName = ll.Character.Name,
                     CharacterMemberStatus = ll.Character.MemberStatus,
-                    TeamId = ll.Character.TeamId,
+                    CharacterEnchanted = ll.Character.Enchanted,
+                    ll.Character.TeamId,
                     TeamName = ll.Character.Team!.Name,
-                    Status = ll.Status,
-                    MainSpec = ll.MainSpec,
-                    OffSpec = ll.OffSpec,
-                    Phase = ll.Phase,
-                    Timestamp = ll.Timestamp,
-                    SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList()
+                    ll.Status,
+                    ll.MainSpec,
+                    ll.OffSpec,
+                    ll.Phase,
+                    ll.Timestamp,
+                    SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
+                    Entries = new List<LootListEntryDto>(),
+                    Bonuses = new List<PriorityBonusDto>()
                 })
                 .AsSingleQuery()
                 .ToListAsync();
@@ -961,7 +964,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 attendances.TryGetValue(dto.CharacterId, out var attended);
                 var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
-                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended?.Count ?? 0, dto.CharacterMemberStatus, characterDonations));
+                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended?.Count ?? 0, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted));
 
                 if (authorizationResult.Succeeded)
                 {
@@ -1027,7 +1030,23 @@ namespace ValhallaLootList.Server.Controllers
                 }
             }
 
-            return dtos;
+            return dtos.ConvertAll(data => new LootListDto
+            {
+                ApprovedBy = data.ApprovedBy,
+                Bonuses = data.Bonuses,
+                CharacterId = data.CharacterId,
+                CharacterMemberStatus = data.CharacterMemberStatus,
+                CharacterName = data.CharacterName,
+                Entries = data.Entries,
+                MainSpec = data.MainSpec,
+                OffSpec = data.OffSpec,
+                Phase = data.Phase,
+                Status = data.Status,
+                SubmittedTo = data.SubmittedTo,
+                TeamId = data.TeamId,
+                TeamName = data.TeamName,
+                Timestamp = data.Timestamp
+            });
         }
     }
 }

@@ -9,6 +9,7 @@ namespace ValhallaLootList.DataTransfer
             Trial = nameof(Trial),
             Attendance = nameof(Attendance),
             Donation = nameof(Donation),
-            Lost = nameof(Lost);
+            Lost = nameof(Lost),
+            Enchanted = nameof(Enchanted);
     }
 }

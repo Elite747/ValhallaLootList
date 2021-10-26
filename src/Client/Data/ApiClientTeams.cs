@@ -48,6 +48,11 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/teams/{teamId}/members/{characterId}");
         }
 
+        public IApiClientOperation UpdateMemberEnchanted(long teamId, long characterId, UpdateEnchantedDto dto)
+        {
+            return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/enchanted", dto);
+        }
+
         public IApiClientOperation<IList<GuildMemberDto>> GetLeaders(long teamId)
         {
             return Client.CreateRequest<IList<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");

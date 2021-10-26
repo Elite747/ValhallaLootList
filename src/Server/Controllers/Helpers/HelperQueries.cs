@@ -32,6 +32,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.IsFemale,
                     c.MemberStatus,
                     c.JoinedTeamAt,
+                    c.Enchanted,
                     Verified = c.VerifiedById.HasValue,
                     LootLists = c.CharacterLootLists.Select(l => new
                     {
@@ -58,6 +59,7 @@ namespace ValhallaLootList.Server.Controllers
                         TeamName = teamName,
                         Verified = character.Verified
                     },
+                    Enchanted = character.Enchanted,
                     JoinedAt = character.JoinedTeamAt,
                     Status = character.MemberStatus,
                     ThisMonthRequiredDonations = scope.RequiredDonationCopper,

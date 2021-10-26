@@ -198,6 +198,23 @@ namespace ValhallaLootList.Server.Discord
             }
         }
 
+        public async Task SendDmAsync(long id, string message)
+        {
+            CheckStarted();
+
+            if (_options.SuppressOutgoingMessages)
+            {
+                return;
+            }
+
+            var member = await GetMemberAsync(id);
+
+            if (member is not null)
+            {
+                await member.SendMessageAsync(message);
+            }
+        }
+
         public Task AddRoleAsync(long id, string roleName, string reason)
         {
             return AddRoleAsync(id, reason, role => string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));

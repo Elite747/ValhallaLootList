@@ -209,7 +209,7 @@
 
     private async Task ApproveAndAddToRosterAsync()
     {
-        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = true }).Result;
+        var result = await DialogService.Show<SetMessageDialog>("Approve Loot List").Result;
 
         if (!result.Cancelled)
         {
@@ -235,7 +235,7 @@
 
     private async Task DenyAsync()
     {
-        var result = await DialogService.Show<SetMessageDialog>(string.Empty, parameters: new() { [nameof(SetMessageDialog.Approved)] = false }).Result;
+        var result = await DialogService.Show<SetMessageDialog>("Deny Loot List").Result;
 
         if (!result.Cancelled)
         {

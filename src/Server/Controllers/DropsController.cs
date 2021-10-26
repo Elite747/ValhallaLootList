@@ -101,6 +101,7 @@ namespace ValhallaLootList.Server.Controllers
                     Id = c.CharacterId,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
+                    c.Character.Enchanted,
                     Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == teamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
@@ -150,7 +151,7 @@ namespace ValhallaLootList.Server.Controllers
 
                     var donated = donationMatrix.GetCreditForMonth(winner.Id, now);
 
-                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, winner.Attended, winner.MemberStatus, donated, passes.Count))
+                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, winner.Attended, winner.MemberStatus, donated, passes.Count, winner.Enchanted))
                     {
                         winnerPrio = winnerPrio.Value + bonus.Value;
                     }
@@ -175,7 +176,7 @@ namespace ValhallaLootList.Server.Controllers
 
                         var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
 
-                        foreach (var bonus in PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes))
+                        foreach (var bonus in PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted))
                         {
                             thisPrio += bonus.Value;
                         }
@@ -323,6 +324,7 @@ namespace ValhallaLootList.Server.Controllers
                     c.Character.Name,
                     c.Character.TeamId,
                     c.Character.MemberStatus,
+                    c.Character.Enchanted,
                     Attended = c.Character.Attendances.Where(x => !x.IgnoreAttendance && x.Raid.RaidTeamId == drop.TeamId && x.RemovalId == null && observedDates.Contains(x.Raid.StartedAt.Date))
                         .Select(x => x.Raid.StartedAt.Date)
                         .Distinct()
@@ -359,7 +361,7 @@ namespace ValhallaLootList.Server.Controllers
 
                 var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
 
-                prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes));
+                prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, killer.Attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted));
 
                 dto.Add(prio);
             }

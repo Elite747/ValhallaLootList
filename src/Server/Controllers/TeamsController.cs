@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
@@ -285,6 +286,92 @@ namespace ValhallaLootList.Server.Controllers
             return Accepted();
         }
 
+        [HttpPut("{id:long}/members/{characterId:long}/enchanted")]
+        public async Task<IActionResult> PutMemberEnchanted(long id, long characterId, [FromBody] UpdateEnchantedDto dto, [FromServices] DiscordClientProvider dcp)
+        {
+            var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.LeadershipOrAdmin);
+
+            if (!auth.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            var team = await _context.RaidTeams.FindAsync(id);
+
+            if (team is null)
+            {
+                return NotFound();
+            }
+
+            var character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+            {
+                return NotFound();
+            }
+
+            if (character.TeamId != id)
+            {
+                return Problem("Character is not assigned to this team.");
+            }
+
+            if (character.Enchanted == dto.Enchanted)
+            {
+                return Problem(dto.Enchanted ? "Character is already marked as enchanted." : "Character's enchanted status is already removed.");
+            }
+
+            character.Enchanted = dto.Enchanted;
+
+            await _context.SaveChangesAsync();
+
+            _telemetry.TrackEvent("TeamMemberEnchantedUpdated", User, props =>
+            {
+                props["TeamId"] = team.Id.ToString();
+                props["TeamName"] = team.Name;
+                props["CharacterId"] = character.Id.ToString();
+                props["CharacterName"] = character.Name;
+                props["Enchanted"] = dto.Enchanted.ToString();
+            });
+
+            var messageTargets = new HashSet<long>(capacity: 4); // standard 3 leaders + owner
+
+            if (character.OwnerId > 0)
+            {
+                messageTargets.Add(character.OwnerId.Value);
+            }
+
+            await foreach (var leaderId in _context.RaidTeamLeaders
+                .AsNoTracking()
+                .Where(rtl => rtl.RaidTeamId == team.Id)
+                .Select(rtl => rtl.UserId)
+                .AsAsyncEnumerable())
+            {
+                messageTargets.Add(leaderId);
+            }
+
+            if (messageTargets.Count > 0)
+            {
+                var sb = new StringBuilder(character.Name)
+                    .Append(dto.Enchanted ? " was given the gem & enchant bonus by <@" : " has had their gem & enchant bonus removed by <@")
+                    .Append(User.GetDiscordId())
+                    .Append(">.");
+
+                if (dto.Message?.Length > 0)
+                {
+                    sb.AppendLine().Append("> ").Append(dto.Message);
+                }
+
+                var message = sb.ToString();
+
+                foreach (var discordId in messageTargets)
+                {
+                    await dcp.SendDmAsync(discordId, message);
+                }
+            }
+
+            return Accepted();
+        }
+
         [HttpDelete("{id:long}/members/{characterId:long}")]
         public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
         {
@@ -331,6 +418,7 @@ namespace ValhallaLootList.Server.Controllers
             character.TeamId = null;
             character.MemberStatus = RaidMemberStatus.FullTrial;
             character.JoinedTeamAt = default;
+            character.Enchanted = false;
 
             await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
             {

@@ -29,6 +29,31 @@
     </NotAuthorized>
 </AuthorizeView>
 
+<AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+    <Authorized>
+        <MudText Inline="false">
+            Gem &amp; Enchant Bonus:
+            <MudText Inline Color="Member.Enchanted ? Color.Success : Color.Warning">
+                @(Member.Enchanted ? "Awarded" : "Not Awarded")
+            </MudText>
+            <MudIconButton OnClick="ToggleEnchantedAsync"
+                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Size="Size.Small"
+                           Color="Member.Enchanted ? Color.Error : Color.Success"
+                           Class="ml-2" />
+        </MudText>
+    </Authorized>
+    <NotAuthorized>
+        @if (Member.Enchanted)
+        {
+            <MudText Inline="false">
+                Gear is gemmed &amp; enchanted
+                <MudIcon Style="font-size: 1rem" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
+            </MudText>
+        }
+    </NotAuthorized>
+</AuthorizeView>
+
 <DonationSummary Member="Member">
     <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
         <MudIconButton OnClick="() => AddDonationAsync(false)"
@@ -116,7 +141,29 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
 
+    private async Task ToggleEnchantedAsync()
+    {
+        var result = await DialogService.Show<SetMessageDialog>(Member.Enchanted ? "Remove Enchanted Bonus" : "Add Enchanted Bonus").Result;
+
+        if (!result.Cancelled)
+        {
+            var dto = new UpdateEnchantedDto
+            {
+                Enchanted = !Member.Enchanted,
+                Message = (string?)result.Data
+            };
+
+            await Api.Teams.UpdateMemberEnchanted(Team.Id, Member.Character.Id, dto)
+                .OnSuccess(_ =>
+                {
+                    Member.Enchanted = dto.Enchanted;
+                    StateHasChanged();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 
     private static string GetDisplayString(RaidMemberStatus status)

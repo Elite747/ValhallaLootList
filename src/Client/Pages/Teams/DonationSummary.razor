@@ -1,6 +1,7 @@
 ﻿<div class="d-flex align-center">
     <MudTooltip Text="This was what was donated last month for priority in the current month.">
         <MudText Inline="false">
+            <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
             This month's donations: <GameCurrencyDisplay Amount="Member.DonatedThisMonth" />
         </MudText>
     </MudTooltip>
@@ -17,6 +18,7 @@
         </TooltipContent>
         <ChildContent>
             <MudText Inline="false">
+                <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
                 Next month's donations: <GameCurrencyDisplay Amount="Member.DonatedNextMonth" />
             </MudText>
         </ChildContent>

@@ -45,6 +45,30 @@
                             </ChildContent>
                         </MudTooltip>
                     }
+                    @if (!member.Enchanted)
+                    {
+                        <MudTooltip Text="Gem & enchant bonus is not active">
+                            <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
+                        </MudTooltip>
+                    }
+                    @if (member.DonatedNextMonth < member.NextMonthRequiredDonations)
+                    {
+                        <MudTooltip>
+                            <TooltipContent>
+                                @if (member.DonatedThisMonth < member.ThisMonthRequiredDonations)
+                                {
+                                    @:Donations for next month is not sufficient to grant a priority bonus.
+                                }
+                                else
+                                {
+                                    @:Donations for next month is not sufficient to maintain the priority bonus.
+                                }
+                            </TooltipContent>
+                            <ChildContent>
+                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />
+                            </ChildContent>
+                        </MudTooltip>
+                    }
                     @if (member.Status != RaidMemberStatus.Member)
                     {
                         <MudText Inline="true" Color="Color.Warning">Trial (@(member.Status == RaidMemberStatus.HalfTrial ? -9 : -18))</MudText>

@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <Target Name="MinifyJs" AfterTargets="CompileTypeScript">
-    <Exec Command="dotnet run --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="dotnet run --no-build --no-restore --configuration $(Configuration) --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
   </Target>
 
   <Target Name="MinifyScss" BeforeTargets="BeforeBuild">

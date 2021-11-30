@@ -45,6 +45,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     Id = team.Id,
                     Name = team.Name,
+                    Inactive = team.Inactive,
                     Schedules = team.Schedules.Select(s => new ScheduleDto
                     {
                         Day = s.Day,
@@ -77,6 +78,7 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     Id = team.Id,
                     Name = team.Name,
+                    Inactive = team.Inactive,
                     Schedules = team.Schedules.Select(s => new ScheduleDto
                     {
                         Day = s.Day,
@@ -121,7 +123,8 @@ namespace ValhallaLootList.Server.Controllers
 
             var team = new RaidTeam(idGenerator.CreateId())
             {
-                Name = dto.Name
+                Name = dto.Name,
+                Inactive = dto.Inactive
             };
 
             foreach (var scheduleDto in dto.Schedules)
@@ -153,6 +156,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 Id = team.Id,
                 Name = team.Name,
+                Inactive = team.Inactive,
                 Schedules = team.Schedules.Select(s => new ScheduleDto
                 {
                     Day = s.Day,
@@ -180,6 +184,7 @@ namespace ValhallaLootList.Server.Controllers
             var team = await _context.RaidTeams.FindAsync(id);
 
             team.Name = dto.Name;
+            team.Inactive = dto.Inactive;
 
             var schedules = await _context.RaidTeamSchedules.AsTracking().Where(s => s.RaidTeam == team).OrderBy(s => s.Id).ToListAsync();
 
@@ -227,6 +232,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 Id = team.Id,
                 Name = team.Name,
+                Inactive = team.Inactive,
                 Schedules = team.Schedules.Select(s => new ScheduleDto
                 {
                     Day = s.Day,

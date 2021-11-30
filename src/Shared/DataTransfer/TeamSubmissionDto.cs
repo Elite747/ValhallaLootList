@@ -14,6 +14,8 @@ namespace ValhallaLootList.DataTransfer
         [Required, GuildName]
         public string? Name { get; set; }
 
+        public bool Inactive { get; set; }
+
         public List<ScheduleSubmissionDto> Schedules
         {
             get => _schedules ??= new();

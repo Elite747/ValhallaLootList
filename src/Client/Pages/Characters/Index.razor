@@ -63,7 +63,7 @@
                                        ToStringFunc='team => team?.Name ?? "No Team"'
                                        T="TeamNameDto">
                                 <MudSelectItem T="TeamNameDto" Value="null">No Team</MudSelectItem>
-                                @foreach (var team in TeamsSource.Teams)
+                                @foreach (var team in TeamsSource.GetTeams())
                                 {
                                     <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name</MudSelectItem>
                                 }

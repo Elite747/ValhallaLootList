@@ -7,6 +7,7 @@
             <ProblemValidator @ref="_problemValidator" />
 
             <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" Variant="Variant.Filled" />
+            <MudSwitch Label="Deactivate" @bind-Checked="_team.Inactive" Color="Color.Error" />
 
             @for (int i = 0; i < _team.Schedules.Count; i++)
             {
@@ -57,6 +58,7 @@
         if (EditingTeam is not null)
         {
             _team.Name = EditingTeam.Name;
+            _team.Inactive = EditingTeam.Inactive;
             _team.Schedules.Clear();
 
             foreach (var schedule in EditingTeam.Schedules)

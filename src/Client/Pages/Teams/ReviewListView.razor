@@ -5,7 +5,10 @@
 
 <LootListLayout LootList="LootList" Class="flex-grow-1">
     <HeaderContent>
-        <MudText Typo="Typo.h6">@LootList.CharacterName</MudText>
+        <MudText Typo="Typo.h6">
+            @LootList.CharacterName
+            <MudText Inline Typo="Typo.subtitle1">@_character?.Race.GetDisplayName() @LootList.MainSpec.GetDisplayName(includeClassName: true)</MudText>
+        </MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
 
         @if (_character is not null)

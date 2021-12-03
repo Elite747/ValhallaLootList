@@ -1,8 +1,11 @@
-﻿<CascadingItemContext Id="Entry.ItemId">
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<CascadingItemContext Id="Entry.ItemId">
     <div class="d-flex align-center">
         @if (Entry.Won)
         {
-            <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+            <MudBadge Overlap Left Icon="@Icons.Material.Filled.Check" Color="Color.Success">
                 <MudAvatar Rounded="true" Class="mr-2">
                     <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                 </MudAvatar>
@@ -23,7 +26,7 @@
                     }
                 </TooltipContent>
                 <ChildContent>
-                    <MudBadge Content="_prio" Color="Color.Info" Overlap="true">
+                    <MudBadge Overlap Left Content="_prio" Color="Color.Info">
                         <MudAvatar Rounded="true" Class="mr-2">
                             <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                         </MudAvatar>
@@ -37,12 +40,23 @@
                 <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
             </MudAvatar>
         }
-        <ItemLink Colorize="true" Bracketize="true" LinkEnabled="true" PlaceholderText="@Entry.ItemName" />
+        <div class="d-flex flex-column">
+            <ItemLink Colorize Bracketize LinkEnabled PlaceholderText="@Entry.ItemName" />
+            @if (!Entry.Won && Entry.Rank != 0)
+            {
+                <AuthorizeView Resource="LootList.CharacterId" Policy="@(AppPolicies.CharacterOwner)">
+                    <MudTooltip Text="Toggling this will make it appear as if you don't have this item on your loot list.">
+                        <MudSwitch ReadOnly="_autoPassChanging" T="bool" Checked="Entry.AutoPass" CheckedChanged="SetAutoPassAsync" Label="Auto-Pass" Color="Color.Error" />
+                    </MudTooltip>
+                </AuthorizeView>
+            }
+        </div>
     </div>
 </CascadingItemContext>
 
 @code {
     private int _prio;
+    private bool _autoPassChanging;
 
     [Parameter] public LootListEntryDto Entry { get; set; } = null!;
     [Parameter] public LootListDto LootList { get; set; } = null!;
@@ -60,6 +74,23 @@
             {
                 _prio += bonus.Value;
             }
+        }
+    }
+
+    private async Task SetAutoPassAsync(bool autoPass)
+    {
+        try
+        {
+            _autoPassChanging = true;
+            await Api.LootListEntries
+                .AutoPass(Entry.Id, autoPass)
+                .OnSuccess(_ => Entry.AutoPass = autoPass)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+        finally
+        {
+            _autoPassChanging = false;
         }
     }
 }

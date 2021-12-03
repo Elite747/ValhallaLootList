@@ -26,6 +26,49 @@ namespace ValhallaLootList.Server.Controllers
             _telemetry = telemetry;
         }
 
+        [HttpPost("{entryId:long}/autopass")]
+        public async Task<IActionResult> PostSetAutoPass(long entryId, bool autoPass)
+        {
+            var entry = await _context.LootListEntries.FindAsync(entryId);
+
+            if (entry is null)
+            {
+                return NotFound();
+            }
+
+            await _context.Entry(entry).Reference(e => e.LootList).LoadAsync();
+
+            if (entry is null)
+            {
+                return NotFound();
+            }
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, entry.LootList.CharacterId, AppPolicies.CharacterOwner);
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            if (autoPass != entry.AutoPass)
+            {
+                entry.AutoPass = autoPass;
+                int changes = await _context.SaveChangesAsync();
+                Debug.Assert(changes == 1);
+
+                _telemetry.TrackEvent("LootListEntryAutoPassToggled", User, props =>
+                {
+                    props["EntryId"] = entry.Id.ToString();
+                    props["CharacterId"] = entry.LootList.CharacterId.ToString();
+                    props["Phase"] = entry.LootList.Phase.ToString();
+                    props["AutoPass"] = autoPass.ToString();
+                });
+
+                return Accepted();
+            }
+
+            return Ok();
+        }
+
         [HttpPut("{entryId:long}")]
         public async Task<ActionResult<LootListEntryUpdateDto>> PutEntry(long entryId, [FromBody] LootListEntrySubmissionDto dto)
         {

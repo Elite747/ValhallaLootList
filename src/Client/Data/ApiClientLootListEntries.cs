@@ -16,5 +16,10 @@ namespace ValhallaLootList.Client.Data
         {
             return Client.CreateRequest<LootListEntrySubmissionDto, LootListEntryUpdateDto>(HttpMethod.Put, $"api/v1/lootlistentries/{entryId}", dto);
         }
+
+        public IApiClientOperation AutoPass(long entryId, bool autoPass)
+        {
+            return Client.CreateRequest(HttpMethod.Post, $"api/v1/lootlistentries/{entryId}/autopass?autoPass={autoPass}");
+        }
     }
 }

@@ -199,7 +199,8 @@ namespace ValhallaLootList.Server.Controllers
                     BracketAllowsOffspec = bracket.AllowOffspec,
                     BracketAllowsTypeDuplicates = bracket.AllowTypeDuplicates,
                     Id = entry.Id,
-                    Rank = entry.Rank
+                    Rank = entry.Rank,
+                    AutoPass = entry.AutoPass,
                 });
             }
 
@@ -992,6 +993,7 @@ namespace ValhallaLootList.Server.Controllers
                     ItemName = (string?)e.Item!.Name,
                     Won = e.DropId != null,
                     e.Rank,
+                    e.AutoPass,
                     e.Justification,
                     e.LootList.Phase,
                     e.LootList.CharacterId
@@ -1021,6 +1023,7 @@ namespace ValhallaLootList.Server.Controllers
                         RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
                         Justification = hasRankPrivilege ? entry.Justification : null,
+                        AutoPass = entry.AutoPass,
                         Rank = dto.Status == LootListStatus.Locked || hasRankPrivilege ? entry.Rank : 0,
                         Won = entry.Won,
                         Bracket = hasRankPrivilege && bracket is not null ? bracket.Index : 0,

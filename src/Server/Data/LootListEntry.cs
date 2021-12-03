@@ -37,6 +37,8 @@ namespace ValhallaLootList.Server.Data
         [StringLength(256)]
         public string? Justification { get; set; }
 
+        public bool AutoPass { get; set; }
+
         public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
     }
 }

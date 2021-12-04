@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ValhallaLootList.DataTransfer;
 
@@ -11,11 +12,29 @@ namespace ValhallaLootList.Client.Data
     public class TeamsSource
     {
         private bool _initialized;
-        private IList<TeamNameDto>? _teams;
+        private List<TeamNameDto>? _teams;
 
         public event Action? Updated;
 
-        public IEnumerable<TeamNameDto> Teams => _teams ?? Array.Empty<TeamNameDto>();
+        public IEnumerable<TeamNameDto> GetTeams(bool includeInactive = false)
+        {
+            if (_teams is null)
+            {
+                return Array.Empty<TeamNameDto>();
+            }
+
+            if (includeInactive)
+            {
+                return _teams;
+            }
+
+            return _teams.Where(team => !team.Inactive);
+        }
+
+        public TeamNameDto? GetById(long id)
+        {
+            return _teams?.Find(team => team.Id == id);
+        }
 
         public Task RefreshAsync(ApiClient api)
         {

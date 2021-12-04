@@ -11,7 +11,7 @@
         <MudGrid>
             <MudItem xs="12" md="6">
                 <div class="d-flex align-center mb-3">
-                    <MudText Typo="Typo.h4" GutterBottom="false">@team.Name</MudText>
+                    <MudText Typo="Typo.h4" GutterBottom="false" Color="team.Inactive ? Color.Error : default">@team.Name</MudText>
                     <AuthorizeView Policy="@AppPolicies.Administrator">
                         <MudTooltip Text="Edit" Class="ml-2">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditAsync(team)" />

@@ -20,7 +20,7 @@
             if (date >= TimeProvider.Today)
             {
                 var teamsAdded = _raids.Where(r => TimeProvider.Convert(r.StartedAt).Date == date).Select(r => r.TeamId).ToHashSet();
-                @foreach (var team in TeamsSource.Teams.Where(team => !teamsAdded.Contains(team.Id)))
+                @foreach (var team in TeamsSource.GetTeams().Where(team => !teamsAdded.Contains(team.Id)))
                 {
                     foreach (var schedule in team.Schedules.Select(s => new { s.Day, s.Duration, Date = TimeProvider.FromServerTimeOfDay(date, s.RealmTimeStart) }).Where(s => s.Day == s.Date.DayOfWeek))
                     {

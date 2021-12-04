@@ -386,6 +386,7 @@
                 {
                     Raid.Attendees.Add(a);
                     SetPresent(a.Character, true);
+                    RemoveNonExistant(character);
                 })
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();

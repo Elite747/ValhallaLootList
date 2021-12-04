@@ -172,7 +172,7 @@ else
         {
             var sb = new System.Text.StringBuilder("Loot List has been submitted to ");
 
-            if (LootList.SubmittedTo.Any(id => !TeamsSource.Teams.Any(team => team.Id == id)))
+            if (LootList.SubmittedTo.Any(id => TeamsSource.GetById(id) is null))
             {
                 if (LootList.SubmittedTo.Count == 1)
                 {
@@ -185,7 +185,7 @@ else
             }
             else
             {
-                sb.Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[0]).Name);
+                sb.Append(TeamsSource.GetById(LootList.SubmittedTo[0])?.Name);
 
                 if (LootList.SubmittedTo.Count > 1)
                 {
@@ -196,10 +196,10 @@ else
 
                     for (int i = 1; i < LootList.SubmittedTo.Count - 1; i++)
                     {
-                        sb.Append(' ').Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[i]).Name).Append(',');
+                        sb.Append(' ').Append(TeamsSource.GetById(LootList.SubmittedTo[i])?.Name).Append(',');
                     }
 
-                    sb.Append(" and ").Append(TeamsSource.Teams.First(t => t.Id == LootList.SubmittedTo[^1]).Name);
+                    sb.Append(" and ").Append(TeamsSource.GetById(LootList.SubmittedTo[^1])?.Name);
                 }
             }
 

@@ -8,7 +8,7 @@
 
 <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
     <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
-    @foreach (var team in TeamsSource.Teams)
+    @foreach (var team in TeamsSource.GetTeams())
     {
         <MudNavLink Href="@("teams/" + team.Name)">@team.Name</MudNavLink>
     }

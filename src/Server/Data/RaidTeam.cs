@@ -25,6 +25,8 @@ namespace ValhallaLootList.Server.Data
         [Required, StringLength(24, MinimumLength = 2), GuildName]
         public string Name { get; set; } = string.Empty;
 
+        public bool Inactive { get; set; }
+
         public virtual ICollection<Character> Roster { get; set; } = new HashSet<Character>();
 
         public virtual ICollection<RaidTeamSchedule> Schedules { get; set; } = new HashSet<RaidTeamSchedule>();

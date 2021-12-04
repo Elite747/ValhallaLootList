@@ -13,6 +13,11 @@
         <MudTooltip Text="Add Team">
             <MudIconButton OnClick="CreateClicked" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" />
         </MudTooltip>
+        <MudTooltip Text=@(_showInactive ? "Hide Inactive Teams" : "Show Inactive Teams")>
+            <MudIconButton OnClick="() => _showInactive = !_showInactive"
+                           Color="Color.Primary"
+                           Icon=@(_showInactive ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility) />
+        </MudTooltip>
     </AuthorizeView>
 
     <MudTooltip Text="Refresh">
@@ -22,10 +27,10 @@
 
 <MudPaper Elevation="5">
     <MudList Clickable="true">
-        @foreach (var team in TeamsSource.Teams)
+        @foreach (var team in TeamsSource.GetTeams(_showInactive))
         {
             <MudListItem Href="@("teams/" + team.Name)">
-                <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>
+                <MudText Typo="Typo.h6" Inline="false" Color="team.Inactive ? Color.Error : default">@team.Name</MudText>
                 @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
                 {
                     <ScheduleDisplay Schedule="schedule" Typo="Typo.caption" />
@@ -37,6 +42,8 @@
 
 
 @code {
+    private bool _showInactive;
+
     private async Task CreateClicked()
     {
         var dto = await DialogService.ShowAsync<Create, TeamDto>("Create Team");

@@ -13,6 +13,8 @@ namespace ValhallaLootList.DataTransfer
 
         public string Name { get; set; } = string.Empty;
 
+        public bool Inactive { get; set; }
+
         public List<ScheduleDto> Schedules
         {
             get => _schedules ??= new();

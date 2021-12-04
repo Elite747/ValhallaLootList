@@ -13,9 +13,9 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<TeamNameDto>> GetAllTeamNames()
+        public IApiClientOperation<List<TeamNameDto>> GetAllTeamNames()
         {
-            return Client.CreateRequest<IList<TeamNameDto>>(HttpMethod.Get, "api/v1/teams");
+            return Client.CreateRequest<List<TeamNameDto>>(HttpMethod.Get, "api/v1/teams");
         }
 
         public IApiClientOperation<TeamDto> Get(long teamId)
@@ -53,9 +53,9 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/enchanted", dto);
         }
 
-        public IApiClientOperation<IList<GuildMemberDto>> GetLeaders(long teamId)
+        public IApiClientOperation<List<GuildMemberDto>> GetLeaders(long teamId)
         {
-            return Client.CreateRequest<IList<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");
+            return Client.CreateRequest<List<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");
         }
 
         public IApiClientOperation<GuildMemberDto> AddLeader(long teamId, AddLeaderDto dto)

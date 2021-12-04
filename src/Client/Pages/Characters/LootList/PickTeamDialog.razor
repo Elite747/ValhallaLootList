@@ -8,7 +8,7 @@
     </TitleContent>
     <DialogContent>
         <MudList Dense="true" Clickable="true">
-            @foreach (var team in Teams.Teams)
+            @foreach (var team in Teams.GetTeams())
             {
                 <MudListItem Icon="@(SelectedTeams.Contains(team.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" OnClick="() => Toggle(team.Id)">
                     <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>

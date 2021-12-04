@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211130212423_AddTeamInactiveFlag")]
+    partial class AddTeamInactiveFlag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -889,9 +891,6 @@ namespace ValhallaLootList.Server.Migrations
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint");
-
-                    b.Property<bool>("AutoPass")
-                        .HasColumnType("bit");
 
                     b.Property<long?>("DropId")
                         .HasColumnType("bigint");

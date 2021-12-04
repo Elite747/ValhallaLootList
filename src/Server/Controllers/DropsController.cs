@@ -331,7 +331,7 @@ namespace ValhallaLootList.Server.Controllers
                         .OrderByDescending(x => x)
                         .Take(scope.ObservedAttendances)
                         .Count(),
-                    Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                    Entry = _context.LootListEntries.Where(e => !e.AutoPass && !e.DropId.HasValue && e.LootList.CharacterId == c.CharacterId && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
                         .OrderByDescending(e => e.Rank)
                         .Select(e => new
                         {

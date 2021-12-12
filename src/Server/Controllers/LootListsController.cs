@@ -603,10 +603,10 @@ namespace ValhallaLootList.Server.Controllers
 
             var submissions = await _context.LootListTeamSubmissions
                 .AsTracking()
-                .Where(s => s.LootListCharacterId == list.CharacterId && s.LootListPhase == list.Phase)
+                .Where(s => s.LootListCharacterId == list.CharacterId)
                 .ToListAsync();
 
-            var teamSubmission = submissions.Find(s => s.TeamId == dto.TeamId);
+            var teamSubmission = submissions.Find(s => s.TeamId == dto.TeamId && s.LootListPhase == list.Phase);
 
             if (teamSubmission is null)
             {
@@ -669,7 +669,7 @@ namespace ValhallaLootList.Server.Controllers
             {
                 _context.LootListTeamSubmissions.Remove(teamSubmission);
 
-                if (submissions.Count == 1)
+                if (submissions.Count(s => s.LootListPhase == list.Phase) == 1)
                 {
                     if (list.Status != LootListStatus.Locked)
                     {

@@ -10,7 +10,11 @@
         </MudList>
     </div>
     <MudDivider Vertical FlexItem Class="d-none d-md-block" />
-    @if (_selectedModeItem?.Tag is not null)
+    @if (_ranksHidden)
+    {
+        <MudText Typo="Typo.body1" Class="ma-3">No standings are visible. To view standings you must be on this raid team.</MudText>
+    }
+    else if (_selectedModeItem?.Tag is not null)
     {
         <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedFilterItem is not null ? "d-none d-md-flex" : null)">
             <MudIconButton OnClick="() => _selectedModeItem = null" Icon="@Icons.Material.Filled.ArrowBack" Class="d-md-none mr-auto" />
@@ -21,7 +25,7 @@
             else if (_filterItems is not null)
             {
                 <MudList Dense Clickable Class="content" SelectedItem="_selectedFilterItem" SelectedItemChanged="SelectFilter">
-                    @{  bool hasItems = false; }
+                    @{ bool hasItems = false; }
                     @foreach (var filter in _filterItems)
                     {
                         @if (filter.Header)
@@ -139,7 +143,7 @@
 
     private IList<ItemDto>? _items;
     private MudListItem? _selectedModeItem, _selectedFilterItem;
-    private bool _filtersLoading, _lootListsLoading, _teamOrPhaseChanged;
+    private bool _filtersLoading, _lootListsLoading, _teamOrPhaseChanged, _ranksHidden;
     private byte _phase;
     private TeamDto _team = null!;
 
@@ -247,6 +251,7 @@
     private void ConfigureLootLists(IList<LootListDto> lootLists)
     {
         _lootListsLoading = false;
+        _ranksHidden = lootLists.Count != 0;
 
         foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName))
         {
@@ -279,6 +284,10 @@
                         Rank = entry.Rank,
                         Won = entry.Won
                     });
+                }
+                if (entry.Rank != 0)
+                {
+                    _ranksHidden = false;
                 }
             }
         }

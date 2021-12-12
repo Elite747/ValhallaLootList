@@ -906,6 +906,8 @@ namespace ValhallaLootList.Server.Controllers
                 entryQuery = entryQuery.Where(e => e.LootList.Phase == phase.Value);
             }
 
+            var userId = User.GetDiscordId();
+
             var dtos = await lootListQuery
                 .Select(ll => new
                 {
@@ -923,7 +925,8 @@ namespace ValhallaLootList.Server.Controllers
                     ll.Timestamp,
                     SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
                     Entries = new List<LootListEntryDto>(),
-                    Bonuses = new List<PriorityBonusDto>()
+                    Bonuses = new List<PriorityBonusDto>(),
+                    Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId,
                 })
                 .AsSingleQuery()
                 .ToListAsync();
@@ -955,10 +958,6 @@ namespace ValhallaLootList.Server.Controllers
                 dates.Add(record.Date);
             }
 
-            var characterAuthorizationLookup = new Dictionary<long, bool>();
-
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.LeadershipOrAdmin);
-
             var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate, scope);
 
             foreach (var dto in dtos)
@@ -966,22 +965,30 @@ namespace ValhallaLootList.Server.Controllers
                 attendances.TryGetValue(dto.CharacterId, out var attended);
                 var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
                 dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended?.Count ?? 0, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted));
-
-                if (authorizationResult.Succeeded)
-                {
-                    characterAuthorizationLookup[dto.CharacterId] = true;
-                }
-                else if (!characterAuthorizationLookup.ContainsKey(dto.CharacterId))
-                {
-                    var ownerAuthResult = await _authorizationService.AuthorizeAsync(User, dto.CharacterId, AppPolicies.CharacterOwner);
-                    characterAuthorizationLookup[dto.CharacterId] = ownerAuthResult.Succeeded;
-                }
             }
 
             var brackets = await _context.Brackets
                 .AsNoTracking()
                 .OrderBy(b => b.Index)
                 .ToListAsync();
+
+            var ownedTeams = new HashSet<long>();
+
+            var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.LeadershipOrAdmin);
+
+            if (!adminAuthorizationResult.Succeeded)
+            {
+                // querying owned teams is only necessary when not an administrator.
+                await foreach (var ownedTeamId in _context.Characters
+                    .AsNoTracking()
+                    .Where(c => c.OwnerId == userId && c.TeamId.HasValue)
+                    .Select(c => c.TeamId!.Value)
+                    .Distinct()
+                    .AsAsyncEnumerable())
+                {
+                    ownedTeams.Add(ownedTeamId);
+                }
+            }
 
             await foreach (var entry in entryQuery
                 .OrderByDescending(e => e.Rank)
@@ -1011,25 +1018,32 @@ namespace ValhallaLootList.Server.Controllers
                         bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.LootListEntryId == entry.Id)));
                     }
 
-                    var bracket = brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank);
-
-                    characterAuthorizationLookup.TryGetValue(dto.CharacterId, out var hasRankPrivilege);
-
-                    dto.Entries.Add(new LootListEntryDto
+                    var entryDto = new LootListEntryDto
                     {
                         Bonuses = bonuses,
                         Id = entry.Id,
                         ItemId = entry.ItemId,
                         RewardFromId = entry.RewardFromId,
                         ItemName = entry.ItemName,
-                        Justification = hasRankPrivilege ? entry.Justification : null,
                         AutoPass = entry.AutoPass,
-                        Rank = dto.Status == LootListStatus.Locked || hasRankPrivilege ? entry.Rank : 0,
-                        Won = entry.Won,
-                        Bracket = hasRankPrivilege && bracket is not null ? bracket.Index : 0,
-                        BracketAllowsOffspec = hasRankPrivilege && (bracket?.AllowOffspec ?? false),
-                        BracketAllowsTypeDuplicates = hasRankPrivilege && (bracket?.AllowTypeDuplicates ?? false)
-                    });
+                        Won = entry.Won
+                    };
+
+                    if (adminAuthorizationResult.Succeeded || // user is leadership/admin OR
+                        dto.Owned || // user owns this character OR
+                        (dto.Status == LootListStatus.Locked && dto.TeamId.HasValue && ownedTeams.Contains(dto.TeamId.Value))) // user is on this team and the list is locked
+                    {
+                        entryDto.Justification = entry.Justification;
+                        entryDto.Rank = entry.Rank;
+                        if (brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank) is { } bracket)
+                        {
+                            entryDto.Bracket = bracket.Index;
+                            entryDto.BracketAllowsOffspec = bracket.AllowOffspec;
+                            entryDto.BracketAllowsTypeDuplicates = bracket.AllowTypeDuplicates;
+                        }
+                    }
+
+                    dto.Entries.Add(entryDto);
                 }
             }
 

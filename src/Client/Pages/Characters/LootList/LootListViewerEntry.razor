@@ -15,14 +15,16 @@
         {
             <MudTooltip>
                 <TooltipContent>
-                    <div>
-                        Rank @Entry.Rank
-                    </div>
+                    <div>Rank @Entry.Rank</div>
                     @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
                     {
                         <div>
                             <PriorityBonusDisplay Bonus="bonus" />
                         </div>
+                    }
+                    @if (Entry.AutoPass)
+                    {
+                        <div>Automatically Passing</div>
                     }
                 </TooltipContent>
                 <ChildContent>
@@ -45,9 +47,14 @@
             @if (!Entry.Won && Entry.Rank != 0)
             {
                 <AuthorizeView Resource="LootList.CharacterId" Policy="@(AppPolicies.CharacterOwner)">
-                    <MudTooltip Text="Toggling this will make it appear as if you don't have this item on your loot list.">
-                        <MudSwitch ReadOnly="_autoPassChanging" T="bool" Checked="Entry.AutoPass" CheckedChanged="SetAutoPassAsync" Label="Auto-Pass" Color="Color.Error" />
-                    </MudTooltip>
+                    <Authorized>
+                        <MudTooltip Text="Toggling this will make it appear as if you don't have this item on your loot list.">
+                            <MudSwitch ReadOnly="_autoPassChanging" T="bool" Checked="Entry.AutoPass" CheckedChanged="SetAutoPassAsync" Label="Auto-Pass" Color="Color.Error" />
+                        </MudTooltip>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudText Color="Color.Info">Automatically Passing</MudText>
+                    </NotAuthorized>
                 </AuthorizeView>
             }
         </div>

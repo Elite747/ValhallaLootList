@@ -6,33 +6,68 @@
     private Color _color;
     private string? _text;
 
-    [Parameter] public IEnumerable<RestrictionDto> Restrictions { get; set; } = null!;
-    [Parameter] public string? SpecPrefix { get; set; }
+    [Parameter] public ICollection<RestrictionDto> Restrictions { get; set; } = null!;
+    [Parameter] public Specializations MainSpec { get; set; }
+    [Parameter] public Specializations OffSpec { get; set; }
+    [Parameter] public bool AllowOffSpec { get; set; }
 
     protected override void OnParametersSet()
     {
         if (Restrictions is null) throw new ArgumentNullException(nameof(Restrictions));
 
-        ItemRestrictionLevel? level = null;
-
-        foreach (var restriciton in Restrictions)
+        // get the highest restriction for each spec (restricted > review > allowed)
+        int msLevel = 0, osLevel = 0;
+        foreach (var restriction in Restrictions)
         {
-            if ((level = restriciton.Level) == ItemRestrictionLevel.Restricted)
+            if ((restriction.Specs & MainSpec) != 0)
             {
-                break;
+                msLevel = Math.Max(msLevel, GetRestrictionLevelOrdered(restriction.Level));
+            }
+            if (AllowOffSpec && OffSpec != 0 && (restriction.Specs & OffSpec) != 0)
+            {
+                osLevel = Math.Max(osLevel, GetRestrictionLevelOrdered(restriction.Level));
             }
         }
 
+        // gets the least restrictive of either spec (allowed > review > restricted)
+        int level = AllowOffSpec ? Math.Min(msLevel, osLevel) : msLevel;
+
         (_color, _text) = level switch
         {
-            ItemRestrictionLevel.ManualReview => (Color.Warning, "Review    "),
-            null => (Color.Success, "Allowed   "),
+            0 => (Color.Success, "Allowed"),
+            1 => (Color.Warning, "Review"),
             _ => (Color.Error, "Restricted")
         };
 
-        if (SpecPrefix?.Length > 0)
+        if (AllowOffSpec)
         {
-            _text = SpecPrefix + ": " + _text;
+            _text += GetApplicableSpecSuffix(msLevel, osLevel);
+        }
+    }
+
+    private static int GetRestrictionLevelOrdered(ItemRestrictionLevel level)
+    {
+        return level switch
+        {
+            ItemRestrictionLevel.Restricted => 2,
+            ItemRestrictionLevel.ManualReview => 1,
+            _ => 3
+        };
+    }
+
+    private static string GetApplicableSpecSuffix(int ms, int os)
+    {
+        if (ms == os)
+        {
+            return " (MS/OS)";
+        }
+        else if (ms < os)
+        {
+            return " (MS)";
+        }
+        else
+        {
+            return " (OS)";
         }
     }
 }

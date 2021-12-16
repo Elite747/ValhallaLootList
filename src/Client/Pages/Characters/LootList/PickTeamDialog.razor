@@ -7,6 +7,9 @@
         Select Teams
     </TitleContent>
     <DialogContent>
+        <MudText Typo="Typo.body1">
+            Pick one or more teams to apply to. Applying will send your loot list for @HumanizePhases() for review.
+        </MudText>
         <MudList Dense="true" Clickable="true">
             @foreach (var team in Teams.GetTeams())
             {
@@ -29,11 +32,13 @@
 @code {
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public List<long> SelectedTeams { get; set; } = null!;
+    [Parameter] public List<byte> CurrentPhases { get; set; } = null!;
 
     protected override Task OnParametersSetAsync()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
         if (SelectedTeams is null) throw new ArgumentNullException(nameof(SelectedTeams));
+        if (CurrentPhases is null) throw new ArgumentNullException(nameof(CurrentPhases));
         return Teams.EnsureStartedAsync(Api).AsTask();
     }
 
@@ -43,5 +48,18 @@
         {
             SelectedTeams.Add(id);
         }
+    }
+
+    private string HumanizePhases()
+    {
+        if (CurrentPhases.Count == 1)
+        {
+            return $"phase {CurrentPhases[0]}";
+        }
+        if (CurrentPhases.Count == 2)
+        {
+            return $"phases {CurrentPhases[0]} and {CurrentPhases[1]}";
+        }
+        return $"phases {string.Join(", ", CurrentPhases.Take(CurrentPhases.Count - 1))}, and {CurrentPhases[^1]}";
     }
 }

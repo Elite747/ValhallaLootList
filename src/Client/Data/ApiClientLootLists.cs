@@ -13,7 +13,7 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<LootListDto>> GetForCharacter(long id, byte? phase = null)
+        public IApiClientOperation<List<LootListDto>> GetForCharacter(long id, byte? phase = null)
         {
             string path = "api/v1/lootlists?characterId=" + id;
 
@@ -22,10 +22,10 @@ namespace ValhallaLootList.Client.Data
                 path += "&phase=" + phase;
             }
 
-            return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
+            return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, path);
         }
 
-        public IApiClientOperation<IList<LootListDto>> GetForTeam(long id, byte? phase = null, bool? includeApplicants = null)
+        public IApiClientOperation<List<LootListDto>> GetForTeam(long id, byte? phase = null, bool? includeApplicants = null)
         {
             string path = "api/v1/lootlists?teamId=" + id;
 
@@ -39,7 +39,7 @@ namespace ValhallaLootList.Client.Data
                 path += "&includeApplicants=" + includeApplicants;
             }
 
-            return Client.CreateRequest<IList<LootListDto>>(HttpMethod.Get, path);
+            return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, path);
         }
 
         public IApiClientOperation<LootListDto> Create(long characterId, byte phase, LootListSubmissionDto submission)

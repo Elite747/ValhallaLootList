@@ -53,11 +53,8 @@
                 }
             }
 
-            await Api.LootLists.Submit(LootList, new() { LootList.TeamId.Value })
-                .OnSuccess((_, _) =>
-                {
-                    return OnSubmit.InvokeAsync();
-                })
+            await Api.LootLists.Submit(LootList)
+                .OnSuccess((_, _) => OnSubmit.InvokeAsync())
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }

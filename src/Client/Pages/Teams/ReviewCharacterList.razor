@@ -5,30 +5,14 @@
 
 <LootListLayout LootList="LootList" Class="flex-grow-1">
     <HeaderContent>
-        <MudText Typo="Typo.h6">
-            @LootList.CharacterName
-            <MudText Inline Typo="Typo.subtitle1">@_character?.Race.GetDisplayName() @LootList.MainSpec.GetDisplayName(includeClassName: true)</MudText>
-        </MudText>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
-
-        @if (_character is not null)
+        @if (LootList.TeamId == Team.Id)
         {
-            <AuthorizeView Context="auth">
-                <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" HideRemovals="true" @key="_character" />
-            </AuthorizeView>
-        }
-
-        <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
-            <Authorized>
+            <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
                 @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)
                 {
                     if (auth.User.IsAdmin())
                     {
-                        <MudTooltip Text="Revoking an approval will prevent this loot list from being eligible for rankings, but will not hide rankings.">
-                            <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
-                                Revoke Approval
-                            </MudButton>
-                        </MudTooltip>
                         <MudTooltip Text="Unlocking a loot list will hide rankings from non-leaders. If the list is unlocked and approval revoked, it becomes editable.">
                             <MudButton OnClick="UnlockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Class="ml-2">Unlock</MudButton>
                         </MudTooltip>
@@ -41,7 +25,7 @@
                 else if (LootList.Status == LootListStatus.Submitted || (!LootList.TeamId.HasValue && LootList.Status == LootListStatus.Locked))
                 {
                     <MudTooltip Text="Approving a loot list is considered an acceptance onto the raid team.">
-                        <MudButton OnClick="ApproveAndAddToRosterAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                        <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
                             Approve
                         </MudButton>
                     </MudTooltip>
@@ -54,7 +38,7 @@
                 else if (LootList.Status == LootListStatus.Approved)
                 {
                     <MudTooltip Text="Revoking an approval will allow it to be edited by the owner. This will not remove the player from the team.">
-                        <MudButton OnClick="SetEditableAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
+                        <MudButton OnClick="RevokeAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Clear" Color="Color.Error">
                             Revoke Approval
                         </MudButton>
                     </MudTooltip>
@@ -62,8 +46,8 @@
                         <MudButton OnClick="LockAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Error" Class="ml-2">Lock</MudButton>
                     </MudTooltip>
                 }
-            </Authorized>
-        </AuthorizeView>
+            </AuthorizeView>
+        }
     </HeaderContent>
     <EntryTemplate Context="entry">
         @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
@@ -115,45 +99,20 @@
 </LootListLayout>
 
 @code {
-    private IEnumerable<IGrouping<int, LootListEntryDto>> _rows = Enumerable.Empty<IGrouping<int, LootListEntryDto>>();
-    private int _rowSize;
     private Color _messageColor;
     private string? _message;
-    private long _characterId;
-    private CharacterDto? _character;
 
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public IList<ItemDto> Items { get; set; } = null!;
-    [Parameter] public System.Security.Claims.ClaimsPrincipal User { get; set; } = null!;
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
-    [Parameter] public EventCallback RosterChanged { get; set; }
 
-    protected override Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
         if (Items is null) throw new ArgumentNullException(nameof(Items));
-        if (User is null) throw new ArgumentNullException(nameof(User));
-        _rows = LootList.Entries.GroupBy(e => e.Rank);
-        _rowSize = _rows.Select(row => row.Count()).Max();
         SetMessage();
-
-        if (_characterId != LootList.CharacterId)
-        {
-            _characterId = LootList.CharacterId;
-            _character = Team.Roster.Find(m => m.Character.Id == _characterId)?.Character;
-
-            if (_character is null)
-            {
-                return Api.Characters.Get(_characterId)
-                    .OnSuccess(c => _character = c)
-                    .SendErrorTo(Snackbar)
-                    .ExecuteAsync();
-            }
-        }
-
-        return Task.CompletedTask;
     }
 
     private void SetMessage()
@@ -161,11 +120,11 @@
         (_message, _messageColor) = LootList.Status switch
         {
             LootListStatus.Editing => ("Loot List is still being edited.", Color.Error),
-            LootListStatus.Submitted => ("Loot List is submitted but awaiting approval.", Color.Warning),
-            LootListStatus.Approved => ("Loot List has been approved, but still needs to be locked.", Color.Warning),
-            LootListStatus.Locked when LootList.TeamId is null => ("Loot list is locked, but character is not on this team yet.", Color.Warning),
-            LootListStatus.Locked => ("Loot List has been approved and locked!", Color.Success),
-            _ => ("Unrecognized status!", Color.Error)
+            LootListStatus.Submitted => ("Loot List is awaiting approval.", Color.Warning),
+            LootListStatus.Approved => ("Loot List is approved but unlocked.", Color.Warning),
+            LootListStatus.Locked when LootList.TeamId != Team.Id => ("Loot List is locked.", Color.Warning),
+            LootListStatus.Locked => ("Loot List is approved and locked.", Color.Success),
+            _ => ("Unrecognized status.", Color.Error)
         };
     }
 
@@ -174,9 +133,9 @@
         return item.GetRestrictions(LootList.MainSpec, LootList.OffSpec, entry.BracketAllowsOffspec);
     }
 
-    private Task SetEditableAsync()
+    private Task RevokeAsync()
     {
-        return Api.LootLists.SetEditable(LootList)
+        return Api.LootLists.Revoke(LootList)
             .OnSuccess((_, _) =>
             {
                 SetMessage();
@@ -210,13 +169,13 @@
             .ExecuteAsync();
     }
 
-    private async Task ApproveAndAddToRosterAsync()
+    private async Task ApproveAsync()
     {
         var result = await DialogService.Show<SetMessageDialog>("Approve Loot List").Result;
 
         if (!result.Cancelled)
         {
-            await Api.LootLists.Approve(LootList, Team.Id, (string?)result.Data)
+            await Api.LootLists.Approve(LootList, (string?)result.Data)
                 .OnSuccess(async (response, _) =>
                 {
                     LootList.TeamId = Team.Id;
@@ -225,11 +184,11 @@
                     StateHasChanged();
                     await StatusUpdated.InvokeAsync(LootList);
 
-                    if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
-                    {
-                        Team.Roster.Add(response.Member);
-                        await RosterChanged.InvokeAsync();
-                    }
+                    //if (!Team.Roster.Any(m => m.Character.Id == LootList.CharacterId) && response.Member is not null)
+                    //{
+                    //    Team.Roster.Add(response.Member);
+                    //    await RosterChanged.InvokeAsync();
+                    //}
                 })
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
@@ -242,7 +201,7 @@
 
         if (!result.Cancelled)
         {
-            await Api.LootLists.Reject(LootList, Team.Id, (string?)result.Data)
+            await Api.LootLists.Reject(LootList, (string?)result.Data)
                 .OnSuccess((_, _) =>
                 {
                     SetMessage();

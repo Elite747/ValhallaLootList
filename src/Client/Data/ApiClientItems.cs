@@ -14,14 +14,14 @@ namespace ValhallaLootList.Client.Data
 
         public ApiClient Client { get; }
 
-        public IApiClientOperation<IList<ItemDto>> Get(byte phase, bool includeTokens = false)
+        public IApiClientOperation<List<ItemDto>> Get(byte phase, bool includeTokens = false)
         {
-            return Client.CreateRequest<IList<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}&includeTokens={includeTokens}").CacheFor(TimeSpan.FromHours(1));
+            return Client.CreateRequest<List<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}&includeTokens={includeTokens}").CacheFor(TimeSpan.FromHours(1));
         }
 
-        public IApiClientOperation<IList<RestrictionDto>> GetRestrictions(uint itemId)
+        public IApiClientOperation<List<RestrictionDto>> GetRestrictions(uint itemId)
         {
-            return Client.CreateRequest<IList<RestrictionDto>>(HttpMethod.Get, $"api/v1/items/{itemId}/restrictions");
+            return Client.CreateRequest<List<RestrictionDto>>(HttpMethod.Get, $"api/v1/items/{itemId}/restrictions");
         }
     }
 }

@@ -1,0 +1,30 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudText>
+            Select a phase to lock all loot lists for that phase.
+        </MudText>
+        <MudRadioGroup Class="d-flex flex-column" @bind-SelectedOption="_phase">
+            @foreach (var phase in Phases)
+            {
+                <MudRadio Option="phase">Phase @phase</MudRadio>
+            }
+        </MudRadioGroup>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_phase))" Disabled="_phase == 0" Color="Color.Error" Variant="Variant.Filled">Lock</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private byte _phase;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public List<byte> Phases { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Phases is null) throw new ArgumentNullException(nameof(Phases));
+    }
+}

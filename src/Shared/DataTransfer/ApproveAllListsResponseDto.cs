@@ -3,8 +3,8 @@
 
 namespace ValhallaLootList.DataTransfer
 {
-    public class ApproveOrRejectLootListDto : TimestampDto
+    public class ApproveAllListsResponseDto : MultiTimestampDto
     {
-        public string? Message { get; set; }
+        public MemberDto? Member { get; set; }
     }
 }

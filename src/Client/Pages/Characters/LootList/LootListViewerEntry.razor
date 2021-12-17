@@ -53,7 +53,10 @@
                         </MudTooltip>
                     </Authorized>
                     <NotAuthorized>
-                        <MudText Color="Color.Info">Automatically Passing</MudText>
+                        @if (Entry.AutoPass)
+                        {
+                            <MudText Color="Color.Info">Automatically Passing</MudText>
+                        }
                     </NotAuthorized>
                 </AuthorizeView>
             }

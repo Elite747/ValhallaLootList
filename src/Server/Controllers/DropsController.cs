@@ -56,22 +56,27 @@ namespace ValhallaLootList.Server.Controllers
                 return NotFound();
             }
 
-            var teamId = await _context.Raids
+            var raid = await _context.Raids
                 .AsNoTracking()
                 .Where(r => r.Id == drop.EncounterKillRaidId)
-                .Select(r => (long?)r.RaidTeamId)
+                .Select(r => new { r.RaidTeamId, r.LocksAt })
                 .FirstOrDefaultAsync();
 
-            if (!teamId.HasValue)
+            if (raid is null)
             {
                 return NotFound();
             }
 
-            var authResult = await auth.AuthorizeAsync(User, teamId, AppPolicies.LootMaster);
+            var authResult = await auth.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
 
             if (!authResult.Succeeded)
             {
                 return Unauthorized();
+            }
+
+            if (DateTimeOffset.UtcNow > raid.LocksAt)
+            {
+                return Problem("Can't alter a locked raid.");
             }
 
             if (dto.WinnerId.HasValue && drop.WinnerId.HasValue)
@@ -83,6 +88,7 @@ namespace ValhallaLootList.Server.Controllers
             drop.AwardedAt = now;
             drop.AwardedBy = User.GetDiscordId();
             var scope = await _context.GetCurrentPriorityScopeAsync();
+            var teamId = raid.RaidTeamId;
 
             var observedDates = await _context.Raids
                 .AsNoTracking()

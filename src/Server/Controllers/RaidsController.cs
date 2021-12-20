@@ -60,6 +60,7 @@ namespace ValhallaLootList.Server.Controllers
                     Id = r.Id,
                     Phase = r.Phase,
                     StartedAt = r.StartedAt,
+                    LocksAt = r.LocksAt,
                     TeamId = r.RaidTeamId,
                     TeamName = r.RaidTeam.Name
                 })
@@ -82,6 +83,7 @@ namespace ValhallaLootList.Server.Controllers
                     Id = r.Id,
                     Phase = r.Phase,
                     StartedAt = r.StartedAt,
+                    LocksAt = r.LocksAt,
                     TeamId = r.RaidTeamId,
                     TeamName = r.RaidTeam.Name
                 })
@@ -97,6 +99,7 @@ namespace ValhallaLootList.Server.Controllers
                 .Select(raid => new RaidDto
                 {
                     StartedAt = raid.StartedAt,
+                    LocksAt = raid.LocksAt,
                     Id = raid.Id,
                     Phase = raid.Phase,
                     TeamId = raid.RaidTeamId,
@@ -231,6 +234,7 @@ namespace ValhallaLootList.Server.Controllers
                 RaidTeamId = team.Id,
                 StartedAt = realmTimeZoneInfo.TimeZoneNow()
             };
+            raid.LocksAt = raid.StartedAt.AddHours(6);
 
             var allCharacterIds = dto.Attendees.Concat(dto.Rto).ToList();
 
@@ -328,6 +332,7 @@ namespace ValhallaLootList.Server.Controllers
                     }
                 }).ToList(),
                 StartedAt = raid.StartedAt,
+                LocksAt = raid.LocksAt,
                 Id = raid.Id,
                 Phase = raid.Phase,
                 TeamId = team.Id,
@@ -352,9 +357,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6) && !User.IsAdmin())
+            if (DateTimeOffset.UtcNow > raid.LocksAt && !User.IsAdmin())
             {
-                return Problem("Can't delete a raid that has been active for more than 6 hours.");
+                return Problem("Can't delete a locked raid.");
             }
 
             if (await _context.EncounterKills.CountAsync(ek => ek.RaidId == id) > 0)
@@ -382,6 +387,35 @@ namespace ValhallaLootList.Server.Controllers
             return Ok();
         }
 
+        [HttpPost("{id:long}/Unlock"), Authorize(AppPolicies.Administrator)]
+        public async Task<ActionResult<UnlockResponse>> Unlock(long id, [FromServices] TimeZoneInfo realmTimeZoneInfo)
+        {
+            var raid = await _context.Raids.FindAsync(id);
+
+            if (raid is null)
+            {
+                return NotFound();
+            }
+
+            raid.LocksAt = realmTimeZoneInfo.TimeZoneNow().AddMinutes(10);
+
+            await _context.SaveChangesAsync();
+
+            var teamName = await _context.RaidTeams
+                .AsNoTracking()
+                .Where(t => t.Id == raid.RaidTeamId)
+                .Select(t => t.Name)
+                .FirstAsync();
+
+            _telemetry.TrackEvent("RaidUnlocked", User, props =>
+            {
+                props["TeamId"] = raid.RaidTeamId.ToString();
+                props["TeamName"] = teamName;
+            });
+
+            return new UnlockResponse { LocksAt = raid.LocksAt };
+        }
+
         [HttpPost("{id:long}/Attendees"), Authorize(AppPolicies.LootMaster)]
         public async Task<ActionResult<AttendanceDto>> PostAttendee(long id, [FromBody] AttendeeSubmissionDto dto)
         {
@@ -399,9 +433,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            if (DateTimeOffset.UtcNow > raid.LocksAt)
             {
-                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+                return Problem("Can't alter a locked raid.");
             }
 
             var character = await _context.Characters.FindAsync(dto.CharacterId);
@@ -496,9 +530,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6) && !User.IsAdmin())
+            if (DateTimeOffset.UtcNow > raid.LocksAt && !User.IsAdmin())
             {
-                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+                return Problem("Can't alter a locked raid.");
             }
 
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
@@ -582,9 +616,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            if (DateTimeOffset.UtcNow > raid.LocksAt)
             {
-                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+                return Problem("Can't alter a locked raid.");
             }
 
             var attendee = await _context.RaidAttendees.FindAsync(characterId, id);
@@ -652,9 +686,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            if (DateTimeOffset.UtcNow > raid.LocksAt)
             {
-                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+                return Problem("Can't alter a locked raid.");
             }
 
             var encounter = await _context.Encounters
@@ -817,9 +851,9 @@ namespace ValhallaLootList.Server.Controllers
                 return Unauthorized();
             }
 
-            if (DateTimeOffset.UtcNow > raid.StartedAt.AddHours(6))
+            if (DateTimeOffset.UtcNow > raid.LocksAt)
             {
-                return Problem("Can't alter a raid that has been active for more than 6 hours.");
+                return Problem("Can't alter a locked raid.");
             }
 
             var kill = await _context.EncounterKills.FindAsync(encounterId, id, trashIndex);

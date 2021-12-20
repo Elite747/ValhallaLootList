@@ -53,6 +53,13 @@ namespace ValhallaLootList.Client.Data
             return Client.CreateRequest(HttpMethod.Delete, $"api/v1/raids/{raidId}/Kills/{encounterId}/{trashIndex}");
         }
 
+        public IApiClientOperation Unlock(RaidDto raid)
+        {
+            var request = Client.CreateRequest<UnlockResponse>(HttpMethod.Post, $"api/v1/raids/{raid.Id}/unlock");
+            request.ConfigureSuccess(response => raid.LocksAt = response.LocksAt);
+            return request;
+        }
+
         public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId, bool rto)
         {
             return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId, Rto = rto });

@@ -119,6 +119,11 @@ namespace ValhallaLootList.Client.Data
                 return _task = ExecuteInternalAsync(cancellationToken);
             }
 
+            public Task ExecuteOrWaitAsync(CancellationToken cancellationToken = default)
+            {
+                return _task ??= ExecuteInternalAsync(cancellationToken);
+            }
+
             private async Task ExecuteInternalAsync(CancellationToken cancellationToken = default)
             {
                 Status = ApiOperationStatus.Running;

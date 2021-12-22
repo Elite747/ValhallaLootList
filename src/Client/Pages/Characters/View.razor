@@ -108,14 +108,11 @@
     {
         _characterOperation = Api.Characters.Get(CharacterName ?? string.Empty);
         _phaseConfigOperation = Api.GetPhaseConfiguration().OnSuccess(config => _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase));
-        var character = await _characterOperation.ExecuteAndTryReturnAsync();
+        await _characterOperation.ExecuteAsync();
         StateHasChanged();
-        if (character is not null)
+        if (_characterOperation.HasResult())
         {
-            _lootListsOperation = Api.LootLists.GetForCharacter(character.Id);
-            _lootListsAndPhaseConfigOperations = new IApiClientOperation[] { _phaseConfigOperation, _lootListsOperation };
-            await Task.WhenAll(_lootListsAndPhaseConfigOperations.Select(op => op.ExecuteAsync()));
-            StateHasChanged();
+            await RefreshLootListsAsync();
         }
     }
 
@@ -182,10 +179,7 @@
         await Api.LootLists.RevokeAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList())
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
-
-        _lootListsOperation = Api.LootLists.GetForCharacter(_characterOperation.GetResult().Id);
-        _lootListsAndPhaseConfigOperations = new IApiClientOperation[] { _phaseConfigOperation, _lootListsOperation };
-        StateHasChanged();
+        await RefreshLootListsAsync();
     }
 
     private async Task ApplyAsync()
@@ -250,11 +244,16 @@
             await Api.LootLists.SubmitAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList(), teams)
                     .SendErrorTo(Snackbar)
                     .ExecuteAsync();
-
-            _lootListsOperation = Api.LootLists.GetForCharacter(_characterOperation.GetResult().Id);
-            _lootListsAndPhaseConfigOperations = new IApiClientOperation[] { _phaseConfigOperation, _lootListsOperation };
-            StateHasChanged();
+            await RefreshLootListsAsync();
         }
+    }
+
+    private async Task RefreshLootListsAsync()
+    {
+        _lootListsOperation = Api.LootLists.GetForCharacter(_characterOperation.GetResult().Id);
+        _lootListsAndPhaseConfigOperations = new IApiClientOperation[] { _phaseConfigOperation, _lootListsOperation };
+        await Task.WhenAll(_lootListsAndPhaseConfigOperations.Select(op => op.ExecuteOrWaitAsync()));
+        StateHasChanged();
     }
 
     private List<byte> GetCurrentPhasesInDescendingOrder()

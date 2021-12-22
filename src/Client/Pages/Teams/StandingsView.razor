@@ -256,7 +256,7 @@
         _lootListsLoading = false;
         _ranksHidden = lootLists.Count != 0;
 
-        foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName))
+        foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName).Where(ll => ll.Phase == Phase))
         {
             _characterFilterItems.Add(new()
             {

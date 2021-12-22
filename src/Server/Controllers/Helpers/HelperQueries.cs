@@ -96,6 +96,7 @@ namespace ValhallaLootList.Server.Controllers
 
             var memberIds = members.ConvertAll(m => m.Character.Id);
             var donationMatrix = await context.GetDonationMatrixAsync(d => memberIds.Contains(d.CharacterId), scope);
+            var attendanceTable = await context.GetAttendanceTableAsync(teamId, scope.ObservedAttendances);
 
             foreach (var member in members)
             {
@@ -106,6 +107,13 @@ namespace ValhallaLootList.Server.Controllers
                 {
                     member.DonatedNextMonth += member.DonatedThisMonth - scope.RequiredDonationCopper;
                 }
+
+                if (attendanceTable.TryGetValue(member.Character.Id, out var attendance))
+                {
+                    member.Attended = attendance;
+                }
+
+                member.ObservedAttendances = scope.ObservedAttendances;
             }
 
             return members;

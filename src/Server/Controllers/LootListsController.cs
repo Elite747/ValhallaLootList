@@ -155,26 +155,9 @@ namespace ValhallaLootList.Server.Controllers
             });
 
             var scope = await _context.GetCurrentPriorityScopeAsync();
-
-            var observedDates = await _context.Raids
-                .AsNoTracking()
-                .Where(r => r.RaidTeamId == character.TeamId)
-                .Select(r => r.StartedAt.Date)
-                .Distinct()
-                .OrderByDescending(date => date)
-                .Take(scope.ObservedAttendances)
-                .ToListAsync();
-
-            var attendance = await _context.RaidAttendees
-                .AsNoTracking()
-                .Where(x => !x.IgnoreAttendance && x.RemovalId == null && x.CharacterId == character.Id && x.Raid.RaidTeamId == character.TeamId)
-                .Select(x => x.Raid.StartedAt.Date)
-                .Where(date => observedDates.Contains(date))
-                .Distinct()
-                .CountAsync();
-
             var now = _serverTimeZoneInfo.TimeZoneNow();
             var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == characterId, scope);
+            var attendance = await _context.GetAttendanceForCharacterAsync(character, scope.ObservedAttendances);
             var donations = donationMatrix.GetCreditForMonth(characterId, now);
 
             var returnDto = new LootListDto
@@ -1119,7 +1102,6 @@ namespace ValhallaLootList.Server.Controllers
             var lootListQuery = _context.CharacterLootLists.AsNoTracking();
             var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null);
             var entryQuery = _context.LootListEntries.AsNoTracking();
-            var attendanceQuery = _context.RaidAttendees.AsNoTracking().AsSingleQuery().Where(x => !x.IgnoreAttendance && x.RemovalId == null);
 
             var now = _serverTimeZoneInfo.TimeZoneNow();
             var lastMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0).AddMonths(-1);
@@ -1143,7 +1125,6 @@ namespace ValhallaLootList.Server.Controllers
                 lootListQuery = lootListQuery.Where(ll => ll.CharacterId == characterId);
                 passQuery = passQuery.Where(p => p.CharacterId == characterId);
                 entryQuery = entryQuery.Where(e => e.LootList.CharacterId == characterId);
-                attendanceQuery = attendanceQuery.Where(a => a.CharacterId == characterId && a.Raid.RaidTeamId == character.TeamId);
                 donationPredicate = d => d.CharacterId == characterId;
                 teamId = character.TeamId;
             }
@@ -1166,7 +1147,6 @@ namespace ValhallaLootList.Server.Controllers
                 }
 
                 passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
-                attendanceQuery = attendanceQuery.Where(a => a.Raid.RaidTeamId == teamId && a.Character.TeamId == teamId);
                 donationPredicate = d => d.Character.TeamId == teamId;
             }
             else
@@ -1210,35 +1190,14 @@ namespace ValhallaLootList.Server.Controllers
                 .ToListAsync();
 
             var scope = await _context.GetCurrentPriorityScopeAsync();
-
-            var observedDates = await _context.Raids
-                .AsNoTracking()
-                .Where(r => r.RaidTeamId == teamId)
-                .Select(r => r.StartedAt.Date)
-                .Distinct()
-                .OrderByDescending(date => date)
-                .Take(scope.ObservedAttendances)
-                .ToListAsync();
-
-            var attendances = new Dictionary<long, HashSet<DateTime>>();
-
-            await foreach (var record in attendanceQuery.Select(a => new { a.CharacterId, a.Raid.StartedAt.Date }).Where(a => observedDates.Contains(a.Date)).AsAsyncEnumerable())
-            {
-                if (!attendances.TryGetValue(record.CharacterId, out var dates))
-                {
-                    attendances[record.CharacterId] = dates = new();
-                }
-
-                dates.Add(record.Date);
-            }
-
+            var attendanceTable = teamId.HasValue ? await _context.GetAttendanceTableAsync(teamId.Value, scope.ObservedAttendances, characterId) : new();
             var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate, scope);
 
             foreach (var dto in dtos)
             {
-                attendances.TryGetValue(dto.CharacterId, out var attended);
+                attendanceTable.TryGetValue(dto.CharacterId, out var attended);
                 var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
-                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended?.Count ?? 0, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted));
+                dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted));
             }
 
             var brackets = await _context.Brackets

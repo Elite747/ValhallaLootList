@@ -1,30 +1,68 @@
 ﻿<MudListItem Class="@(Selected ? "mud-selected-item" : null)" OnClick="OnClick" Icon="@_icon" IconColor="_iconColor">
     <div class="d-flex align-center">
-        <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" Class="mr-1" />
-        <span>@LootList.CharacterName</span>
+        <SpecIcon Spec="_mainSpec" Size="IconSize.Tiny" Class="mr-1" />
+        <span>@_characterName</span>
     </div>
 </MudListItem>
 
 @code {
     private string _icon = string.Empty;
     private Color _iconColor = Color.Default;
+    private Specializations _mainSpec;
+    private string _characterName = string.Empty;
 
-    [Parameter] public LootListDto LootList { get; set; } = null!;
+    [Parameter] public IEnumerable<LootListDto> LootLists { get; set; } = null!;
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public bool Selected { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+    [Parameter] public byte CurrentPhase { get; set; }
 
     protected override void OnParametersSet()
     {
-        if (LootList is null) throw new ArgumentNullException(nameof(LootList));
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
         if (Team is null) throw new ArgumentNullException(nameof(Team));
 
-        if (LootList.TeamId != Team.Id)
+        bool isNew = true;
+        bool allLocked = true;
+        bool anyNotApproved = false;
+        _mainSpec = default;
+
+        foreach (var lootList in LootLists)
+        {
+            _characterName = lootList.CharacterName;
+            if (lootList.TeamId == Team.Id)
+            {
+                isNew = false;
+            }
+            if (lootList.Phase <= CurrentPhase)
+            {
+                if (lootList.Phase == CurrentPhase)
+                {
+                    _mainSpec = lootList.MainSpec;
+                }
+
+                if (lootList.Status != LootListStatus.Locked)
+                {
+                    allLocked = false;
+                }
+                if (lootList.Status < LootListStatus.Approved)
+                {
+                    anyNotApproved = true;
+                }
+            }
+        }
+
+        if (_mainSpec == default)
+        {
+            _mainSpec = LootLists.First().MainSpec;
+        }
+
+        if (isNew)
         {
             _icon = Icons.Material.Outlined.FiberNew;
             _iconColor = Color.Info;
         }
-        else if (LootList.Status == LootListStatus.Locked)
+        else if (allLocked)
         {
             _icon = Icons.Custom.Uncategorized.AlertSuccess;
             _iconColor = Color.Success;
@@ -32,15 +70,7 @@
         else
         {
             _icon = Icons.Material.Filled.ErrorOutline;
-
-            if (LootList.Status == LootListStatus.Approved)
-            {
-                _iconColor = Color.Warning;
-            }
-            else
-            {
-                _iconColor = Color.Error;
-            }
+            _iconColor = anyNotApproved ? Color.Error : Color.Warning;
         }
     }
 }

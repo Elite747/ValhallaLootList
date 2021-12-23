@@ -36,6 +36,10 @@ namespace ValhallaLootList.DataTransfer
         public long ThisMonthRequiredDonations { get; set; }
 
         public long NextMonthRequiredDonations { get; set; }
+
+        public int Attended { get; set; }
+
+        public int ObservedAttendances { get; set; }
     }
 
     public class DonationSubmissionDto

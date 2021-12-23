@@ -21,7 +21,7 @@ namespace ValhallaLootList.DataTransfer
 
         public DateTimeOffset StartedAt { get; set; }
 
-        public DateTimeOffset LocksAt => StartedAt.AddHours(6);
+        public DateTimeOffset LocksAt { get; set; }
 
         public List<AttendanceDto> Attendees
         {

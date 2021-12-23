@@ -89,19 +89,22 @@
                                                                         }
                                                                         else
                                                                         {
-                                                                            <div>
-                                                                                Rank @itemStanding.Rank
-                                                                            </div>
+                                                                            <div>Rank @itemStanding.Rank</div>
                                                                             @foreach (var bonus in itemStanding.Bonuses)
                                                                             {
                                                                                 <div>
                                                                                     <PriorityBonusDisplay Bonus="bonus" />
                                                                                 </div>
                                                                             }
+                                                                            @if (itemStanding.AutoPass)
+                                                                            {
+                                                                                <div>Automatically Passing</div>
+                                                                            }
                                                                         }
                                                                     </TooltipContent>
                                                                     <ChildContent>
-                                                                        <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem.Tag as long?  ? "mud-success-text" : null)">
+                                                                        <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem.Tag as long?  ? "mud-success-text" : null)"
+                                                                              style=@(itemStanding.AutoPass ? "text-decoration:line-through" : null)>
                                                                             @itemStanding.CharacterName
                                                                         </span>
                                                                     </ChildContent>
@@ -253,7 +256,7 @@
         _lootListsLoading = false;
         _ranksHidden = lootLists.Count != 0;
 
-        foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName))
+        foreach (var lootList in lootLists.OrderBy(ll => ll.CharacterName).Where(ll => ll.Phase == Phase))
         {
             _characterFilterItems.Add(new()
             {
@@ -282,7 +285,8 @@
                         CharacterName = lootList.CharacterName,
                         ItemId = sourceItemId,
                         Rank = entry.Rank,
-                        Won = entry.Won
+                        Won = entry.Won,
+                        AutoPass = entry.AutoPass
                     });
                 }
                 if (entry.Rank != 0)
@@ -334,6 +338,7 @@
         public string CharacterName { get; init; } = string.Empty;
         public bool Won { get; init; }
         public int Rank { get; init; }
+        public bool AutoPass { get; init; }
         public IEnumerable<PriorityBonusDto> Bonuses { get; init; } = Array.Empty<PriorityBonusDto>();
 
         public string GetPriorityDisplay()

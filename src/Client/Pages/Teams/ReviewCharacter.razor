@@ -1,0 +1,134 @@
+﻿@using ValhallaLootList.Client.Pages.Characters.LootList 
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (_character is null)
+{
+    <LoadingIndicator />
+}
+else
+{
+    <div class="d-flex flex-column flex-grow-1">
+        <div class="mx-4 my-2">
+            <MudText Typo="Typo.h6">
+                @_character.Name
+                <MudText Inline Typo="Typo.subtitle1">@_character.Race.GetDisplayName() @_character.Class.GetDisplayName()</MudText>
+                @if (_character.TeamId != Team.Id)
+                {
+                    <MudIcon Icon=@(Icons.Material.Filled.FiberNew) Color="Color.Info" />
+                }
+            </MudText>
+            <AuthorizeView Context="auth">
+                <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" HideRemovals="true" @key="_character" />
+            </AuthorizeView>
+            @if (_character.TeamId != Team.Id)
+            {
+                <AuthorizeView Policy=@(AppPolicies.RaidLeaderOrAdmin)>
+                    <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" Color="Color.Success" Class="ma-2">Approve All &amp; Add to Team</MudButton>
+                    <MudButton OnClick="RejectAsync" Variant="Variant.Filled" Color="Color.Error" Class="ma-2">Reject Application</MudButton>
+                    <br />
+                </AuthorizeView>
+            }
+            @foreach (var list in LootLists.OrderByDescending(ll => ll.Phase))
+            {
+                <MudButton OnClick="() => _selectedList = list" @key="list.Phase" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">Phase @list.Phase</MudButton>
+            }
+        </div>
+        @if (_selectedList is not null)
+        {
+            <ApiExecutor Operation="() => Api.Items.Get(_selectedList.Phase)" Context="items" @key="_selectedList">
+                <ReviewCharacterList LootList="_selectedList"
+                                     Items="items"
+                                     StatusUpdated="StatusUpdated"
+                                     Team="Team" />
+            </ApiExecutor>
+        }
+    </div>
+}
+
+
+@code {
+    private LootListDto? _selectedList;
+    private long _characterId;
+    private CharacterDto? _character;
+
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public long CharacterId { get; set; }
+    [Parameter] public List<LootListDto> LootLists { get; set; } = null!;
+    [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+
+        if (_characterId != CharacterId)
+        {
+            _characterId = CharacterId;
+            _character = Team.Roster.Find(m => m.Character.Id == _characterId)?.Character;
+
+            if (_character is null)
+            {
+                await Api.Characters.Get(_characterId)
+                    .OnSuccess(c => _character = c)
+                    .SendErrorTo(Snackbar)
+                    .ExecuteAsync();
+            }
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        var result = await DialogService.Show<SetMessageDialog>("Approve All Loot Lists").Result;
+
+        if (!result.Cancelled)
+        {
+            var lootLists = LootLists.ToList();
+            await Api.LootLists.ApproveAll(lootLists, Team.Id, (string?)result.Data)
+                .OnSuccess(async (response, _) =>
+                {
+                    foreach (var lootList in lootLists)
+                    {
+                        lootList.TeamId = Team.Id;
+                        lootList.TeamName = Team.Name;
+                        await StatusUpdated.InvokeAsync(lootList);
+                    }
+
+                    if (response.Member is not null)
+                    {
+                        _character = response.Member.Character;
+                        Team.Roster.RemoveAll(m => m.Character.Id == CharacterId);
+                        Team.Roster.Add(response.Member);
+                        await RosterChanged.InvokeAsync();
+                    }
+
+                    StateHasChanged();
+
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private async Task RejectAsync()
+    {
+        var result = await DialogService.Show<SetMessageDialog>("Reject All Loot Lists").Result;
+
+        if (!result.Cancelled)
+        {
+            var lootLists = LootLists.ToList();
+            await Api.LootLists.RejectAll(lootLists, Team.Id, (string?)result.Data)
+                .OnSuccess(async (_, _) =>
+                {
+                    foreach (var lootList in lootLists)
+                    {
+                        await StatusUpdated.InvokeAsync(lootList);
+                    }
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+}

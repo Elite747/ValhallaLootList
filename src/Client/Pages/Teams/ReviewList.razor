@@ -1,0 +1,102 @@
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudList Clickable>
+    @foreach (var listsByChar in LootLists.GroupBy(ll => ll.CharacterId).OrderBy(g => g.First().TeamId == Team.Id).ThenBy(g => g.First().CharacterName))
+    {
+        <ReviewSelector LootLists="listsByChar"
+                        Selected="_characterId == listsByChar.Key"
+                        OnClick="() => SelectCharacter(listsByChar.Key)"
+                        Team="Team"
+                        CurrentPhase="CurrentPhase"
+                        @key="listsByChar.Key" />
+    }
+    @if (LootLists.Any(ll => ll.Status == LootListStatus.Approved))
+    {
+        <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin">
+            <MudListItem Icon="@Icons.Material.Filled.Lock"
+                         IconColor="Color.Error"
+                         Text="Lock All Lists"
+                         OnClick="LockAllAsync" />
+        </AuthorizeView>
+    }
+</MudList>
+<MudDivider Vertical FlexItem />
+@if (_characterId > 0)
+{
+    <ReviewCharacter LootLists="_characterLootLists"
+                     CharacterId="_characterId.Value"
+                     Team="Team"
+                     StatusUpdated="OnStatusUpdatedAsync"
+                     RosterChanged="RosterChanged" />
+}
+
+@code {
+    private long? _characterId;
+    private readonly List<LootListDto> _characterLootLists = new();
+
+    [Parameter] public TeamDto Team { get; set; } = null!;
+    [Parameter] public List<LootListDto> LootLists { get; set; } = null!;
+    [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
+    [Parameter] public EventCallback RosterChanged { get; set; }
+    [Parameter] public byte CurrentPhase { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Team is null) throw new ArgumentNullException(nameof(Team));
+        if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
+    }
+
+    private void SelectCharacter(long? characterId)
+    {
+        _characterId = characterId;
+        _characterLootLists.Clear();
+        if (characterId.HasValue)
+        {
+            _characterLootLists.AddRange(LootLists.Where(ll => ll.Phase <= CurrentPhase && ll.CharacterId == characterId && (ll.TeamId == Team.Id || ll.SubmittedTo.Contains(Team.Id))).OrderByDescending(ll => ll.Phase));
+        }
+    }
+
+    private Task OnStatusUpdatedAsync(LootListDto lootList)
+    {
+        StateHasChanged();
+
+        if ((lootList.Status == LootListStatus.Editing || (lootList.Status == LootListStatus.Submitted && !lootList.SubmittedTo.Contains(Team.Id))) && !Team.Roster.Any(m => m.Character.Id == lootList.CharacterId))
+        {
+            LootLists.Remove(lootList);
+            _characterLootLists.Remove(lootList);
+            if (_characterLootLists.Count == 0)
+            {
+                _characterId = null;
+            }
+        }
+
+        return StatusUpdated.InvokeAsync(lootList);
+    }
+
+    private async Task LockAllAsync()
+    {
+        var phases = LootLists.Where(ll => ll.Status == LootListStatus.Approved).Select(ll => ll.Phase).Distinct().OrderBy(phase => phase).ToList();
+
+        var phase = await DialogService.ShowAsync<PhaseLockDialog, byte?>("Lock All Lists", new() { [nameof(PhaseLockDialog.Phases)] = phases });
+
+        if (phase.HasValue)
+        {
+            var tasks = new List<Task>();
+
+            foreach (var list in LootLists)
+            {
+                if (list.Status == LootListStatus.Approved && list.Phase == phase.Value)
+                {
+                    tasks.Add(Api.LootLists.Lock(list)
+                        .OnSuccess(_ => StateHasChanged())
+                        .SendErrorTo(Snackbar)
+                        .ExecuteAsync());
+                }
+            }
+
+            await Task.WhenAll(tasks);
+        }
+    }
+}

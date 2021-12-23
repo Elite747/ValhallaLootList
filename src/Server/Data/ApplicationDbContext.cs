@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -61,6 +62,63 @@ namespace ValhallaLootList.Server.Data
         public Task<PriorityScope> GetCurrentPriorityScopeAsync(CancellationToken cancellationToken = default)
         {
             return PriorityScopes.OrderByDescending(ps => ps.StartsAt).FirstAsync(cancellationToken);
+        }
+
+        public async Task<List<DateTime>> GetObservedRaidDatesAsync(long teamId, int observedAttendances)
+        {
+            return await Raids
+                .AsNoTracking()
+                .Where(r => r.RaidTeamId == teamId)
+                .Select(r => r.StartedAt.Date)
+                .Distinct()
+                .OrderByDescending(date => date)
+                .Take(observedAttendances)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetAttendanceForCharacterAsync(Character character, int observedAttendances)
+        {
+            if (character.TeamId.HasValue)
+            {
+                var attendanceTable = await GetAttendanceTableAsync(character.TeamId.Value, observedAttendances, character.Id);
+                if (attendanceTable.TryGetValue(character.Id, out int attendance))
+                {
+                    return attendance;
+                }
+            }
+            return 0;
+        }
+
+        public async Task<Dictionary<long, int>> GetAttendanceTableAsync(long teamId, int observedAttendances, long? characterId = null)
+        {
+            // checks for duplicate raids on the same day to avoid doubling up on attendances.
+            // this check is a holdover from when raids didn't span multiple phases
+            // and should probably be removed.
+            var recorded = new HashSet<(long, DateTime)>();
+            var attendances = new Dictionary<long, int>();
+
+            var observedDates = await GetObservedRaidDatesAsync(teamId, observedAttendances);
+
+            var query = RaidAttendees
+                .AsNoTracking()
+                .AsSingleQuery()
+                .Where(x => !x.IgnoreAttendance && x.RemovalId == null && x.Raid.RaidTeamId == teamId && x.Character.TeamId == teamId && observedDates.Contains(x.Raid.StartedAt.Date));
+
+            if (characterId.HasValue)
+            {
+                query = query.Where(x => x.CharacterId == characterId.Value);
+            }
+
+            await foreach (var record in query.Select(x => new { x.CharacterId, x.Raid.StartedAt.Date }).AsAsyncEnumerable())
+            {
+                if (recorded.Add((record.CharacterId, record.Date)))
+                {
+                    attendances.TryGetValue(record.CharacterId, out var count);
+                    attendances[record.CharacterId] = count + 1;
+                }
+            }
+
+            return attendances;
         }
 
         public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, PriorityScope scope, CancellationToken cancellationToken = default)

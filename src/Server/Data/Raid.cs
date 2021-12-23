@@ -23,6 +23,8 @@ namespace ValhallaLootList.Server.Data
 
         public DateTimeOffset StartedAt { get; set; }
 
+        public DateTimeOffset LocksAt { get; set; }
+
         public byte Phase { get; set; }
 
         [Required]

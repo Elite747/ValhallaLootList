@@ -1,5 +1,6 @@
 ﻿@page "/raids/{RaidId:long}"
 @inject ApiClient Api
+@inject ISnackbar Snackbar
 
 <ApiExecutor Operation="() => Api.Raids.Get(RaidId)" Context="raid" @ref="_executor" BackgroundRefresh="true">
     <div class="content layout-container">
@@ -20,7 +21,18 @@
             }
             else
             {
-                <MudText Typo="Typo.subtitle1" Color="Color.Error">Locked</MudText>
+                <span>
+                    <MudText Inline Typo="Typo.subtitle1" Color="Color.Error">Locked</MudText>
+                    @if (context.User.IsAdmin())
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="() => UnlockAsync(raid)">
+                            Unlock
+                        </MudButton>
+                    }
+                </span>
             }
         </AuthorizeView>
 
@@ -47,4 +59,9 @@
     private IApiExecutor? _executor;
 
     [Parameter] public long RaidId { get; set; }
+
+    private async Task UnlockAsync(RaidDto raid)
+    {
+        await Api.Raids.Unlock(raid).SendErrorTo(Snackbar).ExecuteAsync();
+    }
 }

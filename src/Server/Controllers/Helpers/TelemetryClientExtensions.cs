@@ -14,7 +14,7 @@ namespace ValhallaLootList.Server.Controllers
         {
             var properties = new Dictionary<string, string>
             {
-                ["Initiator"] = initiator.Identity?.Name ?? string.Empty,
+                ["Initiator"] = initiator.GetDisplayName() ?? string.Empty,
                 ["InitiatorId"] = initiator.GetDiscordId()?.ToString() ?? string.Empty,
             };
 

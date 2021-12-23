@@ -5,7 +5,10 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav 
 
-<ApiExecutor Operation="() => Api.Characters.Get(CharacterName ?? string.Empty)" Context="character" @key="CharacterName">
+<ApiView Operation="_characterOperation" @key="CharacterName">
+    @{
+        var character = _characterOperation.GetResult(); 
+    }
     <PageTitle Title="@character.Name" />
     <div class="d-flex align-center mb-3">
         <PlayerIcon Race="character.Race"
@@ -18,6 +21,31 @@
         @if (character.TeamName?.Length > 0)
         {
             <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
+        }
+        else if (!character.Deactivated)
+        {
+            @if (_lootListsOperation?.HasResult() == true && _lootListsOperation.GetResult().Any(ll => ll.SubmittedTo.Count != 0))
+            {
+                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
+                           Variant="Variant.Text"
+                           Color="Color.Error"
+                           Size="Size.Medium"
+                           Class="ml-2"
+                           OnClick="RevokeAsync">
+                    Cancel Team Applications
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
+                           Variant="Variant.Text"
+                           Color="Color.Success"
+                           Size="Size.Medium"
+                           Class="ml-2"
+                           OnClick="ApplyAsync">
+                    Apply to a Team
+                </MudButton>
+            }
         }
         @if (character.Deactivated)
         {
@@ -48,27 +76,12 @@
         <AdminView Character="character" User="context.User" />
     </AuthorizeView>
 
-    <ApiExecutor Operation="() => Api.LootLists.GetForCharacter(character.Id)" Context="lootLists">
+    <ApiView Operations="_lootListsAndPhaseConfigOperations">
         <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
-            @{
-                byte currentPhase;
-                IEnumerable<byte> phases;
-
-                if (_phaseConfig is null)
-                {
-                    currentPhase = lootLists.Max(ll => ll.Phase);
-                    phases = lootLists.Select(ll => ll.Phase).Distinct();
-                }
-                else
-                {
-                    currentPhase = _phaseConfig.CurrentPhase;
-                    phases = _phaseConfig.Phases;
-                }
-            }
-            @foreach (var phase in phases.OrderByDescending(p => p))
+            @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                    <LootListPhase Character="character" Phase="phase" LootLists="lootLists" PhaseActive="phase <= currentPhase" />
+                    <LootListPhase Character="character" Phase="phase" LootLists="_lootListsOperation!.GetResult()" PhaseActive="phase <= _phaseConfigOperation.GetResult().CurrentPhase" />
                 </MudTabPanel>
             }
             <MudTabPanel Text="Won Items" ID="_wonId">
@@ -78,25 +91,29 @@
                 <AttendanceView Character="character" />
             </MudTabPanel>
         </MudTabs>
-    </ApiExecutor>
-</ApiExecutor>
+    </ApiView>
+</ApiView>
 
 @code {
     private int _panelIndex;
-    private PhaseConfigDto? _phaseConfig;
     private object _wonId = new(), _attendanceId = new();
+    private IApiClientOperation<CharacterDto> _characterOperation = null!;
+    private IApiClientOperation<PhaseConfigDto> _phaseConfigOperation = null!;
+    private IApiClientOperation<List<LootListDto>>? _lootListsOperation;
+    private IApiClientOperation[] _lootListsAndPhaseConfigOperations = Array.Empty<IApiClientOperation>();
 
     [Parameter] public string? CharacterName { get; set; }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return Api.GetPhaseConfiguration()
-            .OnSuccess(config =>
-            {
-                _phaseConfig = config;
-                _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase);
-            })
-            .ExecuteAsync();
+        _characterOperation = Api.Characters.Get(CharacterName ?? string.Empty);
+        _phaseConfigOperation = Api.GetPhaseConfiguration().OnSuccess(config => _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase));
+        await _characterOperation.ExecuteAsync();
+        StateHasChanged();
+        if (_characterOperation.HasResult())
+        {
+            await RefreshLootListsAsync();
+        }
     }
 
     private async Task EditAsync(CharacterDto character)
@@ -150,5 +167,110 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
+
+    private async Task RevokeAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootListsOperation?.HasResult() == true);
+        System.Diagnostics.Debug.Assert(_phaseConfigOperation?.HasResult() == true);
+        System.Diagnostics.Debug.Assert(_characterOperation?.HasResult() == true);
+
+        var currentPhases = GetCurrentPhasesInDescendingOrder();
+        await Api.LootLists.RevokeAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList())
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        await RefreshLootListsAsync();
+    }
+
+    private async Task ApplyAsync()
+    {
+        System.Diagnostics.Debug.Assert(_lootListsOperation?.HasResult() == true);
+        System.Diagnostics.Debug.Assert(_phaseConfigOperation?.HasResult() == true);
+        System.Diagnostics.Debug.Assert(_characterOperation?.HasResult() == true);
+
+        var phasesWithCollapsibleBrackets = new Dictionary<byte, int>();
+        var currentPhases = GetCurrentPhasesInDescendingOrder();
+
+        foreach (byte phase in currentPhases)
+        {
+            if (_lootListsOperation.GetResult().Find(ll => ll.Phase == phase) is not { } lootList)
+            {
+                await DialogService.ShowMessageBox(new MessageBoxOptions
+                {
+                    Title = $"No Phase {phase} loot list",
+                    Message = "You must create a loot list for all current phases.",
+                    YesText = "Close"
+                });
+                return;
+            }
+            else
+            {
+                int? collapsibleBracket = lootList.GetCollapsibleBracket();
+                if (collapsibleBracket.HasValue)
+                {
+                    phasesWithCollapsibleBrackets[phase] = collapsibleBracket.Value;
+                }
+            }
+        }
+
+        if (phasesWithCollapsibleBrackets.Count != 0)
+        {
+            if (await DialogService.ShowMessageBox(new MessageBoxOptions
+            {
+                Title = "Unfilled Ranks",
+                Message = "The following loot brackets have higher ranks available that could be used for items within it:" +
+                Environment.NewLine +
+                string.Join(Environment.NewLine, phasesWithCollapsibleBrackets.OrderBy(x => x.Key).Select(x => $"Phase {x.Key}: Bracket {x.Value}")) +
+                Environment.NewLine +
+                "Submitting this list would be voluntarily accepting lower priority on these items with no benefit. Are you sure you want to submit these lists?",
+                YesText = "Continue",
+                NoText = "Cancel"
+            }) != true)
+            {
+                return;
+            }
+        }
+
+        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
+            string.Empty,
+            parameters: new()
+            {
+                [nameof(PickTeamDialog.SelectedTeams)] = _lootListsOperation.GetResult().SelectMany(ll => ll.SubmittedTo).Distinct().ToList(),
+                [nameof(PickTeamDialog.CurrentPhases)] = currentPhases
+            });
+
+        if (teams is not null)
+        {
+            await Api.LootLists.SubmitAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList(), teams)
+                    .SendErrorTo(Snackbar)
+                    .ExecuteAsync();
+            await RefreshLootListsAsync();
+        }
+    }
+
+    private async Task RefreshLootListsAsync()
+    {
+        _lootListsOperation = Api.LootLists.GetForCharacter(_characterOperation.GetResult().Id);
+        _lootListsAndPhaseConfigOperations = new IApiClientOperation[] { _phaseConfigOperation, _lootListsOperation };
+        await Task.WhenAll(_lootListsAndPhaseConfigOperations.Select(op => op.ExecuteOrWaitAsync()));
+        StateHasChanged();
+    }
+
+    private List<byte> GetCurrentPhasesInDescendingOrder()
+    {
+        var config = _phaseConfigOperation.GetResult();
+
+        var phases = new List<byte>(config.CurrentPhase);
+
+        for (byte phase = config.CurrentPhase; phase > 0; phase--)
+        {
+            // Since a phase can have no raids, don't just assume every phase before the current is valid.
+            if (config.Phases.Contains(phase))
+            {
+                phases.Add(phase);
+            }
+        }
+
+        return phases;
     }
 }

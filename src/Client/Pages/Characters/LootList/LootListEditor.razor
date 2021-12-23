@@ -6,16 +6,12 @@
 <ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
     <LootListLayout LootList="LootList" ShowBracketRules="true">
         <HeaderContent> 
-            <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1" Disabled="!PhaseActive">
-                @if (LootList.TeamId.HasValue)
-                {
+            @if (LootList.TeamId.HasValue) @*Only submit individual loot lists when already on a team.*@
+            {
+                <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1" Disabled="!PhaseActive">
                     <span>Submit to @(string.IsNullOrEmpty(LootList.TeamName) ? "your team" : LootList.TeamName)</span>
-                }
-                else
-                {
-                    <span>Submit Application</span>
-                }
-            </MudButton>
+                </MudButton>
+            }
             <MudButton OnClick="ChangeSpecAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">Change Specialization</MudButton>
         </HeaderContent>
         <EntryTemplate Context="entry">
@@ -38,84 +34,30 @@
         if (LootList is null) throw new ArgumentNullException(nameof(LootList));
     }
 
-    private Task SubmitAsync()
+    private async Task SubmitAsync()
     {
         if (LootList.TeamId.HasValue)
         {
-            return SendSubmissionAsync(new() { LootList.TeamId.Value });
-        }
-        return SubmitNewAsync();
-    }
-
-    private async Task SubmitNewAsync()
-    {
-        int? collapsibleBracket = GetCollapsibleBracket();
-        if (collapsibleBracket.HasValue)
-        {
-            if (await DialogService.ShowMessageBox(
-                $"Unfilled Ranks in Bracket {collapsibleBracket}",
-                $"Your loot list has higher ranks in bracket {collapsibleBracket} that could be used for items you have listed within it. " +
-                "Submitting this list would be voluntarily accepting lower priority on these items with no benefit. " +
-                "Are you sure you want to continue to submit this list?",
-                "Continue",
-                "Cancel") != true)
+            int? collapsibleBracket = LootList.GetCollapsibleBracket();
+            if (collapsibleBracket.HasValue)
             {
-                return;
-            }
-        }
-
-        var teams = await DialogService.ShowAsync<PickTeamDialog, List<long>?>(
-            string.Empty,
-            parameters: new()
-            {
-                [nameof(PickTeamDialog.SelectedTeams)] = LootList.SubmittedTo.ToList()
-            });
-
-        if (teams is not null)
-        {
-            await SendSubmissionAsync(teams);
-        }
-    }
-
-    private Task SendSubmissionAsync(List<long> teams)
-    {
-        return Api.LootLists.Submit(LootList, teams)
-            .OnSuccess((_, _) =>
-            {
-                return OnSubmit.InvokeAsync();
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
-    private int? GetCollapsibleBracket()
-    {
-        foreach (var bracket in LootList.Entries.Where(e => !e.Won).GroupBy(e => e.Bracket))
-        {
-            bool hasUnselected = false;
-
-            foreach (var entry in bracket.OrderByDescending(e => e.Rank))
-            {
-                if (entry.ItemId.HasValue)
+                if (await DialogService.ShowMessageBox(
+                    $"Unfilled Ranks in Bracket {collapsibleBracket}",
+                    $"Your loot list has higher ranks in bracket {collapsibleBracket} that could be used for items you have listed within it. " +
+                    "Submitting this list would be voluntarily accepting lower priority on these items with no benefit. " +
+                    "Are you sure you want to continue to submit this list?",
+                    "Continue",
+                    "Cancel") != true)
                 {
-                    if (hasUnselected)
-                    {
-                        // higher rank is not filled.
-                        return bracket.Key + 1;
-                    }
-                    else
-                    {
-                        hasUnselected = false;
-                    }
-                }
-                else
-                {
-                    hasUnselected = true;
+                    return;
                 }
             }
-        }
 
-        return null;
+            await Api.LootLists.Submit(LootList)
+                .OnSuccess((_, _) => OnSubmit.InvokeAsync())
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
     }
 
     private Task ChangeSpecAsync()

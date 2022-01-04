@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class SpyglassOfTheHiddenFleetRule : SimpleRule
 {
-    internal class SpyglassOfTheHiddenFleetRule : SimpleRule
-    {
-        protected override string DisallowReason => "Spyglass of the Hidden Fleet has a healing on-use effect, which is most appropriate for tanks.";
+    protected override string DisallowReason => "Spyglass of the Hidden Fleet has a healing on-use effect, which is most appropriate for tanks.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 30620u;
+    protected override bool AppliesTo(Item item) => item.Id == 30620u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

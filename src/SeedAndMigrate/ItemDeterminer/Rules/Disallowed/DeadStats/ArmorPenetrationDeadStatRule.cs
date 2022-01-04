@@ -3,14 +3,13 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class ArmorPenetrationDeadStatRule : DeadStatRule
 {
-    internal class ArmorPenetrationDeadStatRule : DeadStatRule
-    {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
 
-        protected override int GetStat(Item item) => item.ArmorPenetration;
+    protected override int GetStat(Item item) => item.ArmorPenetration;
 
-        protected override string GetStatDisplayName() => "Armor Penetration";
-    }
+    protected override string GetStatDisplayName() => "Armor Penetration";
 }

@@ -3,14 +3,13 @@
 
 using Microsoft.AspNetCore.Components;
 
-namespace ValhallaLootList.Client.Shared
+namespace ValhallaLootList.Client.Shared;
+
+public class ClassIcon : WowIcon
 {
-    public class ClassIcon : WowIcon
-    {
-        [Parameter] public Classes PlayerClass { get; set; }
+    [Parameter] public Classes PlayerClass { get; set; }
 
-        protected override string GetIconId() => "class_" + PlayerClass.GetLowercaseName();
+    protected override string GetIconId() => "class_" + PlayerClass.GetLowercaseName();
 
-        protected override string GetAltText() => PlayerClass.ToString();
-    }
+    protected override string GetAltText() => PlayerClass.ToString();
 }

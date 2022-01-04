@@ -3,14 +3,13 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class BlockValueDeadStatRule : DeadStatRule
 {
-    internal class BlockValueDeadStatRule : DeadStatRule
-    {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior);
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior);
 
-        protected override int GetStat(Item item) => item.BlockValue;
+    protected override int GetStat(Item item) => item.BlockValue;
 
-        protected override string GetStatDisplayName() => "Block";
-    }
+    protected override string GetStatDisplayName() => "Block";
 }

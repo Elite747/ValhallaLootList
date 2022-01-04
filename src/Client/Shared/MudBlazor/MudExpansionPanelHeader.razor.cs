@@ -4,27 +4,26 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor.Utilities;
 
-namespace MudBlazor
+namespace MudBlazor;
+
+public partial class MudExpansionPanelHeader : MudExpansionPanelEx
 {
-    public partial class MudExpansionPanelHeader : MudExpansionPanelEx
+    [CascadingParameter] private MudExpansionPanels Parent2 { get; set; } = null!;
+
+    [Parameter] public RenderFragment? ActionsContent { get; set; }
+
+    public MudExpansionPanelHeader()
     {
-        [CascadingParameter] private MudExpansionPanels Parent2 { get; set; } = null!;
-
-        [Parameter] public RenderFragment? ActionsContent { get; set; }
-
-        public MudExpansionPanelHeader()
-        {
-            Disabled = true;
-            CursorEnabled = true;
-        }
-
-        protected new string Classname =>
-        new CssBuilder("mud-expand-panel")
-            .AddClass("mud-panel-expanded", IsExpanded)
-            .AddClass("mud-panel-next-expanded", NextPanelExpanded)
-            .AddClass($"mud-elevation-{Parent2?.Elevation.ToString()}")
-            .AddClass("mud-expand-panel-border", Parent2?.DisableBorders != true)
-            .AddClass(Class)
-        .Build();
+        Disabled = true;
+        CursorEnabled = true;
     }
+
+    protected new string Classname =>
+    new CssBuilder("mud-expand-panel")
+        .AddClass("mud-panel-expanded", IsExpanded)
+        .AddClass("mud-panel-next-expanded", NextPanelExpanded)
+        .AddClass($"mud-elevation-{Parent2?.Elevation.ToString()}")
+        .AddClass("mud-expand-panel-border", Parent2?.DisableBorders != true)
+        .AddClass(Class)
+    .Build();
 }

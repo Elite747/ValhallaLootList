@@ -3,32 +3,31 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.Server.Data
+namespace ValhallaLootList.Server.Data;
+
+public class DropPass
 {
-    public class DropPass
-    {
-        [Required]
-        public long CharacterId { get; set; }
+    [Required]
+    public long CharacterId { get; set; }
 
-        [Required]
-        public virtual Character Character { get; set; } = null!;
+    [Required]
+    public virtual Character Character { get; set; } = null!;
 
-        [Required]
-        public long DropId { get; set; }
+    [Required]
+    public long DropId { get; set; }
 
-        [Required]
-        public virtual Drop Drop { get; set; } = null!;
+    [Required]
+    public virtual Drop Drop { get; set; } = null!;
 
-        public long? LootListEntryId { get; set; }
+    public long? LootListEntryId { get; set; }
 
-        public virtual LootListEntry? LootListEntry { get; set; }
+    public virtual LootListEntry? LootListEntry { get; set; }
 
-        public int RelativePriority { get; set; }
+    public int RelativePriority { get; set; }
 
-        public long? WonEntryId { get; set; }
+    public long? WonEntryId { get; set; }
 
-        public long? RemovalId { get; set; }
+    public long? RemovalId { get; set; }
 
-        public virtual TeamRemoval? Removal { get; set; }
-    }
+    public virtual TeamRemoval? Removal { get; set; }
 }

@@ -3,26 +3,25 @@
 
 using System.Text.Json.Serialization;
 
-namespace ValhallaLootList.Minify
+namespace ValhallaLootList.Minify;
+
+public class SourceMap
 {
-    public class SourceMap
-    {
-        [JsonPropertyName("version")]
-        public int Version { get; set; }
+    [JsonPropertyName("version")]
+    public int Version { get; set; }
 
-        [JsonPropertyName("sourceRoot")]
-        public string? SourceRoot { get; set; }
+    [JsonPropertyName("sourceRoot")]
+    public string? SourceRoot { get; set; }
 
-        [JsonPropertyName("sources")]
-        public string[]? Sources { get; set; }
+    [JsonPropertyName("sources")]
+    public string[]? Sources { get; set; }
 
-        [JsonPropertyName("names")]
-        public object[]? Names { get; set; }
+    [JsonPropertyName("names")]
+    public object[]? Names { get; set; }
 
-        [JsonPropertyName("mappings")]
-        public string? Mappings { get; set; }
+    [JsonPropertyName("mappings")]
+    public string? Mappings { get; set; }
 
-        [JsonPropertyName("file")]
-        public string? File { get; set; }
-    }
+    [JsonPropertyName("file")]
+    public string? File { get; set; }
 }

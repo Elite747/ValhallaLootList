@@ -3,9 +3,8 @@
 
 using Microsoft.AspNetCore.Identity;
 
-namespace ValhallaLootList.Server.Data
+namespace ValhallaLootList.Server.Data;
+
+public class AppUser : IdentityUser<long>
 {
-    public class AppUser : IdentityUser<long>
-    {
-    }
 }

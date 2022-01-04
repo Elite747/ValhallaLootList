@@ -3,26 +3,25 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview;
+
+internal class DruidsDontBenefitFromOnHitProcsRule : SimpleRule
 {
-    internal class DruidsDontBenefitFromOnHitProcsRule : SimpleRule
+    protected override string DisallowReason => "Feral druids do not benefit from on-hit procs on weapons.";
+
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+
+    protected override bool AppliesTo(Item item)
     {
-        protected override string DisallowReason => "Feral druids do not benefit from on-hit procs on weapons.";
-
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
-
-        protected override bool AppliesTo(Item item)
+        if (item.Id == 32500u) // Crystal Spire of Karabor is a weapon with a proc that isn't on-hit
         {
-            if (item.Id == 32500u) // Crystal Spire of Karabor is a weapon with a proc that isn't on-hit
-            {
-                return false;
-            }
-
-            return item.HasProc && (item.Slot is InventorySlot.MainHand or InventorySlot.OffHand or InventorySlot.OneHand or InventorySlot.TwoHand);
+            return false;
         }
 
-        protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid;
-
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
+        return item.HasProc && (item.Slot is InventorySlot.MainHand or InventorySlot.OffHand or InventorySlot.OneHand or InventorySlot.TwoHand);
     }
+
+    protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid;
+
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

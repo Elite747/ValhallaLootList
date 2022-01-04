@@ -3,32 +3,31 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
+namespace ValhallaLootList.Server.Migrations;
+
+public partial class AddMissingTrashIndexKey : Migration
 {
-    public partial class AddMissingTrashIndexKey : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_CharacterEncounterKill",
-                table: "CharacterEncounterKill");
+        migrationBuilder.DropPrimaryKey(
+            name: "PK_CharacterEncounterKill",
+            table: "CharacterEncounterKill");
 
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_CharacterEncounterKill",
-                table: "CharacterEncounterKill",
-                columns: new[] { "EncounterKillRaidId", "EncounterKillEncounterId", "EncounterKillTrashIndex", "CharacterId" });
-        }
+        migrationBuilder.AddPrimaryKey(
+            name: "PK_CharacterEncounterKill",
+            table: "CharacterEncounterKill",
+            columns: new[] { "EncounterKillRaidId", "EncounterKillEncounterId", "EncounterKillTrashIndex", "CharacterId" });
+    }
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_CharacterEncounterKill",
-                table: "CharacterEncounterKill");
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropPrimaryKey(
+            name: "PK_CharacterEncounterKill",
+            table: "CharacterEncounterKill");
 
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_CharacterEncounterKill",
-                table: "CharacterEncounterKill",
-                columns: new[] { "EncounterKillRaidId", "EncounterKillEncounterId", "CharacterId" });
-        }
+        migrationBuilder.AddPrimaryKey(
+            name: "PK_CharacterEncounterKill",
+            table: "CharacterEncounterKill",
+            columns: new[] { "EncounterKillRaidId", "EncounterKillEncounterId", "CharacterId" });
     }
 }

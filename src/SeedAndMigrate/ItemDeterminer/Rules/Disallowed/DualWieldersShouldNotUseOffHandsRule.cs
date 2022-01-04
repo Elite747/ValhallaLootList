@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class DualWieldersShouldNotUseOffHandsRule : SimpleRule
 {
-    internal class DualWieldersShouldNotUseOffHandsRule : SimpleRule
-    {
-        protected override string DisallowReason => "Dual-wielding specializations should not use non-weapon offhands.";
+    protected override string DisallowReason => "Dual-wielding specializations should not use non-weapon offhands.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && (item.Type == ItemType.Other || item.Type == ItemType.Shield);
+    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && (item.Type == ItemType.Other || item.Type == ItemType.Shield);
 
-        protected override Specializations ApplicableSpecs() => Specializations.FuryWarrior | Specializations.EnhanceShaman | SpecializationGroups.Rogue;
+    protected override Specializations ApplicableSpecs() => Specializations.FuryWarrior | Specializations.EnhanceShaman | SpecializationGroups.Rogue;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

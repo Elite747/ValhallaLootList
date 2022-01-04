@@ -3,20 +3,19 @@
 
 using System.Text.Json.Serialization;
 
-namespace ValhallaLootList.Client.Data.Items
+namespace ValhallaLootList.Client.Data.Items;
+
+public class WowheadItemResponse
 {
-    public class WowheadItemResponse
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("quality")]
-        public int Quality { get; set; }
+    [JsonPropertyName("quality")]
+    public int Quality { get; set; }
 
-        [JsonPropertyName("icon")]
-        public string Icon { get; set; } = string.Empty;
+    [JsonPropertyName("icon")]
+    public string Icon { get; set; } = string.Empty;
 
-        [JsonPropertyName("tooltip")]
-        public string Tooltip { get; set; } = string.Empty;
-    }
+    [JsonPropertyName("tooltip")]
+    public string Tooltip { get; set; } = string.Empty;
 }

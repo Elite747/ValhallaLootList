@@ -1,9 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
 using CommandLine;
 using DartSassHost;

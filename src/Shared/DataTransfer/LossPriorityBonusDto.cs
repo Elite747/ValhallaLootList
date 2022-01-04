@@ -1,10 +1,9 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-namespace ValhallaLootList.DataTransfer
+namespace ValhallaLootList.DataTransfer;
+
+public class LossPriorityBonusDto : PriorityBonusDto
 {
-    public class LossPriorityBonusDto : PriorityBonusDto
-    {
-        public int TimesSeen { get; set; }
-    }
+    public int TimesSeen { get; set; }
 }

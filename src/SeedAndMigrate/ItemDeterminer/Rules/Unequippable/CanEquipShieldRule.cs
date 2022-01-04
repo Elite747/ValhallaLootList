@@ -3,19 +3,18 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Unequippable;
+
+internal class CanEquipShieldRule : SimpleRule
 {
-    internal class CanEquipShieldRule : SimpleRule
+    protected override string DisallowReason => "Class cannot equip shields.";
+
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
+
+    protected override bool AppliesTo(Item item) => item.Type == ItemType.Shield;
+
+    protected override bool IsAllowed(Item item, Specializations spec)
     {
-        protected override string DisallowReason => "Class cannot equip shields.";
-
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
-
-        protected override bool AppliesTo(Item item) => item.Type == ItemType.Shield;
-
-        protected override bool IsAllowed(Item item, Specializations spec)
-        {
-            return (spec & (SpecializationGroups.Warrior | SpecializationGroups.Paladin | SpecializationGroups.Shaman)) == spec;
-        }
+        return (spec & (SpecializationGroups.Warrior | SpecializationGroups.Paladin | SpecializationGroups.Shaman)) == spec;
     }
 }

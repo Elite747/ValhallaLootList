@@ -1,16 +1,15 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-namespace ValhallaLootList.Client.Data.Import
+namespace ValhallaLootList.Client.Data.Import;
+
+public class ImportCharacter
 {
-    public class ImportCharacter
-    {
-        public string? Name { get; set; }
+    public string? Name { get; set; }
 
-        public Classes Class { get; set; }
+    public Classes Class { get; set; }
 
-        public PlayerRace Race { get; set; }
+    public PlayerRace Race { get; set; }
 
-        public Gender Gender { get; set; }
-    }
+    public Gender Gender { get; set; }
 }

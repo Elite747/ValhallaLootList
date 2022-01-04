@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class FathomBroochOfTheTidewalkerRule : SimpleRule
 {
-    internal class FathomBroochOfTheTidewalkerRule : SimpleRule
-    {
-        protected override string DisallowReason => "Fathom-Brooch of the Tidewalker is more valuable to healers than dps.";
+    protected override string DisallowReason => "Fathom-Brooch of the Tidewalker is more valuable to healers than dps.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 30663u;
+    protected override bool AppliesTo(Item item) => item.Id == 30663u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.EleShaman | Specializations.EnhanceShaman;
+    protected override Specializations ApplicableSpecs() => Specializations.EleShaman | Specializations.EnhanceShaman;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

@@ -3,22 +3,21 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal abstract class DeadStatRule : SimpleRule
 {
-    internal abstract class DeadStatRule : SimpleRule
-    {
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override string DisallowReason => $"The {GetStatDisplayName()} stat is not appropriate for the selected specialization.";
+    protected override string DisallowReason => $"The {GetStatDisplayName()} stat is not appropriate for the selected specialization.";
 
-        protected abstract int GetStat(Item item);
+    protected abstract int GetStat(Item item);
 
-        protected override sealed bool AppliesTo(Item item) => GetStat(item) > 0;
+    protected override sealed bool AppliesTo(Item item) => GetStat(item) > 0;
 
-        protected override abstract Specializations ApplicableSpecs();
+    protected override abstract Specializations ApplicableSpecs();
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 
-        protected abstract string GetStatDisplayName();
-    }
+    protected abstract string GetStatDisplayName();
 }

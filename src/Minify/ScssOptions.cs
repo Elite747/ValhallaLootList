@@ -3,10 +3,9 @@
 
 using CommandLine;
 
-namespace ValhallaLootList.Minify
+namespace ValhallaLootList.Minify;
+
+[Verb("scss", HelpText = "Compiles and minifies Scss stylesheets.")]
+internal class ScssOptions : OptionsBase
 {
-    [Verb("scss", HelpText = "Compiles and minifies Scss stylesheets.")]
-    internal class ScssOptions : OptionsBase
-    {
-    }
 }

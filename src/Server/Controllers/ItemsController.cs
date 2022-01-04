@@ -1,89 +1,85 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.Server.Controllers
+namespace ValhallaLootList.Server.Controllers;
+
+public class ItemsController : ApiControllerV1
 {
-    public class ItemsController : ApiControllerV1
+    private readonly ApplicationDbContext _context;
+
+    public ItemsController(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public ItemsController(ApplicationDbContext context)
+    public async Task<IEnumerable<ItemDto>> Get(byte phase, bool includeTokens = false)
+    {
+        var itemQuery = _context.Items.AsNoTracking().Where(item => item.Phase == phase);
+        var restrictionQuery = _context.ItemRestrictions.AsNoTracking().Where(r => r.Item.Phase == phase);
+
+        if (!includeTokens)
         {
-            _context = context;
+            itemQuery = itemQuery.Where(item => item.Slot != InventorySlot.Unknown);
+            restrictionQuery = restrictionQuery.Where(r => r.Item.Slot != InventorySlot.Unknown);
         }
 
-        public async Task<IEnumerable<ItemDto>> Get(byte phase, bool includeTokens = false)
-        {
-            var itemQuery = _context.Items.AsNoTracking().Where(item => item.Phase == phase);
-            var restrictionQuery = _context.ItemRestrictions.AsNoTracking().Where(r => r.Item.Phase == phase);
-
-            if (!includeTokens)
+        var items = await itemQuery
+            .Select(item => new ItemDto
             {
-                itemQuery = itemQuery.Where(item => item.Slot != InventorySlot.Unknown);
-                restrictionQuery = restrictionQuery.Where(r => r.Item.Slot != InventorySlot.Unknown);
-            }
+                Id = item.Id,
+                RewardFromId = item.RewardFromId,
+                QuestId = item.RewardFromId.HasValue ? item.RewardFrom!.QuestId : default,
+                Name = item.Name,
+                Slot = item.Slot,
+                Type = item.Type,
+                MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1
+            })
+            .ToDictionaryAsync(item => item.Id);
 
-            var items = await itemQuery
-                .Select(item => new ItemDto
-                {
-                    Id = item.Id,
-                    RewardFromId = item.RewardFromId,
-                    QuestId = item.RewardFromId.HasValue ? item.RewardFrom!.QuestId : default,
-                    Name = item.Name,
-                    Slot = item.Slot,
-                    Type = item.Type,
-                    MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1
-                })
-                .ToDictionaryAsync(item => item.Id);
-
-            await foreach (var restriction in restrictionQuery
-                .OrderBy(r => r.ItemId)
-                .ThenBy(r => r.RestrictionLevel)
-                .Select(r => new
-                {
-                    r.ItemId,
-                    r.Reason,
-                    r.RestrictionLevel,
-                    r.Specializations
-                })
-                .AsAsyncEnumerable())
+        await foreach (var restriction in restrictionQuery
+            .OrderBy(r => r.ItemId)
+            .ThenBy(r => r.RestrictionLevel)
+            .Select(r => new
             {
-                if (items.TryGetValue(restriction.ItemId, out var item))
-                {
-                    item.Restrictions.Add(new RestrictionDto
-                    {
-                        Level = restriction.RestrictionLevel,
-                        Reason = restriction.Reason,
-                        Specs = restriction.Specializations
-                    });
-                }
-            }
-
-            return items.Values;
-        }
-
-        [HttpGet("{itemId:int}/Restrictions")]
-        public IAsyncEnumerable<RestrictionDto> GetRestrictions(uint itemId)
+                r.ItemId,
+                r.Reason,
+                r.RestrictionLevel,
+                r.Specializations
+            })
+            .AsAsyncEnumerable())
         {
-            return _context.ItemRestrictions
-                .AsNoTracking()
-                .Where(r => r.ItemId == itemId)
-                .OrderBy(r => r.RestrictionLevel)
-                .Select(r => new RestrictionDto
+            if (items.TryGetValue(restriction.ItemId, out var item))
+            {
+                item.Restrictions.Add(new RestrictionDto
                 {
-                    Level = r.RestrictionLevel,
-                    Reason = r.Reason,
-                    Specs = r.Specializations
-                })
-                .AsAsyncEnumerable();
+                    Level = restriction.RestrictionLevel,
+                    Reason = restriction.Reason,
+                    Specs = restriction.Specializations
+                });
+            }
         }
+
+        return items.Values;
+    }
+
+    [HttpGet("{itemId:int}/Restrictions")]
+    public IAsyncEnumerable<RestrictionDto> GetRestrictions(uint itemId)
+    {
+        return _context.ItemRestrictions
+            .AsNoTracking()
+            .Where(r => r.ItemId == itemId)
+            .OrderBy(r => r.RestrictionLevel)
+            .Select(r => new RestrictionDto
+            {
+                Level = r.RestrictionLevel,
+                Reason = r.Reason,
+                Specs = r.Specializations
+            })
+            .AsAsyncEnumerable();
     }
 }

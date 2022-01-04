@@ -3,25 +3,24 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
-{
-    public partial class AddEnchantBonus : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<bool>(
-                name: "Enchanted",
-                table: "Characters",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
-        }
+namespace ValhallaLootList.Server.Migrations;
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "Enchanted",
-                table: "Characters");
-        }
+public partial class AddEnchantBonus : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.AddColumn<bool>(
+            name: "Enchanted",
+            table: "Characters",
+            type: "bit",
+            nullable: false,
+            defaultValue: false);
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Enchanted",
+            table: "Characters");
     }
 }

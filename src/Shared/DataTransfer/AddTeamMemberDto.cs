@@ -3,13 +3,12 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.DataTransfer
-{
-    public class AddTeamMemberDto
-    {
-        [Required]
-        public long? CharacterId { get; set; }
+namespace ValhallaLootList.DataTransfer;
 
-        public RaidMemberStatus MemberStatus { get; set; }
-    }
+public class AddTeamMemberDto
+{
+    [Required]
+    public long? CharacterId { get; set; }
+
+    public RaidMemberStatus MemberStatus { get; set; }
 }

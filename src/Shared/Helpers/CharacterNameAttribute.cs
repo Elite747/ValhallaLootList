@@ -3,13 +3,12 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.Helpers
+namespace ValhallaLootList.Helpers;
+
+public class CharacterNameAttribute : RegularExpressionAttribute
 {
-    public class CharacterNameAttribute : RegularExpressionAttribute
+    public CharacterNameAttribute() : base(NameHelpers.CharacterNameRegex)
     {
-        public CharacterNameAttribute() : base(NameHelpers.CharacterNameRegex)
-        {
-            ErrorMessage = "Name must be 2 to 12 characters long, contain only letters, and have no more than two consecutive letters.";
-        }
+        ErrorMessage = "Name must be 2 to 12 characters long, contain only letters, and have no more than two consecutive letters.";
     }
 }

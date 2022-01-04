@@ -1,10 +1,9 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-namespace ValhallaLootList.Client.Shared
+namespace ValhallaLootList.Client.Shared;
+
+public class RenderLocation
 {
-    public class RenderLocation
-    {
-        public bool IsServer { get; init; }
-    }
+    public bool IsServer { get; init; }
 }

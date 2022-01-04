@@ -3,14 +3,13 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class SpellHasteDeadStatRule : DeadStatRule
 {
-    internal class SpellHasteDeadStatRule : DeadStatRule
-    {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank;
 
-        protected override int GetStat(Item item) => item.SpellHaste;
+    protected override int GetStat(Item item) => item.SpellHaste;
 
-        protected override string GetStatDisplayName() => "Spell Haste";
-    }
+    protected override string GetStatDisplayName() => "Spell Haste";
 }

@@ -1,29 +1,27 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.DataTransfer
+namespace ValhallaLootList.DataTransfer;
+
+public class KillSubmissionDto
 {
-    public class KillSubmissionDto
+    private List<long>? _characters;
+    private List<uint>? _drops;
+
+    [Required]
+    public string? EncounterId { get; set; }
+
+    public List<long> Characters
     {
-        private List<long>? _characters;
-        private List<uint>? _drops;
+        get => _characters ??= new();
+        set => _characters = value;
+    }
 
-        [Required]
-        public string? EncounterId { get; set; }
-
-        public List<long> Characters
-        {
-            get => _characters ??= new();
-            set => _characters = value;
-        }
-
-        public List<uint> Drops
-        {
-            get => _drops ??= new();
-            set => _drops = value;
-        }
+    public List<uint> Drops
+    {
+        get => _drops ??= new();
+        set => _drops = value;
     }
 }

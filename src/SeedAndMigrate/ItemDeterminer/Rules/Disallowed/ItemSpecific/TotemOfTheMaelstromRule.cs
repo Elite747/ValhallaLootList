@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class TotemOfTheMaelstromRule : SimpleRule
 {
-    internal class TotemOfTheMaelstromRule : SimpleRule
-    {
-        protected override string DisallowReason => "Totem of the Maelstrom is only appropriate for the Restoration spec.";
+    protected override string DisallowReason => "Totem of the Maelstrom is only appropriate for the Restoration spec.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 30023u;
+    protected override bool AppliesTo(Item item) => item.Id == 30023u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Shaman;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Shaman;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => spec == Specializations.RestoShaman;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => spec == Specializations.RestoShaman;
 }

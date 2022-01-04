@@ -3,17 +3,16 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
-{
-    public partial class RemoveUnusedClaims : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql("DELETE FROM AspNetUserClaims WHERE ClaimType NOT IN ('Character', 'RaidLeader')");
-        }
+namespace ValhallaLootList.Server.Migrations;
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-        }
+public partial class RemoveUnusedClaims : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql("DELETE FROM AspNetUserClaims WHERE ClaimType NOT IN ('Character', 'RaidLeader')");
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
     }
 }

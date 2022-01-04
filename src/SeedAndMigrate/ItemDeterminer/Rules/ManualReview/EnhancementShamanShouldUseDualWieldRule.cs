@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview;
+
+internal class EnhancementShamanShouldUseDualWieldRule : SimpleRule
 {
-    internal class EnhancementShamanShouldUseDualWieldRule : SimpleRule
-    {
-        protected override string DisallowReason => "Enhancement shamans should utilize dual-wield specializations instead of two-handed.";
+    protected override string DisallowReason => "Enhancement shamans should utilize dual-wield specializations instead of two-handed.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.TwoHand;
+    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.TwoHand;
 
-        protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman;
+    protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

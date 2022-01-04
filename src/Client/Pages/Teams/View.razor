@@ -7,7 +7,7 @@
 
 <ApiExecutor Operation="Api.GetPhaseConfiguration" Context="phaseConfig">
     <ApiExecutor Operation="() => Api.Teams.Get(TeamName)" Context="team" @ref="_executor" BackgroundRefresh="true">
-        <PageTitle Title="@GetTitle(team)" />
+        <AppPageTitle Title="@GetTitle(team)" />
         <MudGrid>
             <MudItem xs="12" md="6">
                 <div class="d-flex align-center mb-3">

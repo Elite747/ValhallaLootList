@@ -4,7 +4,7 @@
 @inject IDialogService DialogService
 @inject TeamsSource TeamsSource
 
-<PageTitle Title="Characters" />
+<AppPageTitle Title="Characters" />
 <div class="layout-container content">
     <div class="d-flex align-center mb-3">
         <MudText Typo="Typo.h4" GutterBottom="false">Characters</MudText>
@@ -35,7 +35,8 @@
 
                         </MudItem>
                         <MudItem xs="12" md="4">
-                            <MudSelect @bind-SelectedValues="_searchClasses"
+                            <MudSelect SelectedValues="_searchClasses"
+                                       SelectedValuesChanged="UpdateSearchClasses"
                                        MultiSelection="true"
                                        Variant="Variant.Filled"
                                        Label="Class"
@@ -56,7 +57,8 @@
 
                         </MudItem>
                         <MudItem xs="12" md="4">
-                            <MudSelect @bind-SelectedValues="_searchTeams"
+                            <MudSelect SelectedValues="_searchTeams"
+                                       SelectedValuesChanged="UpdateSearchTeams"
                                        MultiSelection="true"
                                        Variant="Variant.Filled"
                                        Label="Team"
@@ -96,8 +98,8 @@
     private readonly List<CharacterDto> _filteredList = new();
     private ApiExecutor<IList<CharacterDto>>? _executor;
     private string _searchText = string.Empty;
-    private HashSet<Classes> _searchClasses = new();
-    private HashSet<TeamNameDto?> _searchTeams = new();
+    private readonly HashSet<Classes> _searchClasses = new();
+    private readonly HashSet<TeamNameDto?> _searchTeams = new();
     private bool _showDeactivated, _onlyUnverified;
     private static readonly Classes[] _allClasses = new[] {
         Classes.Druid,
@@ -176,5 +178,17 @@
         {
             Nav.NavigateTo("/characters/" + character.Name);
         }
+    }
+
+    private void UpdateSearchClasses(IEnumerable<Classes> classes)
+    {
+        _searchClasses.Clear();
+        _searchClasses.UnionWith(classes);
+    }
+
+    private void UpdateSearchTeams(IEnumerable<TeamNameDto> teams)
+    {
+        _searchTeams.Clear();
+        _searchTeams.UnionWith(teams);
     }
 }

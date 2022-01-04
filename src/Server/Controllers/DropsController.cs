@@ -139,6 +139,7 @@ namespace ValhallaLootList.Server.Controllers
                     }
 
                     drop.WinningEntry = await _context.LootListEntries.FindAsync(winner.Entry.Id);
+                    Debug.Assert(drop.WinningEntry is not null);
                     drop.WinningEntry.Drop = drop;
                     drop.WinningEntry.DropId = drop.Id;
 
@@ -207,7 +208,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId && kill.TrashIndex == drop.EncounterKillTrashIndex)
                 .Select(kill => new { kill.DiscordMessageId, kill.KilledAt, kill.RaidId, TeamName = kill.Raid.RaidTeam.Name, EncounterName = kill.Encounter.Name })
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             var drops = new List<(uint, string, string?)>();
 

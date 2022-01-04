@@ -375,7 +375,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             _telemetry.TrackEvent("RaidDeleted", User, props =>
             {
@@ -476,7 +476,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             _telemetry.TrackEvent("AttendeeAdded", User, props =>
             {
@@ -562,13 +562,13 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == characterId)
                 .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name, c.VerifiedById })
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             _telemetry.TrackEvent("AttendeeUpdated", User, props =>
             {
@@ -636,13 +636,13 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             var character = await _context.Characters
                 .AsNoTracking()
                 .Where(c => c.Id == characterId)
                 .Select(c => new { c.Id, c.Name })
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             _telemetry.TrackEvent("AttendeeDeleted", User, props =>
             {
@@ -795,7 +795,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             await _context.SaveChangesAsync();
 
@@ -884,7 +884,7 @@ namespace ValhallaLootList.Server.Controllers
                 .AsNoTracking()
                 .Where(t => t.Id == raid.RaidTeamId)
                 .Select(t => t.Name)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             _telemetry.TrackEvent("KillDeleted", User, props =>
             {

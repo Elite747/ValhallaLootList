@@ -183,6 +183,11 @@ namespace ValhallaLootList.Server.Controllers
 
             var team = await _context.RaidTeams.FindAsync(id);
 
+            if (team is null)
+            {
+                return NotFound();
+            }
+
             team.Name = dto.Name;
             team.Inactive = dto.Inactive;
 

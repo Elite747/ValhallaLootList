@@ -293,7 +293,7 @@ namespace ValhallaLootList.Server.Controllers
                     var swapBracket = await _context.Brackets
                         .AsNoTracking()
                         .Where(b => b.Phase == swapEntry.LootList.Phase && swapEntry.Rank >= b.MinRank && swapEntry.Rank <= b.MaxRank)
-                        .FirstOrDefaultAsync();
+                        .FirstAsync();
 
                     if (swapBracket.Index == bracket.Index)
                     {
@@ -326,7 +326,7 @@ namespace ValhallaLootList.Server.Controllers
                 var swapBracket = await _context.Brackets
                     .AsNoTracking()
                     .Where(b => b.Phase == entry.LootList.Phase && entry.Rank >= b.MinRank && entry.Rank <= b.MaxRank)
-                    .FirstOrDefaultAsync();
+                    .FirstAsync();
 
                 if (swapBracket.Index != bracket.Index && !swapBracket.AllowTypeDuplicates && await BracketHasTypeAsync(swapBracket, swapEntry))
                 {

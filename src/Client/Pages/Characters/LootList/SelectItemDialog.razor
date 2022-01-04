@@ -13,7 +13,8 @@
                               AdornmentIcon="@Icons.Filled.Search" />
             </MudItem>
             <MudItem xs="12" sm="4">
-                <MudSelect @bind-SelectedValues="_searchGroups"
+                <MudSelect SelectedValues="_searchGroups"
+                           SelectedValuesChanged="UpdateSearchGroups"
                            MultiSelection="true"
                            Variant="Variant.Filled"
                            Label="Item Group"
@@ -137,5 +138,11 @@
         }
 
         return items;
+    }
+
+    private void UpdateSearchGroups(IEnumerable<ItemGroup> searchGroups)
+    {
+        _searchGroups.Clear();
+        _searchGroups.UnionWith(searchGroups);
     }
 }

@@ -23,7 +23,7 @@
         {
             DateTime firstDayThisWeek = _firstCalendarDay.AddDays(week * 7);
 
-            if (firstDayThisWeek.Month > Date.Month || firstDayThisWeek.Year > Date.Year)
+            if (week > 0 && (firstDayThisWeek.Month > Date.Month || firstDayThisWeek.Year > Date.Year))
             {
                 break;
             }

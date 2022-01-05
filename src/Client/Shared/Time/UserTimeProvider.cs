@@ -32,13 +32,17 @@ public class UserTimeProvider
 
     public DateTimeOffset Now => Mode switch
     {
-        TimeFormatterMode.Original => DateTimeOffset.UtcNow.ToTimeZone(_serverTimeZone),
+        TimeFormatterMode.Original => ServerNow,
         TimeFormatterMode.Local => DateTimeOffset.Now,
         TimeFormatterMode.Utc => DateTimeOffset.UtcNow,
         _ => DateTimeOffset.Now
     };
 
     public DateTime Today => Now.Date;
+
+    public DateTimeOffset ServerNow => DateTimeOffset.UtcNow.ToTimeZone(_serverTimeZone);
+
+    public DateTime ServerToday => ServerNow.Date;
 
     public DateTimeOffset FromServerTimeOfDay(DateTime date, TimeSpan timeOfDay)
     {

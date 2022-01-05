@@ -44,4 +44,6 @@ public class DonationSubmissionDto
     public long CharacterId { get; set; }
 
     public int CopperAmount { get; set; }
+
+    public bool ApplyThisMonth { get; set; }
 }

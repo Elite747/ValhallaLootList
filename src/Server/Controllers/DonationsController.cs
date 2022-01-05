@@ -29,6 +29,17 @@ public class DonationsController : ApiControllerV1
     [HttpPost, Authorize(AppPolicies.LootMasterOrAdmin)]
     public async Task<IActionResult> Post([FromBody] DonationSubmissionDto dto)
     {
+        var donatedAt = _serverTimeZone.TimeZoneNow();
+
+        if (dto.ApplyThisMonth)
+        {
+            if (donatedAt.Day > 7)
+            {
+                return Problem("Donations can only be applied to the current month within the first week of the month.");
+            }
+            donatedAt = donatedAt.AddDays(-donatedAt.Day);
+        }
+
         var character = await _context.Characters.FindAsync(dto.CharacterId);
 
         if (character is null)
@@ -39,7 +50,7 @@ public class DonationsController : ApiControllerV1
         _context.Donations.Add(new Donation(_idGenerator.CreateId())
         {
             CopperAmount = dto.CopperAmount,
-            DonatedAt = _serverTimeZone.TimeZoneNow(),
+            DonatedAt = donatedAt,
             Character = character,
             CharacterId = character.Id,
             EnteredById = User.GetDiscordId().GetValueOrDefault()

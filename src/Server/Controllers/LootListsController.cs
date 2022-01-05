@@ -624,10 +624,6 @@ public class LootListsController : ApiControllerV1
         {
             return Problem("The loot list has been changed. Refresh before trying again.");
         }
-        if (!await PhaseActiveAsync(list.Phase))
-        {
-            return Problem("Phase is not yet active.");
-        }
 
         long teamId = list.Character.Team.Id;
         list.ApprovedBy = null;
@@ -771,10 +767,6 @@ public class LootListsController : ApiControllerV1
         {
             return Problem("The loot list has been changed. Refresh before trying again.");
         }
-        if (!await PhaseActiveAsync(list.Phase))
-        {
-            return Problem("Phase is not yet active.");
-        }
 
         switch (list.Status)
         {
@@ -906,6 +898,10 @@ public class LootListsController : ApiControllerV1
         if (list.Status != LootListStatus.Approved)
         {
             return Problem("Loot list must be approved before locking.");
+        }
+        if (!await _context.PhaseActiveAsync(list.Phase))
+        {
+            return Problem("Phase is not yet active.");
         }
 
         list.Status = LootListStatus.Locked;
@@ -1040,12 +1036,6 @@ public class LootListsController : ApiControllerV1
             .Where(p => p.StartsAt <= now)
             .Select(p => p.Id)
             .ToListAsync();
-    }
-
-    private async Task<bool> PhaseActiveAsync(byte phase)
-    {
-        var phaseDetails = await _context.PhaseDetails.FindAsync(phase);
-        return phaseDetails is not null && phaseDetails.StartsAt <= DateTimeOffset.UtcNow;
     }
 
     private async Task<bool> AuthorizeCharacterAsync(Character character, string policy)

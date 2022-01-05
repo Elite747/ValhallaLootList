@@ -138,6 +138,12 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
         return new(results, scope);
     }
 
+    public async Task<bool> PhaseActiveAsync(byte phase)
+    {
+        var phaseDetails = await PhaseDetails.FindAsync(phase);
+        return phaseDetails is not null && phaseDetails.StartsAt <= DateTimeOffset.UtcNow;
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

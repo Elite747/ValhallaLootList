@@ -698,6 +698,10 @@ public class RaidsController : ApiControllerV1
             ModelState.AddModelError(nameof(dto.EncounterId), "Encounter does not exist.");
             return ValidationProblem();
         }
+        if (!await _context.PhaseActiveAsync(encounter.Phase))
+        {
+            return Problem("Phase is not yet active.");
+        }
 
         var existingKillIndex = await _context.EncounterKills
             .Where(ek => ek.RaidId == id && ek.EncounterId == dto.EncounterId)

@@ -121,7 +121,7 @@
         <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
             <MudList Clickable Dense>
                 @foreach (var instance in _instancesOperation.GetResult()
-                    .Where(i => _phaseConfigOperation.GetResult().Phases.Contains(i.Phase))
+                    .Where(IsInActivePhase)
                     .OrderByDescending(i => i.Phase)
                     .ThenBy(i => i.Name))
                 {
@@ -476,5 +476,11 @@
     private string GetNotPresent()
     {
         return string.Join(", ", Raid.Attendees.Where(a => !_attendees.ContainsKey(a.Character.Id)).OrderBy(a => a.Character.Name).Select(a => a.Character.Name));
+    }
+
+    private bool IsInActivePhase(InstanceDto instance)
+    {
+        var phaseConfig = _phaseConfigOperation.GetResult();
+        return instance.Phase <= phaseConfig.CurrentPhase && phaseConfig.Phases.Contains(instance.Phase);
     }
 }

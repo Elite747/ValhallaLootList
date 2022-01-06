@@ -1,10 +1,12 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System.Diagnostics;
 using IdGen;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
@@ -17,13 +19,20 @@ public class DonationsController : ApiControllerV1
     private readonly TimeZoneInfo _serverTimeZone;
     private readonly IIdGenerator<long> _idGenerator;
     private readonly TelemetryClient _telemetry;
+    private readonly IAuthorizationService _authorizationService;
 
-    public DonationsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, IIdGenerator<long> idGenerator, TelemetryClient telemetry)
+    public DonationsController(
+        ApplicationDbContext context,
+        TimeZoneInfo serverTimeZone,
+        IIdGenerator<long> idGenerator,
+        TelemetryClient telemetry,
+        IAuthorizationService authorizationService)
     {
         _context = context;
         _serverTimeZone = serverTimeZone;
         _idGenerator = idGenerator;
         _telemetry = telemetry;
+        _authorizationService = authorizationService;
     }
 
     [HttpPost, Authorize(AppPolicies.LootMasterOrAdmin)]
@@ -31,20 +40,51 @@ public class DonationsController : ApiControllerV1
     {
         var donatedAt = _serverTimeZone.TimeZoneNow();
 
+        var character = await _context.Characters.FindAsync(dto.CharacterId);
+
+        if (character is null)
+        {
+            return NotFound();
+        }
+
+        var authResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
+
+        if (!authResult.Succeeded)
+        {
+            if (dto.ApplyThisMonth || !character.TeamId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            authResult = await _authorizationService.AuthorizeAsync(User, character.TeamId.Value, AppPolicies.LootMaster);
+
+            if (!authResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+        }
+        else if (!character.TeamId.HasValue)
+        {
+            return Problem("Donations can only be applied to characters on a raid team.");
+        }
+
+        Debug.Assert(authResult.Succeeded);
+
         if (dto.ApplyThisMonth)
         {
             if (donatedAt.Day > 7)
             {
                 return Problem("Donations can only be applied to the current month within the first week of the month.");
             }
+
+            if (await _context.Raids.CountAsync(raid => raid.RaidTeamId == character.TeamId.Value &&
+                                                        raid.StartedAt.Month == donatedAt.Month &&
+                                                        raid.StartedAt.Year == donatedAt.Year) > 0)
+            {
+                return Problem("Donations can only be applied to the current month before any raid occurs during the month.");
+            }
+
             donatedAt = donatedAt.AddDays(-donatedAt.Day);
-        }
-
-        var character = await _context.Characters.FindAsync(dto.CharacterId);
-
-        if (character is null)
-        {
-            return NotFound();
         }
 
         _context.Donations.Add(new Donation(_idGenerator.CreateId())

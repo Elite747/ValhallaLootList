@@ -10,7 +10,7 @@ using ValhallaLootList.Server.Data;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseConsoleLifetime()
-    .ConfigureHostConfiguration(config => config.AddUserSecrets(typeof(Program).Assembly))
+    .ConfigureHostConfiguration(config => config.AddUserSecrets(typeof(Program).Assembly, optional: true))
     .ConfigureServices((context, services) =>
     {
         services.AddHostedService<App>();

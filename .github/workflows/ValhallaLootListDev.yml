@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build
     - name: Seed and Migrate
-      run: dotnet run -p "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore --no-build
+      run: dotnet run --project "${{ env.MIGRATE_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore --no-build
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
     - name: Deploy to Azure WebApp

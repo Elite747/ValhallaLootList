@@ -298,7 +298,7 @@ public class DropsController : ApiControllerV1
 
         var dto = new List<ItemPrioDto>();
 
-        foreach (var killer in presentTeamRaiders.Where(c => c.Entry is not null))
+        foreach (var killer in presentTeamRaiders.Where(c => c.Entry?.AutoPass == false))
         {
             Debug.Assert(killer.Entry is not null);
             var prio = new ItemPrioDto
@@ -336,6 +336,7 @@ public class DropsController : ApiControllerV1
         public int Rank { get; init; }
         public LootListStatus Status { get; init; }
         public int Passes { get; init; }
+        public bool AutoPass { get; init; }
     }
 
     private Expression<Func<Character, CharacterDropInfo>> ConvertToDropInfo(uint itemId) => character => new()
@@ -352,7 +353,8 @@ public class DropsController : ApiControllerV1
                 Id = e.Id,
                 Rank = e.Rank,
                 Status = e.LootList.Status,
-                Passes = e.Passes.Count(p => p.RemovalId == null)
+                Passes = e.Passes.Count(p => p.RemovalId == null),
+                AutoPass = e.AutoPass
             })
             .FirstOrDefault()
     };

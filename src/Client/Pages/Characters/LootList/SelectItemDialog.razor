@@ -134,7 +134,7 @@
         {
             items = items.Where(item =>
                 !item.Restrictions.Any(r => (r.Specs & MainSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted) ||
-                !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted));
+                (AllowOffspec && !item.Restrictions.Any(r => (r.Specs & OffSpec) != 0 && r.Level == ItemRestrictionLevel.Restricted)));
         }
 
         return items;

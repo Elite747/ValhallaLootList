@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class BlackBowOfTheBetrayerRule : SimpleRule
 {
-    internal class BlackBowOfTheBetrayerRule : SimpleRule
-    {
-        protected override string DisallowReason => "Black Bow of the Betrayer has a mana drain effect, which is only useful to hunters.";
+    protected override string DisallowReason => "Black Bow of the Betrayer has a mana drain effect, which is only useful to hunters.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 32336u;
+    protected override bool AppliesTo(Item item) => item.Id == 32336u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

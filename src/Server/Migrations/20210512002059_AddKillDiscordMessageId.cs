@@ -3,25 +3,24 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
-{
-    public partial class AddKillDiscordMessageId : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<long>(
-                name: "DiscordMessageId",
-                table: "EncounterKills",
-                type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
-        }
+namespace ValhallaLootList.Server.Migrations;
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "DiscordMessageId",
-                table: "EncounterKills");
-        }
+public partial class AddKillDiscordMessageId : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.AddColumn<long>(
+            name: "DiscordMessageId",
+            table: "EncounterKills",
+            type: "bigint",
+            nullable: false,
+            defaultValue: 0L);
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "DiscordMessageId",
+            table: "EncounterKills");
     }
 }

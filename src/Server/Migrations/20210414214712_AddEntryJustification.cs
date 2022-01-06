@@ -3,25 +3,24 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
-{
-    public partial class AddEntryJustification : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<string>(
-                name: "Justification",
-                table: "LootListEntries",
-                type: "nvarchar(256)",
-                maxLength: 256,
-                nullable: true);
-        }
+namespace ValhallaLootList.Server.Migrations;
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "Justification",
-                table: "LootListEntries");
-        }
+public partial class AddEntryJustification : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.AddColumn<string>(
+            name: "Justification",
+            table: "LootListEntries",
+            type: "nvarchar(256)",
+            maxLength: 256,
+            nullable: true);
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Justification",
+            table: "LootListEntries");
     }
 }

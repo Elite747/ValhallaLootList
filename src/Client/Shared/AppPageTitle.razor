@@ -1,0 +1,8 @@
+﻿@if (Title?.Length > 0)
+{
+    <PageTitle>@Title - Valhalla Loot List</PageTitle>
+}
+
+@code {
+    [Parameter] public string? Title { get; set; }
+}

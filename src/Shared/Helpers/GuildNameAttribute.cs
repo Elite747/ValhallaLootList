@@ -3,13 +3,12 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.Helpers
+namespace ValhallaLootList.Helpers;
+
+public class GuildNameAttribute : RegularExpressionAttribute
 {
-    public class GuildNameAttribute : RegularExpressionAttribute
+    public GuildNameAttribute() : base(NameHelpers.GuildNameRegex)
     {
-        public GuildNameAttribute() : base(NameHelpers.GuildNameRegex)
-        {
-            ErrorMessage = "Name must be 2 to 24 characters long, contain no numbers, and have no more than two consecutive letters.";
-        }
+        ErrorMessage = "Name must be 2 to 24 characters long, contain no numbers, and have no more than two consecutive letters.";
     }
 }

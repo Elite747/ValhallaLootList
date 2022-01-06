@@ -3,36 +3,35 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ValhallaLootList.Server.Migrations
+namespace ValhallaLootList.Server.Migrations;
+
+public partial class AddUniqueAndQuestIdToItems : Migration
 {
-    public partial class AddUniqueAndQuestIdToItems : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsUnique",
-                table: "Items",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
+        migrationBuilder.AddColumn<bool>(
+            name: "IsUnique",
+            table: "Items",
+            type: "bit",
+            nullable: false,
+            defaultValue: false);
 
-            migrationBuilder.AddColumn<long>(
-                name: "QuestId",
-                table: "Items",
-                type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
-        }
+        migrationBuilder.AddColumn<long>(
+            name: "QuestId",
+            table: "Items",
+            type: "bigint",
+            nullable: false,
+            defaultValue: 0L);
+    }
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "IsUnique",
-                table: "Items");
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "IsUnique",
+            table: "Items");
 
-            migrationBuilder.DropColumn(
-                name: "QuestId",
-                table: "Items");
-        }
+        migrationBuilder.DropColumn(
+            name: "QuestId",
+            table: "Items");
     }
 }

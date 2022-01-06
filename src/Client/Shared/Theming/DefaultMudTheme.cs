@@ -3,19 +3,18 @@
 
 using MudBlazor;
 
-namespace ValhallaLootList.Client.Shared
+namespace ValhallaLootList.Client.Shared;
+
+public static class DefaultMudTheme
 {
-    public static class DefaultMudTheme
+    public static MudTheme Value { get; } = new()
     {
-        public static MudTheme Value { get; } = new()
-        {
-            Palette =
+        Palette =
             {
                 Primary = Colors.Purple.Darken1,
                 Secondary = Colors.Blue.Accent1,
                 Tertiary = Colors.Orange.Darken3,
                 AppbarBackground = Colors.Purple.Darken1
             }
-        };
-    }
+    };
 }

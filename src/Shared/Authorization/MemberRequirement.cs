@@ -3,9 +3,8 @@
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace ValhallaLootList
+namespace ValhallaLootList;
+
+public class MemberRequirement : IAuthorizationRequirement
 {
-    public class MemberRequirement : IAuthorizationRequirement
-    {
-    }
 }

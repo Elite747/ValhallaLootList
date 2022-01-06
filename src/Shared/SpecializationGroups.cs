@@ -3,30 +3,29 @@
 
 using static ValhallaLootList.Specializations;
 
-namespace ValhallaLootList
+namespace ValhallaLootList;
+
+public static class SpecializationGroups
 {
-    public static class SpecializationGroups
-    {
-        public const Specializations
-            Tank = BearDruid | ProtPaladin | ProtWarrior,
-            Healer = RestoDruid | RestoShaman | HolyPaladin | DiscPriest | HolyPriest,
-            MeleeDps = CatDruid | Rogue | EnhanceShaman | RetPaladin | ArmsWarrior | FuryWarrior,
-            CasterDps = BalanceDruid | Mage | ShadowPriest | EleShaman | Warlock,
-            PhysicalDps = MeleeDps | Hunter,
-            Dps = CasterDps | PhysicalDps,
+    public const Specializations
+        Tank = BearDruid | ProtPaladin | ProtWarrior,
+        Healer = RestoDruid | RestoShaman | HolyPaladin | DiscPriest | HolyPriest,
+        MeleeDps = CatDruid | Rogue | EnhanceShaman | RetPaladin | ArmsWarrior | FuryWarrior,
+        CasterDps = BalanceDruid | Mage | ShadowPriest | EleShaman | Warlock,
+        PhysicalDps = MeleeDps | Hunter,
+        Dps = CasterDps | PhysicalDps,
 
-            HealerPriest = DiscPriest | HolyPriest,
+        HealerPriest = DiscPriest | HolyPriest,
 
-            Druid = BalanceDruid | BearDruid | CatDruid | RestoDruid,
-            Hunter = BeastMasterHunter | MarksmanHunter | SurvivalHunter,
-            Mage = ArcaneMage | FireMage | FrostMage,
-            Paladin = HolyPaladin | ProtPaladin | RetPaladin,
-            Priest = DiscPriest | HolyPriest | ShadowPriest,
-            Rogue = AssassinationRogue | CombatRogue | SubtletyRogue,
-            Shaman = EleShaman | EnhanceShaman | RestoShaman,
-            Warlock = AfflictionWarlock | DemoWarlock | DestroWarlock,
-            Warrior = ProtWarrior | ArmsWarrior | FuryWarrior,
+        Druid = BalanceDruid | BearDruid | CatDruid | RestoDruid,
+        Hunter = BeastMasterHunter | MarksmanHunter | SurvivalHunter,
+        Mage = ArcaneMage | FireMage | FrostMage,
+        Paladin = HolyPaladin | ProtPaladin | RetPaladin,
+        Priest = DiscPriest | HolyPriest | ShadowPriest,
+        Rogue = AssassinationRogue | CombatRogue | SubtletyRogue,
+        Shaman = EleShaman | EnhanceShaman | RestoShaman,
+        Warlock = AfflictionWarlock | DemoWarlock | DestroWarlock,
+        Warrior = ProtWarrior | ArmsWarrior | FuryWarrior,
 
-            All = Druid | Paladin | Priest | Shaman | Warrior | Rogue | Hunter | Mage | Warlock;
-    }
+        All = Druid | Paladin | Priest | Shaman | Warrior | Rogue | Hunter | Mage | Warlock;
 }

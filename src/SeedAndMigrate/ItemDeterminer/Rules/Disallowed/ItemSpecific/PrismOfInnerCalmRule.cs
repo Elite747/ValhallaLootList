@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class PrismOfInnerCalmRule : SimpleRule
 {
-    internal class PrismOfInnerCalmRule : SimpleRule
-    {
-        protected override string DisallowReason => "Prism of Inner Calm reduces threat on critical strikes, which is only useful to dps.";
+    protected override string DisallowReason => "Prism of Inner Calm reduces threat on critical strikes, which is only useful to dps.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 30621u;
+    protected override bool AppliesTo(Item item) => item.Id == 30621u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank | SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank | SpecializationGroups.Healer;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

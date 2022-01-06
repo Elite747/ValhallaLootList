@@ -1,51 +1,49 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
-using System.Collections.Generic;
+namespace ValhallaLootList.DataTransfer;
 
-namespace ValhallaLootList.DataTransfer
+public class MemberDto
 {
-    public class MemberDto
+    private CharacterDto? _character;
+    private List<MemberLootListDto>? _lootLists;
+
+    public CharacterDto Character
     {
-        private CharacterDto? _character;
-        private List<MemberLootListDto>? _lootLists;
-
-        public CharacterDto Character
-        {
-            get => _character ?? throw new InvalidOperationException("Characer has not been set.");
-            set => _character = value;
-        }
-
-        public List<MemberLootListDto> LootLists
-        {
-            get => _lootLists ??= new();
-            set => _lootLists = value;
-        }
-
-        public RaidMemberStatus Status { get; set; }
-
-        public DateTimeOffset JoinedAt { get; set; }
-
-        public bool Enchanted { get; set; }
-
-        public long DonatedThisMonth { get; set; }
-
-        public long DonatedNextMonth { get; set; }
-
-        public long ThisMonthRequiredDonations { get; set; }
-
-        public long NextMonthRequiredDonations { get; set; }
-
-        public int Attended { get; set; }
-
-        public int ObservedAttendances { get; set; }
+        get => _character ?? throw new InvalidOperationException("Characer has not been set.");
+        set => _character = value;
     }
 
-    public class DonationSubmissionDto
+    public List<MemberLootListDto> LootLists
     {
-        public long CharacterId { get; set; }
-
-        public int CopperAmount { get; set; }
+        get => _lootLists ??= new();
+        set => _lootLists = value;
     }
+
+    public RaidMemberStatus Status { get; set; }
+
+    public DateTimeOffset JoinedAt { get; set; }
+
+    public bool Enchanted { get; set; }
+
+    public long DonatedThisMonth { get; set; }
+
+    public long DonatedNextMonth { get; set; }
+
+    public long ThisMonthRequiredDonations { get; set; }
+
+    public long NextMonthRequiredDonations { get; set; }
+
+    public int Attended { get; set; }
+
+    public int ObservedAttendances { get; set; }
+}
+
+public class DonationSubmissionDto
+{
+    public long CharacterId { get; set; }
+
+    public int CopperAmount { get; set; }
+
+    public bool ApplyThisMonth { get; set; }
 }

@@ -3,25 +3,24 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.Server.Data
+namespace ValhallaLootList.Server.Data;
+
+public class CharacterEncounterKill
 {
-    public class CharacterEncounterKill
-    {
-        [Required]
-        public long CharacterId { get; set; }
+    [Required]
+    public long CharacterId { get; set; }
 
-        [Required]
-        public long EncounterKillRaidId { get; set; }
+    [Required]
+    public long EncounterKillRaidId { get; set; }
 
-        [Required]
-        public string EncounterKillEncounterId { get; set; } = null!;
+    [Required]
+    public string EncounterKillEncounterId { get; set; } = null!;
 
-        public byte EncounterKillTrashIndex { get; set; }
+    public byte EncounterKillTrashIndex { get; set; }
 
-        [Required]
-        public Character Character { get; set; } = null!;
+    [Required]
+    public Character Character { get; set; } = null!;
 
-        [Required]
-        public virtual EncounterKill EncounterKill { get; set; } = null!;
-    }
+    [Required]
+    public virtual EncounterKill EncounterKill { get; set; } = null!;
 }

@@ -2,13 +2,15 @@
 
 <span class="@Class">
     <MudTooltip Text="@_tooltipText">
-        <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
-        @if (_role?.Length > 0)
-        {
-            <span class="player-icon-role @_role">
-                <MudIcon Icon="@_roleIcon" />
-            </span>
-        }
+        <div style="position:relative">
+            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
+            @if (_role?.Length > 0)
+            {
+                <span class="player-icon-role @_role">
+                    <MudIcon Icon="@_roleIcon" />
+                </span>
+            }
+        </div>
     </MudTooltip>
 </span>
 

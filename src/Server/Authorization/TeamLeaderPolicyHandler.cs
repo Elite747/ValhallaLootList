@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Threading.Tasks;
 using DSharpPlus.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -9,50 +8,49 @@ using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
 
-namespace ValhallaLootList.Server.Authorization
-{
-    public class TeamLeaderPolicyHandler : DiscordAuthorizationHandler<TeamLeaderRequirement>
-    {
-        private readonly ApplicationDbContext _context;
+namespace ValhallaLootList.Server.Authorization;
 
-        public TeamLeaderPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : base(discordClientProvider)
+public class TeamLeaderPolicyHandler : DiscordAuthorizationHandler<TeamLeaderRequirement>
+{
+    private readonly ApplicationDbContext _context;
+
+    public TeamLeaderPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : base(discordClientProvider)
+    {
+        _context = context;
+    }
+
+    protected override async ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement, DiscordMember member)
+    {
+        if (requirement.AllowAdmin && DiscordClientProvider.HasAdminRole(member))
         {
-            _context = context;
+            context.Succeed(requirement);
+            return;
         }
 
-        protected override async ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement, DiscordMember member)
+        if ((requirement.AllowRaidLeader && DiscordClientProvider.HasRaidLeaderRole(member)) ||
+            (requirement.AllowLootMaster && DiscordClientProvider.HasLootMasterRole(member)) ||
+            (requirement.AllowRecruiter && DiscordClientProvider.HasRecruiterRole(member)))
         {
-            if (requirement.AllowAdmin && DiscordClientProvider.HasAdminRole(member))
+            long? teamId = context.Resource switch
             {
-                context.Succeed(requirement);
-                return;
-            }
+                long id => id,
+                TeamDto team => team.Id,
+                RaidTeam team => team.Id,
+                _ => null
+            };
 
-            if ((requirement.AllowRaidLeader && DiscordClientProvider.HasRaidLeaderRole(member)) ||
-                (requirement.AllowLootMaster && DiscordClientProvider.HasLootMasterRole(member)) ||
-                (requirement.AllowRecruiter && DiscordClientProvider.HasRecruiterRole(member)))
+            if (teamId.HasValue)
             {
-                long? teamId = context.Resource switch
-                {
-                    long id => id,
-                    TeamDto team => team.Id,
-                    RaidTeam team => team.Id,
-                    _ => null
-                };
+                var discordId = (long)member.Id;
 
-                if (teamId.HasValue)
-                {
-                    var discordId = (long)member.Id;
-
-                    if (await _context.RaidTeamLeaders.AsNoTracking().CountAsync(rtl => rtl.UserId == discordId && rtl.RaidTeamId == teamId) > 0)
-                    {
-                        context.Succeed(requirement);
-                    }
-                }
-                else
+                if (await _context.RaidTeamLeaders.AsNoTracking().CountAsync(rtl => rtl.UserId == discordId && rtl.RaidTeamId == teamId) > 0)
                 {
                     context.Succeed(requirement);
                 }
+            }
+            else
+            {
+                context.Succeed(requirement);
             }
         }
     }

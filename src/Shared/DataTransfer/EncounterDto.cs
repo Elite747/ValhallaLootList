@@ -1,24 +1,21 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Collections.Generic;
+namespace ValhallaLootList.DataTransfer;
 
-namespace ValhallaLootList.DataTransfer
+public class EncounterDto
 {
-    public class EncounterDto
+    private IList<uint>? _items;
+
+    public string Id { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public bool IsTrash { get; set; }
+
+    public IList<uint> Items
     {
-        private IList<uint>? _items;
-
-        public string Id { get; set; } = string.Empty;
-
-        public string Name { get; set; } = string.Empty;
-
-        public bool IsTrash { get; set; }
-
-        public IList<uint> Items
-        {
-            get => _items ??= new List<uint>();
-            set => _items = value;
-        }
+        get => _items ??= new List<uint>();
+        set => _items = value;
     }
 }

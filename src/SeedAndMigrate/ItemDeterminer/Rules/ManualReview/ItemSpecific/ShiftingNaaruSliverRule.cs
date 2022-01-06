@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class ShiftingNaaruSliverRule : SimpleRule
 {
-    internal class ShiftingNaaruSliverRule : SimpleRule
-    {
-        protected override string DisallowReason => "Shifting Naaru Sliver is more valuable to caster dps than healers.";
+    protected override string DisallowReason => "Shifting Naaru Sliver is more valuable to caster dps than healers.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 34429u;
+    protected override bool AppliesTo(Item item) => item.Id == 34429u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

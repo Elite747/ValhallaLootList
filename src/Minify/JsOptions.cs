@@ -3,10 +3,9 @@
 
 using CommandLine;
 
-namespace ValhallaLootList.Minify
+namespace ValhallaLootList.Minify;
+
+[Verb("js", HelpText = "Minifies JavaScript files.")]
+internal class JsOptions : OptionsBase
 {
-    [Verb("js", HelpText = "Minifies JavaScript files.")]
-    internal class JsOptions : OptionsBase
-    {
-    }
 }

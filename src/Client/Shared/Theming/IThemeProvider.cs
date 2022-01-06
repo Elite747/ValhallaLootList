@@ -1,10 +1,9 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-namespace ValhallaLootList.Client.Shared
+namespace ValhallaLootList.Client.Shared;
+
+public interface IThemeProvider
 {
-    public interface IThemeProvider
-    {
-        Theme? SelectedTheme { get; set; }
-    }
+    Theme? SelectedTheme { get; set; }
 }

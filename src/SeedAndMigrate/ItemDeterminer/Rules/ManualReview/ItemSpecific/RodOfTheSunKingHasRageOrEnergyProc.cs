@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class RodOfTheSunKingHasRageOrEnergyProcRule : SimpleRule
 {
-    internal class RodOfTheSunKingHasRageOrEnergyProcRule : SimpleRule
-    {
-        protected override string DisallowReason => "Rod of the Sun King gives rage or energy on hit, which only benefits Rogues and Warriors.";
+    protected override string DisallowReason => "Rod of the Sun King gives rage or energy on hit, which only benefits Rogues and Warriors.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 29996u;
+    protected override bool AppliesTo(Item item) => item.Id == 29996u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(SpecializationGroups.Warrior | SpecializationGroups.Rogue);
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(SpecializationGroups.Warrior | SpecializationGroups.Rogue);
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

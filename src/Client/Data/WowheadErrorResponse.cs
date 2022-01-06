@@ -3,11 +3,10 @@
 
 using System.Text.Json.Serialization;
 
-namespace ValhallaLootList.Client.Data
+namespace ValhallaLootList.Client.Data;
+
+public class WowheadErrorResponse
 {
-    public class WowheadErrorResponse
-    {
-        [JsonPropertyName("error")]
-        public string? Error { get; set; }
-    }
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
 }

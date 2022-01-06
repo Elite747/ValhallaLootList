@@ -8,7 +8,7 @@
         <HeaderContent> 
             @if (LootList.TeamId.HasValue) @*Only submit individual loot lists when already on a team.*@
             {
-                <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1" Disabled="!PhaseActive">
+                <MudButton OnClick="SubmitAsync" Color="Color.Primary" Variant="Variant.Filled" Class="ma-1">
                     <span>Submit to @(string.IsNullOrEmpty(LootList.TeamName) ? "your team" : LootList.TeamName)</span>
                 </MudButton>
             }
@@ -21,7 +21,6 @@
 </ApiExecutor>
 
 @code {
-    [Parameter] public bool PhaseActive { get; set; }
     [Parameter] public LootListDto LootList { get; set; } = null!;
     [Parameter] public EventCallback OnSubmit { get; set; }
 

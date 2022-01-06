@@ -3,19 +3,18 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class HealingPowerDeadStatRule : DeadStatRule
 {
-    internal class HealingPowerDeadStatRule : DeadStatRule
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Healer;
+
+    protected override int GetStat(Item item) => item.HealingPower;
+
+    protected override string GetStatDisplayName() => "Healing Power";
+
+    protected override bool IsAllowed(Item item, Specializations spec)
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Healer;
-
-        protected override int GetStat(Item item) => item.HealingPower;
-
-        protected override string GetStatDisplayName() => "Healing Power";
-
-        protected override bool IsAllowed(Item item, Specializations spec)
-        {
-            return item.SpellPower == item.HealingPower && (spec & (SpecializationGroups.CasterDps | Specializations.ProtPaladin)) != 0;
-        }
+        return item.SpellPower == item.HealingPower && (spec & (SpecializationGroups.CasterDps | Specializations.ProtPaladin)) != 0;
     }
 }

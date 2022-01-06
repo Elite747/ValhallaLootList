@@ -3,15 +3,14 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class HasteDeadStatRule : DeadStatRule
 {
-    internal class HasteDeadStatRule : DeadStatRule
-    {
-        // TODO: Is unspecified haste physical haste, melee haste, or all haste?
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
+    // TODO: Is unspecified haste physical haste, melee haste, or all haste?
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
 
-        protected override int GetStat(Item item) => item.Haste;
+    protected override int GetStat(Item item) => item.Haste;
 
-        protected override string GetStatDisplayName() => "Haste";
-    }
+    protected override string GetStatDisplayName() => "Haste";
 }

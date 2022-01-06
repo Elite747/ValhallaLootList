@@ -3,23 +3,22 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules;
+
+internal abstract class SimpleRule : Rule
 {
-    internal abstract class SimpleRule : Rule
+    protected override sealed ItemDetermination MakeDetermination(Item item, Specializations spec)
     {
-        protected override sealed ItemDetermination MakeDetermination(Item item, Specializations spec)
+        if (!IsAllowed(item, spec))
         {
-            if (!IsAllowed(item, spec))
-            {
-                return new ItemDetermination(spec, DisallowLevel, DisallowReason);
-            }
-            return new ItemDetermination(spec, DeterminationLevel.Allowed, string.Empty);
+            return new ItemDetermination(spec, DisallowLevel, DisallowReason);
         }
-
-        protected abstract string DisallowReason { get; }
-
-        protected abstract DeterminationLevel DisallowLevel { get; }
-
-        protected abstract bool IsAllowed(Item item, Specializations spec);
+        return new ItemDetermination(spec, DeterminationLevel.Allowed, string.Empty);
     }
+
+    protected abstract string DisallowReason { get; }
+
+    protected abstract DeterminationLevel DisallowLevel { get; }
+
+    protected abstract bool IsAllowed(Item item, Specializations spec);
 }

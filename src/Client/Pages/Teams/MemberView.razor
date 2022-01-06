@@ -50,12 +50,12 @@
 
 <DonationSummary Member="Member">
     <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
-        <MudIconButton OnClick="() => AddDonationAsync(false)"
+        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: false, allowCurrentMonth: context.User.IsAdmin())"
                        Icon="@Icons.Material.Filled.AddCircle"
                        Size="Size.Small"
                        Color="Color.Success"
                        Class="mx-2" />
-        <MudIconButton OnClick="() => AddDonationAsync(true)"
+        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: true, allowCurrentMonth: context.User.IsAdmin())"
                        Icon="@Icons.Material.Filled.RemoveCircle"
                        Size="Size.Small"
                        Color="Color.Error" />
@@ -114,22 +114,31 @@
         }
     }
 
-    private async Task AddDonationAsync(bool isRemove)
+    private async Task ChangeDonationAsync(bool isRemove, bool allowCurrentMonth)
     {
-        var amount = await DialogService.ShowAsync<GameCurrencyDialog, int?>($"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})");
-        if (amount.HasValue)
+        var result = await DialogService.ShowAsync<GameCurrencyDialog, GameCurrencyResult>(
+            $"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})", 
+            parameters: new() { [nameof(GameCurrencyDialog.AllowCurrentMonth)] = allowCurrentMonth });
+        if (result is not null)
         {
-            var actualAmount = amount.Value;
+            var actualAmount = result.GetAmount();
 
             if (isRemove)
             {
                 actualAmount = -actualAmount;
             }
 
-            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id })
+            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id, ApplyThisMonth = result.ApplyThisMonth })
                 .OnSuccess((_, _) =>
                 {
-                    Member.DonatedNextMonth += actualAmount;
+                    if (result.ApplyThisMonth)
+                    {
+                        Member.DonatedThisMonth += actualAmount;
+                    }
+                    else
+                    {
+                        Member.DonatedNextMonth += actualAmount;
+                    }
                     return MemberUpdated.InvokeAsync();
                 })
                 .SendErrorTo(Snackbar)

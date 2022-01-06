@@ -3,20 +3,19 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class SpellPowerDeadStatRule : DeadStatRule
 {
-    internal class SpellPowerDeadStatRule : DeadStatRule
-    {
-        protected override Specializations ApplicableSpecs() => Specializations.BearDruid |
-            Specializations.CatDruid |
-            SpecializationGroups.Hunter |
-            SpecializationGroups.Rogue |
-            SpecializationGroups.Warrior |
-            Specializations.EnhanceShaman |
-            Specializations.RetPaladin;
+    protected override Specializations ApplicableSpecs() => Specializations.BearDruid |
+        Specializations.CatDruid |
+        SpecializationGroups.Hunter |
+        SpecializationGroups.Rogue |
+        SpecializationGroups.Warrior |
+        Specializations.EnhanceShaman |
+        Specializations.RetPaladin;
 
-        protected override int GetStat(Item item) => item.SpellPower;
+    protected override int GetStat(Item item) => item.SpellPower;
 
-        protected override string GetStatDisplayName() => "Spell Power";
-    }
+    protected override string GetStatDisplayName() => "Spell Power";
 }

@@ -54,7 +54,7 @@
         _characterLootLists.Clear();
         if (characterId.HasValue)
         {
-            _characterLootLists.AddRange(LootLists.Where(ll => ll.Phase <= CurrentPhase && ll.CharacterId == characterId && (ll.TeamId == Team.Id || ll.SubmittedTo.Contains(Team.Id))).OrderByDescending(ll => ll.Phase));
+            _characterLootLists.AddRange(LootLists.Where(ll => ll.CharacterId == characterId && (ll.TeamId == Team.Id || ll.SubmittedTo.Contains(Team.Id))).OrderByDescending(ll => ll.Phase));
         }
     }
 

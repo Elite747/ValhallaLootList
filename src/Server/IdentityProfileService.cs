@@ -1,78 +1,75 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Threading.Tasks;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using Microsoft.Extensions.Logging;
 using ValhallaLootList.Server.Discord;
 
-namespace ValhallaLootList.Server
+namespace ValhallaLootList.Server;
+
+public class IdentityProfileService : DefaultProfileService
 {
-    public class IdentityProfileService : DefaultProfileService
+    private readonly DiscordClientProvider _discordClientProvider;
+
+    public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger) : base(logger)
     {
-        private readonly DiscordClientProvider _discordClientProvider;
+        _discordClientProvider = discordClientProvider;
+    }
 
-        public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger) : base(logger)
+    public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
+    {
+        context.LogProfileRequest(Logger);
+
+        if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
         {
-            _discordClientProvider = discordClientProvider;
-        }
+            var member = await _discordClientProvider.GetMemberAsync(userId);
 
-        public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
-        {
-            context.LogProfileRequest(Logger);
-
-            if (long.TryParse(context.Subject.GetSubjectId(), out var userId))
+            if (member is not null)
             {
-                var member = await _discordClientProvider.GetMemberAsync(userId);
+                // add discord claims
+                TryAddClaim(context, DiscordClaimTypes.AvatarHash, member.AvatarHash);
+                TryAddClaim(context, DiscordClaimTypes.AvatarUrl, member.AvatarUrl);
+                TryAddClaim(context, DiscordClaimTypes.Discriminator, member.Discriminator);
+                TryAddClaim(context, DiscordClaimTypes.Username, member.Username);
+                TryAddClaim(context, DiscordClaimTypes.Nickname, member.Nickname);
 
-                if (member is not null)
+                // add discord role claims
+                foreach (var role in member.Roles)
                 {
-                    // add discord claims
-                    TryAddClaim(context, DiscordClaimTypes.AvatarHash, member.AvatarHash);
-                    TryAddClaim(context, DiscordClaimTypes.AvatarUrl, member.AvatarUrl);
-                    TryAddClaim(context, DiscordClaimTypes.Discriminator, member.Discriminator);
-                    TryAddClaim(context, DiscordClaimTypes.Username, member.Username);
-                    TryAddClaim(context, DiscordClaimTypes.Nickname, member.Nickname);
+                    TryAddClaim(context, DiscordClaimTypes.Role, role.Name);
+                }
 
-                    // add discord role claims
-                    foreach (var role in member.Roles)
-                    {
-                        TryAddClaim(context, DiscordClaimTypes.Role, role.Name);
-                    }
-
-                    // add app role claims
-                    foreach (var appRole in _discordClientProvider.GetAppRoles(member))
-                    {
-                        TryAddClaim(context, AppClaimTypes.Role, appRole);
-                    }
+                // add app role claims
+                foreach (var appRole in _discordClientProvider.GetAppRoles(member))
+                {
+                    TryAddClaim(context, AppClaimTypes.Role, appRole);
                 }
             }
-
-            context.LogIssuedClaims(Logger);
         }
 
-        private static void TryAddClaim(ProfileDataRequestContext context, string claimType, string? value)
+        context.LogIssuedClaims(Logger);
+    }
+
+    private static void TryAddClaim(ProfileDataRequestContext context, string claimType, string? value)
+    {
+        if (value?.Length > 0)
         {
-            if (value?.Length > 0)
-            {
-                context.IssuedClaims.Add(new(claimType, value));
-            }
+            context.IssuedClaims.Add(new(claimType, value));
         }
+    }
 
-        public override async Task IsActiveAsync(IsActiveContext context)
+    public override async Task IsActiveAsync(IsActiveContext context)
+    {
+        context.IsActive = false;
+
+        if (long.TryParse(context.Subject.GetSubjectId(), out var id))
         {
-            context.IsActive = false;
+            var guildMember = await _discordClientProvider.GetMemberAsync(id);
 
-            if (long.TryParse(context.Subject.GetSubjectId(), out var id))
+            if (guildMember is not null)
             {
-                var guildMember = await _discordClientProvider.GetMemberAsync(id);
-
-                if (guildMember is not null)
-                {
-                    context.IsActive = _discordClientProvider.HasMemberRole(guildMember);
-                }
+                context.IsActive = _discordClientProvider.HasMemberRole(guildMember);
             }
         }
     }

@@ -3,13 +3,12 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.DataTransfer
-{
-    public class AttendeeSubmissionDto
-    {
-        [Required]
-        public long? CharacterId { get; set; }
+namespace ValhallaLootList.DataTransfer;
 
-        public bool Rto { get; set; }
-    }
+public class AttendeeSubmissionDto
+{
+    [Required]
+    public long? CharacterId { get; set; }
+
+    public bool Rto { get; set; }
 }

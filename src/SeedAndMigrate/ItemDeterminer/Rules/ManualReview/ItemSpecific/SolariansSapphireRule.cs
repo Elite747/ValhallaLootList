@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class SolariansSapphireRule : SimpleRule
 {
-    internal class SolariansSapphireRule : SimpleRule
-    {
-        protected override string DisallowReason => "Solarian's Sapphire is more valuable to tanks than dps.";
+    protected override string DisallowReason => "Solarian's Sapphire is more valuable to tanks than dps.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 30446u;
+    protected override bool AppliesTo(Item item) => item.Id == 30446u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.ArmsWarrior | Specializations.FuryWarrior;
+    protected override Specializations ApplicableSpecs() => Specializations.ArmsWarrior | Specializations.FuryWarrior;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

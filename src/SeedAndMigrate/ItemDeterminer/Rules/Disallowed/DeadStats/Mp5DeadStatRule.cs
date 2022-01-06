@@ -3,14 +3,13 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class Mp5DeadStatRule : DeadStatRule
 {
-    internal class Mp5DeadStatRule : DeadStatRule
-    {
-        protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid | SpecializationGroups.Rogue | SpecializationGroups.Warrior;
+    protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid | SpecializationGroups.Rogue | SpecializationGroups.Warrior;
 
-        protected override int GetStat(Item item) => item.ManaPer5;
+    protected override int GetStat(Item item) => item.ManaPer5;
 
-        protected override string GetStatDisplayName() => "MP5";
-    }
+    protected override string GetStatDisplayName() => "MP5";
 }

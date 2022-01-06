@@ -3,17 +3,16 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.DataTransfer
+namespace ValhallaLootList.DataTransfer;
+
+public class RaidSubmissionAttendeeDto
 {
-    public class RaidSubmissionAttendeeDto
-    {
-        [Required]
-        public string? CharacterId { get; set; }
+    [Required]
+    public string? CharacterId { get; set; }
 
-        public bool IgnoreAttendance { get; set; }
+    public bool IgnoreAttendance { get; set; }
 
-        public string? IgnoreReason { get; set; }
+    public string? IgnoreReason { get; set; }
 
-        public bool UsingOffspec { get; set; }
-    }
+    public bool UsingOffspec { get; set; }
 }

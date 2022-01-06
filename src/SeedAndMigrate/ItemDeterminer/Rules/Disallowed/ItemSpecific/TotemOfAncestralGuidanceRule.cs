@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class TotemOfAncestralGuidanceRule : SimpleRule
 {
-    internal class TotemOfAncestralGuidanceRule : SimpleRule
-    {
-        protected override string DisallowReason => "Totem of Ancestral Guidance increases damage to spells only used by the Elemental spec.";
+    protected override string DisallowReason => "Totem of Ancestral Guidance increases damage to spells only used by the Elemental spec.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 32330u;
+    protected override bool AppliesTo(Item item) => item.Id == 32330u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman | Specializations.RestoShaman;
+    protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman | Specializations.RestoShaman;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

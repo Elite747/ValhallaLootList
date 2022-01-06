@@ -3,31 +3,30 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace ValhallaLootList.Server.Data
+namespace ValhallaLootList.Server.Data;
+
+public class RaidAttendee
 {
-    public class RaidAttendee
-    {
-        [Required]
-        public long RaidId { get; set; }
+    [Required]
+    public long RaidId { get; set; }
 
-        [Required]
-        public long CharacterId { get; set; }
+    [Required]
+    public long CharacterId { get; set; }
 
-        [Required]
-        public virtual Raid Raid { get; set; } = null!;
+    [Required]
+    public virtual Raid Raid { get; set; } = null!;
 
-        [Required]
-        public virtual Character Character { get; set; } = null!;
+    [Required]
+    public virtual Character Character { get; set; } = null!;
 
-        public bool IgnoreAttendance { get; set; }
+    public bool IgnoreAttendance { get; set; }
 
-        [StringLength(256)]
-        public string? IgnoreReason { get; set; }
+    [StringLength(256)]
+    public string? IgnoreReason { get; set; }
 
-        public bool Rto { get; set; }
+    public bool Rto { get; set; }
 
-        public long? RemovalId { get; set; }
+    public long? RemovalId { get; set; }
 
-        public virtual TeamRemoval? Removal { get; set; }
-    }
+    public virtual TeamRemoval? Removal { get; set; }
 }

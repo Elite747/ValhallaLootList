@@ -4,7 +4,7 @@
 
 <ApiExecutor Operation="() => Api.Raids.Get(RaidId)" Context="raid" @ref="_executor" BackgroundRefresh="true">
     <div class="content layout-container">
-        <PageTitle Title=@($"Team {raid.TeamName} Raid - {raid.StartedAt:d}") />
+        <AppPageTitle Title=@($"Team {raid.TeamName} Raid - {raid.StartedAt:d}") />
         <div class="d-flex align-center mb-3">
             <MudText Typo="Typo.h4" GutterBottom="false">Team @raid.TeamName Raid</MudText>
             <MudTooltip Text="Refresh" Class="ml-2">

@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class DragonspineTrophyRule : SimpleRule
 {
-    internal class DragonspineTrophyRule : SimpleRule
-    {
-        protected override string DisallowReason => "Dragonspine Trophy is more valuable to physical dps than tanks.";
+    protected override string DisallowReason => "Dragonspine Trophy is more valuable to physical dps than tanks.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 28830u;
+    protected override bool AppliesTo(Item item) => item.Id == 28830u;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

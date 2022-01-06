@@ -3,21 +3,20 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class ArmsWarriorsShouldOnlyUseTwoHandersRule : SimpleRule
 {
-    internal class ArmsWarriorsShouldOnlyUseTwoHandersRule : SimpleRule
+    protected override string DisallowReason => "Arms warriors should only use two-handed weapons.";
+
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+
+    protected override bool AppliesTo(Item item)
     {
-        protected override string DisallowReason => "Arms warriors should only use two-handed weapons.";
-
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
-
-        protected override bool AppliesTo(Item item)
-        {
-            return item.Slot is InventorySlot.OneHand or InventorySlot.MainHand or InventorySlot.OffHand;
-        }
-
-        protected override Specializations ApplicableSpecs() => Specializations.ArmsWarrior;
-
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
+        return item.Slot is InventorySlot.OneHand or InventorySlot.MainHand or InventorySlot.OffHand;
     }
+
+    protected override Specializations ApplicableSpecs() => Specializations.ArmsWarrior;
+
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

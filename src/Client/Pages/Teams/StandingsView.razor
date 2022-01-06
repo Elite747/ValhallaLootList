@@ -3,10 +3,10 @@
 
 <MudCard Elevation="5" Class="mt-3 layout-container content horizontal">
     <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedModeItem is not null ? "d-none d-md-flex" : null)">
-        <MudList Dense Clickable Class="content" SelectedItem="_selectedModeItem" SelectedItemChanged="SelectMode">
-            <MudListItem Tag="_byBossTag">Items By Encounter</MudListItem>
-            <MudListItem Tag="_byItemGroupTag">Items By Item Group</MudListItem>
-            <MudListItem Tag="_byCharacterTag">Items By Character</MudListItem>
+        <MudList Dense Clickable Class="content" SelectedValue="_selectedModeItem" SelectedValueChanged="SelectMode">
+            <MudListItem Value="_byBossTag">Items By Encounter</MudListItem>
+            <MudListItem Value="_byItemGroupTag">Items By Item Group</MudListItem>
+            <MudListItem Value="_byCharacterTag">Items By Character</MudListItem>
         </MudList>
     </div>
     <MudDivider Vertical FlexItem Class="d-none d-md-block" />
@@ -14,7 +14,7 @@
     {
         <MudText Typo="Typo.body1" Class="ma-3">No standings are visible. To view standings you must be on this raid team.</MudText>
     }
-    else if (_selectedModeItem?.Tag is not null)
+    else if (_selectedModeItem is not null)
     {
         <div class="layout-container flex-grow-1 flex-md-grow-0 @(_selectedFilterItem is not null ? "d-none d-md-flex" : null)">
             <MudIconButton OnClick="() => _selectedModeItem = null" Icon="@Icons.Material.Filled.ArrowBack" Class="d-md-none mr-auto" />
@@ -24,7 +24,7 @@
             }
             else if (_filterItems is not null)
             {
-                <MudList Dense Clickable Class="content" SelectedItem="_selectedFilterItem" SelectedItemChanged="SelectFilter">
+                <MudList Dense Clickable Class="content" SelectedValue="_selectedFilterItem" SelectedValueChanged="SelectFilter">
                     @{ bool hasItems = false; }
                     @foreach (var filter in _filterItems)
                     {
@@ -38,7 +38,7 @@
                         }
                         else
                         {
-                            <MudListItem Tag="filter.Tag" @key="filter.Tag">@filter.Text</MudListItem>
+                            <MudListItem Value="filter.Tag" @key="filter.Tag">@filter.Text</MudListItem>
                         }
                         hasItems = true;
                     }
@@ -46,7 +46,7 @@
             }
         </div>
         <MudDivider Vertical FlexItem Class="d-none d-md-block" />
-        @if (_selectedFilterItem?.Tag is not null)
+        @if (_selectedFilterItem is not null)
         {
             <div class="content layout-container">
                 <MudIconButton OnClick="() => _selectedFilterItem = null" Icon="@Icons.Material.Filled.ArrowBack" Class="d-md-none mr-auto" />
@@ -103,7 +103,7 @@
                                                                         }
                                                                     </TooltipContent>
                                                                     <ChildContent>
-                                                                        <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem.Tag as long?  ? "mud-success-text" : null)"
+                                                                        <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem as long?  ? "mud-success-text" : null)"
                                                                               style=@(itemStanding.AutoPass ? "text-decoration:line-through" : null)>
                                                                             @itemStanding.CharacterName
                                                                         </span>
@@ -145,7 +145,7 @@
     private readonly Dictionary<ItemGroup, List<uint>> _itemsByGroup = new();
 
     private IList<ItemDto>? _items;
-    private MudListItem? _selectedModeItem, _selectedFilterItem;
+    private object? _selectedModeItem, _selectedFilterItem;
     private bool _filtersLoading, _lootListsLoading, _teamOrPhaseChanged, _ranksHidden;
     private byte _phase;
     private TeamDto _team = null!;
@@ -298,12 +298,12 @@
         StateHasChanged();
     }
 
-    private void SelectMode(MudListItem? selectedModeItem)
+    private void SelectMode(object? selectedModeItem)
     {
         _selectedModeItem = selectedModeItem;
         _viewItems = null;
 
-        _filterItems = selectedModeItem?.Tag switch
+        _filterItems = selectedModeItem switch
         {
             _byBossTag => _encounterFilterItems,
             _byCharacterTag => _characterFilterItems,
@@ -312,14 +312,14 @@
         };
     }
 
-    private void SelectFilter(MudListItem? selectedFilterItem)
+    private void SelectFilter(object? selectedFilterItem)
     {
         _selectedFilterItem = selectedFilterItem;
-        _viewItems = selectedFilterItem?.Tag switch
+        _viewItems = selectedFilterItem switch
         {
-            string encounterId when _selectedModeItem?.Tag is _byBossTag => _itemsByEncounter.GetValueOrDefault(encounterId),
-            ItemGroup itemGroup when _selectedModeItem?.Tag is _byItemGroupTag => _itemsByGroup.GetValueOrDefault(itemGroup),
-            long characterId when _selectedModeItem?.Tag is _byCharacterTag => _itemsByCharacter.GetValueOrDefault(characterId),
+            string encounterId when _selectedModeItem is _byBossTag => _itemsByEncounter.GetValueOrDefault(encounterId),
+            ItemGroup itemGroup when _selectedModeItem is _byItemGroupTag => _itemsByGroup.GetValueOrDefault(itemGroup),
+            long characterId when _selectedModeItem is _byCharacterTag => _itemsByCharacter.GetValueOrDefault(characterId),
             _ => null
         };
     }

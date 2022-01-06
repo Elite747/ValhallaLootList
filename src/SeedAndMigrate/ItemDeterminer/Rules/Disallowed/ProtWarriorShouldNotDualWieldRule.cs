@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class ProtWarriorShouldNotDualWieldRule : SimpleRule
 {
-    internal class ProtWarriorShouldNotDualWieldRule : SimpleRule
-    {
-        protected override string DisallowReason => "Protection warriors should not use dual-wield weapons.";
+    protected override string DisallowReason => "Protection warriors should not use dual-wield weapons.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && item.Type != ItemType.Shield;
+    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && item.Type != ItemType.Shield;
 
-        protected override Specializations ApplicableSpecs() => Specializations.ProtWarrior;
+    protected override Specializations ApplicableSpecs() => Specializations.ProtWarrior;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

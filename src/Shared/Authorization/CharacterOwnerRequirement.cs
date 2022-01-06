@@ -3,15 +3,14 @@
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace ValhallaLootList
-{
-    public class CharacterOwnerRequirement : IAuthorizationRequirement
-    {
-        public CharacterOwnerRequirement(bool allowAdmin)
-        {
-            AllowAdmin = allowAdmin;
-        }
+namespace ValhallaLootList;
 
-        public bool AllowAdmin { get; }
+public class CharacterOwnerRequirement : IAuthorizationRequirement
+{
+    public CharacterOwnerRequirement(bool allowAdmin)
+    {
+        AllowAdmin = allowAdmin;
     }
+
+    public bool AllowAdmin { get; }
 }

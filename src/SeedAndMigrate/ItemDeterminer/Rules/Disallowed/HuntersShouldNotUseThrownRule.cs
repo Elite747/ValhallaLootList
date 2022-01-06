@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class HuntersShouldNotUseThrownRule : SimpleRule
 {
-    internal class HuntersShouldNotUseThrownRule : SimpleRule
-    {
-        protected override string DisallowReason => "Hunter ranged abilities do not work with thrown weapons.";
+    protected override string DisallowReason => "Hunter ranged abilities do not work with thrown weapons.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Type == ItemType.Thrown;
+    protected override bool AppliesTo(Item item) => item.Type == ItemType.Thrown;
 
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Hunter;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Hunter;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

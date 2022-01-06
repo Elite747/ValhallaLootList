@@ -4,22 +4,21 @@
 using ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class FirePowerDeadStatRule : DeadStatRule
 {
-    internal class FirePowerDeadStatRule : DeadStatRule
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(SpecializationGroups.Mage | Specializations.EleShaman | SpecializationGroups.Warlock);
+
+    protected override int GetStat(Item item)
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(SpecializationGroups.Mage | Specializations.EleShaman | SpecializationGroups.Warlock);
-
-        protected override int GetStat(Item item)
+        return item.Id switch
         {
-            return item.Id switch
-            {
-                30020u => 60, // Fire-Cord of the Magus
-                32589u => 51, // Hellfire-Encased Pendant
-                _ => 0
-            };
-        }
-
-        protected override string GetStatDisplayName() => "Fire Power";
+            30020u => 60, // Fire-Cord of the Magus
+            32589u => 51, // Hellfire-Encased Pendant
+            _ => 0
+        };
     }
+
+    protected override string GetStatDisplayName() => "Fire Power";
 }

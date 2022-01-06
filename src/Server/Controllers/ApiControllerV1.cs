@@ -4,12 +4,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ValhallaLootList.Server.Controllers
+namespace ValhallaLootList.Server.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize(AppPolicies.Member)]
+public abstract class ApiControllerV1 : ControllerBase
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    [Authorize(AppPolicies.Member)]
-    public abstract class ApiControllerV1 : ControllerBase
-    {
-    }
 }

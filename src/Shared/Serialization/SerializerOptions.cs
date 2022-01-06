@@ -4,32 +4,31 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ValhallaLootList.Serialization
+namespace ValhallaLootList.Serialization;
+
+public static class SerializerOptions
 {
-    public static class SerializerOptions
+    private static JsonSerializerOptions? _options;
+
+    public static JsonSerializerOptions DefaultOptions
     {
-        private static JsonSerializerOptions? _options;
-
-        public static JsonSerializerOptions DefaultOptions
+        get
         {
-            get
+            if (_options is null)
             {
-                if (_options is null)
-                {
-                    _options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-                    ConfigureDefaultOptions(_options);
-                }
-                return _options;
+                _options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+                ConfigureDefaultOptions(_options);
             }
+            return _options;
         }
+    }
 
-        public static void ConfigureDefaultOptions(JsonSerializerOptions options)
-        {
-            options.PropertyNameCaseInsensitive = true;
-            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
-            options.Converters.Add(new TimeSpanConverter());
-            options.Converters.Add(new PriorityBonusConverter());
-        }
+    public static void ConfigureDefaultOptions(JsonSerializerOptions options)
+    {
+        options.PropertyNameCaseInsensitive = true;
+        options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+        options.Converters.Add(new TimeSpanConverter());
+        options.Converters.Add(new PriorityBonusConverter());
     }
 }

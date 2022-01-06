@@ -4,22 +4,21 @@
 using ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class ShadowPowerDeadStatRule : DeadStatRule
 {
-    internal class ShadowPowerDeadStatRule : DeadStatRule
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ShadowPriest | SpecializationGroups.Warlock);
+
+    protected override int GetStat(Item item)
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ShadowPriest | SpecializationGroups.Warlock);
-
-        protected override int GetStat(Item item)
+        return item.Id switch
         {
-            return item.Id switch
-            {
-                32590u => 53, // Nethervoid Cloak
-                30050u => 59, // Boots of the Shifting Nightmare
-                _ => 0
-            };
-        }
-
-        protected override string GetStatDisplayName() => "Shadow Power";
+            32590u => 53, // Nethervoid Cloak
+            30050u => 59, // Boots of the Shifting Nightmare
+            _ => 0
+        };
     }
+
+    protected override string GetStatDisplayName() => "Shadow Power";
 }

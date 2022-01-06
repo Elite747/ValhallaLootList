@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class SwordAndBoardTanksShouldNotUseOffHands : SimpleRule
 {
-    internal class SwordAndBoardTanksShouldNotUseOffHands : SimpleRule
-    {
-        protected override string DisallowReason => "Protection warriors and paladins should not use non-shield offhands.";
+    protected override string DisallowReason => "Protection warriors and paladins should not use non-shield offhands.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && item.Type == ItemType.Other;
+    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && item.Type == ItemType.Other;
 
-        protected override Specializations ApplicableSpecs() => Specializations.ProtPaladin | Specializations.ProtWarrior;
+    protected override Specializations ApplicableSpecs() => Specializations.ProtPaladin | Specializations.ProtWarrior;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

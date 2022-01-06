@@ -1,43 +1,39 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.Server.Controllers
+namespace ValhallaLootList.Server.Controllers;
+
+public class ConfigController : ApiControllerV1
 {
-    public class ConfigController : ApiControllerV1
+    private readonly ApplicationDbContext _context;
+
+    public ConfigController(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public ConfigController(ApplicationDbContext context)
+    [HttpGet("phases")]
+    public async Task<ActionResult<PhaseConfigDto>> GetPhaseConfig()
+    {
+        var dto = new PhaseConfigDto();
+        var now = DateTimeOffset.UtcNow;
+        bool currentPhaseFound = false;
+
+        await foreach (var phase in _context.PhaseDetails.AsNoTracking().OrderByDescending(p => p.Id).AsAsyncEnumerable())
         {
-            _context = context;
-        }
-
-        [HttpGet("phases")]
-        public async Task<ActionResult<PhaseConfigDto>> GetPhaseConfig()
-        {
-            var dto = new PhaseConfigDto();
-            var now = DateTimeOffset.UtcNow;
-            bool currentPhaseFound = false;
-
-            await foreach (var phase in _context.PhaseDetails.AsNoTracking().OrderByDescending(p => p.Id).AsAsyncEnumerable())
+            if (!currentPhaseFound && phase.StartsAt <= now)
             {
-                if (!currentPhaseFound && phase.StartsAt <= now)
-                {
-                    dto.CurrentPhase = phase.Id;
-                    currentPhaseFound = true;
-                }
-                dto.Phases.Add(phase.Id);
+                dto.CurrentPhase = phase.Id;
+                currentPhaseFound = true;
             }
-
-            return dto;
+            dto.Phases.Add(phase.Id);
         }
+
+        return dto;
     }
 }

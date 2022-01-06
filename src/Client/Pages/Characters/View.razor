@@ -9,7 +9,7 @@
     @{
         var character = _characterOperation.GetResult(); 
     }
-    <PageTitle Title="@character.Name" />
+    <AppPageTitle Title="@character.Name" />
     <div class="d-flex align-center mb-3">
         <PlayerIcon Race="character.Race"
                     Gender="character.Gender"
@@ -81,7 +81,7 @@
             @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                    <LootListPhase Character="character" Phase="phase" LootLists="_lootListsOperation!.GetResult()" PhaseActive="phase <= _phaseConfigOperation.GetResult().CurrentPhase" />
+                    <LootListPhase Character="character" Phase="phase" LootLists="_lootListsOperation!.GetResult()" />
                 </MudTabPanel>
             }
             <MudTabPanel Text="Won Items" ID="_wonId">

@@ -3,19 +3,18 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class RangedAttackPowerDeadStatRule : DeadStatRule
 {
-    internal class RangedAttackPowerDeadStatRule : DeadStatRule
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
+
+    protected override int GetStat(Item item) => item.RangedAttackPower;
+
+    protected override string GetStatDisplayName() => "Ranged Attack Power";
+
+    protected override bool IsAllowed(Item item, Specializations spec)
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
-
-        protected override int GetStat(Item item) => item.RangedAttackPower;
-
-        protected override string GetStatDisplayName() => "Ranged Attack Power";
-
-        protected override bool IsAllowed(Item item, Specializations spec)
-        {
-            return (spec & (SpecializationGroups.MeleeDps | SpecializationGroups.Tank)) != 0 && item.MeleeAttackPower > 0;
-        }
+        return (spec & (SpecializationGroups.MeleeDps | SpecializationGroups.Tank)) != 0 && item.MeleeAttackPower > 0;
     }
 }

@@ -1,100 +1,96 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Shared;
 using ValhallaLootList.DataTransfer;
 
-namespace ValhallaLootList.Client.Pages.Raids
+namespace ValhallaLootList.Client.Pages.Raids;
+
+public partial class KillsView
 {
-    public partial class KillsView
+    protected override void OnParametersSet()
     {
-        protected override void OnParametersSet()
-        {
-            if (Raid is null) throw new ArgumentNullException(nameof(Raid));
-        }
+        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+    }
 
-        private async Task DeleteAsync(string encounterId, byte trashIndex)
-        {
-            await Api.Raids.Delete(Raid.Id, encounterId, trashIndex)
-                .OnSuccess(_ =>
-                {
-                    Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId && kill.TrashIndex == trashIndex);
-                    StateHasChanged();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-
-        private Task AddClickedAsync()
-        {
-            return DialogService.ShowAsync<AddKillWizard, object?>(
-                string.Empty,
-                parameters: new()
-                {
-                    [nameof(AddKillWizard.Raid)] = Raid
-                });
-        }
-
-        private string GetWinnerName(long? id)
-        {
-            if (id.HasValue)
+    private async Task DeleteAsync(string encounterId, byte trashIndex)
+    {
+        await Api.Raids.Delete(Raid.Id, encounterId, trashIndex)
+            .OnSuccess(_ =>
             {
-                return Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name ?? "Unknown";
-            }
-            return "nobody";
-        }
+                Raid.Kills.RemoveAll(kill => kill.EncounterId == encounterId && kill.TrashIndex == trashIndex);
+                StateHasChanged();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
 
-        private IEnumerable<string> GetIneligible(EncounterKillDto kill)
-        {
-            foreach (var attendee in Raid.Attendees)
+    private Task AddClickedAsync()
+    {
+        return DialogService.ShowAsync<AddKillWizard, object?>(
+            string.Empty,
+            parameters: new()
             {
-                if (!kill.Characters.Contains(attendee.Character.Id))
-                {
-                    yield return attendee.Character.Name;
-                }
+                [nameof(AddKillWizard.Raid)] = Raid
+            });
+    }
+
+    private string GetWinnerName(long? id)
+    {
+        if (id.HasValue)
+        {
+            return Raid.Attendees.Find(a => a.Character.Id == id)?.Character.Name ?? "Unknown";
+        }
+        return "nobody";
+    }
+
+    private IEnumerable<string> GetIneligible(EncounterKillDto kill)
+    {
+        foreach (var attendee in Raid.Attendees)
+        {
+            if (!kill.Characters.Contains(attendee.Character.Id))
+            {
+                yield return attendee.Character.Name;
             }
         }
+    }
 
-        private async Task BeginAssignAsync(EncounterDropDto drop)
-        {
-            var characterId = await DialogService.ShowAsync<AssignLootDialog, long?>(
-                string.Empty,
-                parameters: new()
-                {
-                    [nameof(AssignLootDialog.Drop)] = drop,
-                    [nameof(AssignLootDialog.Raid)] = Raid
-                });
-
-            if (characterId.HasValue)
+    private async Task BeginAssignAsync(EncounterDropDto drop)
+    {
+        var characterId = await DialogService.ShowAsync<AssignLootDialog, long?>(
+            string.Empty,
+            parameters: new()
             {
-                await AssignAsync(drop, characterId);
-            }
-        }
+                [nameof(AssignLootDialog.Drop)] = drop,
+                [nameof(AssignLootDialog.Raid)] = Raid
+            });
 
-        private Task AssignAsync(EncounterDropDto drop, long? characterId)
+        if (characterId.HasValue)
         {
-            return Api.Drops.Assign(drop.Id, characterId)
-                .OnSuccess(response =>
-                {
-                    drop.AwardedAt = response.AwardedAt;
-                    drop.AwardedBy = response.AwardedBy;
-                    drop.WinnerId = response.WinnerId;
-                    StateHasChanged();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
+            await AssignAsync(drop, characterId);
         }
+    }
 
-        private Task DeleteRaidAsync()
-        {
-            return Api.Raids.Delete(Raid.Id)
-                .OnSuccess(_ => Nav.NavigateTo("teams/" + Raid.TeamName))
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
+    private Task AssignAsync(EncounterDropDto drop, long? characterId)
+    {
+        return Api.Drops.Assign(drop.Id, characterId)
+            .OnSuccess(response =>
+            {
+                drop.AwardedAt = response.AwardedAt;
+                drop.AwardedBy = response.AwardedBy;
+                drop.WinnerId = response.WinnerId;
+                StateHasChanged();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private Task DeleteRaidAsync()
+    {
+        return Api.Raids.Delete(Raid.Id)
+            .OnSuccess(_ => Nav.NavigateTo("teams/" + Raid.TeamName))
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 }

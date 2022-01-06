@@ -242,3 +242,4 @@ dotnet_diagnostic.RCS1154.severity = none
 
 # IDE0073: The file header is missing or not located at the top of the file
 dotnet_diagnostic.IDE0073.severity = warning
+csharp_style_namespace_declarations=file_scoped:warning

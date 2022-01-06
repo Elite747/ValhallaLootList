@@ -3,31 +3,30 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
+
+internal class TanksShouldUseHeaviestArmorRule : SimpleRule
 {
-    internal class TanksShouldUseHeaviestArmorRule : SimpleRule
+    protected override string DisallowReason => "Tanks should not equip lesser armor types.";
+
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+
+    protected override bool AppliesTo(Item item)
     {
-        protected override string DisallowReason => "Tanks should not equip lesser armor types.";
+        return item.Type is ItemType.Cloth or ItemType.Leather or ItemType.Mail or ItemType.Plate;
+    }
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
 
-        protected override bool AppliesTo(Item item)
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        if (spec == Specializations.BearDruid)
         {
-            return item.Type is ItemType.Cloth or ItemType.Leather or ItemType.Mail or ItemType.Plate;
+            return item.Type == ItemType.Leather;
         }
-
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
-
-        protected override bool IsAllowed(Item item, Specializations spec)
+        else
         {
-            if (spec == Specializations.BearDruid)
-            {
-                return item.Type == ItemType.Leather;
-            }
-            else
-            {
-                return item.Type == ItemType.Plate;
-            }
+            return item.Type == ItemType.Plate;
         }
     }
 }

@@ -3,19 +3,18 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadStats;
+
+internal class MeleeAttackPowerDeadStatRule : DeadStatRule
 {
-    internal class MeleeAttackPowerDeadStatRule : DeadStatRule
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps | SpecializationGroups.Hunter;
+
+    protected override int GetStat(Item item) => item.MeleeAttackPower;
+
+    protected override string GetStatDisplayName() => "Melee Attack Power";
+
+    protected override bool IsAllowed(Item item, Specializations spec)
     {
-        protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps | SpecializationGroups.Hunter;
-
-        protected override int GetStat(Item item) => item.MeleeAttackPower;
-
-        protected override string GetStatDisplayName() => "Melee Attack Power";
-
-        protected override bool IsAllowed(Item item, Specializations spec)
-        {
-            return (spec & SpecializationGroups.Hunter) != 0 && item.RangedAttackPower > 0;
-        }
+        return (spec & SpecializationGroups.Hunter) != 0 && item.RangedAttackPower > 0;
     }
 }

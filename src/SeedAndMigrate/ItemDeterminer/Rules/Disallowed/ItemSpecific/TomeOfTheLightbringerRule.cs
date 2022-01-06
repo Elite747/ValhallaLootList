@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.ItemSpecific;
+
+internal class TomeOfTheLightbringerRule : SimpleRule
 {
-    internal class TomeOfTheLightbringerRule : SimpleRule
-    {
-        protected override string DisallowReason => "Tome of the Lightbringer has a proc that gives Shield Block Value, which is only useful for the Protection spec.";
+    protected override string DisallowReason => "Tome of the Lightbringer has a proc that gives Shield Block Value, which is only useful for the Protection spec.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-        protected override bool AppliesTo(Item item) => item.Id == 32368u;
+    protected override bool AppliesTo(Item item) => item.Id == 32368u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.HolyPaladin | Specializations.RetPaladin;
+    protected override Specializations ApplicableSpecs() => Specializations.HolyPaladin | Specializations.RetPaladin;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

@@ -1,19 +1,26 @@
 ﻿@inject IDialogService DialogService
+@inject UserTimeProvider TimeProvider
 
 <MudDialog>
     <DialogContent>
-        <EditForm OnValidSubmit="() => Dialog.Close(DialogResult.Ok(_model.GetAmount()))" Model="_model" id="currencyForm">
+        <EditForm OnValidSubmit="() => Dialog.Close(DialogResult.Ok(_model))" Model="_model" id="currencyForm">
             <DataAnnotationsValidator />
-            <MudGrid>
+            <MudGrid Spacing="0">
                 <MudItem xs="12" sm="4">
                     <MudTextField @bind-Value="_model.Gold" For="() => _model.Gold" Variant="Variant.Filled" Label="Gold" Immediate="true" />
                 </MudItem>
                 <MudItem xs="12" sm="4">
-                    <MudTextField @bind-Value="_model.Silver" For="() => _model.Silver" Variant="Variant.Filled" Label="Silver" Immediate="true" />
+                    <MudTextField @bind-Value="_model.Silver" For="() => _model.Silver" Variant="Variant.Filled" Label="Silver" Immediate="true" Class="mx-sm-3" />
                 </MudItem>
                 <MudItem xs="12" sm="4">
                     <MudTextField @bind-Value="_model.Copper" For="() => _model.Copper" Variant="Variant.Filled" Label="Copper" Immediate="true" />
                 </MudItem>
+                @if (AllowCurrentMonth && TimeProvider.ServerNow.Day <= 7)
+                {
+                    <MudItem xs="12">
+                        <MudSwitch @bind-Checked="_model.ApplyThisMonth" Color="Color.Primary" Label="Apply Donation to This Month" />
+                    </MudItem>
+                }
             </MudGrid>
         </EditForm>
     </DialogContent>
@@ -24,39 +31,13 @@
 </MudDialog>
 
 @code {
-    private readonly InputModel _model = new();
+    private readonly GameCurrencyResult _model = new();
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+    [Parameter] public bool AllowCurrentMonth { get; set; }
 
     protected override void OnParametersSet()
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
-    }
-
-    private class InputModel
-    {
-        [System.ComponentModel.DataAnnotations.Range(0, 10000)]
-        public int? Gold { get; set; }
-        [System.ComponentModel.DataAnnotations.Range(0, 99)]
-        public int? Silver { get; set; }
-        [System.ComponentModel.DataAnnotations.Range(0, 99)]
-        public int? Copper { get; set; }
-
-        public int GetAmount()
-        {
-            int amount = Copper.GetValueOrDefault();
-
-            if (Silver.HasValue)
-            {
-                amount += (Silver.Value * 100);
-            }
-
-            if (Gold.HasValue)
-            {
-                amount += (Gold.Value * 100 * 100);
-            }
-
-            return amount;
-        }
     }
 }

@@ -1,41 +1,39 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.DataTransfer;
 
-namespace ValhallaLootList.Client.Authorization
-{
-    public class CharacterOwnerPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
-    {
-        private readonly PermissionManager _permissionManager;
+namespace ValhallaLootList.Client.Authorization;
 
-        public CharacterOwnerPolicyHandler(PermissionManager permissionManager)
+public class CharacterOwnerPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
+{
+    private readonly PermissionManager _permissionManager;
+
+    public CharacterOwnerPolicyHandler(PermissionManager permissionManager)
+    {
+        _permissionManager = permissionManager;
+    }
+
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
+    {
+        if (requirement.AllowAdmin && context.User.HasClaim(AppClaimTypes.Role, AppRoles.Administrator))
         {
-            _permissionManager = permissionManager;
+            context.Succeed(requirement);
+            return;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
+        long? characterId = context.Resource switch
         {
-            if (requirement.AllowAdmin && context.User.HasClaim(AppClaimTypes.Role, AppRoles.Administrator))
-            {
-                context.Succeed(requirement);
-                return;
-            }
+            long id => id,
+            CharacterDto character => character.Id,
+            _ => null
+        };
 
-            long? characterId = context.Resource switch
-            {
-                long id => id,
-                CharacterDto character => character.Id,
-                _ => null
-            };
-
-            if (characterId.HasValue && await _permissionManager.IsOwnerOfAsync(characterId.Value))
-            {
-                context.Succeed(requirement);
-            }
+        if (characterId.HasValue && await _permissionManager.IsOwnerOfAsync(characterId.Value))
+        {
+            context.Succeed(requirement);
         }
     }
 }

@@ -3,18 +3,17 @@
 
 using ValhallaLootList.Server.Data;
 
-namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific
+namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.ManualReview.ItemSpecific;
+
+internal class EyeOfMagtheridonRule : SimpleRule
 {
-    internal class EyeOfMagtheridonRule : SimpleRule
-    {
-        protected override string DisallowReason => "Eye of Magtheridon has an effect that procs when spells are resisted, which is most useful to casters.";
+    protected override string DisallowReason => "Eye of Magtheridon has an effect that procs when spells are resisted, which is most useful to casters.";
 
-        protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
+    protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-        protected override bool AppliesTo(Item item) => item.Id == 28789u;
+    protected override bool AppliesTo(Item item) => item.Id == 28789u;
 
-        protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman | Specializations.RetPaladin;
+    protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman | Specializations.RetPaladin;
 
-        protected override bool IsAllowed(Item item, Specializations spec) => false;
-    }
+    protected override bool IsAllowed(Item item, Specializations spec) => false;
 }

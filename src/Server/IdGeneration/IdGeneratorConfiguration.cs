@@ -3,16 +3,15 @@
 
 using IdGen;
 
-namespace ValhallaLootList.Server.IdGeneration
+namespace ValhallaLootList.Server.IdGeneration;
+
+public class IdGeneratorConfiguration
 {
-    public class IdGeneratorConfiguration
-    {
-        public int GeneratorId { get; set; }
+    public int GeneratorId { get; set; }
 
-        public IdStructure? Structure { get; set; }
+    public IdStructure? Structure { get; set; }
 
-        public ITimeSource? TimeSource { get; set; }
+    public ITimeSource? TimeSource { get; set; }
 
-        public SequenceOverflowStrategy SequenceOverflowStrategy { get; set; }
-    }
+    public SequenceOverflowStrategy SequenceOverflowStrategy { get; set; }
 }

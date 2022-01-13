@@ -51,6 +51,11 @@ public class ApiClientTeams
         return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/enchanted", dto);
     }
 
+    public IApiClientOperation UpdateMemberPrepared(long teamId, long characterId, UpdatePreparedDto dto)
+    {
+        return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/prepared", dto);
+    }
+
     public IApiClientOperation<List<GuildMemberDto>> GetLeaders(long teamId)
     {
         return Client.CreateRequest<List<GuildMemberDto>>(HttpMethod.Get, "api/v1/teams/" + teamId + "/leaders");

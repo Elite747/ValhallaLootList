@@ -12,12 +12,19 @@ public static class PrioCalculator
         return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);
     }
 
-    public static IEnumerable<PriorityBonusDto> GetListBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, bool enchanted)
+    public static IEnumerable<PriorityBonusDto> GetListBonuses(
+        PriorityScope scope,
+        int attendances,
+        RaidMemberStatus status,
+        long donatedCopper,
+        bool enchanted,
+        bool prepared)
     {
         yield return GetAttendanceBonus(scope, attendances);
         yield return GetStatusBonus(scope, status);
         yield return GetDonationBonus(scope, donatedCopper);
         yield return GetEnchantedBonus(enchanted);
+        yield return GetPreparedBonus(prepared);
 
         static PriorityBonusDto GetAttendanceBonus(PriorityScope scope, int attendances)
         {
@@ -66,6 +73,15 @@ public static class PrioCalculator
                 Value = enchanted ? 2 : 0
             };
         }
+
+        static PriorityBonusDto GetPreparedBonus(bool prepared)
+        {
+            return new PriorityBonusDto
+            {
+                Type = PriorityBonusTypes.Prepared,
+                Value = prepared ? 1 : 0
+            };
+        }
     }
 
     public static IEnumerable<PriorityBonusDto> GetItemBonuses(int timesSeen)
@@ -78,8 +94,15 @@ public static class PrioCalculator
         };
     }
 
-    public static IEnumerable<PriorityBonusDto> GetAllBonuses(PriorityScope scope, int attendances, RaidMemberStatus status, long donatedCopper, int timesSeen, bool enchanted)
+    public static IEnumerable<PriorityBonusDto> GetAllBonuses(
+        PriorityScope scope,
+        int attendances,
+        RaidMemberStatus status,
+        long donatedCopper,
+        int timesSeen,
+        bool enchanted,
+        bool prepared)
     {
-        return GetListBonuses(scope, attendances, status, donatedCopper, enchanted).Concat(GetItemBonuses(timesSeen));
+        return GetListBonuses(scope, attendances, status, donatedCopper, enchanted, prepared).Concat(GetItemBonuses(timesSeen));
     }
 }

@@ -159,7 +159,7 @@ public class LootListsController : ApiControllerV1
         var returnDto = new LootListDto
         {
             ApprovedBy = null,
-            Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations, character.Enchanted).ToList(),
+            Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations, character.Enchanted, character.Prepared).ToList(),
             CharacterId = character.Id,
             CharacterMemberStatus = character.MemberStatus,
             CharacterName = character.Name,
@@ -984,14 +984,14 @@ public class LootListsController : ApiControllerV1
                 .Append(" was ")
                 .Append(approved ? "approved!" : "rejected.");
 
-            if (message?.Length > 0)
+            if (!string.IsNullOrWhiteSpace(message))
             {
-                sb.AppendLine()
-                    .Append("<@")
-                    .Append(User.GetDiscordId())
-                    .AppendLine("> said:")
-                    .Append("> ")
-                    .Append(message);
+                sb.AppendLine().Append("<@").Append(User.GetDiscordId()).Append("> said:");
+
+                foreach (var line in message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
             }
 
             if (approved)
@@ -1156,6 +1156,7 @@ public class LootListsController : ApiControllerV1
                 CharacterName = ll.Character.Name,
                 CharacterMemberStatus = ll.Character.MemberStatus,
                 CharacterEnchanted = ll.Character.Enchanted,
+                CharacterPrepared = ll.Character.Prepared,
                 ll.Character.TeamId,
                 TeamName = ll.Character.Team!.Name,
                 ll.Status,
@@ -1183,7 +1184,7 @@ public class LootListsController : ApiControllerV1
         {
             attendanceTable.TryGetValue(dto.CharacterId, out var attended);
             var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
-            dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted));
+            dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted, dto.CharacterPrepared));
         }
 
         var brackets = await _context.Brackets

@@ -48,6 +48,21 @@
     </AuthorizeView>
 </MudText>
 
+<MudText Inline="false">
+    <MudIcon Class="text-icon" Icon="@CustomIcons.Illidan" />
+    Prepared Bonus:
+    <MudText Inline Color="Member.Prepared ? Color.Success : Color.Warning">
+        @(Member.Prepared ? "Awarded" : "Not Awarded")
+    </MudText>
+    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+        <MudIconButton OnClick="TogglePreparedAsync"
+                       Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                       Size="Size.Small"
+                       Color="Member.Prepared ? Color.Error : Color.Success"
+                       Class="ml-2" />
+    </AuthorizeView>
+</MudText>
+
 <DonationSummary Member="Member">
     <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
         <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: false)"
@@ -160,6 +175,29 @@
                 .OnSuccess((_, _) =>
                 {
                     Member.Enchanted = dto.Enchanted;
+                    return MemberUpdated.InvokeAsync();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private async Task TogglePreparedAsync()
+    {
+        var result = await DialogService.Show<SetMessageDialog>(Member.Prepared ? "Remove Prepared Bonus" : "Add Prepared Bonus").Result;
+
+        if (!result.Cancelled)
+        {
+            var dto = new UpdatePreparedDto
+            {
+                Prepared = !Member.Prepared,
+                Message = (string?)result.Data
+            };
+
+            await Api.Teams.UpdateMemberPrepared(Team.Id, Member.Character.Id, dto)
+                .OnSuccess((_, _) =>
+                {
+                    Member.Prepared = dto.Prepared;
                     return MemberUpdated.InvokeAsync();
                 })
                 .SendErrorTo(Snackbar)

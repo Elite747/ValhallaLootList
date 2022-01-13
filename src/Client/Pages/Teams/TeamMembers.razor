@@ -51,6 +51,12 @@
                             <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
                         </MudTooltip>
                     }
+                    @if (member is not { Prepared: true })
+                    {
+                        <MudTooltip Text="Prepared bonus is not active">
+                            <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
+                        </MudTooltip>
+                    }
                     @if (member.DonatedNextMonth < member.NextMonthRequiredDonations)
                     {
                         <MudTooltip>

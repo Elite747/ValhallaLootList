@@ -29,6 +29,7 @@ public static class HelperQueries
                 c.MemberStatus,
                 c.JoinedTeamAt,
                 c.Enchanted,
+                c.Prepared,
                 Verified = c.VerifiedById.HasValue,
                 LootLists = c.CharacterLootLists.Select(l => new
                 {
@@ -59,7 +60,8 @@ public static class HelperQueries
                 JoinedAt = character.JoinedTeamAt,
                 Status = character.MemberStatus,
                 ThisMonthRequiredDonations = scope.RequiredDonationCopper,
-                NextMonthRequiredDonations = scope.RequiredDonationCopper
+                NextMonthRequiredDonations = scope.RequiredDonationCopper,
+                Prepared = character.Prepared
             };
 
             foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))

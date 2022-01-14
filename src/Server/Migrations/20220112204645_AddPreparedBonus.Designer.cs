@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValhallaLootList.Server.Data;
 
@@ -11,9 +12,10 @@ using ValhallaLootList.Server.Data;
 namespace ValhallaLootList.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220112204645_AddPreparedBonus")]
+    partial class AddPreparedBonus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -428,46 +430,6 @@ namespace ValhallaLootList.Server.Migrations
                         new
                         {
                             Phase = (byte)2,
-                            Index = (byte)3,
-                            AllowOffspec = true,
-                            AllowTypeDuplicates = true,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)6,
-                            MinRank = (byte)1
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)0,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)18,
-                            MinRank = (byte)15
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)1,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)14,
-                            MinRank = (byte)11
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)2,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)10,
-                            MinRank = (byte)7
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
                             Index = (byte)3,
                             AllowOffspec = true,
                             AllowTypeDuplicates = true,
@@ -1014,11 +976,6 @@ namespace ValhallaLootList.Server.Migrations
                         {
                             Id = (byte)2,
                             StartsAt = new DateTimeOffset(new DateTime(2021, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, -4, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = (byte)3,
-                            StartsAt = new DateTimeOffset(new DateTime(2022, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, -4, 0, 0, 0))
                         });
                 });
 

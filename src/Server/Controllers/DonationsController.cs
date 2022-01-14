@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Diagnostics;
 using IdGen;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
@@ -46,37 +45,20 @@ public class DonationsController : ApiControllerV1
         {
             return NotFound();
         }
-
-        var authResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
-
-        if (!authResult.Succeeded)
-        {
-            if (dto.ApplyThisMonth || !character.TeamId.HasValue)
-            {
-                return Unauthorized();
-            }
-
-            authResult = await _authorizationService.AuthorizeAsync(User, character.TeamId.Value, AppPolicies.LootMaster);
-
-            if (!authResult.Succeeded)
-            {
-                return Unauthorized();
-            }
-        }
-        else if (!character.TeamId.HasValue)
+        if (!character.TeamId.HasValue)
         {
             return Problem("Donations can only be applied to characters on a raid team.");
         }
 
-        Debug.Assert(authResult.Succeeded);
+        var authResult = await _authorizationService.AuthorizeAsync(User, character.TeamId.Value, AppPolicies.LootMasterOrAdmin);
+
+        if (!authResult.Succeeded)
+        {
+            return Unauthorized();
+        }
 
         if (dto.ApplyThisMonth)
         {
-            if (donatedAt.Day > 7)
-            {
-                return Problem("Donations can only be applied to the current month within the first week of the month.");
-            }
-
             if (await _context.Raids.CountAsync(raid => raid.RaidTeamId == character.TeamId.Value &&
                                                         raid.StartedAt.Month == donatedAt.Month &&
                                                         raid.StartedAt.Year == donatedAt.Year) > 0)

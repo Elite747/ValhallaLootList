@@ -15,12 +15,9 @@
                 <MudItem xs="12" sm="4">
                     <MudTextField @bind-Value="_model.Copper" For="() => _model.Copper" Variant="Variant.Filled" Label="Copper" Immediate="true" />
                 </MudItem>
-                @if (AllowCurrentMonth && TimeProvider.ServerNow.Day <= 7)
-                {
-                    <MudItem xs="12">
-                        <MudSwitch @bind-Checked="_model.ApplyThisMonth" Color="Color.Primary" Label="Apply Donation to This Month" />
-                    </MudItem>
-                }
+                <MudItem xs="12">
+                    <MudSwitch @bind-Checked="_model.ApplyThisMonth" Color="Color.Primary" Label="Apply Donation to This Month" />
+                </MudItem>
             </MudGrid>
         </EditForm>
     </DialogContent>
@@ -34,7 +31,6 @@
     private readonly GameCurrencyResult _model = new();
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
-    [Parameter] public bool AllowCurrentMonth { get; set; }
 
     protected override void OnParametersSet()
     {

@@ -129,7 +129,7 @@ public class DropsController : ApiControllerV1
                 var donated = donationMatrix.GetCreditForMonth(winner.Id, now);
                 attendances.TryGetValue(winner.Id, out int attended);
 
-                foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, winner.MemberStatus, donated, passes.Count, winner.Enchanted))
+                foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, winner.MemberStatus, donated, passes.Count, winner.Enchanted, winner.Prepared))
                 {
                     winnerPrio = winnerPrio.Value + bonus.Value;
                 }
@@ -156,7 +156,7 @@ public class DropsController : ApiControllerV1
                     var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
                     attendances.TryGetValue(killer.Id, out int attended);
 
-                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted))
+                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted, killer.Prepared))
                     {
                         thisPrio += bonus.Value;
                     }
@@ -312,7 +312,7 @@ public class DropsController : ApiControllerV1
             var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
             attendances.TryGetValue(killer.Id, out int attended);
 
-            prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted));
+            prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted, killer.Prepared));
 
             dto.Add(prio);
         }
@@ -327,6 +327,7 @@ public class DropsController : ApiControllerV1
         public long? TeamId { get; init; }
         public RaidMemberStatus MemberStatus { get; init; }
         public bool Enchanted { get; init; }
+        public bool Prepared { get; init; }
         public TargetEntry? Entry { get; init; }
     }
 
@@ -346,6 +347,7 @@ public class DropsController : ApiControllerV1
         TeamId = character.TeamId,
         MemberStatus = character.MemberStatus,
         Enchanted = character.Enchanted,
+        Prepared = character.Prepared,
         Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == character.Id && (e.ItemId == itemId || e.Item!.RewardFromId == itemId))
             .OrderByDescending(e => e.Rank)
             .Select(e => new TargetEntry

@@ -10,5 +10,6 @@ public static class PriorityBonusTypes
         Attendance = nameof(Attendance),
         Donation = nameof(Donation),
         Lost = nameof(Lost),
-        Enchanted = nameof(Enchanted);
+        Enchanted = nameof(Enchanted),
+        Prepared = nameof(Prepared);
 }

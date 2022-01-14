@@ -26,6 +26,8 @@ public class MemberDto
 
     public bool Enchanted { get; set; }
 
+    public bool Prepared { get; set; }
+
     public long DonatedThisMonth { get; set; }
 
     public long DonatedNextMonth { get; set; }

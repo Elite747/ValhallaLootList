@@ -363,9 +363,101 @@ public class TeamsController : ApiControllerV1
                 .Append(User.GetDiscordId())
                 .Append(">.");
 
-            if (dto.Message?.Length > 0)
+            if (!string.IsNullOrWhiteSpace(dto.Message))
             {
-                sb.AppendLine().Append("> ").Append(dto.Message);
+                foreach (var line in dto.Message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
+            }
+
+            var message = sb.ToString();
+
+            foreach (var discordId in messageTargets)
+            {
+                await dcp.SendDmAsync(discordId, message);
+            }
+        }
+
+        return Accepted();
+    }
+
+    [HttpPut("{id:long}/members/{characterId:long}/prepared")]
+    public async Task<IActionResult> PutMemberPrepared(long id, long characterId, [FromBody] UpdatePreparedDto dto, [FromServices] DiscordClientProvider dcp)
+    {
+        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.LeadershipOrAdmin);
+
+        if (!auth.Succeeded)
+        {
+            return Unauthorized();
+        }
+
+        var team = await _context.RaidTeams.FindAsync(id);
+
+        if (team is null)
+        {
+            return NotFound();
+        }
+
+        var character = await _context.Characters.FindAsync(characterId);
+
+        if (character is null)
+        {
+            return NotFound();
+        }
+
+        if (character.TeamId != id)
+        {
+            return Problem("Character is not assigned to this team.");
+        }
+
+        if (character.Prepared == dto.Prepared)
+        {
+            return Problem(dto.Prepared ? "Character is already marked as prepared." : "Character's prepared status is already removed.");
+        }
+
+        character.Prepared = dto.Prepared;
+
+        await _context.SaveChangesAsync();
+
+        _telemetry.TrackEvent("TeamMemberPreparedUpdated", User, props =>
+        {
+            props["TeamId"] = team.Id.ToString();
+            props["TeamName"] = team.Name;
+            props["CharacterId"] = character.Id.ToString();
+            props["CharacterName"] = character.Name;
+            props["Prepared"] = dto.Prepared.ToString();
+        });
+
+        var messageTargets = new HashSet<long>(capacity: 4); // standard 3 leaders + owner
+
+        if (character.OwnerId > 0)
+        {
+            messageTargets.Add(character.OwnerId.Value);
+        }
+
+        await foreach (var leaderId in _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Where(rtl => rtl.RaidTeamId == team.Id)
+            .Select(rtl => rtl.UserId)
+            .AsAsyncEnumerable())
+        {
+            messageTargets.Add(leaderId);
+        }
+
+        if (messageTargets.Count > 0)
+        {
+            var sb = new StringBuilder(character.Name)
+                .Append(dto.Prepared ? " was given the prepared bonus by <@" : " has had their prepared bonus removed by <@")
+                .Append(User.GetDiscordId())
+                .Append(">.");
+
+            if (!string.IsNullOrWhiteSpace(dto.Message))
+            {
+                foreach (var line in dto.Message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
             }
 
             var message = sb.ToString();
@@ -426,6 +518,7 @@ public class TeamsController : ApiControllerV1
         character.MemberStatus = RaidMemberStatus.FullTrial;
         character.JoinedTeamAt = default;
         character.Enchanted = false;
+        character.Prepared = false;
 
         await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
         {

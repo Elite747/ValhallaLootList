@@ -39,6 +39,8 @@ public class Character
 
     public bool Enchanted { get; set; }
 
+    public bool Prepared { get; set; }
+
     public DateTimeOffset JoinedTeamAt { get; set; }
 
     public long? TeamId { get; set; }

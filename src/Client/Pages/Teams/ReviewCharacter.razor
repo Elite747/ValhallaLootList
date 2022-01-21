@@ -32,7 +32,13 @@ else
             }
             @foreach (var list in LootLists.OrderByDescending(ll => ll.Phase))
             {
-                <MudButton OnClick="() => _selectedList = list" @key="list.Phase" Variant="Variant.Filled" Color="Color.Primary" Class="ma-2">Phase @list.Phase</MudButton>
+                <MudButton OnClick="() => _selectedList = list"
+                    @key="list.Phase"
+                    Variant="Variant.Filled"
+                    Color="_selectedList == list ? Color.Primary : Color.Default"
+                    Class="ma-2">
+                    Phase @list.Phase
+                </MudButton>
             }
         </div>
         @if (_selectedList is not null)
@@ -66,6 +72,7 @@ else
 
         if (_characterId != CharacterId)
         {
+            _selectedList = null;
             _characterId = CharacterId;
             _character = Team.Roster.Find(m => m.Character.Id == _characterId)?.Character;
 

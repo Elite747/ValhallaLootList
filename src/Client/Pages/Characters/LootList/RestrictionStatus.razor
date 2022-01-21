@@ -30,7 +30,7 @@
         }
 
         // gets the least restrictive of either spec (allowed > review > restricted)
-        int level = AllowOffSpec ? Math.Min(msLevel, osLevel) : msLevel;
+        int level = AllowOffSpec && OffSpec != 0 ? Math.Min(msLevel, osLevel) : msLevel;
 
         (_color, _text) = level switch
         {
@@ -39,7 +39,7 @@
             _ => (Color.Error, "Restricted")
         };
 
-        if (AllowOffSpec)
+        if (AllowOffSpec && OffSpec != 0)
         {
             _text += GetApplicableSpecSuffix(msLevel, osLevel);
         }

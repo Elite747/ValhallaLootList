@@ -20,7 +20,7 @@ else
                 }
             </MudText>
             <AuthorizeView Context="auth">
-                <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" HideRemovals="true" @key="_character" />
+                <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" @key="_character" />
             </AuthorizeView>
             @if (_character.TeamId != Team.Id)
             {

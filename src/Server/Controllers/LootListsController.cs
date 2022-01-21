@@ -1211,7 +1211,6 @@ public class LootListsController : ApiControllerV1
         }
 
         await foreach (var entry in entryQuery
-            .OrderByDescending(e => e.Rank)
             .Select(e => new
             {
                 e.Id,
@@ -1267,22 +1266,30 @@ public class LootListsController : ApiControllerV1
             }
         }
 
-        return dtos.ConvertAll(data => new LootListDto
+        var typedDtos = new List<LootListDto>(dtos.Count);
+
+        foreach (var data in dtos)
         {
-            ApprovedBy = data.ApprovedBy,
-            Bonuses = data.Bonuses,
-            CharacterId = data.CharacterId,
-            CharacterMemberStatus = data.CharacterMemberStatus,
-            CharacterName = data.CharacterName,
-            Entries = data.Entries,
-            MainSpec = data.MainSpec,
-            OffSpec = data.OffSpec,
-            Phase = data.Phase,
-            Status = data.Status,
-            SubmittedTo = data.SubmittedTo,
-            TeamId = data.TeamId,
-            TeamName = data.TeamName,
-            Timestamp = data.Timestamp
-        });
+            data.Entries.Sort((l, r) => string.CompareOrdinal(l.ItemName, r.ItemName));
+            typedDtos.Add(new LootListDto
+            {
+                ApprovedBy = data.ApprovedBy,
+                Bonuses = data.Bonuses,
+                CharacterId = data.CharacterId,
+                CharacterMemberStatus = data.CharacterMemberStatus,
+                CharacterName = data.CharacterName,
+                Entries = data.Entries,
+                MainSpec = data.MainSpec,
+                OffSpec = data.OffSpec,
+                Phase = data.Phase,
+                Status = data.Status,
+                SubmittedTo = data.SubmittedTo,
+                TeamId = data.TeamId,
+                TeamName = data.TeamName,
+                Timestamp = data.Timestamp
+            });
+        }
+
+        return typedDtos;
     }
 }

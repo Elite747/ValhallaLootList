@@ -12,7 +12,7 @@
             </MudTooltip>
         </div>
         <MudText Typo="Typo.subtitle1" Inline="false"><DateTimeDisplay Date="raid.StartedAt" Format="f" /></MudText>
-        <AuthorizeView Resource="raid.TeamId" Policy="@AppPolicies.LootMaster">
+        <AuthorizeView Resource="raid.TeamId" Policy="@AppPolicies.LootMasterOrAdmin">
             @if (raid.LocksAt > DateTimeOffset.UtcNow)
             {
                 <MudText Typo="Typo.subtitle1" Color="Color.Warning">

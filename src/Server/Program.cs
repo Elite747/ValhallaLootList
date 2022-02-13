@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -47,9 +48,37 @@ builder.Services.RemoveAll<IUserValidator<AppUser>>(); // Don't validate usernam
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(builder => builder.WithOrigins("https://valhalla-wow.com", "https://www.valhalla-wow.com")));
 
-builder.Services.AddIdentityServer(options => options.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"])
-    .AddApiAuthorization<AppUser, ApplicationDbContext>()
-    .AddProfileService<IdentityProfileService>();
+var identityServerBuilder = builder.Services.AddIdentityServer(options => options.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"]);
+
+if (OperatingSystem.IsLinux())
+{
+    string certPath = $"/var/ssl/private/{builder.Configuration["IdentityServer:Thumbprint"]}.p12";
+    if (File.Exists(certPath))
+    {
+        var bytes = File.ReadAllBytes(certPath);
+        var certificate = new X509Certificate2(bytes);
+
+        // AddApiAuthorization adds default configuration that is not compatible with linux.
+        identityServerBuilder.AddAspNetIdentity<AppUser>().AddOperationalStore<ApplicationDbContext>();
+        typeof(IdentityServerBuilderConfigurationExtensions)
+            .GetMethod("ConfigureReplacedServices", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(null, new[] { identityServerBuilder });
+        identityServerBuilder.AddIdentityResources()
+                .AddApiResources()
+                .AddClients()
+                .AddSigningCredential(certificate);
+    }
+    else
+    {
+        identityServerBuilder.AddApiAuthorization<AppUser, ApplicationDbContext>();
+    }
+}
+else
+{
+    identityServerBuilder.AddApiAuthorization<AppUser, ApplicationDbContext>();
+}
+
+identityServerBuilder.AddProfileService<IdentityProfileService>();
 
 builder.Services.AddAuthentication()
     .AddDiscord(options =>

@@ -1,0 +1,55 @@
+﻿@page "/admin/audit"
+@attribute [Authorize(AppPolicies.Administrator)]
+@inject ApiClient Api
+
+<AppPageTitle Title="Raid Audit" />
+<div class="d-flex align-center mb-3">
+    <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">Raid Audit</MudText>
+    <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Refresh" OnClick="RefreshAsync" />
+</div>
+<ApiExecutor Operation="() => Api.Drops.Audit()" @ref="_executor">
+    <MudPaper Elevation="5" Class="layout-container content">
+        <MudSimpleTable FixedHeader Dense Hover Striped Bordered Class="content">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Raid</th>
+                    <th>Item</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var drop in context)
+                {
+                    <tr @key="drop.DropId">
+                        <td>
+                            <MudLink Href=@($"teams/{drop.TeamName}")>@drop.TeamName</MudLink>
+                        </td>
+                        <td>
+                            <MudLink Href=@($"raids/{drop.RaidId}")>
+                                <DateTimeDisplay Date="drop.RaidDate" Format="D" />
+                            </MudLink>
+                        </td>
+                        <td>
+                            <CascadingItemContext Id="drop.ItemId">
+                                <ItemIcon Size="IconSize.Tiny" />
+                                <ItemLink LinkEnabled Colorize Bracketize PlaceholderText="@drop.ItemName" />
+                            </CascadingItemContext>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+</ApiExecutor>
+
+@code {
+    private IApiExecutor? _executor;
+
+    private async Task RefreshAsync()
+    {
+        if (_executor is not null)
+        {
+            await _executor.RestartAsync(backgroundRefresh: true);
+        }
+    }
+}

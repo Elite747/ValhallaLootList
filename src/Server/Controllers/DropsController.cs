@@ -46,6 +46,25 @@ public class DropsController : ApiControllerV1
             .AsAsyncEnumerable();
     }
 
+    [HttpGet("audit"), Authorize(AppPolicies.Administrator)]
+    public IAsyncEnumerable<AuditDropDto> Audit()
+    {
+        return _context.Drops
+            .AsNoTracking()
+            .Where(drop => drop.WinnerId == null && drop.EncounterKill.Raid.LocksAt < DateTimeOffset.UtcNow)
+            .OrderByDescending(drop => drop.Id)
+            .Select(drop => new AuditDropDto
+            {
+                DropId = drop.Id,
+                ItemId = drop.ItemId,
+                ItemName = drop.Item.Name,
+                RaidId = drop.EncounterKillRaidId,
+                RaidDate = drop.EncounterKill.Raid.StartedAt,
+                TeamName = drop.EncounterKill.Raid.RaidTeam.Name
+            })
+            .AsAsyncEnumerable();
+    }
+
     [HttpPut("{id:long}"), Authorize(AppPolicies.LootMaster)]
     public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] DiscordClientProvider dcp)
     {

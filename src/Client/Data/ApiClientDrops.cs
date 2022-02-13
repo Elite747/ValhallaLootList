@@ -28,4 +28,9 @@ public class ApiClientDrops
             "api/v1/drops/" + dropId,
             new AwardDropSubmissionDto { WinnerId = characterId });
     }
+
+    public IApiClientOperation<List<AuditDropDto>> Audit()
+    {
+        return Client.CreateRequest<List<AuditDropDto>>(HttpMethod.Get, "api/v1/drops/audit");
+    }
 }

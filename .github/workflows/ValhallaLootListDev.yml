@@ -4,17 +4,17 @@ on:
     branches:
     - master
 env:
-  AZURE_WEBAPP_NAME: ValhallaLootListDev
-  AZURE_WEBAPP_PACKAGE_PATH: src\Server\published
-  AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.VALHALLALOOTLIST_DEV }}
+  AZURE_WEBAPP_NAME: ValhallaLootList-linux-dev
+  AZURE_WEBAPP_PACKAGE_PATH: src/Server?published
+  AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.ValhallaLootList_linux_dev_fa16 }}
   ConnectionStrings:DefaultConnection: ${{ secrets.DEVCONNECTION }}
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
-  WORKING_DIRECTORY: src\Server
-  MIGRATE_DIRECTORY: src\SeedAndMigrate
+  WORKING_DIRECTORY: src/Server
+  MIGRATE_DIRECTORY: src/SeedAndMigrate
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core

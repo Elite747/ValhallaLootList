@@ -6,6 +6,12 @@
 <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
 <MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
 
+<AuthorizeView Policy="@AppPolicies.Administrator">
+    <MudNavGroup Title="Admin Tools" Icon="@Icons.Material.Filled.AdminPanelSettings">
+        <MudNavLink Href="admin/audit">Raid Audit</MudNavLink>
+    </MudNavGroup>
+</AuthorizeView>
+
 <MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
     <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
     @foreach (var team in TeamsSource.GetTeams())

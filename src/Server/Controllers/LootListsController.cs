@@ -23,19 +23,22 @@ public class LootListsController : ApiControllerV1
     private readonly IAuthorizationService _authorizationService;
     private readonly TelemetryClient _telemetry;
     private readonly DiscordClientProvider _discordClientProvider;
+    private readonly MessageSender _messageSender;
 
     public LootListsController(
         ApplicationDbContext context,
         TimeZoneInfo serverTimeZoneInfo,
         IAuthorizationService authorizationService,
         TelemetryClient telemetry,
-        DiscordClientProvider discordClientProvider)
+        DiscordClientProvider discordClientProvider,
+        MessageSender messageSender)
     {
         _context = context;
         _serverTimeZoneInfo = serverTimeZoneInfo;
         _authorizationService = authorizationService;
         _telemetry = telemetry;
         _discordClientProvider = discordClientProvider;
+        _messageSender = messageSender;
     }
 
     [HttpGet]
@@ -338,19 +341,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(lootLists);
 
-        await foreach (var leader in _context.RaidTeamLeaders
-            .AsNoTracking()
-            .Where(rtl => dto.SubmitTo.Contains(rtl.RaidTeamId))
-            .Select(rtl => new { rtl.UserId, rtl.RaidTeamId, TeamName = rtl.RaidTeam.Name })
-            .AsAsyncEnumerable())
-        {
-            if (submissions.Find(s => s.TeamId == leader.RaidTeamId) is null) // Don't notify on a resubmit.
-            {
-                await _discordClientProvider.SendDmAsync(
-                    leader.UserId,
-                    $"You have a new application to {leader.TeamName} from {character.Name}. ({character.Race.GetDisplayName()} {character.Class.GetDisplayName()})");
-            }
-        }
+        await _messageSender.SendNewApplicationMessagesAsync(character, dto.SubmitTo);
 
         return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) };
     }
@@ -512,7 +503,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(lootLists);
 
-        await NotifyOwnerAsync(character, team, approved: true, dto.Message);
+        await _messageSender.SendApprovedApplicationMessagesAsync(character, team, dto.Message);
 
         return new ApproveAllListsResponseDto
         {
@@ -590,7 +581,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(lootLists);
 
-        await NotifyOwnerAsync(character, team, approved: false, dto.Message);
+        await _messageSender.SendDeniedApplicationMessagesAsync(character, team, dto.Message);
 
         return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) };
     }
@@ -664,16 +655,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(list);
 
-        var dm = $"{list.Character.Name} ({list.Character.Race.GetDisplayName()} {list.MainSpec.GetDisplayName(includeClassName: true)}) has submitted a new phase {phase} loot list for team {list.Character.Team.Name}.";
-
-        await foreach (var leaderId in _context.RaidTeamLeaders
-            .AsNoTracking()
-            .Where(rtl => rtl.RaidTeamId == teamId)
-            .Select(rtl => rtl.UserId)
-            .AsAsyncEnumerable())
-        {
-            await _discordClientProvider.SendDmAsync(leaderId, dm);
-        }
+        await _messageSender.SendNewListMessagesAsync(list);
 
         return new TimestampDto { Timestamp = list.Timestamp };
     }
@@ -797,7 +779,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(list);
 
-        await NotifyOwnerAsync(list.Character, list.Character.Team, approved: true, dto.Message);
+        await _messageSender.SendApprovedListMessagesAsync(list.Character, list, dto.Message);
 
         return new TimestampDto { Timestamp = list.Timestamp };
     }
@@ -861,7 +843,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(list);
 
-        await NotifyOwnerAsync(list.Character, list.Character.Team, approved: false, dto.Message);
+        await _messageSender.SendDeniedListMessagesAsync(list.Character, list, dto.Message);
 
         return new TimestampDto { Timestamp = list.Timestamp };
     }
@@ -971,36 +953,6 @@ public class LootListsController : ApiControllerV1
             team.Name,
             isLeader: true);
         return members.Count == 1 ? members[0] : null;
-    }
-
-    private async Task NotifyOwnerAsync(Character character, RaidTeam team, bool approved, string? message)
-    {
-        if (character.OwnerId > 0)
-        {
-            var sb = new StringBuilder("Your application to ")
-                .Append(team.Name)
-                .Append(" for ")
-                .Append(character.Name)
-                .Append(" was ")
-                .Append(approved ? "approved!" : "rejected.");
-
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                sb.AppendLine().Append("<@").Append(User.GetDiscordId()).Append("> said:");
-
-                foreach (var line in message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                {
-                    sb.AppendLine().Append("> ").Append(line);
-                }
-            }
-
-            if (approved)
-            {
-                await _discordClientProvider.AddRoleAsync(character.OwnerId.Value, team.Name, "Accepted onto the raid team.");
-            }
-
-            await _discordClientProvider.SendDmAsync(character.OwnerId.Value, sb.ToString());
-        }
     }
 
     private void TrackListStatusChange(List<CharacterLootList> lists, [CallerMemberName] string method = null!)

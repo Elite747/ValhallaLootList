@@ -28,6 +28,7 @@ builder.Services.AddScoped<IAuthorizationHandler, MemberPolicyHandler>();
 
 builder.Services.Configure<DiscordServiceOptions>(options => builder.Configuration.Bind("Discord", options));
 builder.Services.AddSingleton<DiscordClientProvider>();
+builder.Services.AddScoped<MessageSender>();
 builder.Services.AddHostedService<DiscordBackgroundService>();
 
 builder.Services.AddIdGen(options =>

@@ -294,7 +294,7 @@ public class TeamsController : ApiControllerV1
     }
 
     [HttpPut("{id:long}/members/{characterId:long}/enchanted")]
-    public async Task<IActionResult> PutMemberEnchanted(long id, long characterId, [FromBody] UpdateEnchantedDto dto, [FromServices] DiscordClientProvider dcp)
+    public async Task<IActionResult> PutMemberEnchanted(long id, long characterId, [FromBody] UpdateEnchantedDto dto, [FromServices] MessageSender messageSender)
     {
         var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.LeadershipOrAdmin);
 
@@ -340,50 +340,13 @@ public class TeamsController : ApiControllerV1
             props["Enchanted"] = dto.Enchanted.ToString();
         });
 
-        var messageTargets = new HashSet<long>(capacity: 4); // standard 3 leaders + owner
-
-        if (character.OwnerId > 0)
-        {
-            messageTargets.Add(character.OwnerId.Value);
-        }
-
-        await foreach (var leaderId in _context.RaidTeamLeaders
-            .AsNoTracking()
-            .Where(rtl => rtl.RaidTeamId == team.Id)
-            .Select(rtl => rtl.UserId)
-            .AsAsyncEnumerable())
-        {
-            messageTargets.Add(leaderId);
-        }
-
-        if (messageTargets.Count > 0)
-        {
-            var sb = new StringBuilder(character.Name)
-                .Append(dto.Enchanted ? " was given the gem & enchant bonus by <@" : " has had their gem & enchant bonus removed by <@")
-                .Append(User.GetDiscordId())
-                .Append(">.");
-
-            if (!string.IsNullOrWhiteSpace(dto.Message))
-            {
-                foreach (var line in dto.Message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                {
-                    sb.AppendLine().Append("> ").Append(line);
-                }
-            }
-
-            var message = sb.ToString();
-
-            foreach (var discordId in messageTargets)
-            {
-                await dcp.SendDmAsync(discordId, message);
-            }
-        }
+        await messageSender.SendGemEnchantMessagesAsync(character, dto.Enchanted, dto.Message);
 
         return Accepted();
     }
 
     [HttpPut("{id:long}/members/{characterId:long}/prepared")]
-    public async Task<IActionResult> PutMemberPrepared(long id, long characterId, [FromBody] UpdatePreparedDto dto, [FromServices] DiscordClientProvider dcp)
+    public async Task<IActionResult> PutMemberPrepared(long id, long characterId, [FromBody] UpdatePreparedDto dto, [FromServices] MessageSender messageSender)
     {
         var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.LeadershipOrAdmin);
 
@@ -429,44 +392,7 @@ public class TeamsController : ApiControllerV1
             props["Prepared"] = dto.Prepared.ToString();
         });
 
-        var messageTargets = new HashSet<long>(capacity: 4); // standard 3 leaders + owner
-
-        if (character.OwnerId > 0)
-        {
-            messageTargets.Add(character.OwnerId.Value);
-        }
-
-        await foreach (var leaderId in _context.RaidTeamLeaders
-            .AsNoTracking()
-            .Where(rtl => rtl.RaidTeamId == team.Id)
-            .Select(rtl => rtl.UserId)
-            .AsAsyncEnumerable())
-        {
-            messageTargets.Add(leaderId);
-        }
-
-        if (messageTargets.Count > 0)
-        {
-            var sb = new StringBuilder(character.Name)
-                .Append(dto.Prepared ? " was given the prepared bonus by <@" : " has had their prepared bonus removed by <@")
-                .Append(User.GetDiscordId())
-                .Append(">.");
-
-            if (!string.IsNullOrWhiteSpace(dto.Message))
-            {
-                foreach (var line in dto.Message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                {
-                    sb.AppendLine().Append("> ").Append(line);
-                }
-            }
-
-            var message = sb.ToString();
-
-            foreach (var discordId in messageTargets)
-            {
-                await dcp.SendDmAsync(discordId, message);
-            }
-        }
+        await messageSender.SendPreparedMessagesAsync(character, dto.Prepared, dto.Message);
 
         return Accepted();
     }

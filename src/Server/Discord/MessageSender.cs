@@ -1,0 +1,311 @@
+﻿// Copyright (C) 2021 Donovan Sullivan
+// GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+using System.Text;
+using DSharpPlus.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.EntityFrameworkCore;
+using ValhallaLootList.Server.Data;
+
+namespace ValhallaLootList.Server.Discord;
+
+public class MessageSender
+{
+    private readonly ApplicationDbContext _context;
+    private readonly DiscordClientProvider _discordClientProvider;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public MessageSender(ApplicationDbContext context, DiscordClientProvider discordClientProvider, IHttpContextAccessor httpContextAccessor)
+    {
+        _context = context;
+        _discordClientProvider = discordClientProvider;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public async Task SendKillMessageAsync(long raidId, string encounterId, byte trashIndex)
+    {
+        var kill = await _context.EncounterKills.FindAsync(encounterId, raidId, trashIndex);
+
+        if (kill is null)
+        {
+            throw new Exception("Kill not found.");
+        }
+
+        var drops = new List<(uint, string, string?)>();
+        string? teamName = null, encounterName = null;
+
+        await foreach (var d in _context.Drops
+            .AsNoTracking()
+            .Where(d => d.EncounterKillEncounterId == encounterId && d.EncounterKillRaidId == raidId && d.EncounterKillTrashIndex == trashIndex)
+            .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name, TeamName = d.EncounterKill.Raid.RaidTeam.Name, EncounterName = d.EncounterKill.Encounter.Name })
+            .AsAsyncEnumerable())
+        {
+            teamName = d.TeamName;
+            encounterName = d.EncounterName;
+            drops.Add((d.ItemId, d.ItemName, d.WinnerName));
+        }
+
+        if (teamName is null || encounterName is null)
+        {
+            (teamName, encounterName) = await _context.EncounterKills.AsNoTracking()
+                .Where(ek => ek.RaidId == raidId && ek.EncounterId == encounterId && ek.TrashIndex == trashIndex)
+                .Select(ek => new ValueTuple<string, string>(ek.Raid.RaidTeam.Name, ek.Encounter.Name))
+                .FirstAsync();
+        }
+
+        var message = await _discordClientProvider.SendOrUpdatePublicNotificationAsync(
+            kill.DiscordMessageId,
+            m => ConfigureKillMessage(m, raidId, kill.KilledAt, teamName, encounterName, kill.EncounterId, drops));
+
+        if (message is not null)
+        {
+            var messageId = (long)message.Id;
+
+            if (messageId != kill.DiscordMessageId)
+            {
+                kill.DiscordMessageId = messageId;
+                await _context.SaveChangesAsync();
+            }
+        }
+    }
+
+    public async Task DeleteKillMessageAsync(long messageId)
+    {
+        if (messageId > 0)
+        {
+            await _discordClientProvider.DeletePublicNotificationAsync(messageId);
+        }
+    }
+
+    public async Task SendNewApplicationMessagesAsync(Character character, List<long> submittedTeamIds)
+    {
+        await foreach (var leader in _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Where(rtl => submittedTeamIds.Contains(rtl.RaidTeamId))
+            .Select(rtl => new { rtl.UserId, rtl.RaidTeamId, TeamName = rtl.RaidTeam.Name })
+            .AsAsyncEnumerable())
+        {
+            await _discordClientProvider.SendDmAsync(
+                leader.UserId,
+                $"You have a new application to {leader.TeamName} from {character.Name}. ({character.Race.GetDisplayName()} {character.Class.GetDisplayName()})");
+        }
+    }
+
+    public async Task SendApprovedApplicationMessagesAsync(Character character, RaidTeam team, string? message)
+    {
+        await NotifyApplicationStateChanged(character, team, approved: true, message);
+    }
+
+    public async Task SendDeniedApplicationMessagesAsync(Character character, RaidTeam team, string? message)
+    {
+        await NotifyApplicationStateChanged(character, team, approved: false, message);
+    }
+
+    public async Task SendNewListMessagesAsync(CharacterLootList list)
+    {
+        var team = list.Character.Team;
+
+        if (team is null)
+        {
+            throw new ArgumentException("Loot list's character must be assigned to a team.");
+        }
+
+        var dm = $"{list.Character.Name} ({list.Character.Race.GetDisplayName()} {list.MainSpec.GetDisplayName(includeClassName: true)}) has submitted a new phase {list.Phase} loot list for team {team.Name}.";
+
+        await foreach (var leaderId in _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Where(rtl => rtl.RaidTeamId == team.Id)
+            .Select(rtl => rtl.UserId)
+            .AsAsyncEnumerable())
+        {
+            await _discordClientProvider.SendDmAsync(leaderId, dm);
+        }
+    }
+
+    public async Task SendApprovedListMessagesAsync(Character character, CharacterLootList list, string? message)
+    {
+        await NotifyListStateChanged(character, list, approved: true, message);
+    }
+
+    public async Task SendDeniedListMessagesAsync(Character character, CharacterLootList list, string? message)
+    {
+        await NotifyListStateChanged(character, list, approved: false, message);
+    }
+
+    public async Task SendGemEnchantMessagesAsync(Character character, bool enchanted, string? message)
+    {
+        await SendBonusMessageAsync("gen & enchant", character, enchanted, message);
+    }
+
+    public async Task SendPreparedMessagesAsync(Character character, bool prepared, string? message)
+    {
+        await SendBonusMessageAsync("prepared", character, prepared, message);
+    }
+
+    private async Task NotifyApplicationStateChanged(Character character, RaidTeam team, bool approved, string? message)
+    {
+        if (character.OwnerId > 0)
+        {
+            var sb = new StringBuilder("Your application to ")
+                .Append(team.Name)
+                .Append(" for ")
+                .Append(character.Name)
+                .Append(" was ")
+                .Append(approved ? "approved!" : "rejected.");
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                sb.AppendLine().Append("<@").Append(GetUserDiscordId()).Append("> said:");
+
+                foreach (var line in message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
+            }
+
+            if (approved)
+            {
+                await _discordClientProvider.AddRoleAsync(character.OwnerId.Value, team.Name, "Accepted onto the raid team.");
+            }
+
+            await _discordClientProvider.SendDmAsync(character.OwnerId.Value, sb.ToString());
+        }
+    }
+
+    private async Task NotifyListStateChanged(Character character, CharacterLootList list, bool approved, string? message)
+    {
+        if (character.OwnerId > 0)
+        {
+            var sb = new StringBuilder("Your phase")
+                .Append(list.Phase)
+                .Append(" loot list for ")
+                .Append(character.Name)
+                .Append(" was ")
+                .Append(approved ? "approved!" : "rejected.");
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                sb.AppendLine().Append("<@").Append(GetUserDiscordId()).Append("> said:");
+
+                foreach (var line in message.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
+            }
+
+            await _discordClientProvider.SendDmAsync(character.OwnerId.Value, sb.ToString());
+        }
+    }
+
+    private long GetUserDiscordId()
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.GetDiscordId();
+
+        if (userId is null)
+        {
+            throw new InvalidOperationException("Couldn't access the calling user's discord id.");
+        }
+
+        return userId.Value;
+    }
+
+    private async Task SendBonusMessageAsync(string bonusName, Character character, bool awarded, string? message)
+    {
+        var messageTargets = new HashSet<long>(capacity: 4);
+
+        if (character.OwnerId > 0)
+        {
+            messageTargets.Add(character.OwnerId.Value);
+        }
+
+        await foreach (var leaderId in _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Where(rtl => rtl.RaidTeamId == character.TeamId)
+            .Select(rtl => rtl.UserId)
+            .AsAsyncEnumerable())
+        {
+            messageTargets.Add(leaderId);
+        }
+
+        if (messageTargets.Count > 0)
+        {
+            var sb = new StringBuilder(character.Name)
+                .Append(" has had their ")
+                .Append(bonusName)
+                .Append(" bonus ")
+                .Append(awarded ? "given" : "removed")
+                .Append(" by <@")
+                .Append(GetUserDiscordId())
+                .Append(">.");
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                foreach (var line in message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
+            }
+
+            var completeMessage = sb.ToString();
+
+            foreach (var discordId in messageTargets)
+            {
+                await _discordClientProvider.SendDmAsync(discordId, completeMessage);
+            }
+        }
+    }
+
+    private void ConfigureKillMessage(
+        DiscordMessageBuilder message,
+        long raidId,
+        DateTimeOffset killedAt,
+        string teamName,
+        string encounterName,
+        string encounterId,
+        List<(uint, string, string?)> drops)
+    {
+        var request = _httpContextAccessor.HttpContext?.Request;
+
+        if (request is null)
+        {
+            throw new InvalidOperationException("Messages must be sent within an http request.");
+        }
+
+        var builder = new DiscordEmbedBuilder()
+            .WithColor(new DiscordColor("#8E24AA"))
+            .WithAuthor(name: teamName, url: $"{request.Scheme}://{request.Host}{request.PathBase}/teams/{teamName}")
+            .WithUrl($"{request.Scheme}://{request.Host}{request.PathBase}/raids/{raidId}")
+            .WithDescription($"Killed <t:{killedAt.ToUnixTimeSeconds()}:f>");
+
+        if (encounterId.Contains("trash"))
+        {
+            builder.WithTitle("Trash Drops");
+        }
+        else
+        {
+            builder.WithTitle($":skull_crossbones: {encounterName} :skull_crossbones:")
+                .WithThumbnail($"https://valhallalootliststorage.blob.core.windows.net/encounters/{encounterId}.png", height: 64, width: 128);
+        }
+
+        var itemsBuilder = new StringBuilder();
+
+        foreach (var (itemId, itemName, winnerName) in drops.OrderBy(x => x.Item2))
+        {
+            itemsBuilder.Append('[').Append(itemName).Append("](https://tbc.wowhead.com/item=").Append(itemId).Append("): ");
+
+            if (winnerName?.Length > 0)
+            {
+                itemsBuilder.Append("Awarded to ").AppendLine(winnerName);
+            }
+            else
+            {
+                itemsBuilder.AppendLine("Not awarded");
+            }
+        }
+
+        builder.AddField("Loot", itemsBuilder.ToString());
+
+        message.Embed = builder.Build();
+    }
+}

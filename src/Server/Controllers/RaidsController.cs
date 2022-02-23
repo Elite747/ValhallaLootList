@@ -654,7 +654,7 @@ public class RaidsController : ApiControllerV1
     }
 
     [HttpPost("{id:long}/Kills"), Authorize(AppPolicies.LootMaster)]
-    public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
+    public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender)
     {
         if (dto.Drops.Count == 0)
         {
@@ -799,13 +799,7 @@ public class RaidsController : ApiControllerV1
 
         await _context.SaveChangesAsync();
 
-        var message = await dcp.SendOrUpdatePublicNotificationAsync(null, m => m.ConfigureKillMessage(Request, Url, kill, teamName, encounter.Name, drops));
-
-        if (message is not null)
-        {
-            kill.DiscordMessageId = (long)message.Id;
-            await _context.SaveChangesAsync();
-        }
+        await messageSender.SendKillMessageAsync(kill.RaidId, kill.EncounterId, kill.TrashIndex);
 
         _telemetry.TrackEvent("KillAdded", User, props =>
         {
@@ -835,7 +829,7 @@ public class RaidsController : ApiControllerV1
     }
 
     [HttpDelete("{id:long}/Kills/{encounterId}/{trashIndex}"), Authorize(AppPolicies.LootMaster)]
-    public async Task<ActionResult> DeleteKill(long id, string encounterId, byte trashIndex, [FromServices] DiscordClientProvider dcp)
+    public async Task<ActionResult> DeleteKill(long id, string encounterId, byte trashIndex, [FromServices] MessageSender messageSender)
     {
         var raid = await _context.Raids.FindAsync(id);
 
@@ -875,10 +869,7 @@ public class RaidsController : ApiControllerV1
 
         await _context.SaveChangesAsync();
 
-        if (kill.DiscordMessageId > 0)
-        {
-            await dcp.DeletePublicNotificationAsync(kill.DiscordMessageId);
-        }
+        await messageSender.DeleteKillMessageAsync(kill.DiscordMessageId);
 
         var teamName = await _context.RaidTeams
             .AsNoTracking()

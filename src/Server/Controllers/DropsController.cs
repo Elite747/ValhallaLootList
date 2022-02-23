@@ -66,7 +66,7 @@ public class DropsController : ApiControllerV1
     }
 
     [HttpPut("{id:long}"), Authorize(AppPolicies.LootMaster)]
-    public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] DiscordClientProvider dcp)
+    public async Task<ActionResult<EncounterDropDto>> PutAssign(long id, [FromBody] AwardDropSubmissionDto dto, [FromServices] MessageSender messageSender)
     {
         var now = _realmTimeZone.TimeZoneNow();
         var drop = await _context.Drops.FindAsync(id);
@@ -219,24 +219,7 @@ public class DropsController : ApiControllerV1
 
         await _context.SaveChangesAsync();
 
-        var kill = await _context.EncounterKills
-            .AsNoTracking()
-            .Where(kill => kill.EncounterId == drop.EncounterKillEncounterId && kill.RaidId == drop.EncounterKillRaidId && kill.TrashIndex == drop.EncounterKillTrashIndex)
-            .Select(kill => new { kill.DiscordMessageId, kill.KilledAt, kill.RaidId, TeamName = kill.Raid.RaidTeam.Name, EncounterName = kill.Encounter.Name })
-            .FirstAsync();
-
-        var drops = new List<(uint, string, string?)>();
-
-        await foreach (var d in _context.Drops
-            .AsNoTracking()
-            .Where(d => d.EncounterKillEncounterId == drop.EncounterKillEncounterId && d.EncounterKillRaidId == drop.EncounterKillRaidId && d.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
-            .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name })
-            .AsAsyncEnumerable())
-        {
-            drops.Add((d.ItemId, d.ItemName, d.WinnerName));
-        }
-
-        var message = await dcp.SendOrUpdatePublicNotificationAsync(kill.DiscordMessageId, m => m.ConfigureKillMessage(Request, Url, kill.RaidId, kill.KilledAt, kill.TeamName, kill.EncounterName, drops));
+        await messageSender.SendKillMessageAsync(drop.EncounterKillRaidId, drop.EncounterKillEncounterId, drop.EncounterKillTrashIndex);
 
         _telemetry.TrackEvent("DropAssigned", User, props =>
         {

@@ -135,7 +135,7 @@ public class MessageSender
 
     public async Task SendGemEnchantMessagesAsync(Character character, bool enchanted, string? message)
     {
-        await SendBonusMessageAsync("gen & enchant", character, enchanted, message);
+        await SendBonusMessageAsync("gem & enchant", character, enchanted, message);
     }
 
     public async Task SendPreparedMessagesAsync(Character character, bool prepared, string? message)

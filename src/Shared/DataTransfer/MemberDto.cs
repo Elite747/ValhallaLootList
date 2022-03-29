@@ -39,6 +39,8 @@ public class MemberDto
     public int Attended { get; set; }
 
     public int ObservedAttendances { get; set; }
+
+    public bool Disenchanter { get; set; }
 }
 
 public class DonationSubmissionDto

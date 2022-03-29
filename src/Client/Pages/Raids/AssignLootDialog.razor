@@ -44,6 +44,19 @@
                     </MudListItem>
                     <MudDivider />
                 }
+                <MudListItem @key=@("disenchanters")>
+                    <div class="d-flex align-center">
+                        <MudAvatar Color="Color.Info" Size="Size.Small">
+                            DE
+                        </MudAvatar>
+                        <div class="mr-auto">
+                            @foreach (var context in _disenchanters)
+                            {
+                                <AssignLootDialogChip Disenchant Context="context" />
+                            }
+                        </div>
+                    </div>
+                </MudListItem>
             </MudList>
         </ApiView>
     </DialogContent>
@@ -54,6 +67,7 @@
 
 @code {
     private readonly List<IGrouping<int?, AssignEntryContext>> _prioGroups = new();
+    private readonly List<AssignEntryContext> _disenchanters = new();
     private IApiClientOperation<IList<ItemPrioDto>> _prioOperation = null!;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
@@ -77,5 +91,10 @@
             .Select(attendee => new AssignEntryContext(Raid, Drop, attendee, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id)))
             .GroupBy(context => context.Prio)
             .OrderByDescending(g => g.Key));
+        _disenchanters.Clear();
+        _disenchanters.AddRange(Raid.Attendees
+            .Where(a => a.Disenchanter)
+            .OrderBy(a => a.Character.Name)
+            .Select(attendee => new AssignEntryContext(Raid, Drop, attendee, prios.FirstOrDefault(p => p.CharacterId == attendee.Character.Id))));
     }
 }

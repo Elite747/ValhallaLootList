@@ -13,5 +13,7 @@ public class EncounterDropDto
 
     public long? AwardedBy { get; set; }
 
+    public bool Disenchanted { get; set; }
+
     public DateTimeOffset AwardedAt { get; set; }
 }

@@ -34,7 +34,7 @@ public class DropsController : ApiControllerV1
     {
         return _context.Drops
             .AsNoTracking()
-            .Where(drop => drop.WinnerId == characterId || drop.WinningEntry!.LootList.CharacterId == characterId)
+            .Where(drop => !drop.Disenchanted && (drop.WinnerId == characterId || drop.WinningEntry!.LootList.CharacterId == characterId))
             .OrderByDescending(drop => drop.AwardedAt)
             .Select(drop => new WonDropDto
             {
@@ -165,6 +165,7 @@ public class DropsController : ApiControllerV1
             }
 
             drop.WinnerId = winner.Id;
+            drop.Disenchanted = dto.Disenchant;
 
             foreach (var killer in presentTeamRaiders)
             {
@@ -201,6 +202,7 @@ public class DropsController : ApiControllerV1
             drop.Winner = null;
             drop.WinnerId = null;
             drop.WinningEntry = null;
+            drop.Disenchanted = false;
 
             if (oldWinningEntry is not null)
             {
@@ -243,7 +245,8 @@ public class DropsController : ApiControllerV1
             AwardedAt = drop.AwardedAt,
             AwardedBy = drop.AwardedBy,
             ItemId = drop.ItemId,
-            WinnerId = drop.WinnerId
+            WinnerId = drop.WinnerId,
+            Disenchanted = drop.Disenchanted
         };
     }
 

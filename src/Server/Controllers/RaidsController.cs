@@ -118,6 +118,7 @@ public class RaidsController : ApiControllerV1
                 IgnoreReason = a.IgnoreReason,
                 MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec).GetValueOrDefault(),
                 Rto = a.Rto,
+                Disenchanter = a.Character.Disenchanter,
                 Character = new CharacterDto
                 {
                     Class = a.Character.Class,
@@ -173,7 +174,8 @@ public class RaidsController : ApiControllerV1
                 AwardedBy = (long?)d.AwardedBy,
                 WinnerId = (long?)d.WinnerId,
                 d.ItemId,
-                ItemName = d.Item.Name
+                ItemName = d.Item.Name,
+                d.Disenchanted
             })
             .OrderBy(d => d.ItemName)
             .AsAsyncEnumerable())
@@ -184,7 +186,8 @@ public class RaidsController : ApiControllerV1
                 AwardedAt = drop.AwardedAt,
                 AwardedBy = drop.AwardedBy,
                 ItemId = drop.ItemId,
-                WinnerId = drop.WinnerId
+                WinnerId = drop.WinnerId,
+                Disenchanted = drop.Disenchanted
             });
         }
 
@@ -315,6 +318,7 @@ public class RaidsController : ApiControllerV1
                 IgnoreReason = a.IgnoreReason,
                 MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec ?? Specializations.None,
                 Rto = a.Rto,
+                Disenchanter = a.Character.Disenchanter,
                 Character = new CharacterDto
                 {
                     Id = a.CharacterId,
@@ -496,6 +500,7 @@ public class RaidsController : ApiControllerV1
             IgnoreReason = attendee.IgnoreReason,
             MainSpec = spec,
             Rto = attendee.Rto,
+            Disenchanter = character.Disenchanter,
             Character = new CharacterDto
             {
                 Class = character.Class,
@@ -563,7 +568,7 @@ public class RaidsController : ApiControllerV1
         var character = await _context.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
-            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name, c.VerifiedById })
+            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name, c.VerifiedById, c.Disenchanter })
             .FirstAsync();
 
         _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -581,6 +586,7 @@ public class RaidsController : ApiControllerV1
             IgnoreAttendance = attendee.IgnoreAttendance,
             IgnoreReason = attendee.IgnoreReason,
             Rto = attendee.Rto,
+            Disenchanter = character.Disenchanter,
             Character = new CharacterDto
             {
                 Class = character.Class,
@@ -820,7 +826,8 @@ public class RaidsController : ApiControllerV1
                 AwardedAt = d.AwardedAt,
                 AwardedBy = d.AwardedBy,
                 ItemId = d.ItemId,
-                WinnerId = d.Winner?.Id
+                WinnerId = d.Winner?.Id,
+                Disenchanted = d.Disenchanted
             }).ToList(),
             EncounterId = kill.EncounterId,
             EncounterName = encounter.Name,

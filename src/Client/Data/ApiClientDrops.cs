@@ -21,12 +21,12 @@ public class ApiClientDrops
         return Client.CreateRequest<IList<ItemPrioDto>>(HttpMethod.Get, $"api/v1/drops/{dropId}/ranks");
     }
 
-    public IApiClientOperation<EncounterDropDto> Assign(long dropId, long? characterId)
+    public IApiClientOperation<EncounterDropDto> Assign(long dropId, long? characterId, bool disenchant)
     {
         return Client.CreateRequest<AwardDropSubmissionDto, EncounterDropDto>(
             HttpMethod.Put,
             "api/v1/drops/" + dropId,
-            new AwardDropSubmissionDto { WinnerId = characterId });
+            new AwardDropSubmissionDto { WinnerId = characterId, Disenchant = disenchant });
     }
 
     public IApiClientOperation<List<AuditDropDto>> Audit()

@@ -58,7 +58,7 @@ public partial class KillsView
 
     private async Task BeginAssignAsync(EncounterDropDto drop)
     {
-        var characterId = await DialogService.ShowAsync<AssignLootDialog, long?>(
+        var response = await DialogService.ShowAsync<AssignLootDialog, AssignEntryResponse?>(
             string.Empty,
             parameters: new()
             {
@@ -66,20 +66,21 @@ public partial class KillsView
                 [nameof(AssignLootDialog.Raid)] = Raid
             });
 
-        if (characterId.HasValue)
+        if (response is not null)
         {
-            await AssignAsync(drop, characterId);
+            await AssignAsync(drop, response.CharacterId, response.Disenchant);
         }
     }
 
-    private Task AssignAsync(EncounterDropDto drop, long? characterId)
+    private Task AssignAsync(EncounterDropDto drop, long? characterId, bool disenchant)
     {
-        return Api.Drops.Assign(drop.Id, characterId)
+        return Api.Drops.Assign(drop.Id, characterId, disenchant)
             .OnSuccess(response =>
             {
                 drop.AwardedAt = response.AwardedAt;
                 drop.AwardedBy = response.AwardedBy;
                 drop.WinnerId = response.WinnerId;
+                drop.Disenchanted = response.Disenchanted;
                 StateHasChanged();
             })
             .SendErrorTo(Snackbar)

@@ -3,6 +3,11 @@
     <MudNavLink Href="me" Icon="@Icons.Material.Filled.Person">Me</MudNavLink>
     <MudNavLink Href="about" Icon="@Icons.Material.Filled.Help">About</MudNavLink>
     <AuthorizeView>
-        <AuthorizedNavMenu />
+        <Authorized>
+            <AuthorizedNavMenu />
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="discord" Target="_blank" Icon=@(Icons.Custom.Brands.Discord) ForceLoad>Discord</MudNavLink>
+        </NotAuthorized>
     </AuthorizeView>
 </MudNavMenu>

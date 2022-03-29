@@ -77,6 +77,11 @@
     </AuthorizeView>
 </DonationSummary>
 
+<AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
+    <MudCheckBox T="bool" Label="Disenchanter" Checked="Member.Disenchanter" CheckedChanged="ToggleDisenchanterAsync" />
+    <br />
+</AuthorizeView>
+
 <MudButton Link="@("characters/" + Member.Character.Name)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
 
 <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
@@ -203,6 +208,18 @@
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         }
+    }
+
+    private async Task ToggleDisenchanterAsync(bool disenchanter)
+    {
+        await Api.Teams.UpdateMemberDisenchanter(Team.Id, Member.Character.Id, disenchanter)
+            .OnSuccess((_, _) =>
+            {
+                Member.Disenchanter = disenchanter;
+                return MemberUpdated.InvokeAsync();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
     }
 
     private static string GetDisplayString(RaidMemberStatus status)

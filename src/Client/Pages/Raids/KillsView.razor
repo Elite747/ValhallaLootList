@@ -39,7 +39,16 @@
                             </MudAvatar>
                             <div class="mr-auto">
                                 <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" />
-                                <MudText Color="drop.WinnerId is null ? Color.Error : Color.Success" Inline="false">Awarded to @GetWinnerName(drop.WinnerId).</MudText>
+                                <MudText Color="drop.WinnerId is null ? Color.Error : drop.Disenchanted ? Color.Info : Color.Success" Inline="false">
+                                    @if (drop.Disenchanted)
+                                    {
+                                        <text>Disenchanted by @GetWinnerName(drop.WinnerId)</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Awarded to @GetWinnerName(drop.WinnerId)</text>
+                                    }
+                                </MudText>
                             </div>
                         </CascadingItemContext>
                         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
@@ -51,7 +60,7 @@
                                 }
                                 else
                                 {
-                                    <MudButton OnClick="() => AssignAsync(drop, null)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
+                                    <MudButton OnClick="() => AssignAsync(drop, null, false)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
                                 }
                             </AuthorizeView>
                         }

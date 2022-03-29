@@ -3,8 +3,6 @@
 
 using System.Text;
 using DSharpPlus.Entities;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.Server.Data;
 
@@ -15,6 +13,8 @@ public class MessageSender
     private readonly ApplicationDbContext _context;
     private readonly DiscordClientProvider _discordClientProvider;
     private readonly IHttpContextAccessor _httpContextAccessor;
+
+    private readonly record struct DropData(uint ItemId, string ItemName, string? WinnerName, bool Disenchanted);
 
     public MessageSender(ApplicationDbContext context, DiscordClientProvider discordClientProvider, IHttpContextAccessor httpContextAccessor)
     {
@@ -32,18 +32,18 @@ public class MessageSender
             throw new Exception("Kill not found.");
         }
 
-        var drops = new List<(uint, string, string?)>();
+        var drops = new List<DropData>();
         string? teamName = null, encounterName = null;
 
         await foreach (var d in _context.Drops
             .AsNoTracking()
             .Where(d => d.EncounterKillEncounterId == encounterId && d.EncounterKillRaidId == raidId && d.EncounterKillTrashIndex == trashIndex)
-            .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name, TeamName = d.EncounterKill.Raid.RaidTeam.Name, EncounterName = d.EncounterKill.Encounter.Name })
+            .Select(d => new { d.ItemId, ItemName = d.Item.Name, WinnerName = (string?)d.Winner!.Name, TeamName = d.EncounterKill.Raid.RaidTeam.Name, EncounterName = d.EncounterKill.Encounter.Name, d.Disenchanted })
             .AsAsyncEnumerable())
         {
             teamName = d.TeamName;
             encounterName = d.EncounterName;
-            drops.Add((d.ItemId, d.ItemName, d.WinnerName));
+            drops.Add(new(d.ItemId, d.ItemName, d.WinnerName, d.Disenchanted));
         }
 
         if (teamName is null || encounterName is null)
@@ -135,7 +135,7 @@ public class MessageSender
 
     public async Task SendGemEnchantMessagesAsync(Character character, bool enchanted, string? message)
     {
-        await SendBonusMessageAsync("gen & enchant", character, enchanted, message);
+        await SendBonusMessageAsync("gem & enchant", character, enchanted, message);
     }
 
     public async Task SendPreparedMessagesAsync(Character character, bool prepared, string? message)
@@ -263,7 +263,7 @@ public class MessageSender
         string teamName,
         string encounterName,
         string encounterId,
-        List<(uint, string, string?)> drops)
+        List<DropData> drops)
     {
         var request = _httpContextAccessor.HttpContext?.Request;
 
@@ -290,13 +290,17 @@ public class MessageSender
 
         var itemsBuilder = new StringBuilder();
 
-        foreach (var (itemId, itemName, winnerName) in drops.OrderBy(x => x.Item2))
+        foreach (var drop in drops.OrderBy(x => x.ItemName))
         {
-            itemsBuilder.Append('[').Append(itemName).Append("](https://tbc.wowhead.com/item=").Append(itemId).Append("): ");
+            itemsBuilder.Append('[').Append(drop.ItemName).Append("](https://tbc.wowhead.com/item=").Append(drop.ItemId).Append("): ");
 
-            if (winnerName?.Length > 0)
+            if (drop.Disenchanted)
             {
-                itemsBuilder.Append("Awarded to ").AppendLine(winnerName);
+                itemsBuilder.Append("Disenchanted");
+            }
+            else if (drop.WinnerName?.Length > 0)
+            {
+                itemsBuilder.Append("Awarded to ").AppendLine(drop.WinnerName);
             }
             else
             {

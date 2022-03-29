@@ -23,6 +23,8 @@ public class Drop
 
     public DateTimeOffset AwardedAt { get; set; }
 
+    public bool Disenchanted { get; set; }
+
     [Required]
     public uint ItemId { get; set; }
 

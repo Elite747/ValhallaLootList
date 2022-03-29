@@ -5,6 +5,12 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Pages.Raids;
 
+public class AssignEntryResponse
+{
+    public bool Disenchant { get; init; }
+    public long CharacterId { get; init; }
+}
+
 public class AssignEntryContext
 {
     public AssignEntryContext(RaidDto raid, EncounterDropDto drop, AttendanceDto attendance, ItemPrioDto? entry)

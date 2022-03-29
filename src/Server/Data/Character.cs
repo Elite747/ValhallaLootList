@@ -41,6 +41,8 @@ public class Character
 
     public bool Prepared { get; set; }
 
+    public bool Disenchanter { get; set; }
+
     public DateTimeOffset JoinedTeamAt { get; set; }
 
     public long? TeamId { get; set; }

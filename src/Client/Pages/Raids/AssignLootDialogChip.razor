@@ -6,7 +6,11 @@
         {
             <div><b>RTO</b></div>
         }
-        @if (Context.Message.Length > 0)
+        @if (Disenchant)
+        {
+            <span>Disenchant</span>
+        }
+        else if (Context.Message.Length > 0)
         {
             <span>@Context.Message</span>
         }
@@ -24,10 +28,10 @@
         }
     </TooltipContent>
     <ChildContent>
-        <CharacterChip Character="Context.Character" OnClick="() => Dialog.Close(DialogResult.Ok(Context.Character.Id))" Disabled="Context.Disabled">
+        <CharacterChip Character="Context.Character" OnClick="OnClick" Disabled="Context.Disabled">
             <div class="d-flex align-center">
                 @Context.Character.Name
-                @if (Context.Rto || Context.Message.Length > 0)
+                @if (Context.Rto || (Context.Message.Length > 0 && !Disenchant))
                 {
                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Error" Color="Context.Rto ? Color.Info : Color.Error" Style="margin-left: 4px; margin-right: -12px" />
                 }
@@ -38,11 +42,21 @@
 
 @code {
     [Parameter] public AssignEntryContext Context { get; set; } = null!;
+    [Parameter] public bool Disenchant { get; set; } = false;
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
         if (Context is null) throw new ArgumentNullException(nameof(Context));
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+
+    private void OnClick()
+    {
+        Dialog.Close(DialogResult.Ok(new AssignEntryResponse
+        {
+            CharacterId = Context.Character.Id,
+            Disenchant = Disenchant
+        }));
     }
 }

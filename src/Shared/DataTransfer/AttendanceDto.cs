@@ -15,6 +15,8 @@ public class AttendanceDto
 
     public bool Rto { get; set; }
 
+    public bool Disenchanter { get; set; }
+
     public bool IgnoreAttendance { get; set; }
 
     public string? IgnoreReason { get; set; }

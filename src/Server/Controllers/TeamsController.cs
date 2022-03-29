@@ -397,6 +397,56 @@ public class TeamsController : ApiControllerV1
         return Accepted();
     }
 
+    [HttpPut("{id:long}/members/{characterId:long}/disenchanter")]
+    public async Task<IActionResult> PutMemberDisenchanter(long id, long characterId, bool disenchanter)
+    {
+        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.LootMasterOrAdmin);
+
+        if (!auth.Succeeded)
+        {
+            return Unauthorized();
+        }
+
+        var team = await _context.RaidTeams.FindAsync(id);
+
+        if (team is null)
+        {
+            return NotFound();
+        }
+
+        var character = await _context.Characters.FindAsync(characterId);
+
+        if (character is null)
+        {
+            return NotFound();
+        }
+
+        if (character.TeamId != id)
+        {
+            return Problem("Character is not assigned to this team.");
+        }
+
+        if (character.Disenchanter == disenchanter)
+        {
+            return Problem(disenchanter ? "Character is already marked as a disenchanter." : "Character is already not a disenchanter.");
+        }
+
+        character.Disenchanter = disenchanter;
+
+        await _context.SaveChangesAsync();
+
+        _telemetry.TrackEvent("TeamMemberPreparedUpdated", User, props =>
+        {
+            props["TeamId"] = team.Id.ToString();
+            props["TeamName"] = team.Name;
+            props["CharacterId"] = character.Id.ToString();
+            props["CharacterName"] = character.Name;
+            props["Disenchanter"] = disenchanter.ToString();
+        });
+
+        return Accepted();
+    }
+
     [HttpDelete("{id:long}/members/{characterId:long}")]
     public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
     {
@@ -445,6 +495,7 @@ public class TeamsController : ApiControllerV1
         character.JoinedTeamAt = default;
         character.Enchanted = false;
         character.Prepared = false;
+        character.Disenchanter = false;
 
         await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
         {

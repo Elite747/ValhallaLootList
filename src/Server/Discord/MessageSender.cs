@@ -296,7 +296,7 @@ public class MessageSender
 
             if (drop.Disenchanted)
             {
-                itemsBuilder.Append("Disenchanted");
+                itemsBuilder.AppendLine("Disenchanted");
             }
             else if (drop.WinnerName?.Length > 0)
             {

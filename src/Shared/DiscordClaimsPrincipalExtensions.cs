@@ -94,4 +94,9 @@ public static class DiscordClaimsPrincipalExtensions
     {
         return principal.HasClaim(AppClaimTypes.Role, AppRoles.Administrator);
     }
+
+    public static bool IsLeadership(this ClaimsPrincipal principal)
+    {
+        return principal.Claims.Any(claim => claim.Type == AppClaimTypes.Role && claim.Value is AppRoles.Administrator or AppRoles.RaidLeader or AppRoles.LootMaster or AppRoles.Recruiter);
+    }
 }

@@ -32,6 +32,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
     public virtual DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; } = null!;
     public virtual DbSet<Donation> Donations { get; set; } = null!;
     public virtual DbSet<Encounter> Encounters { get; set; } = null!;
+    public virtual DbSet<EncounterItem> EncounterItems { get; set; } = null!;
     public virtual DbSet<EncounterKill> EncounterKills { get; set; } = null!;
     public virtual DbSet<CharacterEncounterKill> CharacterEncounterKills { get; set; } = null!;
     public virtual DbSet<Character> Characters { get; set; } = null!;
@@ -200,6 +201,13 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
         {
             e.Property(encounter => encounter.Id).ValueGeneratedNever();
             e.HasOne(encounter => encounter.Instance).WithMany(i => i.Encounters).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<EncounterItem>(e =>
+        {
+            e.HasKey(ei => new { ei.EncounterId, ei.ItemId });
+            e.HasOne(ei => ei.Encounter).WithMany(encounter => encounter.Items).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ei => ei.Item).WithMany(item => item.Encounters).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<EncounterKill>(e =>

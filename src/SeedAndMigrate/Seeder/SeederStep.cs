@@ -30,6 +30,7 @@ internal class SeederStep
         var existingItems = await _context.Items.ToDictionaryAsync(item => item.Id, cancellationToken);
         var existingInstances = await _context.Instances.ToDictionaryAsync(instance => instance.Id, cancellationToken);
         var existingEncounters = await _context.Encounters.ToDictionaryAsync(encounter => encounter.Id, cancellationToken);
+        var existingEncounterItems = await _context.EncounterItems.ToDictionaryAsync(encounterItem => (encounterItem.ItemId, encounterItem.EncounterId), cancellationToken);
 
         foreach (var seedItem in seedItems)
         {
@@ -85,12 +86,6 @@ internal class SeederStep
             item.QuestId = seedItem.QuestId;
         }
 
-        foreach (var item in existingItems.Values)
-        {
-            item.Encounter = null;
-            item.EncounterId = null;
-        }
-
         foreach (var seedInstance in seedInstances)
         {
             if (!existingInstances.TryGetValue(seedInstance.Id, out var instance))
@@ -118,9 +113,16 @@ internal class SeederStep
                 foreach (var itemId in seedEncounter.Items)
                 {
                     var item = existingItems[itemId];
-                    item.Encounter = encounter;
-                    item.EncounterId = encounter.Id;
                     item.Phase = seedInstance.Phase;
+
+                    if (existingEncounterItems.TryGetValue((itemId, encounter.Id), out var existingEncounterItem))
+                    {
+                        existingEncounterItems.Remove((itemId, encounter.Id));
+                    }
+                    else
+                    {
+                        _context.EncounterItems.Add(new() { Encounter = encounter, EncounterId = encounter.Id, Item = item, ItemId = itemId });
+                    }
 
                     foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
                     {
@@ -129,6 +131,8 @@ internal class SeederStep
                 }
             }
         }
+
+        _context.EncounterItems.RemoveRange(existingEncounterItems.Values);
 
         int changes = await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Application context saved with {ChangeCount} changes.", changes);

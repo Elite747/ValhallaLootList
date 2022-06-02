@@ -170,7 +170,7 @@
             "Create Character",
             parameters: new()
             {
-                [nameof(Create.AllowSubmitNonOwned)] = auth.User.IsAdmin(),
+                [nameof(Create.AllowSubmitNonOwned)] = auth.User.IsLeadership(),
                 [nameof(Create.DefaultSenderIsOwner)] = true
             },
             options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });

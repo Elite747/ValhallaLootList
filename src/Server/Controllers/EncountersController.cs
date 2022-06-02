@@ -46,7 +46,7 @@ public class EncountersController : ApiControllerV1
                 Id = e.Id,
                 Name = e.Name,
                 IsTrash = e.Index < 0,
-                Items = e.Items.Where(item => item.RewardFromId == null).Select(item => item.Id).ToList()
+                Items = e.Items.Where(item => item.Item.RewardFromId == null).Select(item => item.ItemId).ToList()
             })
             .AsAsyncEnumerable());
     }

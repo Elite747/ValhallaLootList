@@ -36,5 +36,5 @@ public class Encounter
     [Required]
     public virtual Instance Instance { get; set; } = null!;
 
-    public virtual ICollection<Item> Items { get; set; } = new HashSet<Item>();
+    public virtual ICollection<EncounterItem> Items { get; set; } = new HashSet<EncounterItem>();
 }

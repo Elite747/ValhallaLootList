@@ -59,7 +59,7 @@ public class InstancesController : ApiControllerV1
                 Encounters = i.Encounters.OrderBy(e => e.Index).Select(e => new EncounterDto
                 {
                     Id = e.Id,
-                    Items = e.Items.Where(item => item.RewardFromId == null).Select(item => item.Id).ToList(),
+                    Items = e.Items.Where(item => item.Item.RewardFromId == null).Select(item => item.Item.Id).ToList(),
                     IsTrash = e.Index < 0,
                     Name = e.Name
                 }).ToList()

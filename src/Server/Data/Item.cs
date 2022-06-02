@@ -110,9 +110,13 @@ public class Item
 
     public Classes? UsableClasses { get; set; }
 
+    [Obsolete("Use Encounters instead")]
     public virtual Encounter? Encounter { get; set; }
 
+    [Obsolete("Use Encounters instead")]
     public string? EncounterId { get; set; }
+
+    public virtual ICollection<EncounterItem> Encounters { get; set; } = new HashSet<EncounterItem>();
 
     public virtual ICollection<Drop> Drops { get; set; } = new HashSet<Drop>();
 

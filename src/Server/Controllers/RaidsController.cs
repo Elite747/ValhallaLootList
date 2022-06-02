@@ -696,7 +696,7 @@ public class RaidsController : ApiControllerV1
         var encounter = await _context.Encounters
             .AsTracking()
             .Where(e => e.Id == dto.EncounterId)
-            .Select(e => new { e.Id, e.Name, e.Instance.Phase, e.Index })
+            .Select(e => new { e.Id, e.Name, e.Instance.Phase, e.Index, Items = e.Items.Select(i => i.ItemId).ToList() })
             .FirstOrDefaultAsync();
 
         if (encounter is null)
@@ -771,7 +771,7 @@ public class RaidsController : ApiControllerV1
             {
                 ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not exist.");
             }
-            else if (item.EncounterId != encounter.Id)
+            else if (!encounter.Items.Contains(item.Id))
             {
                 ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not belong to the specified encounter.");
             }

@@ -19,7 +19,7 @@
                 @if (kill.Characters.Count != Raid.Attendees.Count)
                 {
                     <MudText Typo="Typo.subtitle1" Color="Color.Warning">
-                        Not Eligible: @string.Join(", ", GetIneligible(kill))
+                        Not eligible for loot or bonuses: @string.Join(", ", GetIneligible(kill))
                     </MudText>
                 }
                 @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))

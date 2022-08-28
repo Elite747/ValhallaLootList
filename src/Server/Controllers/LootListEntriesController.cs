@@ -386,19 +386,17 @@ public class LootListEntriesController : ApiControllerV1
     private async Task<bool> BracketHasTypeAsync(Bracket bracket, LootListEntry entry)
     {
         Debug.Assert(entry.ItemId.HasValue);
-        var item = await _context.Items.FindAsync(entry.ItemId.Value);
-        Debug.Assert(item is not null);
-        var itemGroup = new ItemGroup(item.Type, item.Slot);
 
-        var bracketItems = await _context.LootListEntries
-            .AsNoTracking()
-            .Where(e => e.LootList == entry.LootList && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id)
-            .Select(e => e.Item)
-            .ToListAsync();
+        var item = await _context.Items.AsNoTracking()
+            .Where(item => item.Id == entry.ItemId.Value)
+            .Select(item => new { item.Slot, item.Type, Heroic = item.Encounters.Any(e => e.Heroic) })
+            .FirstAsync();
+
+        var itemGroup = new ItemGroup(item.Type, item.Slot);
 
         await foreach (var bracketItem in _context.LootListEntries
             .AsNoTracking()
-            .Where(e => e.LootList == entry.LootList && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id && e.ItemId.HasValue)
+            .Where(e => e.LootList == entry.LootList && e.Heroic == item.Heroic && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id && e.ItemId.HasValue)
             .Select(e => new { e.Item!.Type, e.Item!.Slot })
             .AsAsyncEnumerable())
         {

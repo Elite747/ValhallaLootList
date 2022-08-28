@@ -128,7 +128,7 @@ else if (!Entry.Won)
                 {
                     var item = Items.FirstOrDefault(item => item.Id == entry.ItemId.Value);
 
-                    if (item is not null)
+                    if (item is not null && item.Heroic == Entry.Heroic)
                     {
                         groupsInBracket.Add(new ItemGroup(item.Type, item.Slot));
                     }

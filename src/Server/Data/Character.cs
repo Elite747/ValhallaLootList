@@ -49,24 +49,3 @@ public class Character
 
     public virtual ICollection<TeamMember> Teams { get; set; } = new HashSet<TeamMember>();
 }
-
-public class TeamMember
-{
-    public DateTimeOffset JoinedAt { get; set; }
-
-    public long CharacterId { get; set; }
-
-    public long TeamId { get; set; }
-
-    public RaidMemberStatus MemberStatus { get; set; }
-
-    public bool Enchanted { get; set; }
-
-    public bool Prepared { get; set; }
-
-    public bool Disenchanter { get; set; }
-
-    public virtual Character? Character { get; set; }
-
-    public virtual RaidTeam? Team { get; set; }
-}

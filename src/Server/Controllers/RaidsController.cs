@@ -126,7 +126,6 @@ public class RaidsController : ApiControllerV1
             {
                 MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == dto.TeamSize)!.MainSpec).GetValueOrDefault(),
                 Standby = a.Standby,
-                Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == a.CharacterId),
                 Character = new CharacterDto
                 {
                     Class = a.Character.Class,
@@ -139,6 +138,11 @@ public class RaidsController : ApiControllerV1
                 }
             })
             .ToListAsync();
+
+        foreach (var attendee in dto.Attendees)
+        {
+            attendee.Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == attendee.Character.Id);
+        }
 
         dto.Kills = await _context.EncounterKills
             .AsNoTracking()

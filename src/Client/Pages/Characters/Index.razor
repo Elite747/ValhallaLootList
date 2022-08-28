@@ -67,7 +67,7 @@
                                 <MudSelectItem T="TeamNameDto" Value="null">No Team</MudSelectItem>
                                 @foreach (var team in TeamsSource.GetTeams())
                                 {
-                                    <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name</MudSelectItem>
+                                    <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name (@team.Size-man)</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>

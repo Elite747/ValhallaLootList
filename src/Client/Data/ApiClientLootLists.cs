@@ -31,13 +31,13 @@ public class ApiClientLootLists
         return Client.CreateRequest(HttpMethod.Put, "api/v1/lootlists", submission);
     }
 
-    public IApiClientOperation<MultiTimestampDto> SubmitAll(List<LootListDto> lootLists, List<long> submitTo)
+    public IApiClientOperation<MultiTimestampDto> SubmitAll(List<LootListDto> lootLists, List<long> submitTo, byte size)
     {
         var characterId = lootLists.Select(ll => ll.CharacterId).Distinct().Single();
         var request = Client.CreateRequest<SubmitAllListsDto, MultiTimestampDto>(
             HttpMethod.Post,
             $"api/v1/lootlists/{characterId}/submitAll",
-            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), SubmitTo = submitTo });
+            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = size, SubmitTo = submitTo });
 
         request.ConfigureSuccess(response =>
         {
@@ -56,13 +56,13 @@ public class ApiClientLootLists
         return request;
     }
 
-    public IApiClientOperation<MultiTimestampDto> RevokeAll(List<LootListDto> lootLists)
+    public IApiClientOperation<MultiTimestampDto> RevokeAll(List<LootListDto> lootLists, byte size)
     {
         var characterId = lootLists.Select(ll => ll.CharacterId).Distinct().Single();
         var request = Client.CreateRequest<MultiTimestampDto, MultiTimestampDto>(
             HttpMethod.Post,
             $"api/v1/lootlists/{characterId}/revokeall",
-            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) });
+            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = size });
 
         request.ConfigureSuccess(response =>
         {
@@ -80,13 +80,13 @@ public class ApiClientLootLists
         return request;
     }
 
-    public IApiClientOperation<ApproveAllListsResponseDto> ApproveAll(List<LootListDto> lootLists, long teamId, string? message)
+    public IApiClientOperation<ApproveAllListsResponseDto> ApproveAll(List<LootListDto> lootLists, TeamDto team, string? message)
     {
         var characterId = lootLists.Select(ll => ll.CharacterId).Distinct().Single();
         var request = Client.CreateRequest<ApproveOrRejectAllListsDto, ApproveAllListsResponseDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/{characterId}/approveall/{teamId}",
-            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Message = message });
+            $"api/v1/lootlists/{characterId}/approveall/{team.Id}",
+            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Message = message, Size = team.Size });
 
         request.ConfigureSuccess(response =>
         {
@@ -104,13 +104,13 @@ public class ApiClientLootLists
         return request;
     }
 
-    public IApiClientOperation<MultiTimestampDto> RejectAll(List<LootListDto> lootLists, long teamId, string? message)
+    public IApiClientOperation<MultiTimestampDto> RejectAll(List<LootListDto> lootLists, TeamDto team, string? message)
     {
         var characterId = lootLists.Select(ll => ll.CharacterId).Distinct().Single();
         var request = Client.CreateRequest<ApproveOrRejectAllListsDto, MultiTimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/{characterId}/rejectall/{teamId}",
-            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Message = message });
+            $"api/v1/lootlists/{characterId}/rejectall/{team.Id}",
+            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = team.Size, Message = message });
 
         request.ConfigureSuccess(response =>
         {
@@ -121,7 +121,7 @@ public class ApiClientLootLists
                 {
                     lootList.Status = LootListStatus.Editing;
                 }
-                lootList.SubmittedTo.Remove(teamId);
+                lootList.SubmittedTo.Remove(team.Id);
             }
         });
 

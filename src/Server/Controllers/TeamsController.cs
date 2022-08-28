@@ -36,12 +36,14 @@ public class TeamsController : ApiControllerV1
     {
         return _context.RaidTeams
             .AsNoTracking()
-            .OrderBy(team => team.Name)
+            .OrderByDescending(team => team.TeamSize)
+            .ThenBy(team => team.Name)
             .Select(team => new TeamNameDto
             {
                 Id = team.Id,
                 Name = team.Name,
                 Inactive = team.Inactive,
+                Size = team.TeamSize,
                 Schedules = team.Schedules.Select(s => new ScheduleDto
                 {
                     Day = s.Day,

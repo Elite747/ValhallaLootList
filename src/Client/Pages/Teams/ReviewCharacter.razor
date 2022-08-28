@@ -93,7 +93,7 @@ else
         if (!result.Cancelled)
         {
             var lootLists = LootLists.ToList();
-            await Api.LootLists.ApproveAll(lootLists, Team.Id, (string?)result.Data)
+            await Api.LootLists.ApproveAll(lootLists, Team, (string?)result.Data)
                 .OnSuccess(async (response, _) =>
                 {
                     foreach (var lootList in lootLists)
@@ -126,7 +126,7 @@ else
         if (!result.Cancelled)
         {
             var lootLists = LootLists.ToList();
-            await Api.LootLists.RejectAll(lootLists, Team.Id, (string?)result.Data)
+            await Api.LootLists.RejectAll(lootLists, Team, (string?)result.Data)
                 .OnSuccess(async (_, _) =>
                 {
                     foreach (var lootList in lootLists)

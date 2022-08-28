@@ -13,6 +13,8 @@ public record TeamNameDto
 
     public bool Inactive { get; set; }
 
+    public byte Size { get; set; }
+
     public List<ScheduleDto> Schedules
     {
         get => _schedules ??= new();

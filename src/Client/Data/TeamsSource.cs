@@ -12,7 +12,7 @@ public class TeamsSource
 
     public event Action? Updated;
 
-    public IEnumerable<TeamNameDto> GetTeams(bool includeInactive = false)
+    public IEnumerable<TeamNameDto> GetTeams(int? size = null, bool includeInactive = false)
     {
         if (_teams is null)
         {
@@ -21,10 +21,18 @@ public class TeamsSource
 
         if (includeInactive)
         {
-            return _teams;
+            if (size is null)
+            {
+                return _teams;
+            }
+            return _teams.Where(team => team.Size == size);
         }
 
-        return _teams.Where(team => !team.Inactive);
+        if (size is null)
+        {
+            return _teams.Where(team => !team.Inactive);
+        }
+        return _teams.Where(team => !team.Inactive && team.Size == size);
     }
 
     public TeamNameDto? GetById(long id)

@@ -1,12 +1,20 @@
 ﻿@inject ApiClient Api
+@inject TeamsSource Teams
 
-<ApiExecutor Operation="() => Api.Teams.GetAllTeamNames().CacheFor(TimeSpan.FromHours(6))" Context="names">
-    @{
-        var teamName = names.Where(t => t.Id == TeamId).FirstOrDefault()?.Name ?? $"Team {TeamId}";
-    }
-    <MudLink Href="@("teams/" + teamName)" Typo="Typo.h5" Class="mr-2">&lt;@teamName&gt;</MudLink>
-</ApiExecutor>
+@if (_team is not null)
+{
+    <MudLink Href=@($"teams/{_team.Name}") Typo="Typo.h5" Class="mr-2">&lt;@_team.Name&gt;</MudLink>
+}
 
 @code {
+    private TeamNameDto? _team;
+
     [Parameter] public long TeamId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _team = null;
+        await Teams.EnsureStartedAsync(Api);
+        _team = Teams.GetById(TeamId);
+    }
 }

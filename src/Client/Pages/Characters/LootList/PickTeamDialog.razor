@@ -8,10 +8,10 @@
     </TitleContent>
     <DialogContent>
         <MudText Typo="Typo.body1" Class="mx-5">
-            Pick one or more teams to apply to. Applying will send your loot list for @HumanizePhases() for review.
+            Pick one or more teams to apply to. Applying will send your @Size-man loot lists for @HumanizePhases() for review.
         </MudText>
         <MudList Dense="true" Clickable="true">
-            @foreach (var team in Teams.GetTeams())
+            @foreach (var team in Teams.GetTeams(Size))
             {
                 <MudListItem Icon="@(SelectedTeams.Contains(team.Id) ? Icons.Material.Outlined.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" OnClick="() => Toggle(team.Id)">
                     <MudText Typo="Typo.h6" Inline="false">@team.Name</MudText>
@@ -33,6 +33,7 @@
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public List<long> SelectedTeams { get; set; } = null!;
     [Parameter] public List<byte> CurrentPhases { get; set; } = null!;
+    [Parameter] public byte Size { get; set; }
 
     protected override Task OnParametersSetAsync()
     {

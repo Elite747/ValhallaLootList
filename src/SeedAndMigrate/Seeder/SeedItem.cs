@@ -17,14 +17,6 @@ public class SeedItem
 
     public int ItemLevel { get; set; }
 
-    public int TopEndDamage { get; set; }
-
-    public double DPS { get; set; }
-
-    public double Speed { get; set; }
-
-    public int Armor { get; set; }
-
     public int Strength { get; set; }
 
     public int Agility { get; set; }
@@ -35,19 +27,11 @@ public class SeedItem
 
     public int Spirit { get; set; }
 
-    public int PhysicalHit { get; set; }
+    public int Hit { get; set; }
 
-    public int SpellHit { get; set; }
-
-    public int MeleeCrit { get; set; }
-
-    public int RangedCrit { get; set; }
-
-    public int SpellCrit { get; set; }
+    public int Crit { get; set; }
 
     public int Haste { get; set; }
-
-    public int SpellHaste { get; set; }
 
     public int Defense { get; set; }
 
@@ -61,25 +45,15 @@ public class SeedItem
 
     public int SpellPower { get; set; }
 
-    public int HealingPower { get; set; }
-
     public int ManaPer5 { get; set; }
 
-    public int HealthPer5 { get; set; }
-
-    public int MeleeAttackPower { get; set; }
-
-    public int RangedAttackPower { get; set; }
-
-    public int Resilience { get; set; }
+    public int AttackPower { get; set; }
 
     public int Expertise { get; set; }
 
     public int ArmorPenetration { get; set; }
 
     public int SpellPenetration { get; set; }
-
-    public int Sockets { get; set; }
 
     public bool HasProc { get; set; }
 

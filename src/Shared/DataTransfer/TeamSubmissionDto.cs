@@ -13,6 +13,8 @@ public class TeamSubmissionDto
     [Required, GuildName]
     public string? Name { get; set; }
 
+    public byte Size { get; set; }
+
     public bool Inactive { get; set; }
 
     public List<ScheduleSubmissionDto> Schedules

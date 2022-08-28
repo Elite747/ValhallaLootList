@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Server.Data;
 
@@ -47,17 +48,12 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
     public virtual DbSet<Raid> Raids { get; set; } = null!;
     public virtual DbSet<RaidAttendee> RaidAttendees { get; set; } = null!;
     public virtual DbSet<RaidTeam> RaidTeams { get; set; } = null!;
+    public virtual DbSet<TeamMember> TeamMembers { get; set; } = null!;
     public virtual DbSet<RaidTeamLeader> RaidTeamLeaders { get; set; } = null!;
     public virtual DbSet<RaidTeamSchedule> RaidTeamSchedules { get; set; } = null!;
     public virtual DbSet<TeamRemoval> TeamRemovals { get; set; } = null!;
     public virtual DbSet<Bracket> Brackets { get; set; } = null!;
     public virtual DbSet<PhaseDetails> PhaseDetails { get; set; } = null!;
-    public virtual DbSet<PriorityScope> PriorityScopes { get; set; } = null!;
-
-    public Task<PriorityScope> GetCurrentPriorityScopeAsync(CancellationToken cancellationToken = default)
-    {
-        return PriorityScopes.OrderByDescending(ps => ps.StartsAt).FirstAsync(cancellationToken);
-    }
 
     public async Task<List<DateTime>> GetObservedRaidDatesAsync(long teamId, int observedAttendances)
     {
@@ -71,72 +67,46 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             .ToListAsync();
     }
 
-    public async Task<int> GetAttendanceForCharacterAsync(Character character, int observedAttendances)
+    public async Task<Dictionary<long, List<PriorityBonusDto>>> GetBonusTableAsync(long teamId, DateTimeOffset date, long? characterId = null)
     {
-        if (character.TeamId.HasValue)
-        {
-            var attendanceTable = await GetAttendanceTableAsync(character.TeamId.Value, observedAttendances, character.Id);
-            if (attendanceTable.TryGetValue(character.Id, out int attendance))
+        var currentPhaseStart = await PhaseDetails.OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
+
+        var attendanceRecords = await RaidAttendees.AsNoTracking()
+            .Where(a => a.RemovalId == null && a.Raid.RaidTeamId == teamId && a.Raid.StartedAt >= currentPhaseStart && (characterId == null || a.CharacterId == characterId))
+            .Select(a => new { a.CharacterId, a.Raid.StartedAt })
+            .ToListAsync();
+
+        var raidsThisPhase = await Raids.AsNoTracking()
+            .Where(r => r.RaidTeamId == teamId && r.StartedAt >= currentPhaseStart)
+            .Select(r => r.StartedAt)
+            .ToListAsync();
+
+        var results = new Dictionary<long, List<PriorityBonusDto>>();
+
+        await foreach (var member in TeamMembers.AsNoTracking()
+            .Where(tm => tm.TeamId == teamId && (characterId == null || tm.CharacterId == characterId))
+            .Select(tm => new
             {
-                return attendance;
-            }
-        }
-        return 0;
-    }
-
-    public async Task<Dictionary<long, int>> GetAttendanceTableAsync(long teamId, int observedAttendances, long? characterId = null)
-    {
-        // checks for duplicate raids on the same day to avoid doubling up on attendances.
-        // this check is a holdover from when raids didn't span multiple phases
-        // and should probably be removed.
-        var recorded = new HashSet<(long, DateTime)>();
-        var attendances = new Dictionary<long, int>();
-
-        var observedDates = await GetObservedRaidDatesAsync(teamId, observedAttendances);
-
-        var query = RaidAttendees
-            .AsNoTracking()
-            .AsSingleQuery()
-            .Where(x => !x.IgnoreAttendance && x.RemovalId == null && x.Raid.RaidTeamId == teamId && x.Character.TeamId == teamId && observedDates.Contains(x.Raid.StartedAt.Date));
-
-        if (characterId.HasValue)
-        {
-            query = query.Where(x => x.CharacterId == characterId.Value);
-        }
-
-        await foreach (var record in query.Select(x => new { x.CharacterId, x.Raid.StartedAt.Date }).AsAsyncEnumerable())
-        {
-            if (recorded.Add((record.CharacterId, record.Date)))
-            {
-                attendances.TryGetValue(record.CharacterId, out var count);
-                attendances[record.CharacterId] = count + 1;
-            }
-        }
-
-        return attendances;
-    }
-
-    public async Task<DonationMatrix> GetDonationMatrixAsync(Expression<Func<Donation, bool>> predicate, PriorityScope scope, CancellationToken cancellationToken = default)
-    {
-        var results = await Donations
-            .AsNoTracking()
-            .Where(d => d.RemovalId == null)
-            .Where(predicate)
-            .Select(d => new { d.DonatedAt.Year, d.DonatedAt.Month, d.CharacterId, d.CopperAmount })
-            .GroupBy(d => new { d.Year, d.Month, d.CharacterId })
-            .Select(g => new MonthDonations
-            {
-                CharacterId = g.Key.CharacterId,
-                Donated = g.Sum(d => d.CopperAmount),
-                Month = g.Key.Month,
-                Year = g.Key.Year,
+                tm.CharacterId,
+                tm.JoinedAt,
+                tm.Prepared,
+                tm.Enchanted,
+                tm.MemberStatus,
+                Donations = tm.Character!.Donations.Count(d => d.TargetMonth == date.Month && d.TargetYear == date.Year)
             })
-            .OrderBy(md => md.CharacterId)
-            .ThenBy(md => md.Year)
-            .ThenBy(md => md.Month)
-            .ToListAsync(cancellationToken);
+            .AsAsyncEnumerable())
+        {
+            var bonuses = results[member.CharacterId] = new();
 
-        return new(results, scope);
+            bonuses.AddRange(PrioCalculator.GetListBonuses(
+                absences: raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt) - attendanceRecords.Count(attendance => attendance.StartedAt >= member.JoinedAt),
+                status: member.MemberStatus,
+                donationTickets: member.Donations,
+                enchanted: member.Enchanted,
+                prepared: member.Prepared));
+        }
+
+        return results;
     }
 
     public async Task<bool> PhaseActiveAsync(byte phase)
@@ -155,8 +125,14 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
         {
             e.HasIndex(character => character.Name).IsUnique();
             e.Property(character => character.Id).ValueGeneratedNever();
-            e.HasOne(character => character.Team).WithMany(team => team!.Roster).OnDelete(DeleteBehavior.SetNull);
             e.HasOne(character => character.Owner).WithMany().OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<TeamMember>(e =>
+        {
+            e.HasKey(tm => new { tm.TeamId, tm.CharacterId });
+            e.HasOne(tm => tm.Team).WithMany(team => team.Roster).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(tm => tm.Character).WithMany(character => character.Teams).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<CharacterEncounterKill>(e =>
@@ -169,7 +145,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
         builder.Entity<CharacterLootList>(e =>
         {
-            e.HasKey(ll => new { ll.CharacterId, ll.Phase });
+            e.HasKey(ll => new { ll.CharacterId, ll.Phase, ll.Size });
             e.HasOne(ll => ll.Character).WithMany(c => c.CharacterLootLists).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -186,7 +162,6 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
         {
             e.Property(donation => donation.Id).ValueGeneratedNever();
             e.HasOne(donation => donation.Character).WithMany(c => c.Donations).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(donation => donation.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<DropPass>(e =>
@@ -205,7 +180,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
         builder.Entity<EncounterItem>(e =>
         {
-            e.HasKey(ei => new { ei.EncounterId, ei.ItemId });
+            e.HasKey(ei => new { ei.EncounterId, ei.ItemId, ei.Heroic, ei.Is25 });
             e.HasOne(ei => ei.Encounter).WithMany(encounter => encounter.Items).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(ei => ei.Item).WithMany(item => item.Encounters).OnDelete(DeleteBehavior.Cascade);
         });
@@ -286,25 +261,15 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             e.HasKey(bracket => new { bracket.Phase, bracket.Index });
             e.HasData(
                 // Phase 1 brackets
-                new(phase: 1, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 1, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true),
+                new Bracket(phase: 1, index: 0, minRank: 21, maxRank: 24, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 1, index: 1, minRank: 17, maxRank: 20, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 1, index: 2, minRank: 13, maxRank: 16, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 1, index: 3, minRank: 01, maxRank: 12, normalItems: 1, heroicItems: 0, allowOffspec: true, allowTypeDuplicates: true),
                 // Phase 2 brackets
-                new(phase: 2, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 2, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 2, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 2, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true),
-                // Phase 3 brackets
-                new(phase: 3, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 3, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 3, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 3, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true),
-                // Phase 5 brackets
-                new(phase: 5, index: 0, minRank: 15, maxRank: 18, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 5, index: 1, minRank: 11, maxRank: 14, maxItems: 1, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 5, index: 2, minRank: 7, maxRank: 10, maxItems: 2, allowOffspec: false, allowTypeDuplicates: false),
-                new(phase: 5, index: 3, minRank: 1, maxRank: 6, maxItems: 2, allowOffspec: true, allowTypeDuplicates: true)
+                new Bracket(phase: 2, index: 0, minRank: 21, maxRank: 24, normalItems: 1, heroicItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 2, index: 1, minRank: 17, maxRank: 20, normalItems: 1, heroicItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 2, index: 2, minRank: 13, maxRank: 16, normalItems: 1, heroicItems: 1, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 2, index: 3, minRank: 01, maxRank: 12, normalItems: 1, heroicItems: 1, allowOffspec: true, allowTypeDuplicates: true)
                 );
         });
 
@@ -313,21 +278,11 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             e.Property(phase => phase.Id).ValueGeneratedNever();
             e.HasData(
                 new PhaseDetails(id: 1, startsAt: default),
-                new PhaseDetails(id: 2, startsAt: DateTimeOffset.Parse("8/27/2021 00:00:00 -04:00")),
-                new PhaseDetails(id: 3, startsAt: DateTimeOffset.Parse("1/27/2022 00:00:00 -04:00")),
-                new PhaseDetails(id: 5, startsAt: DateTimeOffset.Parse("5/12/2022 00:00:00 -04:00"))
+                new PhaseDetails(id: 2, startsAt: default)
                 );
         });
 
         builder.Entity<AppUser>().Property(e => e.Id).ValueGeneratedNever();
-
-        builder.Entity<PriorityScope>(e =>
-        {
-            e.Property(ps => ps.Id).ValueGeneratedNever();
-            e.HasData(
-                new PriorityScope { Id = 1, StartsAt = default, AttendancesPerPoint = 4, FullTrialPenalty = -18, HalfTrialPenalty = -9, ObservedAttendances = 8, RequiredDonationCopper = 50_00_00 }
-                );
-        });
     }
 
     Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();

@@ -12,7 +12,7 @@
         </div>
     </AuthorizeView>
     <p class="mx-4 my-2">
-        @Character.Name does not have a loot list for Phase @Phase.
+        @Character.Name does not have a loot list for Phase @Phase @TeamSize-man.
     </p>
 }
 else
@@ -59,6 +59,7 @@ else
 
 @code {
     [Parameter] public byte Phase { get; set; }
+    [Parameter] public byte TeamSize { get; set; }
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public LootListDto? LootList { get; set; }
     [Parameter] public EventCallback<LootListDto> OnListUpdated { get; set; }
@@ -66,7 +67,7 @@ else
 
     public Task RefreshAsync()
     {
-        return Api.LootLists.GetForCharacter(Character.Id, Phase)
+        return Api.LootLists.GetForCharacter(Character.Id)
             .OnSuccess(lists => ChangeListRef(lists.SingleOrDefault()))
             .SendErrorTo(Snackbar)
             .ExecuteAsync();
@@ -106,7 +107,7 @@ else
             {
                 if (specs.Count == 1)
                 {
-                    await Api.LootLists.Create(Character.Id, Phase, new() { MainSpec = specs[0] })
+                    await Api.LootLists.Create(new LootListSubmissionDto { MainSpec = specs[0], CharacterId = Character.Id, Phase = Phase, Size = TeamSize })
                         .OnSuccess((list, _) => ChangeListRef(list))
                         .SendErrorTo(Snackbar)
                         .ExecuteAsync();
@@ -119,6 +120,7 @@ else
                         {
                             [nameof(CreateListDialog.CharacterId)] = Character.Id,
                             [nameof(CreateListDialog.Phase)] = Phase,
+                            [nameof(CreateListDialog.TeamSize)] = TeamSize,
                             [nameof(CreateListDialog.Specializations)] = specs,
                         });
 

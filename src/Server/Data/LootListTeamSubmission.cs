@@ -9,6 +9,8 @@ public class LootListTeamSubmission
 
     public byte LootListPhase { get; set; }
 
+    public byte LootListSize { get; set; }
+
     public long TeamId { get; set; }
 
     public CharacterLootList LootList { get; set; } = null!;

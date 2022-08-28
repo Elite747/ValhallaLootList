@@ -8,15 +8,18 @@ namespace ValhallaLootList;
 public static class SpecializationGroups
 {
     public const Specializations
-        Tank = BearDruid | ProtPaladin | ProtWarrior,
+        Tank = BearDruid | ProtPaladin | ProtWarrior | TankDeathKnight,
         Healer = RestoDruid | RestoShaman | HolyPaladin | DiscPriest | HolyPriest,
-        MeleeDps = CatDruid | Rogue | EnhanceShaman | RetPaladin | ArmsWarrior | FuryWarrior,
+        MeleeDps = CatDruid | Rogue | EnhanceShaman | RetPaladin | ArmsWarrior | FuryWarrior | DpsDeathKnight,
         CasterDps = BalanceDruid | Mage | ShadowPriest | EleShaman | Warlock,
         PhysicalDps = MeleeDps | Hunter,
         Dps = CasterDps | PhysicalDps,
 
         HealerPriest = DiscPriest | HolyPriest,
+        DpsDeathKnight = BloodDeathKnight | FrostDeathKnight | UnholyDeathKnight,
+        TankDeathKnight = BloodDeathKnightTank | FrostDeathKnightTank | UnholyDeathKnightTank,
 
+        DeathKnight = BloodDeathKnight | BloodDeathKnightTank | FrostDeathKnight | FrostDeathKnightTank | UnholyDeathKnight | UnholyDeathKnightTank,
         Druid = BalanceDruid | BearDruid | CatDruid | RestoDruid,
         Hunter = BeastMasterHunter | MarksmanHunter | SurvivalHunter,
         Mage = ArcaneMage | FireMage | FrostMage,
@@ -27,5 +30,5 @@ public static class SpecializationGroups
         Warlock = AfflictionWarlock | DemoWarlock | DestroWarlock,
         Warrior = ProtWarrior | ArmsWarrior | FuryWarrior,
 
-        All = Druid | Paladin | Priest | Shaman | Warrior | Rogue | Hunter | Mage | Warlock;
+        All = DeathKnight | Druid | Paladin | Priest | Shaman | Warrior | Rogue | Hunter | Mage | Warlock;
 }

@@ -29,9 +29,12 @@
             <SettingsDisplay />
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="@_navOpen" Elevation="5" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive">
-        <NavMenu />
-    </MudDrawer>
+    @if (!Location.IsServer)
+    {
+        <MudDrawer @bind-Open="@_navOpen" Elevation="5" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive">
+            <NavMenu />
+        </MudDrawer>
+    }
     <MudMainContent Class="pt-14 pt-sm-16 h-100 d-flex">
         <div class="layout-container scrollable w-100">
             <MudContainer Class="layout-container content padded">

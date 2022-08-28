@@ -12,4 +12,6 @@ public class MultiTimestampDto
         get => _timestamps ??= new();
         set => _timestamps = value;
     }
+
+    public byte Size { get; set; }
 }

@@ -7,6 +7,12 @@ namespace ValhallaLootList.DataTransfer;
 
 public class LootListSubmissionDto : IValidatableObject
 {
+    public long CharacterId { get; set; }
+
+    public byte Phase { get; set; }
+
+    public byte Size { get; set; }
+
     public Specializations MainSpec { get; set; }
 
     public Specializations OffSpec { get; set; }
@@ -20,6 +26,25 @@ public class LootListSubmissionDto : IValidatableObject
         else if (MainSpec == OffSpec)
         {
             yield return new ValidationResult("Off Spec cannot be the same as Main Spec.", new[] { nameof(OffSpec) });
+        }
+
+        if (CharacterId == 0)
+        {
+            yield return new ValidationResult("The Character field is required.", new[] { nameof(CharacterId) });
+        }
+
+        if (Phase == 0)
+        {
+            yield return new ValidationResult("The Phase field is required.", new[] { nameof(Phase) });
+        }
+
+        if (Size == 0)
+        {
+            yield return new ValidationResult("The Size field is required.", new[] { nameof(Size) });
+        }
+        else if (Size is not (10 or 25))
+        {
+            yield return new ValidationResult("The Size field is not valid.", new[] { nameof(Size) });
         }
     }
 }

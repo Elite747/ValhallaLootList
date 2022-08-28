@@ -43,7 +43,7 @@ public readonly struct ItemGroup : IEquatable<ItemGroup>, IComparable<ItemGroup>
             InventorySlot.MainHand or InventorySlot.OneHand or InventorySlot.TwoHand or InventorySlot.OffHand => _weapon,
             InventorySlot.Ranged => type switch
             {
-                ItemType.Libram or ItemType.Idol or ItemType.Totem or ItemType.Wand => _misc,
+                ItemType.Libram or ItemType.Idol or ItemType.Totem or ItemType.Wand or ItemType.Sigil => _misc,
                 ItemType.Bow or ItemType.Crossbow or ItemType.Gun or ItemType.Thrown => _weapon,
                 _ => default
             },

@@ -23,27 +23,13 @@
                 @if (_editing)
                 {
                     <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="attendanceForm">
-                        <DataAnnotationsValidator />
                         <ProblemValidator @ref="_problemValidator" />
-                        <MudCheckBox T="bool" Checked="_model.Rto" CheckedChanged="ToggleRto">
-                            RTO
+                        <MudCheckBox T="bool" @bind-Checked="_model.Standby">
+                            Standby
                         </MudCheckBox>
-                        <MudCheckBox @bind-Checked="_model.IgnoreAttendance" Disabled="_model.Rto">
-                            Ignore Attendance
-                        </MudCheckBox>
-                        <MudTextField Label="Ignore Reason"
-                                      For="() => _model.IgnoreReason"
-                                      @bind-Value="_model.IgnoreReason"
-                                      Disabled="!_model.IgnoreAttendance || _model.Rto"
-                                      Variant="Variant.Filled"
-                                      Lines="3" />
                     </EditForm>
                 }
-                else if (Attendance.IgnoreAttendance)
-                {
-                    <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
-                }
-                else if (Attendance.Rto)
+                else if (Attendance.Standby)
                 {
                     <MudText Typo="Typo.caption" Inline="false" Color="Color.Info">Attendance Counted: RTO</MudText>
                 }
@@ -105,37 +91,18 @@
             .ExecuteAsync();
     }
 
-    private void ToggleRto(bool rto)
-    {
-        _model.Rto = rto;
-        if (rto)
-        {
-            _model.IgnoreAttendance = false;
-            _model.IgnoreReason = null;
-        }
-    }
-
     private void BeginEdit()
     {
-        _model.IgnoreAttendance = Attendance.IgnoreAttendance;
-        _model.IgnoreReason = Attendance.IgnoreReason;
-        _model.Rto = Attendance.Rto;
+        _model.Standby = Attendance.Standby;
         _editing = true;
     }
 
     private Task OnSubmitAsync()
     {
-        if (!_model.IgnoreAttendance)
-        {
-            _model.IgnoreReason = null;
-        }
-
         return Api.Raids.UpdateAttendee(Raid.Id, Attendance.Character.Id, _model)
             .OnSuccess(attendance =>
             {
-                Attendance.IgnoreAttendance = attendance.IgnoreAttendance;
-                Attendance.IgnoreReason = attendance.IgnoreReason;
-                Attendance.Rto = attendance.Rto;
+                Attendance.Standby = attendance.Standby;
                 Dialog.Close(DialogResult.Ok(false));
             })
             .ValidateWith(_problemValidator)

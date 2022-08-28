@@ -19,12 +19,7 @@ public class RaidAttendee
     [Required]
     public virtual Character Character { get; set; } = null!;
 
-    public bool IgnoreAttendance { get; set; }
-
-    [StringLength(256)]
-    public string? IgnoreReason { get; set; }
-
-    public bool Rto { get; set; }
+    public bool Standby { get; set; }
 
     public long? RemovalId { get; set; }
 

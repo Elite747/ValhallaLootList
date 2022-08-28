@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer;
 
 public class EncounterDto
 {
-    private IList<uint>? _items;
+    private IList<EncounterVariant>? _items;
 
     public string Id { get; set; } = string.Empty;
 
@@ -13,9 +13,24 @@ public class EncounterDto
 
     public bool IsTrash { get; set; }
 
+    public IList<EncounterVariant> Variants
+    {
+        get => _items ??= new List<EncounterVariant>();
+        set => _items = value;
+    }
+}
+
+public class EncounterVariant
+{
+    private IList<uint>? _items;
+
     public IList<uint> Items
     {
         get => _items ??= new List<uint>();
         set => _items = value;
     }
+
+    public int Size { get; set; }
+
+    public bool Heroic { get; set; }
 }

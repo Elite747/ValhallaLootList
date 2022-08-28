@@ -1,0 +1,12 @@
+﻿@inject ApiClient Api
+
+<ApiExecutor Operation="() => Api.Teams.GetAllTeamNames().CacheFor(TimeSpan.FromHours(6))" Context="names">
+    @{
+        var teamName = names.Where(t => t.Id == TeamId).FirstOrDefault()?.Name ?? $"Team {TeamId}";
+    }
+    <MudLink Href="@("teams/" + teamName)" Typo="Typo.h5" Class="mr-2">&lt;@teamName&gt;</MudLink>
+</ApiExecutor>
+
+@code {
+    [Parameter] public long TeamId { get; set; }
+}

@@ -13,6 +13,8 @@ public class LootListEntryDto
 
     public uint? ItemId { get; set; }
 
+    public bool Heroic { get; set; }
+
     public uint? RewardFromId { get; set; }
 
     public string? ItemName { get; set; }

@@ -137,7 +137,7 @@
 
             if (_searchTeams?.Count > 0)
             {
-                en = en.Where(ch => _searchTeams.Any(team => team?.Id == ch.TeamId));
+                en = en.Where(ch => _searchTeams.Any(team => team is null ? ch.Teams.Count == 0 : ch.Teams.Contains(team.Id)));
             }
 
             if (!_showDeactivated)

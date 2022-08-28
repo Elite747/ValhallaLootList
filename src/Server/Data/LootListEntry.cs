@@ -37,5 +37,7 @@ public class LootListEntry
 
     public bool AutoPass { get; set; }
 
+    public bool Heroic { get; set; }
+
     public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
 }

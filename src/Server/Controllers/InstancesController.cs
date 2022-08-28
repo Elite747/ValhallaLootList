@@ -16,55 +16,37 @@ public class InstancesController : ApiControllerV1
         _context = context;
     }
 
-    public IAsyncEnumerable<InstanceDto> Get(byte? phase, byte? minPhase, byte? maxPhase, bool includeEncounters = true)
+    public async IAsyncEnumerable<InstanceDto> Get()
     {
-        var query = _context.Instances.AsNoTracking();
+        var items = await _context.EncounterItems.Select(item => new { item.ItemId, item.Is25, item.Heroic, item.EncounterId }).ToListAsync();
+        var encounters = await _context.Encounters.Select(e => new { e.Id, e.Index, e.InstanceId, e.Name }).ToListAsync();
 
-        if (phase.HasValue)
+        await foreach (var instance in _context.Instances.AsNoTracking()
+            .OrderBy(i => i.Phase)
+            .ThenBy(i => i.Name)
+            .Select(i => new InstanceDto { Id = i.Id, Name = i.Name, Phase = i.Phase })
+            .AsAsyncEnumerable())
         {
-            query = query.Where(i => i.Phase == phase.Value).OrderBy(i => i.Name);
-        }
-        else
-        {
-            if (minPhase.HasValue)
+            foreach (var encounter in encounters
+                .Where(e => e.InstanceId == instance.Id)
+                .OrderBy(e => e.Index)
+                .Select(e => new EncounterDto { Id = e.Id, IsTrash = e.Index < 0, Name = e.Name }))
             {
-                query = query.Where(i => i.Phase >= minPhase.Value);
+                encounter.Variants = items
+                    .Where(i => i.EncounterId == encounter.Id)
+                    .GroupBy(i => new { i.Is25, i.Heroic })
+                    .Select(g => new EncounterVariant
+                    {
+                        Heroic = g.Key.Heroic,
+                        Size = g.Key.Is25 ? 25 : 10,
+                        Items = g.Select(i => i.ItemId).ToList()
+                    })
+                    .ToList();
+
+                instance.Encounters.Add(encounter);
             }
-            if (maxPhase.HasValue)
-            {
-                query = query.Where(i => i.Phase <= maxPhase.Value);
-            }
 
-            query = query.OrderBy(i => i.Phase).ThenBy(i => i.Name);
+            yield return instance;
         }
-
-        if (!includeEncounters)
-        {
-            return query
-                .Select(i => new InstanceDto
-                {
-                    Id = i.Id,
-                    Name = i.Name,
-                    Phase = i.Phase,
-                })
-                .AsAsyncEnumerable();
-        }
-
-        return query
-            .Select(i => new InstanceDto
-            {
-                Id = i.Id,
-                Name = i.Name,
-                Phase = i.Phase,
-                Encounters = i.Encounters.OrderBy(e => e.Index).Select(e => new EncounterDto
-                {
-                    Id = e.Id,
-                    Items = e.Items.Where(item => item.Item.RewardFromId == null).Select(item => item.Item.Id).ToList(),
-                    IsTrash = e.Index < 0,
-                    Name = e.Name
-                }).ToList()
-            })
-            .AsSingleQuery()
-            .AsAsyncEnumerable();
     }
 }

@@ -5,17 +5,18 @@
             <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
         </Authorized>
         <NotAuthorized>
-            <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
+            <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
         </NotAuthorized>
     </AuthorizeView>
 }
 else
 {
-    <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnListUpdated="UpdateLootList" />
+    <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnListUpdated="UpdateLootList" />
 }
 
 @code {
     [Parameter] public byte Phase { get; set; }
+    [Parameter] public byte Size { get; set; }
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
     private LootListDto? _lootList;

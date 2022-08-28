@@ -35,20 +35,6 @@ public class Character
 
     public long? OwnerId { get; set; }
 
-    public RaidMemberStatus MemberStatus { get; set; }
-
-    public bool Enchanted { get; set; }
-
-    public bool Prepared { get; set; }
-
-    public bool Disenchanter { get; set; }
-
-    public DateTimeOffset JoinedTeamAt { get; set; }
-
-    public long? TeamId { get; set; }
-
-    public virtual RaidTeam? Team { get; set; }
-
     public virtual AppUser? Owner { get; set; }
 
     public virtual ICollection<RaidAttendee> Attendances { get; set; } = new HashSet<RaidAttendee>();
@@ -60,4 +46,27 @@ public class Character
     public virtual ICollection<Donation> Donations { get; set; } = new HashSet<Donation>();
 
     public virtual ICollection<TeamRemoval> Removals { get; set; } = new HashSet<TeamRemoval>();
+
+    public virtual ICollection<TeamMember> Teams { get; set; } = new HashSet<TeamMember>();
+}
+
+public class TeamMember
+{
+    public DateTimeOffset JoinedAt { get; set; }
+
+    public long CharacterId { get; set; }
+
+    public long TeamId { get; set; }
+
+    public RaidMemberStatus MemberStatus { get; set; }
+
+    public bool Enchanted { get; set; }
+
+    public bool Prepared { get; set; }
+
+    public bool Disenchanter { get; set; }
+
+    public virtual Character? Character { get; set; }
+
+    public virtual RaidTeam? Team { get; set; }
 }

@@ -7,46 +7,41 @@ namespace ValhallaLootList.Server.Data;
 
 public static class PrioCalculator
 {
-    public static int CalculateAttendanceBonus(int attendances, PriorityScope scope)
-    {
-        return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);
-    }
+    private const int _halfTrialPenalty = -9, _fullTrialPenalty = -18;
+    public const int MaxDonations = 2;
 
     public static IEnumerable<PriorityBonusDto> GetListBonuses(
-        PriorityScope scope,
-        int attendances,
+        int absences,
         RaidMemberStatus status,
-        long donatedCopper,
+        int donationTickets,
         bool enchanted,
         bool prepared)
     {
-        yield return GetAttendanceBonus(scope, attendances);
-        yield return GetStatusBonus(scope, status);
-        yield return GetDonationBonus(scope, donatedCopper);
+        yield return GetAbsencePenalty(absences);
+        yield return GetTrialPenalty(status);
+        yield return GetDonationBonus(donationTickets);
         yield return GetEnchantedBonus(enchanted);
         yield return GetPreparedBonus(prepared);
 
-        static PriorityBonusDto GetAttendanceBonus(PriorityScope scope, int attendances)
+        static PriorityBonusDto GetAbsencePenalty(int absences)
         {
-            return new AttendancePriorityBonusDto
+            return new AbsencePriorityBonusDto
             {
-                Type = PriorityBonusTypes.Attendance,
-                Value = (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint),
-                AttendancePerPoint = scope.AttendancesPerPoint,
-                Attended = attendances,
-                ObservedAttendances = scope.ObservedAttendances
+                Absences = absences,
+                Type = PriorityBonusTypes.Absence,
+                Value = Fib(absences - 1)
             };
         }
 
-        static PriorityBonusDto GetStatusBonus(PriorityScope scope, RaidMemberStatus status)
+        static PriorityBonusDto GetTrialPenalty(RaidMemberStatus status)
         {
             return new MembershipPriorityBonusDto
             {
                 Type = PriorityBonusTypes.Trial,
                 Value = status switch
                 {
-                    RaidMemberStatus.HalfTrial => scope.HalfTrialPenalty,
-                    RaidMemberStatus.FullTrial => scope.FullTrialPenalty,
+                    RaidMemberStatus.HalfTrial => _halfTrialPenalty,
+                    RaidMemberStatus.FullTrial => _fullTrialPenalty,
                     RaidMemberStatus.Member => 0,
                     _ => throw new ArgumentOutOfRangeException(nameof(status))
                 },
@@ -54,14 +49,13 @@ public static class PrioCalculator
             };
         }
 
-        static PriorityBonusDto GetDonationBonus(PriorityScope scope, long donatedCopper)
+        static PriorityBonusDto GetDonationBonus(int donationTickets)
         {
             return new DonationPriorityBonusDto
             {
+                DonationTickets = donationTickets,
                 Type = PriorityBonusTypes.Donation,
-                Value = donatedCopper >= scope.RequiredDonationCopper ? 1 : 0,
-                DonatedCopper = donatedCopper,
-                RequiredDonations = scope.RequiredDonationCopper
+                Value = donationTickets,
             };
         }
 
@@ -94,15 +88,20 @@ public static class PrioCalculator
         };
     }
 
-    public static IEnumerable<PriorityBonusDto> GetAllBonuses(
-        PriorityScope scope,
-        int attendances,
-        RaidMemberStatus status,
-        long donatedCopper,
-        int timesSeen,
-        bool enchanted,
-        bool prepared)
+    private static int Fib(int i)
     {
-        return GetListBonuses(scope, attendances, status, donatedCopper, enchanted, prepared).Concat(GetItemBonuses(timesSeen));
+        if (i <= 0)
+        {
+            return 0;
+        }
+
+        int left = 0, right = 1;
+
+        for (int i2 = 2; i2 <= i; i2++)
+        {
+            (left, right) = (right, left + right);
+        }
+
+        return right;
     }
 }

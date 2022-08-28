@@ -20,6 +20,7 @@ internal class CanEquipRangedWeaponTypeRule : SimpleRule
             ItemType.Libram => SpecializationGroups.Paladin,
             ItemType.Idol => SpecializationGroups.Druid,
             ItemType.Totem => SpecializationGroups.Shaman,
+            ItemType.Sigil => SpecializationGroups.DeathKnight,
             ItemType.Bow or ItemType.Crossbow or ItemType.Gun or ItemType.Thrown => SpecializationGroups.Rogue | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
             ItemType.Wand => SpecializationGroups.Mage | SpecializationGroups.Warlock | SpecializationGroups.Priest,
             _ => throw new ArgumentException("Item is not a ranged item type.", nameof(item))

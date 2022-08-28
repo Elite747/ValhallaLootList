@@ -9,6 +9,8 @@ public class TeamDto
 
     public string Name { get; set; } = string.Empty;
 
+    public byte Size { get; set; }
+
     public bool Inactive { get; set; }
 
     public List<ScheduleDto> Schedules { get; set; } = new();

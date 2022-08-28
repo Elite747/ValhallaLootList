@@ -58,9 +58,9 @@ public class ApiClientRaids
         return request;
     }
 
-    public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId, bool rto)
+    public IApiClientOperation<AttendanceDto> AddAttendee(long raidId, long characterId, bool standby)
     {
-        return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId, Rto = rto });
+        return Client.CreateRequest<AttendeeSubmissionDto, AttendanceDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/attendees", new() { CharacterId = characterId, Standby = standby });
     }
 
     public IApiClientOperation<AttendanceDto> UpdateAttendee(long raidId, long characterId, UpdateAttendanceSubmissionDto dto)

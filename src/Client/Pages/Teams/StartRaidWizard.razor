@@ -282,7 +282,7 @@
         {
             if (attending)
             {
-                if (character.TeamId == Team.Id)
+                if (character.Teams.Contains(Team.Id))
                 {
                     _absent.Remove(character.Id);
                 }
@@ -291,7 +291,7 @@
                     _unrostered[character.Id] = character;
                 }
             }
-            else if (character.TeamId == Team.Id)
+            else if (character.Teams.Contains(Team.Id))
             {
                 _absent[character.Id] = character;
             }
@@ -304,7 +304,7 @@
 
     private void SetRto(CharacterDto character, bool rto)
     {
-        System.Diagnostics.Debug.Assert(character.TeamId == Team.Id);
+        System.Diagnostics.Debug.Assert(character.Teams.Contains(Team.Id));
 
         if (_rto.ContainsKey(character.Id))
         {
@@ -356,7 +356,7 @@
             string.Empty,
             new() {
                 [nameof(Raids.PickCharacterDialog.Operation)] = _charactersOperation,
-                [nameof(Raids.PickCharacterDialog.Filter)] = (Func<CharacterDto, bool>)(c => c.TeamId != Team.Id),
+                [nameof(Raids.PickCharacterDialog.Filter)] = (Func<CharacterDto, bool>)(c => !c.Teams.Contains(Team.Id)),
                 [nameof(Raids.PickCharacterDialog.ShowAdd)] = true
             },
             new() { NoHeader = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });

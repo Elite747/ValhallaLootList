@@ -18,11 +18,11 @@
                     ShowTooltip="true"
                     Class="mr-2" />
         <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@character.Name</MudText>
-        @if (character.TeamName?.Length > 0)
+        @foreach (var teamId in character.Teams)
         {
-            <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
+            <TeamLink TeamId="teamId" />
         }
-        else if (!character.Deactivated)
+        @if (!character.Deactivated && character.Teams.Count < 2)
         {
             @if (_lootListsOperation?.HasResult() == true && _lootListsOperation.GetResult().Any(ll => ll.SubmittedTo.Count != 0))
             {
@@ -80,8 +80,14 @@
         <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
             @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
-                <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                    <LootListPhase Character="character" Phase="phase" LootLists="_lootListsOperation!.GetResult()" />
+                <MudTabPanel Text="@($"Phase {phase} (25-man)")" ID="(phase, 25)">
+                    <LootListPhase Character="character" Phase="phase" Size="25" LootLists="_lootListsOperation!.GetResult()" />
+                </MudTabPanel>
+            }
+            @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
+            {
+                <MudTabPanel Text="@($"Phase {phase} (10-man)")" ID="(phase, 10)">
+                    <LootListPhase Character="character" Phase="phase" Size="10" LootLists="_lootListsOperation!.GetResult()" />
                 </MudTabPanel>
             }
             <MudTabPanel Text="Won Items" ID="_wonId">

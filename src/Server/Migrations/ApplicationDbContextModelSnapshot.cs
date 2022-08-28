@@ -341,13 +341,16 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<bool>("AllowTypeDuplicates")
                         .HasColumnType("bit");
 
-                    b.Property<byte>("MaxItems")
+                    b.Property<byte>("HeroicItems")
                         .HasColumnType("tinyint");
 
                     b.Property<byte>("MaxRank")
                         .HasColumnType("tinyint");
 
                     b.Property<byte>("MinRank")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("NormalItems")
                         .HasColumnType("tinyint");
 
                     b.HasKey("Phase", "Index");
@@ -361,9 +364,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)0,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)18,
-                            MinRank = (byte)15
+                            HeroicItems = (byte)0,
+                            MaxRank = (byte)24,
+                            MinRank = (byte)21,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -371,9 +375,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)1,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)14,
-                            MinRank = (byte)11
+                            HeroicItems = (byte)0,
+                            MaxRank = (byte)20,
+                            MinRank = (byte)17,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -381,9 +386,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)2,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)10,
-                            MinRank = (byte)7
+                            HeroicItems = (byte)0,
+                            MaxRank = (byte)16,
+                            MinRank = (byte)13,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -391,9 +397,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)3,
                             AllowOffspec = true,
                             AllowTypeDuplicates = true,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)6,
-                            MinRank = (byte)1
+                            HeroicItems = (byte)0,
+                            MaxRank = (byte)12,
+                            MinRank = (byte)1,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -401,9 +408,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)0,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)18,
-                            MinRank = (byte)15
+                            HeroicItems = (byte)1,
+                            MaxRank = (byte)24,
+                            MinRank = (byte)21,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -411,9 +419,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)1,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)14,
-                            MinRank = (byte)11
+                            HeroicItems = (byte)1,
+                            MaxRank = (byte)20,
+                            MinRank = (byte)17,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -421,9 +430,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)2,
                             AllowOffspec = false,
                             AllowTypeDuplicates = false,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)10,
-                            MinRank = (byte)7
+                            HeroicItems = (byte)1,
+                            MaxRank = (byte)16,
+                            MinRank = (byte)13,
+                            NormalItems = (byte)1
                         },
                         new
                         {
@@ -431,89 +441,10 @@ namespace ValhallaLootList.Server.Migrations
                             Index = (byte)3,
                             AllowOffspec = true,
                             AllowTypeDuplicates = true,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)6,
-                            MinRank = (byte)1
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)0,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)18,
-                            MinRank = (byte)15
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)1,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)14,
-                            MinRank = (byte)11
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)2,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)10,
-                            MinRank = (byte)7
-                        },
-                        new
-                        {
-                            Phase = (byte)3,
-                            Index = (byte)3,
-                            AllowOffspec = true,
-                            AllowTypeDuplicates = true,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)6,
-                            MinRank = (byte)1
-                        },
-                        new
-                        {
-                            Phase = (byte)5,
-                            Index = (byte)0,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)18,
-                            MinRank = (byte)15
-                        },
-                        new
-                        {
-                            Phase = (byte)5,
-                            Index = (byte)1,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)1,
-                            MaxRank = (byte)14,
-                            MinRank = (byte)11
-                        },
-                        new
-                        {
-                            Phase = (byte)5,
-                            Index = (byte)2,
-                            AllowOffspec = false,
-                            AllowTypeDuplicates = false,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)10,
-                            MinRank = (byte)7
-                        },
-                        new
-                        {
-                            Phase = (byte)5,
-                            Index = (byte)3,
-                            AllowOffspec = true,
-                            AllowTypeDuplicates = true,
-                            MaxItems = (byte)2,
-                            MaxRank = (byte)6,
-                            MinRank = (byte)1
+                            HeroicItems = (byte)1,
+                            MaxRank = (byte)12,
+                            MinRank = (byte)1,
+                            NormalItems = (byte)1
                         });
                 });
 
@@ -528,20 +459,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<bool>("Deactivated")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("Disenchanter")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Enchanted")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsFemale")
                         .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("JoinedTeamAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("MemberStatus")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -551,14 +470,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long?>("OwnerId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("Prepared")
-                        .HasColumnType("bit");
-
                     b.Property<int>("Race")
                         .HasColumnType("int");
-
-                    b.Property<long?>("TeamId")
-                        .HasColumnType("bigint");
 
                     b.Property<long?>("VerifiedById")
                         .HasColumnType("bigint");
@@ -569,8 +482,6 @@ namespace ValhallaLootList.Server.Migrations
                         .IsUnique();
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("TeamId");
 
                     b.ToTable("Characters");
                 });
@@ -606,14 +517,17 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<byte>("Phase")
                         .HasColumnType("tinyint");
 
+                    b.Property<byte>("Size")
+                        .HasColumnType("tinyint");
+
                     b.Property<long?>("ApprovedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("MainSpec")
-                        .HasColumnType("int");
+                    b.Property<long>("MainSpec")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("OffSpec")
-                        .HasColumnType("int");
+                    b.Property<long>("OffSpec")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -624,7 +538,7 @@ namespace ValhallaLootList.Server.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.HasKey("CharacterId", "Phase");
+                    b.HasKey("CharacterId", "Phase", "Size");
 
                     b.ToTable("CharacterLootLists");
                 });
@@ -634,11 +548,11 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("Id")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
-
-                    b.Property<int>("CopperAmount")
-                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("DonatedAt")
                         .HasColumnType("datetimeoffset");
@@ -646,14 +560,19 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("EnteredById")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("RemovalId")
-                        .HasColumnType("bigint");
+                    b.Property<byte>("TargetMonth")
+                        .HasColumnType("tinyint");
+
+                    b.Property<short>("TargetYear")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CharacterId");
-
-                    b.HasIndex("RemovalId");
 
                     b.ToTable("Donations");
                 });
@@ -763,7 +682,13 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("ItemId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("EncounterId", "ItemId");
+                    b.Property<bool>("Heroic")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Is25")
+                        .HasColumnType("bit");
+
+                    b.HasKey("EncounterId", "ItemId", "Heroic", "Is25");
 
                     b.HasIndex("ItemId");
 
@@ -821,10 +746,10 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("Agility")
                         .HasColumnType("int");
 
-                    b.Property<int>("Armor")
+                    b.Property<int>("ArmorPenetration")
                         .HasColumnType("int");
 
-                    b.Property<int>("ArmorPenetration")
+                    b.Property<int>("AttackPower")
                         .HasColumnType("int");
 
                     b.Property<int>("BlockRating")
@@ -833,8 +758,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("BlockValue")
                         .HasColumnType("int");
 
-                    b.Property<double>("DPS")
-                        .HasColumnType("float");
+                    b.Property<int>("Crit")
+                        .HasColumnType("int");
 
                     b.Property<int>("Defense")
                         .HasColumnType("int");
@@ -860,10 +785,7 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("Haste")
                         .HasColumnType("int");
 
-                    b.Property<int>("HealingPower")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HealthPer5")
+                    b.Property<int>("Hit")
                         .HasColumnType("int");
 
                     b.Property<int>("Intellect")
@@ -878,12 +800,6 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("ManaPer5")
                         .HasColumnType("int");
 
-                    b.Property<int>("MeleeAttackPower")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MeleeCrit")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(56)
@@ -895,40 +811,13 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<byte>("Phase")
                         .HasColumnType("tinyint");
 
-                    b.Property<int>("PhysicalHit")
-                        .HasColumnType("int");
-
                     b.Property<long>("QuestId")
                         .HasColumnType("bigint");
-
-                    b.Property<int>("RangedAttackPower")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RangedCrit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Resilience")
-                        .HasColumnType("int");
 
                     b.Property<long?>("RewardFromId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Slot")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Sockets")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Speed")
-                        .HasColumnType("float");
-
-                    b.Property<int>("SpellCrit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SpellHaste")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SpellHit")
                         .HasColumnType("int");
 
                     b.Property<int>("SpellPenetration")
@@ -944,9 +833,6 @@ namespace ValhallaLootList.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Strength")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TopEndDamage")
                         .HasColumnType("int");
 
                     b.Property<int>("Type")
@@ -983,8 +869,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<int>("RestrictionLevel")
                         .HasColumnType("int");
 
-                    b.Property<int>("Specializations")
-                        .HasColumnType("int");
+                    b.Property<long>("Specializations")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1006,6 +892,9 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long?>("DropId")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("Heroic")
+                        .HasColumnType("bit");
+
                     b.Property<long?>("ItemId")
                         .HasColumnType("bigint");
 
@@ -1019,6 +908,9 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<byte>("LootListPhase")
                         .HasColumnType("tinyint");
 
+                    b.Property<byte>("LootListSize")
+                        .HasColumnType("tinyint");
+
                     b.Property<byte>("Rank")
                         .HasColumnType("tinyint");
 
@@ -1030,7 +922,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.HasIndex("LootListCharacterId", "LootListPhase");
+                    b.HasIndex("LootListCharacterId", "LootListPhase", "LootListSize");
 
                     b.ToTable("LootListEntries");
                 });
@@ -1046,9 +938,14 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
 
+                    b.Property<byte>("LootListSize")
+                        .HasColumnType("tinyint");
+
                     b.HasKey("LootListCharacterId", "LootListPhase", "TeamId");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("LootListCharacterId", "LootListPhase", "LootListSize");
 
                     b.ToTable("LootListTeamSubmissions");
                 });
@@ -1074,56 +971,6 @@ namespace ValhallaLootList.Server.Migrations
                         new
                         {
                             Id = (byte)2,
-                            StartsAt = new DateTimeOffset(new DateTime(2021, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, -4, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = (byte)3,
-                            StartsAt = new DateTimeOffset(new DateTime(2022, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, -4, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = (byte)5,
-                            StartsAt = new DateTimeOffset(new DateTime(2022, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, -4, 0, 0, 0))
-                        });
-                });
-
-            modelBuilder.Entity("ValhallaLootList.Server.Data.PriorityScope", b =>
-                {
-                    b.Property<long>("Id")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("AttendancesPerPoint")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FullTrialPenalty")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HalfTrialPenalty")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ObservedAttendances")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RequiredDonationCopper")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("StartsAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PriorityScopes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            AttendancesPerPoint = 4,
-                            FullTrialPenalty = -18,
-                            HalfTrialPenalty = -9,
-                            ObservedAttendances = 8,
-                            RequiredDonationCopper = 500000,
                             StartsAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
@@ -1160,17 +1007,10 @@ namespace ValhallaLootList.Server.Migrations
                     b.Property<long>("RaidId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("IgnoreAttendance")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("IgnoreReason")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<long?>("RemovalId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("Rto")
+                    b.Property<bool>("Standby")
                         .HasColumnType("bit");
 
                     b.HasKey("CharacterId", "RaidId");
@@ -1194,6 +1034,9 @@ namespace ValhallaLootList.Server.Migrations
                         .IsRequired()
                         .HasMaxLength(24)
                         .HasColumnType("nvarchar(24)");
+
+                    b.Property<byte>("TeamSize")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -1240,6 +1083,36 @@ namespace ValhallaLootList.Server.Migrations
                     b.HasIndex("RaidTeamId");
 
                     b.ToTable("RaidTeamSchedules");
+                });
+
+            modelBuilder.Entity("ValhallaLootList.Server.Data.TeamMember", b =>
+                {
+                    b.Property<long>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Disenchanter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Enchanted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("MemberStatus")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Prepared")
+                        .HasColumnType("bit");
+
+                    b.HasKey("TeamId", "CharacterId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.TeamRemoval", b =>
@@ -1326,14 +1199,7 @@ namespace ValhallaLootList.Server.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "Team")
-                        .WithMany("Roster")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Owner");
-
-                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterEncounterKill", b =>
@@ -1374,14 +1240,7 @@ namespace ValhallaLootList.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ValhallaLootList.Server.Data.TeamRemoval", "Removal")
-                        .WithMany()
-                        .HasForeignKey("RemovalId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Character");
-
-                    b.Navigation("Removal");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.Drop", b =>
@@ -1531,7 +1390,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasOne("ValhallaLootList.Server.Data.CharacterLootList", "LootList")
                         .WithMany("Entries")
-                        .HasForeignKey("LootListCharacterId", "LootListPhase")
+                        .HasForeignKey("LootListCharacterId", "LootListPhase", "LootListSize")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1552,7 +1411,7 @@ namespace ValhallaLootList.Server.Migrations
 
                     b.HasOne("ValhallaLootList.Server.Data.CharacterLootList", "LootList")
                         .WithMany("Submissions")
-                        .HasForeignKey("LootListCharacterId", "LootListPhase")
+                        .HasForeignKey("LootListCharacterId", "LootListPhase", "LootListSize")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1628,6 +1487,25 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("RaidTeam");
                 });
 
+            modelBuilder.Entity("ValhallaLootList.Server.Data.TeamMember", b =>
+                {
+                    b.HasOne("ValhallaLootList.Server.Data.Character", "Character")
+                        .WithMany("Teams")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ValhallaLootList.Server.Data.RaidTeam", "Team")
+                        .WithMany("Roster")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("ValhallaLootList.Server.Data.TeamRemoval", b =>
                 {
                     b.HasOne("ValhallaLootList.Server.Data.Character", "Character")
@@ -1658,6 +1536,8 @@ namespace ValhallaLootList.Server.Migrations
                     b.Navigation("EncounterKills");
 
                     b.Navigation("Removals");
+
+                    b.Navigation("Teams");
                 });
 
             modelBuilder.Entity("ValhallaLootList.Server.Data.CharacterLootList", b =>

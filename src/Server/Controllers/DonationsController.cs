@@ -5,7 +5,6 @@ using IdGen;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
@@ -18,26 +17,24 @@ public class DonationsController : ApiControllerV1
     private readonly TimeZoneInfo _serverTimeZone;
     private readonly IIdGenerator<long> _idGenerator;
     private readonly TelemetryClient _telemetry;
-    private readonly IAuthorizationService _authorizationService;
 
     public DonationsController(
         ApplicationDbContext context,
         TimeZoneInfo serverTimeZone,
         IIdGenerator<long> idGenerator,
-        TelemetryClient telemetry,
-        IAuthorizationService authorizationService)
+        TelemetryClient telemetry)
     {
         _context = context;
         _serverTimeZone = serverTimeZone;
         _idGenerator = idGenerator;
         _telemetry = telemetry;
-        _authorizationService = authorizationService;
     }
 
-    [HttpPost, Authorize(AppPolicies.LootMasterOrAdmin)]
+    [HttpPost, Authorize(AppPolicies.Administrator)]
     public async Task<IActionResult> Post([FromBody] DonationSubmissionDto dto)
     {
         var donatedAt = _serverTimeZone.TimeZoneNow();
+        var nextMonth = donatedAt.AddMonths(1);
 
         var character = await _context.Characters.FindAsync(dto.CharacterId);
 
@@ -45,33 +42,19 @@ public class DonationsController : ApiControllerV1
         {
             return NotFound();
         }
-        if (!character.TeamId.HasValue)
+
+        if ((dto.TargetMonth != donatedAt.Month || dto.TargetYear != donatedAt.Year) &&
+            (dto.TargetMonth != nextMonth.Month || dto.TargetYear != nextMonth.Year))
         {
-            return Problem("Donations can only be applied to characters on a raid team.");
-        }
-
-        var authResult = await _authorizationService.AuthorizeAsync(User, character.TeamId.Value, AppPolicies.LootMasterOrAdmin);
-
-        if (!authResult.Succeeded)
-        {
-            return Unauthorized();
-        }
-
-        if (dto.ApplyThisMonth)
-        {
-            if (await _context.Raids.CountAsync(raid => raid.RaidTeamId == character.TeamId.Value &&
-                                                        raid.StartedAt.Month == donatedAt.Month &&
-                                                        raid.StartedAt.Year == donatedAt.Year) > 0)
-            {
-                return Problem("Donations can only be applied to the current month before any raid occurs during the month.");
-            }
-
-            donatedAt = donatedAt.AddDays(-donatedAt.Day);
+            return Problem("Donations can only target the current or next calendar month.");
         }
 
         _context.Donations.Add(new Donation(_idGenerator.CreateId())
         {
-            CopperAmount = dto.CopperAmount,
+            Amount = dto.Amount,
+            TargetMonth = dto.TargetMonth,
+            TargetYear = dto.TargetYear,
+            Unit = dto.Unit ?? "Unknown",
             DonatedAt = donatedAt,
             Character = character,
             CharacterId = character.Id,

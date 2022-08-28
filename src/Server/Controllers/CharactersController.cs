@@ -36,15 +36,15 @@ public class CharactersController : ApiControllerV1
         {
             if (string.Equals(team, "none", StringComparison.InvariantCultureIgnoreCase))
             {
-                query = query.Where(c => c.TeamId == null);
+                query = query.Where(c => c.Teams.Count == 0);
             }
             else if (long.TryParse(team, out var teamId))
             {
-                query = query.Where(c => c.TeamId == teamId);
+                query = query.Where(c => c.Teams.Any(tm => tm.TeamId == teamId));
             }
             else
             {
-                query = query.Where(c => c.Team!.Name == team);
+                query = query.Where(c => c.Teams.Any(tm => tm.Team!.Name == team));
             }
         }
 
@@ -61,11 +61,10 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                TeamId = c.TeamId,
-                TeamName = c.Team!.Name,
                 Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
-                Verified = c.VerifiedById.HasValue
+                Verified = c.VerifiedById.HasValue,
+                Teams = c.Teams.Select(tm => tm.TeamId).ToList()
             })
             .AsAsyncEnumerable();
     }
@@ -97,11 +96,10 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                TeamId = c.TeamId,
-                TeamName = c.Team!.Name,
                 Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
-                Verified = c.VerifiedById.HasValue
+                Verified = c.VerifiedById.HasValue,
+                Teams = c.Teams.Select(tm => tm.TeamId).ToList()
             })
             .AsAsyncEnumerable();
     }
@@ -117,11 +115,10 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                TeamId = c.Team!.Id,
-                TeamName = c.Team.Name,
                 Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
-                Verified = c.VerifiedById.HasValue
+                Verified = c.VerifiedById.HasValue,
+                Teams = c.Teams.Select(tm => tm.TeamId).ToList()
             })
             .FirstOrDefaultAsync();
 
@@ -174,7 +171,6 @@ public class CharactersController : ApiControllerV1
         var character = new Character(idGenerator.CreateId())
         {
             Class = dto.Class,
-            MemberStatus = RaidMemberStatus.FullTrial,
             Name = normalizedName,
             Race = dto.Race.Value,
             IsFemale = dto.Gender == Gender.Female
@@ -258,9 +254,9 @@ public class CharactersController : ApiControllerV1
             Name = character.Name,
             Race = character.Race,
             Gender = character.IsFemale ? Gender.Female : Gender.Male,
-            TeamId = character.TeamId,
             Deactivated = character.Deactivated,
-            Verified = character.VerifiedById.HasValue
+            Verified = character.VerifiedById.HasValue,
+            Teams = await _context.TeamMembers.Where(tm => tm.CharacterId == id).Select(tm => tm.TeamId).ToListAsync()
         };
     }
 
@@ -325,16 +321,22 @@ public class CharactersController : ApiControllerV1
         // Other removal relationships will be set to null on save. Attendances need to also have their ignore fields cleared.
         await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.RemovalId == removal.Id).AsAsyncEnumerable())
         {
-            attendance.IgnoreAttendance = false;
-            attendance.IgnoreReason = null;
             attendance.Removal = null;
             attendance.RemovalId = null;
         }
 
         _context.TeamRemovals.Remove(removal);
 
-        character.TeamId = removal.TeamId;
-        character.JoinedTeamAt = removal.JoinedAt;
+        _context.TeamMembers.Add(new TeamMember
+        {
+            JoinedAt = removal.JoinedAt,
+            CharacterId = character.Id,
+            Disenchanter = false,
+            Enchanted = false,
+            MemberStatus = RaidMemberStatus.FullTrial,
+            Prepared = false,
+            TeamId = removal.TeamId
+        });
 
         await _context.SaveChangesAsync();
 
@@ -423,8 +425,6 @@ public class CharactersController : ApiControllerV1
             .OrderByDescending(ra => ra.Raid.StartedAt)
             .Select(ra => new CharacterAttendanceDto
             {
-                IgnoreAttendance = ra.IgnoreAttendance,
-                IgnoreReason = ra.IgnoreReason,
                 RaidId = ra.RaidId,
                 StartedAt = ra.Raid.StartedAt,
                 TeamId = ra.Raid.RaidTeamId,
@@ -443,7 +443,7 @@ public class CharactersController : ApiControllerV1
             return NotFound();
         }
 
-        if (!character.Deactivated && character.TeamId.HasValue)
+        if (!character.Deactivated && await _context.TeamMembers.AnyAsync(tm => tm.CharacterId == id))
         {
             return Problem("Can't deactivate a character who is on a raid team.");
         }
@@ -509,6 +509,7 @@ public class CharactersController : ApiControllerV1
             Classes.Shaman => new[] { Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman },
             Classes.Warlock => new[] { Specializations.AfflictionWarlock, Specializations.DemoWarlock, Specializations.DestroWarlock },
             Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
+            Classes.DeathKnight => new[] { Specializations.BloodDeathKnight, Specializations.BloodDeathKnightTank, Specializations.FrostDeathKnight, Specializations.FrostDeathKnightTank, Specializations.UnholyDeathKnight, Specializations.UnholyDeathKnightTank },
             _ => Array.Empty<Specializations>()
         };
     }

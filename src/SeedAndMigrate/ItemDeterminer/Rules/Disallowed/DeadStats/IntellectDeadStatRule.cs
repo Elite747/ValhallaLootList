@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class IntellectDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Warrior | SpecializationGroups.Rogue;
+    protected override Specializations ApplicableSpecs() => SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.DeathKnight;
 
     protected override int GetStat(Item item) => item.Intellect;
 

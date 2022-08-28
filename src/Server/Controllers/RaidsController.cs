@@ -10,6 +10,7 @@ using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
+using static AutoMapper.Internal.ExpressionFactory;
 
 namespace ValhallaLootList.Server.Controllers;
 
@@ -58,7 +59,8 @@ public class RaidsController : ApiControllerV1
                 StartedAt = r.StartedAt,
                 LocksAt = r.LocksAt,
                 TeamId = r.RaidTeamId,
-                TeamName = r.RaidTeam.Name
+                TeamName = r.RaidTeam.Name,
+                TeamSize = r.RaidTeam.TeamSize
             })
             .AsAsyncEnumerable();
     }
@@ -81,7 +83,8 @@ public class RaidsController : ApiControllerV1
                 StartedAt = r.StartedAt,
                 LocksAt = r.LocksAt,
                 TeamId = r.RaidTeamId,
-                TeamName = r.RaidTeam.Name
+                TeamName = r.RaidTeam.Name,
+                TeamSize = r.RaidTeam.TeamSize
             })
             .AsAsyncEnumerable();
     }
@@ -99,7 +102,8 @@ public class RaidsController : ApiControllerV1
                 Id = raid.Id,
                 Phase = raid.Phase,
                 TeamId = raid.RaidTeamId,
-                TeamName = raid.RaidTeam.Name
+                TeamName = raid.RaidTeam.Name,
+                TeamSize = raid.RaidTeam.TeamSize
             })
             .FirstOrDefaultAsync();
 
@@ -108,17 +112,21 @@ public class RaidsController : ApiControllerV1
             return NotFound();
         }
 
+        var members = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(tm => tm.TeamId == dto.TeamId)
+            .Select(tm => new { tm.CharacterId, tm.Disenchanter })
+            .ToListAsync();
+
         dto.Attendees = await _context.RaidAttendees
             .AsNoTracking()
             .Where(a => a.RaidId == id)
             .OrderBy(a => a.Character.Name)
             .Select(a => new AttendanceDto
             {
-                IgnoreAttendance = a.IgnoreAttendance,
-                IgnoreReason = a.IgnoreReason,
-                MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)!.MainSpec).GetValueOrDefault(),
-                Rto = a.Rto,
-                Disenchanter = a.Character.Disenchanter,
+                MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == dto.TeamSize)!.MainSpec).GetValueOrDefault(),
+                Standby = a.Standby,
+                Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == a.CharacterId),
                 Character = new CharacterDto
                 {
                     Class = a.Character.Class,
@@ -126,8 +134,7 @@ public class RaidsController : ApiControllerV1
                     Id = a.CharacterId,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
-                    TeamId = a.Character.TeamId,
-                    TeamName = a.Character.Team!.Name,
+                    Teams = a.Character.Teams.Select(tm => tm.TeamId).ToList(),
                     Verified = a.Character.VerifiedById.HasValue
                 }
             })
@@ -237,7 +244,7 @@ public class RaidsController : ApiControllerV1
 
         var allCharacterIds = dto.Attendees.Concat(dto.Rto).ToList();
 
-        var characters = await _context.Characters.AsTracking().Where(c => allCharacterIds.Contains(c.Id)).ToListAsync();
+        var characters = await _context.Characters.AsTracking().Where(c => allCharacterIds.Contains(c.Id)).Include(c => c.Teams).ToListAsync();
 
         for (int i = 0; i < dto.Attendees.Count; i++)
         {
@@ -258,12 +265,6 @@ public class RaidsController : ApiControllerV1
                     RaidId = raid.Id
                 };
 
-                if (character.TeamId != team.Id)
-                {
-                    attendee.IgnoreAttendance = true;
-                    attendee.IgnoreReason = "Character was not part of this raid's team at the time of creation.";
-                }
-
                 raid.Attendees.Add(attendee);
             }
         }
@@ -277,7 +278,7 @@ public class RaidsController : ApiControllerV1
             {
                 ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character does not exist.");
             }
-            else if (character.TeamId != team.Id)
+            else if (!character.Teams.Any(tm => tm.TeamId == team.Id))
             {
                 ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character is not part of this team.");
             }
@@ -289,7 +290,7 @@ public class RaidsController : ApiControllerV1
                     CharacterId = character.Id,
                     Raid = raid,
                     RaidId = raid.Id,
-                    Rto = true
+                    Standby = true
                 });
             }
         }
@@ -310,15 +311,19 @@ public class RaidsController : ApiControllerV1
             props["Phase"] = raid.Phase.ToString();
         });
 
+        var members = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(tm => tm.TeamId == dto.TeamId)
+            .Select(tm => new { tm.CharacterId, tm.Disenchanter })
+            .ToListAsync();
+
         return CreatedAtAction(nameof(Get), new { id = raid.Id }, new RaidDto
         {
             Attendees = raid.Attendees.Select(a => new AttendanceDto
             {
-                IgnoreAttendance = a.IgnoreAttendance,
-                IgnoreReason = a.IgnoreReason,
-                MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase)?.MainSpec ?? Specializations.None,
-                Rto = a.Rto,
-                Disenchanter = a.Character.Disenchanter,
+                MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == team.TeamSize)?.MainSpec ?? Specializations.None,
+                Standby = a.Standby,
+                Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == a.CharacterId),
                 Character = new CharacterDto
                 {
                     Id = a.CharacterId,
@@ -326,8 +331,7 @@ public class RaidsController : ApiControllerV1
                     Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
-                    TeamId = a.Character.TeamId,
-                    TeamName = a.Character.Team?.Name,
+                    Teams = a.Character.Teams.Select(tm => tm.TeamId).ToList(),
                     Verified = a.Character.VerifiedById.HasValue
                 }
             }).ToList(),
@@ -336,7 +340,8 @@ public class RaidsController : ApiControllerV1
             Id = raid.Id,
             Phase = raid.Phase,
             TeamId = team.Id,
-            TeamName = team.Name
+            TeamName = team.Name,
+            TeamSize = team.TeamSize
         });
     }
 
@@ -455,27 +460,21 @@ public class RaidsController : ApiControllerV1
         {
             Character = character,
             CharacterId = character.Id,
-            IgnoreAttendance = false,
-            IgnoreReason = null,
             Raid = raid,
             RaidId = raid.Id,
-            Rto = dto.Rto
+            Standby = dto.Standby
         };
 
-        if (character.TeamId != raid.RaidTeamId)
-        {
-            attendee.IgnoreAttendance = true;
-            attendee.IgnoreReason = "Character was not part of this raid's team at the time of creation.";
-        }
+        var characterTeams = await _context.TeamMembers.Where(tm => tm.CharacterId == character.Id).Select(tm => tm.TeamId).ToListAsync();
 
         _context.RaidAttendees.Add(attendee);
 
         await _context.SaveChangesAsync();
 
-        var teamName = await _context.RaidTeams
+        var team = await _context.RaidTeams
             .AsNoTracking()
             .Where(t => t.Id == raid.RaidTeamId)
-            .Select(t => t.Name)
+            .Select(t => new { t.Name, t.TeamSize })
             .FirstAsync();
 
         _telemetry.TrackEvent("AttendeeAdded", User, props =>
@@ -484,23 +483,21 @@ public class RaidsController : ApiControllerV1
             props["CharacterId"] = character.Id.ToString();
             props["CharacterName"] = character.Name;
             props["TeamId"] = raid.RaidTeamId.ToString();
-            props["TeamName"] = teamName;
+            props["TeamName"] = team.Name;
             props["Phase"] = raid.Phase.ToString();
         });
 
         var spec = await _context.CharacterLootLists
             .AsNoTracking()
-            .Where(ll => ll.Phase == raid.Phase && ll.CharacterId == character.Id)
+            .Where(ll => ll.Phase == raid.Phase && ll.Size == team.TeamSize && ll.CharacterId == character.Id)
             .Select(ll => ll.MainSpec)
             .FirstOrDefaultAsync();
 
         return new AttendanceDto
         {
-            IgnoreAttendance = attendee.IgnoreAttendance,
-            IgnoreReason = attendee.IgnoreReason,
             MainSpec = spec,
-            Rto = attendee.Rto,
-            Disenchanter = character.Disenchanter,
+            Standby = attendee.Standby,
+            Disenchanter = await _context.TeamMembers.CountAsync(tm => tm.CharacterId == character.Id && tm.TeamId == raid.RaidTeamId && tm.Disenchanter) > 0,
             Character = new CharacterDto
             {
                 Class = character.Class,
@@ -508,7 +505,7 @@ public class RaidsController : ApiControllerV1
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                TeamId = character.TeamId,
+                Teams = characterTeams,
                 Verified = character.VerifiedById.HasValue
             }
         };
@@ -543,19 +540,7 @@ public class RaidsController : ApiControllerV1
             return NotFound();
         }
 
-        if (dto.IgnoreAttendance)
-        {
-            attendee.IgnoreAttendance = true;
-            attendee.IgnoreReason = dto.IgnoreReason;
-        }
-        else
-        {
-            attendee.IgnoreAttendance = false;
-            attendee.IgnoreReason = null;
-            attendee.RemovalId = null;
-        }
-
-        attendee.Rto = dto.Rto;
+        attendee.Standby = dto.Standby;
 
         await _context.SaveChangesAsync();
 
@@ -568,7 +553,7 @@ public class RaidsController : ApiControllerV1
         var character = await _context.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
-            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, c.TeamId, TeamName = (string?)c.Team!.Name, c.VerifiedById, c.Disenchanter })
+            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, Teams = c.Teams.Select(t => t.TeamId).ToList(), c.VerifiedById })
             .FirstAsync();
 
         _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -583,10 +568,8 @@ public class RaidsController : ApiControllerV1
 
         return new AttendanceDto
         {
-            IgnoreAttendance = attendee.IgnoreAttendance,
-            IgnoreReason = attendee.IgnoreReason,
-            Rto = attendee.Rto,
-            Disenchanter = character.Disenchanter,
+            Standby = attendee.Standby,
+            Disenchanter = await _context.TeamMembers.CountAsync(tm => tm.CharacterId == character.Id && tm.TeamId == raid.RaidTeamId && tm.Disenchanter) > 0,
             Character = new CharacterDto
             {
                 Class = character.Class,
@@ -594,8 +577,7 @@ public class RaidsController : ApiControllerV1
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
-                TeamId = character.TeamId,
-                TeamName = character.TeamName,
+                Teams = character.Teams,
                 Verified = character.VerifiedById.HasValue
             }
         };

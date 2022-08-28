@@ -11,43 +11,24 @@ public class ApiClientLootLists
 
     public ApiClient Client { get; }
 
-    public IApiClientOperation<List<LootListDto>> GetForCharacter(long id, byte? phase = null)
+    public IApiClientOperation<List<LootListDto>> GetForCharacter(long id)
     {
-        string path = "api/v1/lootlists?characterId=" + id;
-
-        if (phase.HasValue)
-        {
-            path += "&phase=" + phase;
-        }
-
-        return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, path);
+        return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, $"api/v1/lootlists?characterId={id}");
     }
 
-    public IApiClientOperation<List<LootListDto>> GetForTeam(long id, byte? phase = null, bool? includeApplicants = null)
+    public IApiClientOperation<List<LootListDto>> GetForTeam(long id, bool includeApplicants = false)
     {
-        string path = "api/v1/lootlists?teamId=" + id;
-
-        if (phase.HasValue)
-        {
-            path += "&phase=" + phase;
-        }
-
-        if (includeApplicants.HasValue)
-        {
-            path += "&includeApplicants=" + includeApplicants;
-        }
-
-        return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, path);
+        return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, $"api/v1/lootlists?teamId={id}&includeApplicants={includeApplicants}");
     }
 
-    public IApiClientOperation<LootListDto> Create(long characterId, byte phase, LootListSubmissionDto submission)
+    public IApiClientOperation<LootListDto> Create(LootListSubmissionDto submission)
     {
-        return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+        return Client.CreateRequest<LootListSubmissionDto, LootListDto>(HttpMethod.Post, "api/v1/lootlists", submission);
     }
 
-    public IApiClientOperation SetSpec(long characterId, byte phase, LootListSubmissionDto submission)
+    public IApiClientOperation SetSpec(LootListSubmissionDto submission)
     {
-        return Client.CreateRequest(HttpMethod.Put, $"api/v1/lootlists/phase{phase}/{characterId}", submission);
+        return Client.CreateRequest(HttpMethod.Put, "api/v1/lootlists", submission);
     }
 
     public IApiClientOperation<MultiTimestampDto> SubmitAll(List<LootListDto> lootLists, List<long> submitTo)
@@ -149,10 +130,10 @@ public class ApiClientLootLists
 
     public IApiClientOperation<TimestampDto> Submit(LootListDto lootList)
     {
-        var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+        var request = Client.CreateRequest<LootListActionDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/submit",
-            new() { Timestamp = lootList.Timestamp });
+            $"api/v1/lootlists/{lootList.CharacterId}/submit",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size });
 
         request.ConfigureSuccess(response =>
         {
@@ -173,10 +154,10 @@ public class ApiClientLootLists
 
     public IApiClientOperation<TimestampDto> Revoke(LootListDto lootList)
     {
-        var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+        var request = Client.CreateRequest<LootListActionDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/revoke",
-            new() { Timestamp = lootList.Timestamp });
+            $"api/v1/lootlists/{lootList.CharacterId}/revoke",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size });
 
         request.ConfigureSuccess(response =>
         {
@@ -195,8 +176,8 @@ public class ApiClientLootLists
     {
         var request = Client.CreateRequest<ApproveOrRejectLootListDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/approve",
-            new() { Timestamp = lootList.Timestamp, Message = message });
+            $"api/v1/lootlists/{lootList.CharacterId}/approve",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size, Message = message });
 
         request.ConfigureSuccess(response =>
         {
@@ -215,8 +196,8 @@ public class ApiClientLootLists
     {
         var request = Client.CreateRequest<ApproveOrRejectLootListDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/reject",
-            new() { Timestamp = lootList.Timestamp, Message = message });
+            $"api/v1/lootlists/{lootList.CharacterId}/reject",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size, Message = message });
 
         request.ConfigureSuccess(response =>
         {
@@ -233,10 +214,10 @@ public class ApiClientLootLists
 
     public IApiClientOperation<TimestampDto> Lock(LootListDto lootList)
     {
-        var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+        var request = Client.CreateRequest<LootListActionDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/lock",
-            new() { Timestamp = lootList.Timestamp });
+            $"api/v1/lootlists/{lootList.CharacterId}/lock",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size });
 
         request.ConfigureSuccess(response =>
         {
@@ -249,10 +230,10 @@ public class ApiClientLootLists
 
     public IApiClientOperation<TimestampDto> Unlock(LootListDto lootList)
     {
-        var request = Client.CreateRequest<TimestampDto, TimestampDto>(
+        var request = Client.CreateRequest<LootListActionDto, TimestampDto>(
             HttpMethod.Post,
-            $"api/v1/lootlists/phase{lootList.Phase}/{lootList.CharacterId}/unlock",
-            new() { Timestamp = lootList.Timestamp });
+            $"api/v1/lootlists/{lootList.CharacterId}/unlock",
+            new() { Timestamp = lootList.Timestamp, Phase = lootList.Phase, Size = lootList.Size });
 
         request.ConfigureSuccess(response =>
         {

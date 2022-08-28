@@ -13,13 +13,9 @@ public class AttendanceDto
         set => _character = value;
     }
 
-    public bool Rto { get; set; }
+    public bool Standby { get; set; }
 
     public bool Disenchanter { get; set; }
-
-    public bool IgnoreAttendance { get; set; }
-
-    public string? IgnoreReason { get; set; }
 
     public Specializations MainSpec { get; set; }
 }

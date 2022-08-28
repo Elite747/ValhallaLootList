@@ -13,17 +13,13 @@
     {
         <span>@Bonus.Type</span>
     }
-    else if (Bonus is AttendancePriorityBonusDto attendance)
+    else if (Bonus is AbsencePriorityBonusDto attendance)
     {
-        <span>Attended @attendance.Attended/@attendance.ObservedAttendances raids</span>
+        <span>Missed @attendance.Absences raids</span>
     }
     else if (Bonus is DonationPriorityBonusDto donation)
     {
-        <span>Donated <GameCurrencyDisplay Amount="@donation.DonatedCopper" /></span>
-        @if (donation.DonatedCopper < donation.RequiredDonations)
-        {
-            <span> of the required <GameCurrencyDisplay Amount="@donation.RequiredDonations" /></span>
-        }
+        <span>Completed @donation.DonationTickets donations.</span>
     }
     else if (Bonus is LossPriorityBonusDto loss)
     {

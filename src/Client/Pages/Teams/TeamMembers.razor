@@ -57,18 +57,11 @@
                             <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
                         </MudTooltip>
                     }
-                    @if (member.DonatedNextMonth < member.NextMonthRequiredDonations)
+                    @if (member.DonatedNextMonth < member.MaximumDonationTickets)
                     {
                         <MudTooltip>
                             <TooltipContent>
-                                @if (member.DonatedThisMonth < member.ThisMonthRequiredDonations)
-                                {
-                                    @:Donations for next month is not sufficient to grant a priority bonus.
-                                }
-                                else
-                                {
-                                    @:Donations for next month is not sufficient to maintain the priority bonus.
-                                }
+                                Completed @member.DonatedNextMonth of @member.MaximumDonationTickets tickets for next month.
                             </TooltipContent>
                             <ChildContent>
                                 <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />

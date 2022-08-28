@@ -30,10 +30,13 @@ public class ImportEncounter
         {
             foreach (var encounter in instance.Encounters)
             {
-                if (encounter.Items.Any(itemsHashSet.Contains))
+                foreach (var variant in encounter.Variants)
                 {
-                    itemsHashSet.ExceptWith(encounter.Items);
-                    yield return new ImportEncounter(encounter, items.Where(encounter.Items.Contains));
+                    if (variant.Items.Any(itemsHashSet.Contains))
+                    {
+                        itemsHashSet.ExceptWith(variant.Items);
+                        yield return new ImportEncounter(encounter, items.Where(variant.Items.Contains));
+                    }
                 }
             }
         }

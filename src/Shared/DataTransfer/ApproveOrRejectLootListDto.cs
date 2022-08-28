@@ -3,7 +3,7 @@
 
 namespace ValhallaLootList.DataTransfer;
 
-public class ApproveOrRejectLootListDto : TimestampDto
+public class ApproveOrRejectLootListDto : LootListActionDto
 {
     public string? Message { get; set; }
 }

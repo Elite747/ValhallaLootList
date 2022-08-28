@@ -7,3 +7,10 @@ public class TimestampDto
 {
     public byte[] Timestamp { get; set; } = Array.Empty<byte>();
 }
+
+public class LootListActionDto : TimestampDto
+{
+    public byte Phase { get; set; }
+
+    public byte Size { get; set; }
+}

@@ -9,13 +9,14 @@ public class Bracket
     {
     }
 
-    public Bracket(byte phase, byte index, byte minRank, byte maxRank, byte maxItems, bool allowOffspec, bool allowTypeDuplicates)
+    public Bracket(byte phase, byte index, byte minRank, byte maxRank, byte normalItems, byte heroicItems, bool allowOffspec, bool allowTypeDuplicates)
     {
         Phase = phase;
         Index = index;
         MinRank = minRank;
         MaxRank = maxRank;
-        MaxItems = maxItems;
+        NormalItems = normalItems;
+        HeroicItems = heroicItems;
         AllowOffspec = allowOffspec;
         AllowTypeDuplicates = allowTypeDuplicates;
     }
@@ -28,7 +29,9 @@ public class Bracket
 
     public byte MaxRank { get; set; }
 
-    public byte MaxItems { get; set; }
+    public byte NormalItems { get; set; }
+
+    public byte HeroicItems { get; set; }
 
     public bool AllowOffspec { get; set; }
 

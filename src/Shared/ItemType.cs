@@ -25,5 +25,6 @@ public enum ItemType
     Polearm,
     Stave,
     Thrown,
-    Wand
+    Wand,
+    Sigil
 }

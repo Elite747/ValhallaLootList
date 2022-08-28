@@ -30,7 +30,7 @@
 </AuthorizeView>
 
 <MudText Inline="false">
-    Attended @Member.Attended of the last @Member.ObservedAttendances raids.
+    Missed @Member.Absences raids this phase.
 </MudText>
 
 <MudText Inline="false">
@@ -63,19 +63,7 @@
     </AuthorizeView>
 </MudText>
 
-<DonationSummary Member="Member">
-    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
-        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: false)"
-                       Icon="@Icons.Material.Filled.AddCircle"
-                       Size="Size.Small"
-                       Color="Color.Success"
-                       Class="mx-2" />
-        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: true)"
-                       Icon="@Icons.Material.Filled.RemoveCircle"
-                       Size="Size.Small"
-                       Color="Color.Error" />
-    </AuthorizeView>
-</DonationSummary>
+<DonationSummary Member="Member" />
 
 <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
     <MudCheckBox T="bool" Label="Disenchanter" Checked="Member.Disenchanter" CheckedChanged="ToggleDisenchanterAsync" />
@@ -127,36 +115,6 @@
                 .OnSuccess((_, _) =>
                 {
                     Team.Roster.Remove(Member);
-                    return MemberUpdated.InvokeAsync();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-    }
-
-    private async Task ChangeDonationAsync(bool isRemove)
-    {
-        var result = await DialogService.ShowAsync<GameCurrencyDialog, GameCurrencyResult>($"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})");
-        if (result is not null)
-        {
-            var actualAmount = result.GetAmount();
-
-            if (isRemove)
-            {
-                actualAmount = -actualAmount;
-            }
-
-            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id, ApplyThisMonth = result.ApplyThisMonth })
-                .OnSuccess((_, _) =>
-                {
-                    if (result.ApplyThisMonth)
-                    {
-                        Member.DonatedThisMonth += actualAmount;
-                    }
-                    else
-                    {
-                        Member.DonatedNextMonth += actualAmount;
-                    }
                     return MemberUpdated.InvokeAsync();
                 })
                 .SendErrorTo(Snackbar)

@@ -12,4 +12,8 @@ public class EncounterItem
     public virtual Item Item { get; set; } = null!;
 
     public uint ItemId { get; set; }
+
+    public bool Heroic { get; set; }
+
+    public bool Is25 { get; set; }
 }

@@ -17,11 +17,11 @@ internal class CanEquipOneHandWeaponRule : SimpleRule
     {
         var equippableSpecs = item.Type switch
         {
-            ItemType.Dagger => (SpecializationGroups.All & ~SpecializationGroups.Paladin),
+            ItemType.Dagger => SpecializationGroups.All & ~(SpecializationGroups.Paladin | SpecializationGroups.DeathKnight),
             ItemType.Fist => SpecializationGroups.Druid | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.Hunter,
-            ItemType.Axe => SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
-            ItemType.Mace => SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Priest | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Rogue,
-            ItemType.Sword => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.Hunter | SpecializationGroups.Mage | SpecializationGroups.Warlock,
+            ItemType.Axe => SpecializationGroups.DeathKnight | SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter | SpecializationGroups.Rogue,
+            ItemType.Mace => SpecializationGroups.DeathKnight | SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Priest | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Rogue,
+            ItemType.Sword => SpecializationGroups.DeathKnight | SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Rogue | SpecializationGroups.Hunter | SpecializationGroups.Mage | SpecializationGroups.Warlock,
             _ => throw new ArgumentException("Item is not a one-handed weapon.", nameof(item))
         };
 

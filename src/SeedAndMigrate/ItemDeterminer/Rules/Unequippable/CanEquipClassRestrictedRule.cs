@@ -43,6 +43,7 @@ internal class CanEquipClassRestrictedRule : SimpleRule
             Classes.Mage => SpecializationGroups.Mage,
             Classes.Warlock => SpecializationGroups.Warlock,
             Classes.Druid => SpecializationGroups.Druid,
+            Classes.DeathKnight => SpecializationGroups.DeathKnight,
             _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
         };
     }

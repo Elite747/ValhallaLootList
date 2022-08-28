@@ -19,11 +19,9 @@ internal abstract class Rule : IDeterminationRule
 
     private IEnumerable<ItemDetermination> EnumerateDeterminations(Item item)
     {
-        for (int i = 1; Enum.IsDefined(typeof(Specializations), i); i <<= 1)
+        foreach (var spec in Enum.GetValues<Specializations>())
         {
-            var spec = (Specializations)i;
-
-            if ((spec & ApplicableSpecs()) == spec)
+            if (spec > 0 && (spec & ApplicableSpecs()) == spec)
             {
                 yield return MakeDetermination(item, spec);
             }

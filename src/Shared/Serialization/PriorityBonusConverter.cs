@@ -39,7 +39,7 @@ public class PriorityBonusConverter : JsonConverter<PriorityBonusDto>
         var type = reader.GetString() ?? string.Empty;
         var bonus = type switch
         {
-            PriorityBonusTypes.Attendance => new AttendancePriorityBonusDto(),
+            PriorityBonusTypes.Absence => new AbsencePriorityBonusDto(),
             PriorityBonusTypes.Donation => new DonationPriorityBonusDto(),
             PriorityBonusTypes.Lost => new LossPriorityBonusDto(),
             PriorityBonusTypes.Trial => new MembershipPriorityBonusDto(),
@@ -64,20 +64,11 @@ public class PriorityBonusConverter : JsonConverter<PriorityBonusDto>
                     case nameof(PriorityBonusDto.Value):
                         bonus.Value = reader.GetInt32();
                         break;
-                    case nameof(AttendancePriorityBonusDto.AttendancePerPoint) when bonus is AttendancePriorityBonusDto attendancePriorityBonus:
-                        attendancePriorityBonus.AttendancePerPoint = reader.GetInt32();
+                    case nameof(AbsencePriorityBonusDto.Absences) when bonus is AbsencePriorityBonusDto attendancePriorityBonus:
+                        attendancePriorityBonus.Absences = reader.GetInt32();
                         break;
-                    case nameof(AttendancePriorityBonusDto.Attended) when bonus is AttendancePriorityBonusDto attendancePriorityBonus:
-                        attendancePriorityBonus.Attended = reader.GetInt32();
-                        break;
-                    case nameof(AttendancePriorityBonusDto.ObservedAttendances) when bonus is AttendancePriorityBonusDto attendancePriorityBonus:
-                        attendancePriorityBonus.ObservedAttendances = reader.GetInt32();
-                        break;
-                    case nameof(DonationPriorityBonusDto.DonatedCopper) when bonus is DonationPriorityBonusDto donationPriorityBonus:
-                        donationPriorityBonus.DonatedCopper = reader.GetInt64();
-                        break;
-                    case nameof(DonationPriorityBonusDto.RequiredDonations) when bonus is DonationPriorityBonusDto donationPriorityBonus:
-                        donationPriorityBonus.RequiredDonations = reader.GetInt32();
+                    case nameof(DonationPriorityBonusDto.DonationTickets) when bonus is DonationPriorityBonusDto donationPriorityBonus:
+                        donationPriorityBonus.DonationTickets = reader.GetInt32();
                         break;
                     case nameof(LossPriorityBonusDto.TimesSeen) when bonus is LossPriorityBonusDto lossPriorityBonus:
                         lossPriorityBonus.TimesSeen = reader.GetInt32();
@@ -101,14 +92,11 @@ public class PriorityBonusConverter : JsonConverter<PriorityBonusDto>
 
         switch (value)
         {
-            case AttendancePriorityBonusDto bonus:
-                writer.WriteNumber(nameof(AttendancePriorityBonusDto.AttendancePerPoint), bonus.AttendancePerPoint);
-                writer.WriteNumber(nameof(AttendancePriorityBonusDto.Attended), bonus.Attended);
-                writer.WriteNumber(nameof(AttendancePriorityBonusDto.ObservedAttendances), bonus.ObservedAttendances);
+            case AbsencePriorityBonusDto bonus:
+                writer.WriteNumber(nameof(AbsencePriorityBonusDto.Absences), bonus.Absences);
                 break;
             case DonationPriorityBonusDto bonus:
-                writer.WriteNumber(nameof(DonationPriorityBonusDto.DonatedCopper), bonus.DonatedCopper);
-                writer.WriteNumber(nameof(DonationPriorityBonusDto.RequiredDonations), bonus.RequiredDonations);
+                writer.WriteNumber(nameof(DonationPriorityBonusDto.DonationTickets), bonus.DonationTickets);
                 break;
             case LossPriorityBonusDto bonus:
                 writer.WriteNumber(nameof(LossPriorityBonusDto.TimesSeen), bonus.TimesSeen);

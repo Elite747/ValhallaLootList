@@ -4,7 +4,7 @@
 namespace ValhallaLootList;
 
 [Flags]
-public enum Specializations
+public enum Specializations : long
 {
     None = 0,
     BalanceDruid = 1 << 0,
@@ -34,5 +34,11 @@ public enum Specializations
     CombatRogue = 1 << 24,
     SubtletyRogue = 1 << 25,
     DemoWarlock = 1 << 26,
-    DestroWarlock = 1 << 27
+    DestroWarlock = 1 << 27,
+    BloodDeathKnight = 1 << 28,
+    FrostDeathKnight = 1 << 29,
+    UnholyDeathKnight = 1 << 30,
+    BloodDeathKnightTank = 1 << 31,
+    FrostDeathKnightTank = 1L << 32,
+    UnholyDeathKnightTank = 1L << 33
 }

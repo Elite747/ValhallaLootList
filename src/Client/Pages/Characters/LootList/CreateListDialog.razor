@@ -5,7 +5,7 @@
         Select Your Specialization
     </TitleContent>
     <DialogContent>
-        <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="createListForm">
+        <EditForm OnSubmit="OnSubmitAsync" Model="_model" id="createListForm">
             <DataAnnotationsValidator />
             <ProblemValidator @ref="_problemValidator" />
             <MudSelect Label="Main Spec"
@@ -61,6 +61,7 @@
 
     [Parameter] public long CharacterId { get; set; }
     [Parameter] public byte Phase { get; set; }
+    [Parameter] public byte TeamSize { get; set; }
     [Parameter] public bool UpdateExisting { get; set; }
     [Parameter] public IList<Specializations> Specializations { get; set; } = null!;
     [Parameter] public Specializations DefaultMainSpec { get; set; }
@@ -74,19 +75,22 @@
 
         _model.MainSpec = DefaultMainSpec;
         _model.OffSpec = DefaultOffSpec;
+        _model.Size = TeamSize;
+        _model.Phase = Phase;
+        _model.CharacterId = CharacterId;
     }
 
     private Task OnSubmitAsync()
     {
         if (UpdateExisting)
         {
-            return Api.LootLists.SetSpec(CharacterId, Phase, _model)
+            return Api.LootLists.SetSpec(_model)
                 .OnSuccess(_ => Dialog.Close(DialogResult.Ok(_model)))
                 .ValidateWith(_problemValidator)
                 .ExecuteAsync();
         }
 
-        return Api.LootLists.Create(CharacterId, Phase, _model)
+        return Api.LootLists.Create(_model)
             .OnSuccess(lootList => Dialog.Close(DialogResult.Ok(lootList)))
             .ValidateWith(_problemValidator)
             .ExecuteAsync();

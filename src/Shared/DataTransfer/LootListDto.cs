@@ -25,6 +25,8 @@ public class LootListDto
 
     public byte Phase { get; set; }
 
+    public byte Size { get; set; }
+
     public LootListStatus Status { get; set; }
 
     public long? ApprovedBy { get; set; }

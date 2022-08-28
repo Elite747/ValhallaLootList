@@ -30,7 +30,7 @@
 </AuthorizeView>
 
 <MudText Inline="false">
-    Missed @Member.Absences raids this phase.
+    Missed @(Member.Absences == 1 ? "1 raid" : Member.Absences + " raids") this phase.
 </MudText>
 
 <MudText Inline="false">

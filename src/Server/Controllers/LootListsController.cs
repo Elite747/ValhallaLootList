@@ -1117,7 +1117,7 @@ public class LootListsController : ApiControllerV1
         }
 
         var lootLists = await _context.CharacterLootLists.AsNoTracking()
-            .Where(ll => ll.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && ll.Submissions.Any(s => s.TeamId == teamId)))
+            .Where(ll => ll.Size == team.TeamSize && (ll.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && ll.Submissions.Any(s => s.TeamId == teamId))))
             .Select(ll => new
             {
                 ll.ApprovedBy,
@@ -1183,7 +1183,7 @@ public class LootListsController : ApiControllerV1
         }
 
         await foreach (var entry in _context.LootListEntries.AsNoTracking()
-            .Where(e => e.LootList.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && e.LootList.Submissions.Any(s => s.TeamId == teamId)))
+            .Where(e => e.LootList.Size == team.TeamSize && (e.LootList.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && e.LootList.Submissions.Any(s => s.TeamId == teamId))))
             .Select(e => new
             {
                 e.Id,

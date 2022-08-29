@@ -8,7 +8,7 @@ namespace ValhallaLootList.Server.Data;
 public static class PrioCalculator
 {
     private const int _halfTrialPenalty = -9, _fullTrialPenalty = -18;
-    public const int MaxDonations = 2;
+    public const int MaxDonations = 3;
 
     public static IEnumerable<PriorityBonusDto> GetListBonuses(
         int absences,

@@ -1,0 +1,170 @@
+﻿@page "/admin/donations"
+@attribute [Authorize(AppPolicies.Administrator)]
+@inject ApiClient Api
+@inject UserTimeProvider TimeProvider
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<AppPageTitle Title="Donations" />
+<div class="d-flex align-center mb-3">
+    <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">Donations - @_date.ToString("MMM yyyy", CultureInfo.CurrentCulture)</MudText>
+</div>
+<ApiView Operation="_operation" BackgroundRefresh>
+    <MudPaper Elevation="5" Class="layout-container content">
+        <MudCardContent Class="d-flex align-center mb-3">
+
+            <MudTooltip Text="Previous Month">
+                <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.ChevronLeft" OnClick="GoPrevious" />
+            </MudTooltip>
+            <MudTooltip Text="Next Month">
+                <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.ChevronRight" OnClick="GoNext" />
+            </MudTooltip>
+            <MudTooltip Text="Refresh">
+                <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.Refresh" OnClick="Refresh" />
+            </MudTooltip>
+            <MudTooltip Text="Add Donation">
+                <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.Add" Color="Color.Success" OnClick="Add" />
+            </MudTooltip>
+            <InputFile OnChange="Import" hidden id="importinput" />
+            <MudTooltip Text="Import Donations">
+                <MudIconButton Class="mr-2" Icon="@Icons.Material.Filled.PostAdd" Color="Color.Success" HtmlTag="label" for="importinput" />
+            </MudTooltip>
+        </MudCardContent>
+        <MudTable Items="_operation!.GetResult()" FixedHeader Dense Hover Striped Bordered Class="content">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="(Func<DonationDto, object>)(donation => donation.CharacterName)">Character</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="(Func<DonationDto, object>)(donation => (donation.Unit, donation.Amount))">Donation</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="(Func<DonationDto, object>)(donation => donation.DonatedAt)">Donated At</MudTableSortLabel></MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Character">@context.CharacterName</MudTd>
+                <MudTd DataLabel="Donation">@context.Amount.ToString("N0", CultureInfo.CurrentCulture) @context.Unit</MudTd>
+                <MudTd DataLabel="Donated">@context.DonatedAt.ToString("f", CultureInfo.CurrentCulture)</MudTd>
+                <MudTd><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="() => Delete(context.Id)" /></MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</ApiView>
+
+@code {
+    private DateTimeOffset _date;
+    private IApiClientOperation<List<DonationDto>>? _operation;
+
+    protected override Task OnInitializedAsync()
+    {
+        return SetDate(TimeProvider.ServerNow.AddMonths(1));
+    }
+
+    private Task GoPrevious()
+    {
+        return SetDate(_date.AddMonths(-1));
+    }
+
+    private Task GoNext()
+    {
+        return SetDate(_date.AddMonths(1));
+    }
+
+    private Task Refresh()
+    {
+        return SetDate(_date);
+    }
+
+    private async Task SetDate(DateTimeOffset date)
+    {
+        _date = date;
+        _operation = Api.Donations.GetForMonth(date.Month, date.Year);
+        await _operation.ExecuteOrWaitAsync();
+    }
+
+    private async Task Add()
+    {
+        var donation = await DialogService.ShowAsync<AddDonationDialog, DonationDto>(
+            "Add Donation",
+            parameters: new()
+                {
+                    [nameof(AddDonationDialog.TargetMonth)] = _date.Month,
+                    [nameof(AddDonationDialog.TargetYear)] = _date.Year
+                },
+            options: new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (donation is not null)
+        {
+            _operation!.GetResult().Add(donation);
+        }
+    }
+
+    private async Task Import(InputFileChangeEventArgs e)
+    {
+        using var fs = e.File.OpenReadStream();
+
+        List<DonationImportRecord>? records;
+
+        if (e.File.ContentType == "application/json")
+        {
+            try
+            {
+                records = await System.Text.Json.JsonSerializer.DeserializeAsync<List<DonationImportRecord>>(fs);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+                records = null;
+            }
+        }
+        else
+        {
+            try
+            {
+                records = await ReadImportFromCsv(fs);
+            }
+            catch (CsvHelper.CsvHelperException ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+                records = null;
+            }
+        }
+
+        if (records?.Count > 0)
+        {
+            await Api.Donations.Import(new DonationImportDto { Records = records, TargetMonth = _date.Month, TargetYear = _date.Year })
+                .OnSuccess(donations => _operation?.GetResult().AddRange(donations))
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private async Task<List<DonationImportRecord>> ReadImportFromCsv(Stream stream)
+    {
+        using var reader = new StreamReader(stream);
+        using var parser = new CsvHelper.CsvReader(reader, CultureInfo.CurrentCulture);
+        parser.Context.RegisterClassMap<DonationMap>();
+
+        var result = new List<DonationImportRecord>();
+
+        await foreach (var record in parser.GetRecordsAsync<DonationImportRecord>())
+        {
+            result.Add(record);
+        }
+
+        return result;
+    }
+
+    private Task Delete(long id)
+    {
+        return Api.Donations.Delete(id)
+            .OnSuccess(_ => _operation?.GetResult().RemoveAll(r => r.Id == id))
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private class DonationMap : CsvHelper.Configuration.ClassMap<DonationImportRecord>
+    {
+        public DonationMap()
+        {
+            Map(d => d.CharacterName).Name("Name", "name");
+            Map(d => d.Unit).Name("Unit", "unit");
+            Map(d => d.Amount).Name("Amount", "amount", "Amt", "amt");
+        }
+    }
+}

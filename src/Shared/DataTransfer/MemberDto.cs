@@ -38,16 +38,3 @@ public class MemberDto
 
     public bool Disenchanter { get; set; }
 }
-
-public class DonationSubmissionDto
-{
-    public long CharacterId { get; set; }
-
-    public byte TargetMonth { get; set; }
-
-    public short TargetYear { get; set; }
-
-    public int Amount { get; set; }
-
-    public string? Unit { get; set; }
-}

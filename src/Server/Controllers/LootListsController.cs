@@ -1166,17 +1166,17 @@ public class LootListsController : ApiControllerV1
             .OrderBy(b => b.Index)
             .ToListAsync();
 
-        bool allowedToSeeRanks = false;
+        bool userIsOnTeam = false;
 
-        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.LeadershipOrAdmin);
+        var adminOrLeaderOfThisTeamAuthorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.LeadershipOrAdmin);
 
-        if (adminAuthorizationResult.Succeeded)
+        if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded)
         {
-            allowedToSeeRanks = true;
+            userIsOnTeam = true;
         }
         else
         {
-            allowedToSeeRanks = await _context.TeamMembers
+            userIsOnTeam = await _context.TeamMembers
                 .AsNoTracking()
                 .Where(tm => tm.Character!.OwnerId == userId && tm.TeamId == teamId)
                 .AnyAsync();
@@ -1223,9 +1223,9 @@ public class LootListsController : ApiControllerV1
                     Heroic = entry.Heroic
                 };
 
-                if (adminAuthorizationResult.Succeeded || // user is leadership/admin OR
+                if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded || // user is an admin or a leader of this team OR
                     list.Owned || // user owns this character OR
-                    (list.Status == LootListStatus.Locked && allowedToSeeRanks)) // user is on this team and the list is locked
+                    (list.Status == LootListStatus.Locked && userIsOnTeam)) // user is on this team and the list is locked
                 {
                     entryDto.Justification = entry.Justification;
                     entryDto.Rank = entry.Rank;
@@ -1332,22 +1332,20 @@ public class LootListsController : ApiControllerV1
             .OrderBy(b => b.Index)
             .ToListAsync();
 
-        bool allowedToSeeRanks = false;
+        List<long> userTeamLeaderships = new(), userTeamMemberships = new();
+        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
 
-        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.LeadershipOrAdmin);
-
-        if (adminAuthorizationResult.Succeeded)
+        if (!adminAuthorizationResult.Succeeded)
         {
-            allowedToSeeRanks = true;
-        }
-        else if (members.Count != 0)
-        {
-            var teamIds = members.Select(m => m.TeamId).Distinct().ToList();
+            await foreach (var teamId in _context.RaidTeamLeaders.Where(rtl => rtl.UserId == userId).Select(rtl => rtl.RaidTeamId).AsAsyncEnumerable())
+            {
+                userTeamLeaderships.Add(teamId);
+            }
 
-            allowedToSeeRanks = await _context.TeamMembers
-                .AsNoTracking()
-                .Where(tm => tm.Character!.OwnerId == userId && teamIds.Contains(tm.TeamId))
-                .AnyAsync();
+            await foreach (var teamId in _context.TeamMembers.Where(tm => tm.Character!.OwnerId == userId).Select(tm => tm.TeamId).AsAsyncEnumerable())
+            {
+                userTeamMemberships.Add(teamId);
+            }
         }
 
         await foreach (var entry in _context.LootListEntries.AsNoTracking()
@@ -1372,6 +1370,7 @@ public class LootListsController : ApiControllerV1
             var list = lootLists.Find(x => x.Size == entry.Size && x.Phase == entry.Phase);
             if (list is not null)
             {
+                var member = members.Find(m => m.TeamSize == list.Size);
                 var bonuses = new List<PriorityBonusDto>();
 
                 if (entry.ItemId.HasValue && !entry.Won)
@@ -1392,9 +1391,14 @@ public class LootListsController : ApiControllerV1
                     Heroic = entry.Heroic
                 };
 
-                if (adminAuthorizationResult.Succeeded || // user is leadership/admin OR
-                    list.Owned || // user owns this character OR
-                    (list.Status == LootListStatus.Locked && allowedToSeeRanks)) // user is on this team and the list is locked
+                if (AllowedToSeeRanks(
+                    isAdmin: adminAuthorizationResult.Succeeded,
+                    isOwned: list.Owned,
+                    status: list.Status,
+                    teamId: member?.TeamId,
+                    userMemberships: userTeamMemberships,
+                    userLeaderships: userTeamLeaderships,
+                    submittedTeams: list.SubmittedTo))
                 {
                     entryDto.Justification = entry.Justification;
                     entryDto.Rank = entry.Rank;
@@ -1437,5 +1441,40 @@ public class LootListsController : ApiControllerV1
         }
 
         return typedDtos;
+    }
+
+    private static bool AllowedToSeeRanks(bool isAdmin, bool isOwned, LootListStatus status, long? teamId, List<long> userMemberships, List<long> userLeaderships, List<long> submittedTeams)
+    {
+        // admins and character owners may always see rankings.
+        if (isAdmin || isOwned)
+        {
+            return true;
+        }
+
+        if (teamId.HasValue)
+        {
+            // leadership of the list's target team may always see rankings.
+            if (userLeaderships.Contains(teamId.Value))
+            {
+                return true;
+            }
+
+            // members of the list's target team may only see rankings when the list is locked.
+            if (status == LootListStatus.Locked && userMemberships.Contains(teamId.Value))
+            {
+                return true;
+            }
+        }
+
+        foreach (var submittedTeam in submittedTeams)
+        {
+            // leadership of a team gets temporary access to view rankings when the character submits the list to them.
+            if (userMemberships.Contains(submittedTeam))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -46,3 +46,5 @@ dotnet user-secrets set "Discord:BotToken" "<discord bot token>" -p src/server
 ### Conclusion
 
 Once these steps are taken, the project is ready to be run. Either start the `ValhallaLootList.Server` project in Visual Studio, or run it using `dotnet run -p src/server`.
+
+test

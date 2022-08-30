@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ValhallaLootList.Server.Data;
 
+[Obsolete("Passes counted from drops instead.")]
 public class DropPass
 {
     [Required]

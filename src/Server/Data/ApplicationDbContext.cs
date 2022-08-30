@@ -41,6 +41,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
     public virtual DbSet<LootListEntry> LootListEntries { get; set; } = null!;
     public virtual DbSet<LootListTeamSubmission> LootListTeamSubmissions { get; set; } = null!;
     public virtual DbSet<Drop> Drops { get; set; } = null!;
+    [Obsolete("Passes counted from drops instead.")]
     public virtual DbSet<DropPass> DropPasses { get; set; } = null!;
     public virtual DbSet<Instance> Instances { get; set; } = null!;
     public virtual DbSet<Item> Items { get; set; } = null!;
@@ -164,6 +165,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             e.HasOne(donation => donation.Character).WithMany(c => c.Donations).OnDelete(DeleteBehavior.Cascade);
         });
 
+#pragma warning disable CS0618 // Type or member is obsolete
         builder.Entity<DropPass>(e =>
         {
             e.HasKey(e => new { e.DropId, e.CharacterId });
@@ -171,6 +173,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             e.HasOne(dp => dp.LootListEntry).WithMany(lle => lle!.Passes).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(dp => dp.Removal).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
+#pragma warning restore CS0618 // Type or member is obsolete
 
         builder.Entity<Encounter>(e =>
         {

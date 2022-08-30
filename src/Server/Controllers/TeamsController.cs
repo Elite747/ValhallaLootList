@@ -439,12 +439,6 @@ public class TeamsController : ApiControllerV1
             attendance.RemovalId = removal.Id;
         }
 
-        await foreach (var pass in _context.DropPasses.AsTracking().Where(p => p.CharacterId == member.CharacterId && p.WonEntryId == null && p.RemovalId == null).AsAsyncEnumerable())
-        {
-            pass.Removal = removal;
-            pass.RemovalId = removal.Id;
-        }
-
         _context.TeamMembers.Remove(member);
         _context.TeamRemovals.Add(removal);
 

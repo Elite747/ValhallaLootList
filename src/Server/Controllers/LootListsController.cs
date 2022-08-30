@@ -1144,9 +1144,9 @@ public class LootListsController : ApiControllerV1
 
         var members = await _context.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId).ToListAsync();
 
-        var passes = await _context.DropPasses.AsNoTracking()
-            .Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null && pass.Character.Teams.Any(tm => tm.TeamId == teamId))
-            .Select(pass => new { pass.CharacterId, pass.RelativePriority, pass.LootListEntryId })
+        var passes = await _context.Drops.AsNoTracking()
+            .Where(drop => drop.EncounterKill.Raid.RaidTeamId == teamId)
+            .Select(drop => new { drop.ItemId, drop.EncounterKill.KilledAt })
             .ToListAsync();
 
         var bonusTable = await _context.GetBonusTableAsync(teamId, _serverTimeZoneInfo.TimeZoneNow());
@@ -1205,10 +1205,10 @@ public class LootListsController : ApiControllerV1
             {
                 var bonuses = new List<PriorityBonusDto>();
 
-                if (entry.ItemId.HasValue && !entry.Won)
+                if (entry.ItemId.HasValue && !entry.Won && members.Find(m => m.CharacterId == list.CharacterId) is { } member)
                 {
                     var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.LootListEntryId == entry.Id)));
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt)));
                 }
 
                 var entryDto = new LootListEntryDto
@@ -1301,13 +1301,10 @@ public class LootListsController : ApiControllerV1
 
         var members = await _context.TeamMembers.AsNoTracking()
             .Where(tm => tm.CharacterId == characterId)
-            .Select(tm => new { tm.Enchanted, tm.MemberStatus, tm.Prepared, tm.TeamId, tm.Team!.TeamSize, TeamName = tm.Team.Name })
+            .Select(tm => new { tm.Enchanted, tm.MemberStatus, tm.Prepared, tm.TeamId, tm.Team!.TeamSize, TeamName = tm.Team.Name, tm.JoinedAt })
             .ToListAsync();
 
-        var passes = await _context.DropPasses.AsNoTracking()
-            .Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null && pass.CharacterId == characterId)
-            .Select(pass => new { pass.Drop.EncounterKill.Raid.RaidTeamId, pass.RelativePriority, pass.LootListEntryId })
-            .ToListAsync();
+        var passesByTeam = new Dictionary<long, Dictionary<uint, int>>();
 
         if (members.Count != 0)
         {
@@ -1315,6 +1312,14 @@ public class LootListsController : ApiControllerV1
 
             foreach (var member in members)
             {
+                var passes = await _context.Drops.AsNoTracking()
+                    .Where(drop => drop.EncounterKill.Raid.RaidTeamId == member.TeamId && drop.EncounterKill.KilledAt >= member.JoinedAt && drop.EncounterKill.Characters.Any(cek => cek.CharacterId == characterId))
+                    .GroupBy(drop => drop.ItemId)
+                    .Select(g => new { ItemId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(g => g.ItemId, g => g.Count);
+
+                passesByTeam[member.TeamId] = passes;
+
                 var bonusTable = await _context.GetBonusTableAsync(member.TeamId, now, characterId);
 
                 if (bonusTable.TryGetValue(characterId, out var bonuses))
@@ -1373,10 +1378,14 @@ public class LootListsController : ApiControllerV1
                 var member = members.Find(m => m.TeamSize == list.Size);
                 var bonuses = new List<PriorityBonusDto>();
 
-                if (entry.ItemId.HasValue && !entry.Won)
+                if (entry.ItemId.HasValue && !entry.Won && member is not null && passesByTeam.TryGetValue(member.TeamId, out var passesByItem))
                 {
-                    var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.LootListEntryId == entry.Id)));
+                    if (entry.RewardFromId is null || !passesByItem.TryGetValue(entry.RewardFromId.Value, out int passes))
+                    {
+                        passesByItem.TryGetValue(entry.ItemId.Value, out passes);
+                    }
+
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes));
                 }
 
                 var entryDto = new LootListEntryDto

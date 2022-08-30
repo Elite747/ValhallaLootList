@@ -242,7 +242,7 @@
         var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
         foreach (var attendee in Raid.Attendees)
         {
-            // Unless importing, default characters as present if: 1. is RTO, 2. they were present for the last raid encounter kill, or 3. this is the first raid encounter.
+            // Unless importing, default characters as present if: 1. is standby, 2. they were present for the last raid encounter kill, or 3. this is the first raid encounter.
             SetPresent(attendee.Character, attendee.Standby || lastKill?.Characters.Contains(attendee.Character.Id) != false);
         }
     }
@@ -291,7 +291,7 @@
 
                 if (model.Characters?.Count > 0)
                 {
-                    // When importing, default all non-rto raiders as absent, and all rto raiders as present.
+                    // When importing, default all non-standby raiders as absent, and all standby raiders as present.
                     foreach (var attendee in Raid.Attendees)
                     {
                         SetPresent(attendee.Character, attendee.Standby);

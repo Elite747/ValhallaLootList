@@ -246,7 +246,7 @@ public class RaidsController : ApiControllerV1
         };
         raid.LocksAt = raid.StartedAt.AddHours(6);
 
-        var allCharacterIds = dto.Attendees.Concat(dto.Rto).ToList();
+        var allCharacterIds = dto.Attendees.Concat(dto.Standby).ToList();
 
         var characters = await _context.Characters.AsTracking().Where(c => allCharacterIds.Contains(c.Id)).Include(c => c.Teams).ToListAsync();
 
@@ -273,18 +273,18 @@ public class RaidsController : ApiControllerV1
             }
         }
 
-        for (int i = 0; i < dto.Rto.Count; i++)
+        for (int i = 0; i < dto.Standby.Count; i++)
         {
-            var charId = dto.Rto[i];
+            var charId = dto.Standby[i];
             var character = characters.Find(c => c.Id == charId);
 
             if (character is null)
             {
-                ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character does not exist.");
+                ModelState.AddModelError($"{nameof(dto.Standby)}[{i}]", "Character does not exist.");
             }
             else if (!character.Teams.Any(tm => tm.TeamId == team.Id))
             {
-                ModelState.AddModelError($"{nameof(dto.Rto)}[{i}]", "Character is not part of this team.");
+                ModelState.AddModelError($"{nameof(dto.Standby)}[{i}]", "Character is not part of this team.");
             }
             else
             {

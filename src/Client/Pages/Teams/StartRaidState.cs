@@ -9,5 +9,5 @@ public class StartRaidState
 {
     public Dictionary<long, CharacterDto> Attendees { get; } = new();
 
-    public Dictionary<long, CharacterDto> Rto { get; } = new();
+    public Dictionary<long, CharacterDto> Standby { get; } = new();
 }

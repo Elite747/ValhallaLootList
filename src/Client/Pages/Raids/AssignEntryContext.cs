@@ -49,7 +49,7 @@ public class AssignEntryContext
             Message = "Not on loot list!";
         }
 
-        Rto = attendance.Standby;
+        Standby = attendance.Standby;
 
         if (!kill.Characters.Contains(attendance.Character.Id))
         {
@@ -62,7 +62,7 @@ public class AssignEntryContext
 
     public bool Disabled { get; }
 
-    public bool Rto { get; }
+    public bool Standby { get; }
 
     public CharacterDto Character { get; }
 

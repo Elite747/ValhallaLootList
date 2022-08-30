@@ -6,12 +6,12 @@
 
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiView Operations="new IApiClientOperation[] { _instancesOperation, _charactersOperation }">
-        <WizardSection Name="RTO">
+        <WizardSection Name="Standby">
             <MudText Color="Color.Info">
-                RTO: 
-                @if (_rto.Count != 0)
+                Standby: 
+                @if (_standby.Count != 0)
                 {
-                    @string.Join(", ", _rto.Values.OrderBy(c => c.Name).Select(c => c.Name))
+                    @string.Join(", ", _standby.Values.OrderBy(c => c.Name).Select(c => c.Name))
                 }
                 else
                 {
@@ -27,8 +27,8 @@
                     {
                         <MemberChip Member="member"
                                     Phase="Phase"
-                                    IsSelected="_rto.ContainsKey(member.Character.Id)"
-                                    IsSelectedChanged="selected => SetRto(member.Character, selected)" />
+                                    IsSelected="_standby.ContainsKey(member.Character.Id)"
+                                    IsSelectedChanged="selected => SetStandby(member.Character, selected)" />
                     }
                 }
             </div>
@@ -116,7 +116,7 @@
 
                     @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
                     {
-                        @if (_rto.ContainsKey(member.Character.Id))
+                        @if (_standby.ContainsKey(member.Character.Id))
                         {
                             <MemberChip Disabled IsSelected Member="member" Phase="Phase" />
                         }
@@ -153,7 +153,7 @@
     private readonly List<string> _importWarnings = new();
     private string? _importString, _importError;
     private readonly Dictionary<long, CharacterDto> _absent = new();
-    private readonly Dictionary<long, CharacterDto> _rto = new();
+    private readonly Dictionary<long, CharacterDto> _standby = new();
     private readonly Dictionary<long, CharacterDto> _unrostered = new();
 
     [Parameter] public TeamDto Team { get; set; } = null!;
@@ -278,7 +278,7 @@
 
     private void SetAttending(CharacterDto character, bool attending)
     {
-        if (!_rto.ContainsKey(character.Id))
+        if (!_standby.ContainsKey(character.Id))
         {
             if (attending)
             {
@@ -302,21 +302,21 @@
         }
     }
 
-    private void SetRto(CharacterDto character, bool rto)
+    private void SetStandby(CharacterDto character, bool standby)
     {
         System.Diagnostics.Debug.Assert(character.Teams.Contains(Team.Id));
 
-        if (_rto.ContainsKey(character.Id))
+        if (_standby.ContainsKey(character.Id))
         {
-            if (!rto)
+            if (!standby)
             {
-                _rto.Remove(character.Id);
+                _standby.Remove(character.Id);
                 _absent[character.Id] = character;
             }
         }
-        else if (rto)
+        else if (standby)
         {
-            _rto[character.Id] = character;
+            _standby[character.Id] = character;
             _absent.Remove(character.Id);
         }
     }
@@ -327,7 +327,7 @@
 
         foreach (var rosteredId in Team.Roster.Select(m => m.Character.Id))
         {
-            if (!_rto.ContainsKey(rosteredId) && !_absent.ContainsKey(rosteredId))
+            if (!_standby.ContainsKey(rosteredId) && !_absent.ContainsKey(rosteredId))
             {
                 attendees.Add(rosteredId);
             }
@@ -338,7 +338,7 @@
         var dto = new RaidSubmissionDto
         {
             Attendees = attendees,
-            Rto = _rto.Keys.ToList(),
+                Standby = _standby.Keys.ToList(),
             Phase = Phase,
             TeamId = Team.Id
         };

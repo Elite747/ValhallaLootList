@@ -56,30 +56,32 @@
             @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase} (25-man)")" ID="(phase, 25)">
-                    @if (!character.Deactivated && character.Teams.Count < 2)
+                    @if (!character.Deactivated && _lootListsOperation!.GetResult().Any(ll => ll.Size == 25 && ll.TeamId is null))
                     {
-                        @if (_lootListsOperation?.HasResult() == true && _lootListsOperation.GetResult().Any(ll => ll.SubmittedTo.Count != 0))
-                        {
-                            <MudButton Disabled="!_phaseConfigOperation.HasResult()"
-                                       Variant="Variant.Text"
-                                       Color="Color.Error"
-                                       Size="Size.Medium"
-                                       Class="ml-2"
-                                       OnClick="() => RevokeAsync(25)">
-                                Cancel Team Applications
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
-                                       Variant="Variant.Text"
-                                       Color="Color.Success"
-                                       Size="Size.Medium"
-                                       Class="ml-2"
-                                       OnClick="() => ApplyAsync(25)">
-                                Apply to a Team
-                            </MudButton>
-                        }
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="character">
+                            @if (_lootListsOperation.GetResult().Any(ll => ll.Size == 25 && ll.SubmittedTo.Count != 0))
+                            {
+                                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
+                                           Variant="Variant.Text"
+                                           Color="Color.Error"
+                                           Size="Size.Medium"
+                                           Class="ml-2"
+                                           OnClick="() => RevokeAsync(25)">
+                                    Cancel Team Applications
+                                </MudButton>
+                            }
+                            else if (_lootListsOperation.GetResult().Any(ll => ll.Size == 25 && ll.SubmittedTo.Count == 0))
+                            {
+                                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
+                                           Variant="Variant.Text"
+                                           Color="Color.Success"
+                                           Size="Size.Medium"
+                                           Class="ml-2"
+                                           OnClick="() => ApplyAsync(25)">
+                                    Apply to a Team
+                                </MudButton>
+                            }
+                        </AuthorizeView>
                     }
                     <LootListPhase Character="character" Phase="phase" Size="25" LootLists="_lootListsOperation!.GetResult()" />
                 </MudTabPanel>
@@ -87,27 +89,32 @@
             @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
                 <MudTabPanel Text="@($"Phase {phase} (10-man)")" ID="(phase, 10)">
-                    @if (_lootListsOperation?.HasResult() == true && _lootListsOperation.GetResult().Any(ll => ll.SubmittedTo.Count != 0))
+                    @if (!character.Deactivated && _lootListsOperation!.GetResult().Any(ll => ll.Size == 10 && ll.TeamId is null))
                     {
-                        <MudButton Disabled="!_phaseConfigOperation.HasResult()"
-                           Variant="Variant.Text"
-                           Color="Color.Error"
-                           Size="Size.Medium"
-                           Class="ml-2"
-                           OnClick="() => RevokeAsync(10)">
-                            Cancel Team Applications
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
-                           Variant="Variant.Text"
-                           Color="Color.Success"
-                           Size="Size.Medium"
-                           Class="ml-2"
-                           OnClick="() => ApplyAsync(10)">
-                            Apply to a Team
-                        </MudButton>
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="character">
+                            @if (_lootListsOperation.GetResult().Any(ll => ll.Size == 10 && ll.SubmittedTo.Count != 0))
+                            {
+                                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
+                               Variant="Variant.Text"
+                               Color="Color.Error"
+                               Size="Size.Medium"
+                               Class="ml-2"
+                               OnClick="() => RevokeAsync(25)">
+                                    Cancel Team Applications
+                                </MudButton>
+                            }
+                            else if (_lootListsOperation.GetResult().Any(ll => ll.Size == 10 && ll.SubmittedTo.Count == 0))
+                            {
+                                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
+                               Variant="Variant.Text"
+                               Color="Color.Success"
+                               Size="Size.Medium"
+                               Class="ml-2"
+                               OnClick="() => ApplyAsync(25)">
+                                    Apply to a Team
+                                </MudButton>
+                            }
+                        </AuthorizeView>
                     }
                     <LootListPhase Character="character" Phase="phase" Size="10" LootLists="_lootListsOperation!.GetResult()" />
                 </MudTabPanel>

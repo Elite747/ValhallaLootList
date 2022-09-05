@@ -256,42 +256,6 @@ public class TeamsController : ApiControllerV1
         });
     }
 
-    [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.Recruiter)]
-    public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
-    {
-        if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
-        {
-            ModelState.AddModelError(nameof(dto.MemberStatus), "Unknown member status.");
-            return ValidationProblem();
-        }
-
-        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.Recruiter);
-
-        if (!auth.Succeeded)
-        {
-            return Unauthorized();
-        }
-
-        var member = await _context.TeamMembers.FindAsync(id, characterId);
-
-        if (member is null)
-        {
-            return NotFound();
-        }
-
-        member.MemberStatus = dto.MemberStatus;
-
-        await _context.SaveChangesAsync();
-
-        _telemetry.TrackEvent("TeamMemberStatusUpdated", User, props =>
-        {
-            props["TeamId"] = id.ToString();
-            props["CharacterId"] = characterId.ToString();
-        });
-
-        return Accepted();
-    }
-
     [HttpPut("{id:long}/members/{characterId:long}/enchanted")]
     public async Task<IActionResult> PutMemberEnchanted(long id, long characterId, [FromBody] UpdateEnchantedDto dto, [FromServices] MessageSender messageSender)
     {

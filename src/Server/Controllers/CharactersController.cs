@@ -333,7 +333,6 @@ public class CharactersController : ApiControllerV1
             CharacterId = character.Id,
             Disenchanter = false,
             Enchanted = false,
-            MemberStatus = RaidMemberStatus.FullTrial,
             Prepared = false,
             TeamId = removal.TeamId
         });

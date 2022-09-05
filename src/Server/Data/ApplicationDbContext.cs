@@ -71,6 +71,13 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
     public async Task<Dictionary<long, List<PriorityBonusDto>>> GetBonusTableAsync(long teamId, DateTimeOffset date, long? characterId = null)
     {
+        if (date.Hour < 3)
+        {
+            // as a correction for when raids run past midnight, treat dates passed in here within 2 hours of midnight as the previous day.
+            // This way bonuses don't change at midnight when a raid is still likely to be running.
+            date = date.AddHours(-date.Hour - 1);
+        }
+
         var team = await RaidTeams.FindAsync(teamId);
 
         Debug.Assert(team is not null);
@@ -97,16 +104,29 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
                 tm.JoinedAt,
                 tm.Prepared,
                 tm.Enchanted,
-                tm.MemberStatus,
                 Donations = tm.Character!.Donations.Count(d => d.TargetMonth == date.Month && d.TargetYear == date.Year)
             })
             .AsAsyncEnumerable())
         {
             var bonuses = results[member.CharacterId] = new();
 
+            int attendancesThisPhase = 0, attendancesTotal = 0;
+
+            foreach (var attendanceRecord in attendanceRecords)
+            {
+                if (attendanceRecord.CharacterId == member.CharacterId && attendanceRecord.StartedAt >= member.JoinedAt && attendanceRecord.StartedAt.Date < date.Date)
+                {
+                    attendancesTotal++;
+                    if (attendanceRecord.StartedAt >= currentPhaseStart)
+                    {
+                        attendancesThisPhase++;
+                    }
+                }
+            }
+
             bonuses.AddRange(PrioCalculator.GetListBonuses(
-                absences: raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt) - attendanceRecords.Count(attendance => attendance.StartedAt >= member.JoinedAt),
-                status: member.MemberStatus,
+                absences: raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt && raidDate.Date < date.Date) - attendancesThisPhase,
+                attendances: attendancesTotal,
                 donationTickets: member.Donations,
                 enchanted: member.Enchanted,
                 prepared: member.Prepared,

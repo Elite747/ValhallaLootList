@@ -12,14 +12,14 @@ public static class PrioCalculator
 
     public static IEnumerable<PriorityBonusDto> GetListBonuses(
         int absences,
-        RaidMemberStatus status,
+        int attendances,
         int donationTickets,
         bool enchanted,
         bool prepared,
         byte teamSize)
     {
         yield return GetAbsencePenalty(absences);
-        yield return GetTrialPenalty(status);
+        yield return GetTrialPenalty(teamSize, attendances);
 
         if (teamSize != 10)
         {
@@ -38,8 +38,10 @@ public static class PrioCalculator
             };
         }
 
-        static PriorityBonusDto GetTrialPenalty(RaidMemberStatus status)
+        static PriorityBonusDto GetTrialPenalty(byte teamSize, int attendances)
         {
+            var status = GetStatus(teamSize, attendances);
+
             return new MembershipPriorityBonusDto
             {
                 Type = PriorityBonusTypes.Trial,
@@ -47,8 +49,7 @@ public static class PrioCalculator
                 {
                     RaidMemberStatus.HalfTrial => _halfTrialPenalty,
                     RaidMemberStatus.FullTrial => _fullTrialPenalty,
-                    RaidMemberStatus.Member => 0,
-                    _ => throw new ArgumentOutOfRangeException(nameof(status))
+                    _ => 0,
                 },
                 Status = status
             };
@@ -90,6 +91,18 @@ public static class PrioCalculator
             Type = PriorityBonusTypes.Lost,
             Value = timesSeen,
             TimesSeen = timesSeen
+        };
+    }
+
+    public static RaidMemberStatus GetStatus(byte teamSize, int attendances)
+    {
+        return (teamSize, attendances) switch
+        {
+            (teamSize: 10, attendances: < 1) => RaidMemberStatus.FullTrial,
+            (teamSize: 10, attendances: < 2) => RaidMemberStatus.HalfTrial,
+            (teamSize: 25, attendances: < 2) => RaidMemberStatus.FullTrial,
+            (teamSize: 25, attendances: < 4) => RaidMemberStatus.HalfTrial,
+            _ => RaidMemberStatus.Member
         };
     }
 

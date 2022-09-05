@@ -11,8 +11,6 @@ public class TeamMember
 
     public long TeamId { get; set; }
 
-    public RaidMemberStatus MemberStatus { get; set; }
-
     public bool Enchanted { get; set; }
 
     public bool Prepared { get; set; }

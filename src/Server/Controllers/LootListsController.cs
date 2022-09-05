@@ -187,6 +187,7 @@ public class LootListsController : ApiControllerV1
             ApprovedBy = null,
             CharacterId = character.Id,
             CharacterName = character.Name,
+            CharacterMemberStatus = RaidMemberStatus.FullTrial,
             MainSpec = list.MainSpec,
             OffSpec = list.OffSpec,
             Phase = list.Phase,
@@ -203,9 +204,13 @@ public class LootListsController : ApiControllerV1
             if (bonusTable.TryGetValue(member.CharacterId, out var bonuses))
             {
                 returnDto.Bonuses = bonuses;
+
+                if (bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault() is { } membership)
+                {
+                    returnDto.CharacterMemberStatus = membership.Status;
+                }
             }
 
-            returnDto.CharacterMemberStatus = member.MemberStatus;
             returnDto.TeamId = member.TeamId;
         }
 
@@ -531,7 +536,6 @@ public class LootListsController : ApiControllerV1
         {
             JoinedAt = _serverTimeZoneInfo.TimeZoneNow(),
             TeamId = teamId,
-            MemberStatus = RaidMemberStatus.FullTrial,
             CharacterId = characterId,
             Disenchanter = false,
             Enchanted = false,
@@ -1251,7 +1255,7 @@ public class LootListsController : ApiControllerV1
                 ApprovedBy = list.ApprovedBy,
                 Bonuses = list.Bonuses,
                 CharacterId = list.CharacterId,
-                CharacterMemberStatus = members.Find(m => m.CharacterId == list.CharacterId)?.MemberStatus ?? RaidMemberStatus.FullTrial,
+                CharacterMemberStatus = list.Bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault()?.Status ?? RaidMemberStatus.FullTrial,
                 CharacterName = list.CharacterName,
                 Entries = list.Entries,
                 MainSpec = list.MainSpec,
@@ -1301,7 +1305,7 @@ public class LootListsController : ApiControllerV1
 
         var members = await _context.TeamMembers.AsNoTracking()
             .Where(tm => tm.CharacterId == characterId)
-            .Select(tm => new { tm.Enchanted, tm.MemberStatus, tm.Prepared, tm.TeamId, tm.Team!.TeamSize, TeamName = tm.Team.Name, tm.JoinedAt })
+            .Select(tm => new { tm.Enchanted, tm.Prepared, tm.TeamId, tm.Team!.TeamSize, TeamName = tm.Team.Name, tm.JoinedAt })
             .ToListAsync();
 
         var passesByTeam = new Dictionary<long, Dictionary<uint, int>>();
@@ -1434,7 +1438,7 @@ public class LootListsController : ApiControllerV1
                 ApprovedBy = list.ApprovedBy,
                 Bonuses = list.Bonuses,
                 CharacterId = list.CharacterId,
-                CharacterMemberStatus = member?.MemberStatus ?? RaidMemberStatus.FullTrial,
+                CharacterMemberStatus = list.Bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault()?.Status ?? RaidMemberStatus.FullTrial,
                 CharacterName = list.CharacterName,
                 Entries = list.Entries,
                 MainSpec = list.MainSpec,

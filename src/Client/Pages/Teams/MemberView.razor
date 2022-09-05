@@ -10,24 +10,7 @@
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
 </MudText>
 
-<AuthorizeView Policy="@AppPolicies.Recruiter" Resource="Team">
-    <Authorized>
-        <MudSelect T="RaidMemberStatus"
-                   Value="Member.Status"
-                   ValueChanged="OnStatusChangedAsync"
-                   Label="Status"
-                   ToStringFunc="GetDisplayString"
-                   FullWidth="true"
-                   Variant="Variant.Filled">
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
-        </MudSelect>
-    </Authorized>
-    <NotAuthorized>
-        <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
-    </NotAuthorized>
-</AuthorizeView>
+<MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
 
 <MudText Inline="false">
     Missed @(Member.Absences == 1 ? "1 raid" : Member.Absences + " raids") this phase.
@@ -96,18 +79,6 @@
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
         if (Member is null) throw new ArgumentNullException(nameof(Member));
-    }
-
-    private Task OnStatusChangedAsync(RaidMemberStatus status)
-    {
-        return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status })
-            .OnSuccess((_, _) =>
-            {
-                Member.Status = status;
-                return MemberUpdated.InvokeAsync();
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
     }
 
     private async Task RemoveAsync()

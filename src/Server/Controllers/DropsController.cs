@@ -277,7 +277,6 @@ public class DropsController : ApiControllerV1
         public long Id { get; init; }
         public string Name { get; init; } = string.Empty;
         public long? TeamId { get; init; }
-        public RaidMemberStatus MemberStatus { get; init; }
         public bool Enchanted { get; init; }
         public bool Prepared { get; init; }
         public List<TargetEntry> Entries { get; init; } = null!;
@@ -297,7 +296,6 @@ public class DropsController : ApiControllerV1
         Id = member.CharacterId,
         Name = member.Character!.Name,
         TeamId = member.TeamId,
-        MemberStatus = member.MemberStatus,
         Enchanted = member.Enchanted,
         Prepared = member.Prepared,
         Entries = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == member.Character.Id && (e.ItemId == itemId || e.Item!.RewardFromId == itemId))

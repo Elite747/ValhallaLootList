@@ -13,6 +13,14 @@ public static class HelperQueries
     public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, TimeZoneInfo timeZone, long teamId, byte teamSize, bool isLeader, long? characterId = null)
     {
         var now = timeZone.TimeZoneNow();
+
+        if (now.Hour < 3)
+        {
+            // as a correction for when raids run past midnight, treat dates passed in here within 2 hours of midnight as the previous day.
+            // This way bonuses don't change at midnight when a raid is still likely to be running.
+            now = now.AddHours(-now.Hour - 1);
+        }
+
         var thisMonth = new DateTime(now.Year, now.Month, 1);
         var nextMonth = thisMonth.AddMonths(1);
 
@@ -33,7 +41,6 @@ public static class HelperQueries
                 c.Character.Name,
                 c.Character.Race,
                 c.Character.IsFemale,
-                c.MemberStatus,
                 c.JoinedAt,
                 c.Enchanted,
                 c.Prepared,
@@ -68,7 +75,6 @@ public static class HelperQueries
                 },
                 Enchanted = character.Enchanted,
                 JoinedAt = character.JoinedAt,
-                Status = character.MemberStatus,
                 Prepared = character.Prepared,
                 Disenchanter = character.Disenchanter,
                 DonatedThisMonth = character.DonationsForThisMonth,
@@ -118,7 +124,22 @@ public static class HelperQueries
 
         foreach (var member in members)
         {
-            member.Absences = raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt) - attendanceRecords.Count(attendance => attendance.StartedAt >= member.JoinedAt);
+            int attendancesThisPhase = 0, attendancesTotal = 0;
+
+            foreach (var attendanceRecord in attendanceRecords)
+            {
+                if (attendanceRecord.CharacterId == member.Character.Id && attendanceRecord.StartedAt >= member.JoinedAt && attendanceRecord.StartedAt.Date < now.Date)
+                {
+                    attendancesTotal++;
+                    if (attendanceRecord.StartedAt >= currentPhaseStart)
+                    {
+                        attendancesThisPhase++;
+                    }
+                }
+            }
+
+            member.Absences = raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt && raidDate.Date < now.Date) - attendancesThisPhase;
+            member.Status = PrioCalculator.GetStatus(teamSize, attendancesTotal);
         }
 
         return members;

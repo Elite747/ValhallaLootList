@@ -19,7 +19,14 @@
     }
     else if (Bonus is DonationPriorityBonusDto donation)
     {
-        <span>Completed @donation.DonationTickets donations.</span>
+        @if (donation.DonationTickets == 1)
+        {
+            <span>Completed 1 donation</span>
+        }
+        else
+        {
+            <span>Completed @donation.DonationTickets donations</span>
+        }
     }
     else if (Bonus is LossPriorityBonusDto loss)
     {

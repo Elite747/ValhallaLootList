@@ -15,13 +15,18 @@ public static class PrioCalculator
         RaidMemberStatus status,
         int donationTickets,
         bool enchanted,
-        bool prepared)
+        bool prepared,
+        byte teamSize)
     {
         yield return GetAbsencePenalty(absences);
         yield return GetTrialPenalty(status);
-        yield return GetDonationBonus(donationTickets);
-        yield return GetEnchantedBonus(enchanted);
-        yield return GetPreparedBonus(prepared);
+
+        if (teamSize != 10)
+        {
+            yield return GetDonationBonus(donationTickets);
+            yield return GetEnchantedBonus(enchanted);
+            yield return GetPreparedBonus(prepared);
+        }
 
         static PriorityBonusDto GetAbsencePenalty(int absences)
         {

@@ -45,28 +45,31 @@
                             </ChildContent>
                         </MudTooltip>
                     }
-                    @if (!member.Enchanted)
+                    @if (Team.Size != 10)
                     {
-                        <MudTooltip Text="Gem & enchant bonus is not active">
-                            <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
-                        </MudTooltip>
-                    }
-                    @if (member is not { Prepared: true })
-                    {
-                        <MudTooltip Text="Prepared bonus is not active">
-                            <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
-                        </MudTooltip>
-                    }
-                    @if (member.DonatedNextMonth < member.MaximumDonationTickets)
-                    {
-                        <MudTooltip>
-                            <TooltipContent>
-                                Completed @member.DonatedNextMonth of @member.MaximumDonationTickets tickets for next month.
-                            </TooltipContent>
-                            <ChildContent>
-                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />
-                            </ChildContent>
-                        </MudTooltip>
+                        @if (!member.Enchanted)
+                        {
+                            <MudTooltip Text="Gem & enchant bonus is not active">
+                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
+                            </MudTooltip>
+                        }
+                        @if (member is not { Prepared: true })
+                        {
+                            <MudTooltip Text="Prepared bonus is not active">
+                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
+                            </MudTooltip>
+                        }
+                        @if (member.DonatedNextMonth < member.MaximumDonationTickets)
+                        {
+                            <MudTooltip>
+                                <TooltipContent>
+                                    Completed @member.DonatedNextMonth of @member.MaximumDonationTickets tickets for next month.
+                                </TooltipContent>
+                                <ChildContent>
+                                    <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />
+                                </ChildContent>
+                            </MudTooltip>
+                        }
                     }
                     @if (member.Status != RaidMemberStatus.Member)
                     {

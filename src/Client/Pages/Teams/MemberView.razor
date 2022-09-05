@@ -33,37 +33,40 @@
     Missed @(Member.Absences == 1 ? "1 raid" : Member.Absences + " raids") this phase.
 </MudText>
 
-<MudText Inline="false">
-    <MudIcon Class="text-icon" Icon="@CustomIcons.Diamond" />
-    Gem &amp; Enchant Bonus:
-    <MudText Inline Color="Member.Enchanted ? Color.Success : Color.Warning">
-        @(Member.Enchanted ? "Awarded" : "Not Awarded")
+@if (Team.Size != 10)
+{
+    <MudText Inline="false">
+        <MudIcon Class="text-icon" Icon="@CustomIcons.Diamond" />
+        Gem &amp; Enchant Bonus:
+        <MudText Inline Color="Member.Enchanted ? Color.Success : Color.Warning">
+            @(Member.Enchanted ? "Awarded" : "Not Awarded")
+        </MudText>
+        <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+            <MudIconButton OnClick="ToggleEnchantedAsync"
+                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Size="Size.Small"
+                           Color="Member.Enchanted ? Color.Error : Color.Success"
+                           Class="ml-2" />
+        </AuthorizeView>
     </MudText>
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        <MudIconButton OnClick="ToggleEnchantedAsync"
-                       Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
-                       Size="Size.Small"
-                       Color="Member.Enchanted ? Color.Error : Color.Success"
-                       Class="ml-2" />
-    </AuthorizeView>
-</MudText>
 
-<MudText Inline="false">
-    <MudIcon Class="text-icon" Icon="@CustomIcons.Illidan" />
-    Prepared Bonus:
-    <MudText Inline Color="Member.Prepared ? Color.Success : Color.Warning">
-        @(Member.Prepared ? "Awarded" : "Not Awarded")
+    <MudText Inline="false">
+        <MudIcon Class="text-icon" Icon="@CustomIcons.Illidan" />
+        Prepared Bonus:
+        <MudText Inline Color="Member.Prepared ? Color.Success : Color.Warning">
+            @(Member.Prepared ? "Awarded" : "Not Awarded")
+        </MudText>
+        <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+            <MudIconButton OnClick="TogglePreparedAsync"
+                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Size="Size.Small"
+                           Color="Member.Prepared ? Color.Error : Color.Success"
+                           Class="ml-2" />
+        </AuthorizeView>
     </MudText>
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        <MudIconButton OnClick="TogglePreparedAsync"
-                       Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
-                       Size="Size.Small"
-                       Color="Member.Prepared ? Color.Error : Color.Success"
-                       Class="ml-2" />
-    </AuthorizeView>
-</MudText>
 
-<DonationSummary Member="Member" />
+    <DonationSummary Member="Member" />
+}
 
 <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
     <MudCheckBox T="bool" Label="Disenchanter" Checked="Member.Disenchanter" CheckedChanged="ToggleDisenchanterAsync" />

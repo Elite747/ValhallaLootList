@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System.Diagnostics;
 using System.Linq.Expressions;
 using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Extensions;
@@ -70,6 +71,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
     public async Task<Dictionary<long, List<PriorityBonusDto>>> GetBonusTableAsync(long teamId, DateTimeOffset date, long? characterId = null)
     {
+        var team = await RaidTeams.FindAsync(teamId);
+
+        Debug.Assert(team is not null);
+
         var currentPhaseStart = await PhaseDetails.OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
 
         var attendanceRecords = await RaidAttendees.AsNoTracking()
@@ -104,7 +109,8 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
                 status: member.MemberStatus,
                 donationTickets: member.Donations,
                 enchanted: member.Enchanted,
-                prepared: member.Prepared));
+                prepared: member.Prepared,
+                teamSize: team.TeamSize));
         }
 
         return results;

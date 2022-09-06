@@ -28,26 +28,13 @@ public class MemberDto
 
     public bool Prepared { get; set; }
 
-    public long DonatedThisMonth { get; set; }
+    public int DonatedThisMonth { get; set; }
 
-    public long DonatedNextMonth { get; set; }
+    public int DonatedNextMonth { get; set; }
 
-    public long ThisMonthRequiredDonations { get; set; }
+    public int MaximumDonationTickets { get; set; }
 
-    public long NextMonthRequiredDonations { get; set; }
-
-    public int Attended { get; set; }
-
-    public int ObservedAttendances { get; set; }
+    public int Absences { get; set; }
 
     public bool Disenchanter { get; set; }
-}
-
-public class DonationSubmissionDto
-{
-    public long CharacterId { get; set; }
-
-    public int CopperAmount { get; set; }
-
-    public bool ApplyThisMonth { get; set; }
 }

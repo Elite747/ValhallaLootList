@@ -17,11 +17,11 @@ internal class CanEquipTwoHandWeaponRule : SimpleRule
     {
         var equippableSpecs = item.Type switch
         {
-            ItemType.Axe => SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
-            ItemType.Mace => SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior,
-            ItemType.Sword => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
-            ItemType.Polearm => SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
-            ItemType.Stave => SpecializationGroups.All & ~(SpecializationGroups.Paladin | SpecializationGroups.Rogue),
+            ItemType.Axe => SpecializationGroups.DeathKnight | SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+            ItemType.Mace => SpecializationGroups.DeathKnight | SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Shaman | SpecializationGroups.Warrior,
+            ItemType.Sword => SpecializationGroups.DeathKnight | SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+            ItemType.Polearm => SpecializationGroups.DeathKnight | SpecializationGroups.Druid | SpecializationGroups.Paladin | SpecializationGroups.Warrior | SpecializationGroups.Hunter,
+            ItemType.Stave => SpecializationGroups.All & ~(SpecializationGroups.Paladin | SpecializationGroups.Rogue | SpecializationGroups.DeathKnight),
             _ => throw new ArgumentException("Item is not a two-handed weapon.", nameof(item))
         };
 

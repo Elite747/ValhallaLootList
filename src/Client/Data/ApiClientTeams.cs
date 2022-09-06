@@ -36,11 +36,6 @@ public class ApiClientTeams
         return Client.CreateRequest<TeamSubmissionDto, TeamDto>(HttpMethod.Put, "api/v1/teams/" + teamId, submission);
     }
 
-    public IApiClientOperation UpdateMember(long teamId, long characterId, UpdateTeamMemberDto dto)
-    {
-        return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}", dto);
-    }
-
     public IApiClientOperation RemoveMember(long teamId, long characterId)
     {
         return Client.CreateRequest(HttpMethod.Delete, $"api/v1/teams/{teamId}/members/{characterId}");

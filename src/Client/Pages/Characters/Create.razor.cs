@@ -11,11 +11,11 @@ public partial class Create
 {
     private static readonly Dictionary<PlayerRace, Classes[]> _classLookup = new()
     {
-        [PlayerRace.Human] = new[] { Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warlock, Classes.Warrior },
-        [PlayerRace.Dwarf] = new[] { Classes.Hunter, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warrior },
-        [PlayerRace.NightElf] = new[] { Classes.Druid, Classes.Hunter, Classes.Priest, Classes.Rogue, Classes.Warrior },
-        [PlayerRace.Gnome] = new[] { Classes.Mage, Classes.Rogue, Classes.Warlock, Classes.Warrior },
-        [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior }
+        [PlayerRace.Human] = new[] { Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warlock, Classes.Warrior, Classes.DeathKnight },
+        [PlayerRace.Dwarf] = new[] { Classes.Hunter, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warrior, Classes.DeathKnight },
+        [PlayerRace.NightElf] = new[] { Classes.Druid, Classes.Hunter, Classes.Priest, Classes.Rogue, Classes.Warrior, Classes.DeathKnight },
+        [PlayerRace.Gnome] = new[] { Classes.Mage, Classes.Rogue, Classes.Warlock, Classes.Warrior, Classes.DeathKnight },
+        [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior, Classes.DeathKnight }
     };
 
     private static readonly Dictionary<Classes, PlayerRace[]> _raceLookup = new()
@@ -28,10 +28,12 @@ public partial class Create
         [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
         [Classes.Shaman] = new[] { PlayerRace.Draenei },
         [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
-        [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei }
+        [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei },
+        [Classes.DeathKnight] = _allRaces
     };
 
     private static readonly Classes[] _allClasses = new[] {
+            Classes.DeathKnight,
             Classes.Druid,
             Classes.Hunter,
             Classes.Mage,

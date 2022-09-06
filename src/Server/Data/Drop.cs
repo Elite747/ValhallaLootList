@@ -48,5 +48,6 @@ public class Drop
 
     public virtual LootListEntry? WinningEntry { get; set; }
 
+    [Obsolete("Passes counted from drops instead.")]
     public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
 }

@@ -7,11 +7,9 @@ public static class SpecializationsExtensions
 {
     public static IEnumerable<Specializations> Split(this Specializations specs)
     {
-        for (int i = 1; i <= 1 << 27; i <<= 1)
+        foreach (var spec in Enum.GetValues<Specializations>())
         {
-            Specializations spec = (Specializations)i;
-
-            if ((specs & spec) == spec)
+            if (spec > 0 && (specs & spec) == spec)
             {
                 yield return spec;
             }
@@ -20,8 +18,7 @@ public static class SpecializationsExtensions
 
     public static bool IsSingleSpecialization(this Specializations spec)
     {
-        int i = (int)spec;
-        return i > 0 && i <= (1 << 27) && (i & (i - 1)) == 0;
+        return spec > 0 && Enum.IsDefined(spec);
     }
 
     public static bool IsClass(this Specializations spec, Classes playerClass)
@@ -34,7 +31,7 @@ public static class SpecializationsExtensions
         return (spec & playerClass.ToSpecializations()) != 0;
     }
 
-    public static string GetDisplayName(this Specializations spec, bool includeClassName = false)
+    public static string GetDisplayName(this Specializations spec, bool includeClassName = false, bool shorten = false)
     {
         string specName = spec switch
         {
@@ -66,6 +63,12 @@ public static class SpecializationsExtensions
             Specializations.SubtletyRogue => "Subtlety",
             Specializations.DemoWarlock => "Demonology",
             Specializations.DestroWarlock => "Destruction",
+            Specializations.BloodDeathKnight => shorten ? "Blood" : "Blood (DPS)",
+            Specializations.BloodDeathKnightTank => shorten ? "Blood" : "Blood (Tank)",
+            Specializations.FrostDeathKnight => shorten ? "Frost" : "Frost (DPS)",
+            Specializations.FrostDeathKnightTank => shorten ? "Frost" : "Frost (Tank)",
+            Specializations.UnholyDeathKnight => shorten ? "Unholy" : "Unholy (DPS)",
+            Specializations.UnholyDeathKnightTank => shorten ? "Unholy" : "Unholy (Tank)",
             _ => throw new ArgumentOutOfRangeException(nameof(spec))
         };
 
@@ -90,6 +93,9 @@ public static class SpecializationsExtensions
             Specializations.EleShaman or Specializations.EnhanceShaman or Specializations.RestoShaman => "Shaman",
             Specializations.AfflictionWarlock or Specializations.DemoWarlock or Specializations.DestroWarlock => "Warlock",
             Specializations.ProtWarrior or Specializations.ArmsWarrior or Specializations.FuryWarrior => "Warrior",
+            Specializations.BloodDeathKnight or Specializations.BloodDeathKnightTank or
+            Specializations.FrostDeathKnight or Specializations.FrostDeathKnightTank or
+            Specializations.UnholyDeathKnight or Specializations.UnholyDeathKnightTank => "Death Knight",
             _ => throw new ArgumentOutOfRangeException(nameof(spec))
         };
     }
@@ -131,20 +137,27 @@ public static class SpecializationsExtensions
         return spec switch
         {
             // tanks
-            Specializations.BearDruid => 0,
-            Specializations.ProtPaladin => 1,
-            Specializations.ProtWarrior => 2,
+            Specializations.BloodDeathKnightTank => 0,
+            Specializations.FrostDeathKnightTank => 0,
+            Specializations.UnholyDeathKnightTank => 0,
+            Specializations.BearDruid => 1,
+            Specializations.ProtPaladin => 2,
+            Specializations.ProtWarrior => 3,
 
             // healers
-            Specializations.RestoDruid => 3,
-            Specializations.DiscPriest => 4,
-            Specializations.HolyPriest => 4,
+            Specializations.RestoDruid => 4,
+            Specializations.DiscPriest => 5,
+            Specializations.HolyPriest => 5,
             Specializations.HolyPaladin => 6,
             Specializations.RestoShaman => 7,
 
             // dps
-            Specializations.BalanceDruid => 8,
-            Specializations.CatDruid => 8,
+            Specializations.BloodDeathKnight => 8,
+            Specializations.FrostDeathKnight => 8,
+            Specializations.UnholyDeathKnight => 8,
+
+            Specializations.BalanceDruid => 9,
+            Specializations.CatDruid => 9,
 
             Specializations.BeastMasterHunter => 10,
             Specializations.MarksmanHunter => 10,

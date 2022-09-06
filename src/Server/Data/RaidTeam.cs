@@ -25,7 +25,9 @@ public class RaidTeam
 
     public bool Inactive { get; set; }
 
-    public virtual ICollection<Character> Roster { get; set; } = new HashSet<Character>();
+    public byte TeamSize { get; set; }
+
+    public virtual ICollection<TeamMember> Roster { get; set; } = new HashSet<TeamMember>();
 
     public virtual ICollection<RaidTeamSchedule> Schedules { get; set; } = new HashSet<RaidTeamSchedule>();
 

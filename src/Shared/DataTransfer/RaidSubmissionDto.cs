@@ -7,7 +7,7 @@ namespace ValhallaLootList.DataTransfer;
 
 public class RaidSubmissionDto : IValidatableObject
 {
-    private List<long>? _attendees, _rto;
+    private List<long>? _attendees, _standby;
 
     [Required]
     public long? TeamId { get; set; }
@@ -21,10 +21,10 @@ public class RaidSubmissionDto : IValidatableObject
         set => _attendees = value;
     }
 
-    public List<long> Rto
+    public List<long> Standby
     {
-        get => _rto ?? new();
-        set => _rto = value;
+        get => _standby ?? new();
+        set => _standby = value;
     }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

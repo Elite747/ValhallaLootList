@@ -20,7 +20,7 @@
                         Style="@(Entry.Won ? null : "cursor: move")">
                 @if (_over && Editor.DraggingEntry != Entry)
                 {
-                    <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
+                    <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : (Entry.Heroic ? CustomIcons.Skull : null))" Style="pointer-events: none" />
                 }
                 else
                 {
@@ -75,7 +75,7 @@ else if (!Entry.Won)
                     @ondragenter="OnDragEnter"
                     @ondragleave="OnDragLeave"
                     Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark">
-            <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : null)" Style="pointer-events: none" />
+            <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : (Entry.Heroic ? CustomIcons.Skull : null))" Style="pointer-events: none" />
         </MudAvatar>
         <div class="mr-2">
             <div><span>&nbsp;</span></div>
@@ -128,7 +128,7 @@ else if (!Entry.Won)
                 {
                     var item = Items.FirstOrDefault(item => item.Id == entry.ItemId.Value);
 
-                    if (item is not null)
+                    if (item is not null && item.Heroic == Entry.Heroic)
                     {
                         groupsInBracket.Add(new ItemGroup(item.Type, item.Slot));
                     }
@@ -138,7 +138,7 @@ else if (!Entry.Won)
 
         var spec = Editor.LootList.MainSpec | Editor.LootList.OffSpec;
 
-        var contextItems = Items.Where(item => !item.Restrictions.Any(r => r.Level == ItemRestrictionLevel.Unequippable && (r.Specs & spec) != 0));
+        var contextItems = Items.Where(item => item.Heroic == Entry.Heroic && !item.Restrictions.Any(r => r.Level == ItemRestrictionLevel.Unequippable && (r.Specs & spec) != 0));
 
         var selectedId = await DialogService.ShowAsync<SelectItemDialog, uint?>(
             "Select Item",

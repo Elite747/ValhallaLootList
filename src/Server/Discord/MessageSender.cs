@@ -102,10 +102,8 @@ public class MessageSender
         await NotifyApplicationStateChanged(character, team, approved: false, message);
     }
 
-    public async Task SendNewListMessagesAsync(CharacterLootList list)
+    public async Task SendNewListMessagesAsync(CharacterLootList list, RaidTeam team)
     {
-        var team = list.Character.Team;
-
         if (team is null)
         {
             throw new ArgumentException("Loot list's character must be assigned to a team.");
@@ -133,14 +131,14 @@ public class MessageSender
         await NotifyListStateChanged(character, list, approved: false, message);
     }
 
-    public async Task SendGemEnchantMessagesAsync(Character character, bool enchanted, string? message)
+    public async Task SendGemEnchantMessagesAsync(long teamId, long characterId, bool enchanted, string? message)
     {
-        await SendBonusMessageAsync("gem & enchant", character, enchanted, message);
+        await SendBonusMessageAsync("gem & enchant", teamId, characterId, enchanted, message);
     }
 
-    public async Task SendPreparedMessagesAsync(Character character, bool prepared, string? message)
+    public async Task SendPreparedMessagesAsync(long teamId, long characterId, bool prepared, string? message)
     {
-        await SendBonusMessageAsync("prepared", character, prepared, message);
+        await SendBonusMessageAsync("prepared", teamId, characterId, prepared, message);
     }
 
     private async Task NotifyApplicationStateChanged(Character character, RaidTeam team, bool approved, string? message)
@@ -210,9 +208,11 @@ public class MessageSender
         return userId.Value;
     }
 
-    private async Task SendBonusMessageAsync(string bonusName, Character character, bool awarded, string? message)
+    private async Task SendBonusMessageAsync(string bonusName, long teamId, long characterId, bool awarded, string? message)
     {
         var messageTargets = new HashSet<long>(capacity: 4);
+
+        var character = await _context.Characters.Where(c => c.Id == characterId).Select(c => new { c.Name, c.OwnerId }).FirstAsync();
 
         if (character.OwnerId > 0)
         {
@@ -221,7 +221,7 @@ public class MessageSender
 
         await foreach (var leaderId in _context.RaidTeamLeaders
             .AsNoTracking()
-            .Where(rtl => rtl.RaidTeamId == character.TeamId)
+            .Where(rtl => rtl.RaidTeamId == teamId)
             .Select(rtl => rtl.UserId)
             .AsAsyncEnumerable())
         {
@@ -273,7 +273,7 @@ public class MessageSender
         }
 
         var builder = new DiscordEmbedBuilder()
-            .WithColor(new DiscordColor("#8E24AA"))
+            .WithColor(new DiscordColor("#3949AB"))
             .WithAuthor(name: teamName, url: $"{request.Scheme}://{request.Host}{request.PathBase}/teams/{teamName}")
             .WithUrl($"{request.Scheme}://{request.Host}{request.PathBase}/raids/{raidId}")
             .WithDescription($"Killed <t:{killedAt.ToUnixTimeSeconds()}:f>");

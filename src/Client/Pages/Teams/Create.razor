@@ -7,6 +7,12 @@
             <ProblemValidator @ref="_problemValidator" />
 
             <MudTextField Label="Name" For="() => _team.Name" @bind-Value="_team.Name" Variant="Variant.Filled" />
+            
+            <MudSelect Label="Team Size" @bind-Value="_team.Size" Variant="Variant.Filled">
+                <MudSelectItem T="byte" Value="25">25-man</MudSelectItem>
+                <MudSelectItem T="byte" Value="10">10-man</MudSelectItem>
+            </MudSelect>
+
             <MudSwitch Label="Deactivate" @bind-Checked="_team.Inactive" Color="Color.Error" />
 
             @for (int i = 0; i < _team.Schedules.Count; i++)
@@ -45,7 +51,7 @@
 </MudDialog>
 
 @code {
-    private readonly TeamSubmissionDto _team = new();
+    private readonly TeamSubmissionDto _team = new() { Size = 25 };
     private ProblemValidator? _problemValidator;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
@@ -59,6 +65,7 @@
         {
             _team.Name = EditingTeam.Name;
             _team.Inactive = EditingTeam.Inactive;
+            _team.Size = EditingTeam.Size;
             _team.Schedules.Clear();
 
             foreach (var schedule in EditingTeam.Schedules)

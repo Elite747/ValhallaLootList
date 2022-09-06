@@ -17,6 +17,8 @@ public class ItemDto
 
     public InventorySlot Slot { get; set; }
 
+    public bool Heroic { get; set; }
+
     public ICollection<RestrictionDto> Restrictions { get; set; } = new List<RestrictionDto>();
 
     public uint? RewardFromId { get; set; }

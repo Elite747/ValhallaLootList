@@ -9,12 +9,21 @@
 <AuthorizeView Policy="@AppPolicies.Administrator">
     <MudNavGroup Title="Admin Tools" Icon="@Icons.Material.Filled.AdminPanelSettings">
         <MudNavLink Href="admin/audit">Raid Audit</MudNavLink>
+        <MudNavLink Href="admin/donations">Donations</MudNavLink>
     </MudNavGroup>
 </AuthorizeView>
 
-<MudNavGroup Title="Teams" Expanded="true" Icon="@Icons.Material.Filled.PeopleAlt">
-    <MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
-    @foreach (var team in TeamsSource.GetTeams())
+<MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
+
+<MudNavGroup Title="25-Man Teams" Expanded Icon="@Icons.Material.Filled.PeopleAlt">
+    @foreach (var team in TeamsSource.GetTeams(25))
+    {
+        <MudNavLink Href="@("teams/" + team.Name)">@team.Name</MudNavLink>
+    }
+</MudNavGroup>
+
+<MudNavGroup Title="10-Man Teams" Expanded Icon="@Icons.Material.Filled.PeopleAlt">
+    @foreach (var team in TeamsSource.GetTeams(10))
     {
         <MudNavLink Href="@("teams/" + team.Name)">@team.Name</MudNavLink>
     }

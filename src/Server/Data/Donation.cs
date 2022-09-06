@@ -21,17 +21,19 @@ public class Donation
 
     public DateTimeOffset DonatedAt { get; set; }
 
+    public byte TargetMonth { get; set; }
+
+    public short TargetYear { get; set; }
+
     public long EnteredById { get; set; }
 
-    public int CopperAmount { get; set; }
+    public int Amount { get; set; }
+
+    public string Unit { get; set; } = string.Empty;
 
     [Required]
     public long CharacterId { get; set; }
 
     [Required]
     public virtual Character Character { get; set; } = null!;
-
-    public long? RemovalId { get; set; }
-
-    public virtual TeamRemoval? Removal { get; set; }
 }

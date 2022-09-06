@@ -36,7 +36,6 @@ internal class TankGearShouldHaveDefensiveStatsRule : SimpleRule
             item.BlockValue > 0 ||
             item.Defense > 0 ||
             item.Dodge > 0 ||
-            item.HealthPer5 > 0 ||
             item.Parry > 0)
         {
             return true;

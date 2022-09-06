@@ -5,7 +5,7 @@
     <div class="d-flex align-center">
         @if (Entry.Won)
         {
-            <MudBadge Overlap Left Icon="@Icons.Material.Filled.Check" Color="Color.Success">
+            <MudBadge Overlap Origin="Origin.TopLeft" Icon="@Icons.Material.Filled.Check" Color="Color.Success">
                 <MudAvatar Rounded="true" Class="mr-2">
                     <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                 </MudAvatar>
@@ -28,7 +28,7 @@
                     }
                 </TooltipContent>
                 <ChildContent>
-                    <MudBadge Overlap Left Content="_prio" Color="Color.Info">
+                    <MudBadge Overlap Origin="Origin.TopLeft" Content="_prio" Color="Color.Info">
                         <MudAvatar Rounded="true" Class="mr-2">
                             <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
                         </MudAvatar>

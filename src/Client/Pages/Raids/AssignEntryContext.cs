@@ -46,18 +46,10 @@ public class AssignEntryContext
         else
         {
             Bonuses = Array.Empty<PriorityBonusDto>();
-
-            if (attendance.Character.TeamId == raid.TeamId)
-            {
-                Message = "Not on loot list!";
-            }
-            else
-            {
-                Message = "Not on this team!";
-            }
+            Message = "Not on loot list!";
         }
 
-        Rto = attendance.Rto;
+        Standby = attendance.Standby;
 
         if (!kill.Characters.Contains(attendance.Character.Id))
         {
@@ -70,7 +62,7 @@ public class AssignEntryContext
 
     public bool Disabled { get; }
 
-    public bool Rto { get; }
+    public bool Standby { get; }
 
     public CharacterDto Character { get; }
 

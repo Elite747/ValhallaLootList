@@ -41,6 +41,9 @@ public class SpecIcon : WowIcon
             Specializations.SubtletyRogue => "ability_stealth",
             Specializations.DemoWarlock => "spell_shadow_metamorphosis",
             Specializations.DestroWarlock => "spell_shadow_rainoffire",
+            Specializations.BloodDeathKnight or Specializations.BloodDeathKnightTank => "spell_deathknight_bloodpresence",
+            Specializations.FrostDeathKnight or Specializations.FrostDeathKnightTank => "spell_deathknight_frostpresence",
+            Specializations.UnholyDeathKnight or Specializations.UnholyDeathKnightTank => "spell_deathknight_unholypresence",
             _ => throw new ArgumentOutOfRangeException(nameof(Spec))
         };
     }

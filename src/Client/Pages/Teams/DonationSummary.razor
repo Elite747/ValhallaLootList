@@ -2,10 +2,10 @@
     <MudTooltip Text="This was what was donated last month for priority in the current month.">
         <MudText Inline="false">
             <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
-            This month's donations: <GameCurrencyDisplay Amount="Member.DonatedThisMonth" />
+            Completed @Member.DonatedThisMonth of @Member.MaximumDonationTickets donations for this month.
         </MudText>
     </MudTooltip>
-    @if (Member.DonatedThisMonth >= Member.ThisMonthRequiredDonations)
+    @if (Member.DonatedThisMonth >= Member.MaximumDonationTickets)
     {
         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
     }
@@ -14,25 +14,23 @@
     <MudTooltip>
         <TooltipContent>
             <p>This is what has been donated so far for next month.</p>
-            <p>Donate at least <GameCurrencyDisplay Amount="Member.NextMonthRequiredDonations" /> to get a donation priority bonus next month.</p>
+            <p>Complete up to @Member.MaximumDonationTickets donations before the end of the month to get a priority bonus next month.</p>
         </TooltipContent>
         <ChildContent>
             <MudText Inline="false">
                 <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
-                Next month's donations: <GameCurrencyDisplay Amount="Member.DonatedNextMonth" />
+                Completed @Member.DonatedNextMonth of @Member.MaximumDonationTickets donations for next month.
             </MudText>
         </ChildContent>
     </MudTooltip>
-    @if (Member.DonatedNextMonth >= Member.ThisMonthRequiredDonations)
+    @if (Member.DonatedNextMonth >= Member.MaximumDonationTickets)
     {
         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
     }
-    @ChildContent
 </div>
 
 @code {
     [Parameter] public MemberDto Member { get; set; } = null!;
-    [Parameter] public RenderFragment? ChildContent { get; set; }
 
     protected override void OnParametersSet()
     {

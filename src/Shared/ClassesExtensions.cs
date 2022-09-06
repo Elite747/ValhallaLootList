@@ -16,6 +16,7 @@ public static class ClassesExtensions
         Classes.Mage => "Mage",
         Classes.Warlock => "Warlock",
         Classes.Druid => "Druid",
+        Classes.DeathKnight => "Death Knight",
         _ => "Unknown"
     };
 
@@ -30,6 +31,7 @@ public static class ClassesExtensions
         Classes.Mage => "mage",
         Classes.Warlock => "warlock",
         Classes.Druid => "druid",
+        Classes.DeathKnight => "deathknight",
         _ => "unknown"
     };
 
@@ -44,6 +46,7 @@ public static class ClassesExtensions
         Classes.Mage => "#3FC7EB",
         Classes.Warlock => "#8788EE",
         Classes.Druid => "#FF7C0A",
+        Classes.DeathKnight => "#C41E3A",
         _ => "#000000"
     };
 
@@ -58,6 +61,7 @@ public static class ClassesExtensions
         Classes.Mage => true,
         Classes.Warlock => true,
         Classes.Druid => true,
+        Classes.DeathKnight => true,
         _ => false
     };
 
@@ -72,6 +76,7 @@ public static class ClassesExtensions
         Classes.Mage => SpecializationGroups.Mage,
         Classes.Warlock => SpecializationGroups.Warlock,
         Classes.Druid => SpecializationGroups.Druid,
+        Classes.DeathKnight => SpecializationGroups.DeathKnight,
         _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
     };
 
@@ -88,6 +93,7 @@ public static class ClassesExtensions
             Classes.Mage => 3,
             Classes.Warlock => 8,
             Classes.Druid => 1,
+            Classes.DeathKnight => 0,
             _ => int.MaxValue
         };
     }

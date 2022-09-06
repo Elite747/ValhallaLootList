@@ -3,7 +3,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<ApiExecutor Operation="() => Api.Items.Get(LootList.Phase)" Context="items">
+<ApiExecutor Operation="() => Api.Items.Get(LootList.Phase, LootList.Size)" Context="items">
     <LootListLayout LootList="LootList" ShowBracketRules="true">
         <HeaderContent> 
             @if (LootList.TeamId.HasValue) @*Only submit individual loot lists when already on a team.*@
@@ -76,6 +76,7 @@
                     {
                         [nameof(CreateListDialog.CharacterId)] = LootList.CharacterId,
                         [nameof(CreateListDialog.Phase)] = LootList.Phase,
+                        [nameof(CreateListDialog.TeamSize)] = LootList.Size,
                         [nameof(CreateListDialog.Specializations)] = specs,
                         [nameof(CreateListDialog.UpdateExisting)] = true,
                         [nameof(CreateListDialog.DefaultMainSpec)] = LootList.MainSpec,

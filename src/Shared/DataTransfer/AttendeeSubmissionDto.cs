@@ -10,5 +10,5 @@ public class AttendeeSubmissionDto
     [Required]
     public long? CharacterId { get; set; }
 
-    public bool Rto { get; set; }
+    public bool Standby { get; set; }
 }

@@ -5,17 +5,18 @@
             <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
         </Authorized>
         <NotAuthorized>
-            <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
+            <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
         </NotAuthorized>
     </AuthorizeView>
 }
 else
 {
-    <LootListViewer Character="Character" Phase="Phase" LootList="_lootList" OnListUpdated="UpdateLootList" />
+    <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnListUpdated="UpdateLootList" />
 }
 
 @code {
     [Parameter] public byte Phase { get; set; }
+    [Parameter] public byte Size { get; set; }
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
     private LootListDto? _lootList;
@@ -24,7 +25,7 @@ else
     {
         if (LootLists is null) throw new ArgumentNullException(nameof(LootLists));
         if (Character is null) throw new ArgumentNullException(nameof(Character));
-        _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase);
+        _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase && ll.Size == Size);
     }
 
     private void UpdateLootList(LootListDto? lootList)

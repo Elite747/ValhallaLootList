@@ -27,10 +27,10 @@
 
 <MudPaper Elevation="5">
     <MudList Clickable="true">
-        @foreach (var team in TeamsSource.GetTeams(_showInactive))
+        @foreach (var team in TeamsSource.GetTeams(includeInactive: _showInactive))
         {
             <MudListItem Href="@("teams/" + team.Name)">
-                <MudText Typo="Typo.h6" Inline="false" Color="team.Inactive ? Color.Error : default">@team.Name</MudText>
+                <MudText Typo="Typo.h6" Inline="false" Color="team.Inactive ? Color.Error : default">@team.Name (@team.Size-man)</MudText>
                 @foreach (var schedule in team.Schedules.OrderBy(s => s.Day >= DayOfWeek.Tuesday ? s.Day : (s.Day + 7)))
                 {
                     <ScheduleDisplay Schedule="schedule" Typo="Typo.caption" />

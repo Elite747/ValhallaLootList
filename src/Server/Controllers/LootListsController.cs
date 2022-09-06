@@ -2,9 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,11 +40,29 @@ public class LootListsController : ApiControllerV1
     }
 
     [HttpGet]
-    public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, byte? phase = null, bool? includeApplicants = null)
+    public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, bool? includeApplicants = null)
     {
         try
         {
-            var lootLists = await CreateDtosAsync(characterId, teamId, phase, includeApplicants);
+            List<LootListDto>? lootLists;
+
+            if (characterId.HasValue)
+            {
+                if (teamId.HasValue)
+                {
+                    return BadRequest("Either character or team id must be specified, but not both.");
+                }
+
+                lootLists = await CreateDtosForCharacterAsync(characterId.Value);
+            }
+            else if (teamId.HasValue)
+            {
+                lootLists = await CreateDtosForTeamAsync(teamId.Value, includeApplicants ?? false);
+            }
+            else
+            {
+                return BadRequest("Either character or team id must be specified.");
+            }
 
             if (lootLists is null)
             {
@@ -61,17 +77,17 @@ public class LootListsController : ApiControllerV1
         }
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}")]
-    public async Task<ActionResult<LootListDto>> Post(long characterId, byte phase, [FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
+    [HttpPost]
+    public async Task<ActionResult<LootListDto>> Post([FromBody] LootListSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator)
     {
-        var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == phase).OrderBy(b => b.Index).ToListAsync();
+        var bracketTemplates = await _context.Brackets.AsNoTracking().Where(b => b.Phase == dto.Phase).OrderBy(b => b.Index).ToListAsync();
 
         if (bracketTemplates.Count == 0)
         {
             return NotFound();
         }
 
-        var character = await _context.Characters.FindAsync(characterId);
+        var character = await _context.Characters.FindAsync(dto.CharacterId);
 
         if (character is null)
         {
@@ -89,9 +105,9 @@ public class LootListsController : ApiControllerV1
             return Problem("Character has been deactivated.");
         }
 
-        if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == phase))
+        if (await _context.CharacterLootLists.AsNoTracking().AnyAsync(ll => ll.CharacterId == character.Id && ll.Phase == dto.Phase && ll.Size == dto.Size))
         {
-            return Problem("A loot list for that character and phase already exists.");
+            return Problem("A loot list for that character, phase, and raid size already exists.");
         }
 
         if (!dto.MainSpec.IsClass(character.Class))
@@ -114,14 +130,15 @@ public class LootListsController : ApiControllerV1
             Status = LootListStatus.Editing,
             MainSpec = dto.MainSpec,
             OffSpec = dto.OffSpec,
-            Phase = phase
+            Phase = dto.Phase,
+            Size = dto.Size,
         };
 
         var entries = new List<LootListEntry>();
 
         var brackets = await _context.Brackets
             .AsNoTracking()
-            .Where(b => b.Phase == phase)
+            .Where(b => b.Phase == dto.Phase)
             .OrderBy(b => b.Index)
             .ToListAsync();
 
@@ -129,12 +146,24 @@ public class LootListsController : ApiControllerV1
         {
             for (byte rank = bracket.MinRank; rank <= bracket.MaxRank; rank++)
             {
-                for (int col = 0; col < bracket.MaxItems; col++)
+                for (int col = 0; col < bracket.NormalItems; col++)
                 {
                     var entry = new LootListEntry(idGenerator.CreateId())
                     {
                         LootList = list,
-                        Rank = rank
+                        Rank = rank,
+                        Heroic = false
+                    };
+                    _context.LootListEntries.Add(entry);
+                    entries.Add(entry);
+                }
+                for (int col = 0; col < bracket.HeroicItems; col++)
+                {
+                    var entry = new LootListEntry(idGenerator.CreateId())
+                    {
+                        LootList = list,
+                        Rank = rank,
+                        Heroic = true
                     };
                     _context.LootListEntries.Add(entry);
                     entries.Add(entry);
@@ -153,26 +182,37 @@ public class LootListsController : ApiControllerV1
             props["Phase"] = list.Phase.ToString();
         });
 
-        var scope = await _context.GetCurrentPriorityScopeAsync();
-        var now = _serverTimeZoneInfo.TimeZoneNow();
-        var donationMatrix = await _context.GetDonationMatrixAsync(d => d.CharacterId == characterId, scope);
-        var attendance = await _context.GetAttendanceForCharacterAsync(character, scope.ObservedAttendances);
-        var donations = donationMatrix.GetCreditForMonth(characterId, now);
-
         var returnDto = new LootListDto
         {
             ApprovedBy = null,
-            Bonuses = PrioCalculator.GetListBonuses(scope, attendance, character.MemberStatus, donations, character.Enchanted, character.Prepared).ToList(),
             CharacterId = character.Id,
-            CharacterMemberStatus = character.MemberStatus,
             CharacterName = character.Name,
+            CharacterMemberStatus = RaidMemberStatus.FullTrial,
             MainSpec = list.MainSpec,
             OffSpec = list.OffSpec,
             Phase = list.Phase,
+            Size = list.Size,
             Status = list.Status,
-            TeamId = character.TeamId,
             Timestamp = list.Timestamp
         };
+
+        var member = await _context.TeamMembers.Where(tm => tm.CharacterId == character.Id && tm.Team!.TeamSize == dto.Size).FirstOrDefaultAsync();
+        if (member is not null)
+        {
+            var bonusTable = await _context.GetBonusTableAsync(member.TeamId, _serverTimeZoneInfo.TimeZoneNow(), member.CharacterId);
+
+            if (bonusTable.TryGetValue(member.CharacterId, out var bonuses))
+            {
+                returnDto.Bonuses = bonuses;
+
+                if (bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault() is { } membership)
+                {
+                    returnDto.CharacterMemberStatus = membership.Status;
+                }
+            }
+
+            returnDto.TeamId = member.TeamId;
+        }
 
         if (returnDto.TeamId.HasValue)
         {
@@ -191,16 +231,17 @@ public class LootListsController : ApiControllerV1
                 Id = entry.Id,
                 Rank = entry.Rank,
                 AutoPass = entry.AutoPass,
+                Heroic = entry.Heroic
             });
         }
 
-        return CreatedAtAction(nameof(Get), new { characterId = character.Id, phase }, returnDto);
+        return CreatedAtAction(nameof(Get), new { characterId = character.Id, phase = dto.Phase, size = dto.Size }, returnDto);
     }
 
-    [HttpPut("Phase{phase:int}/{characterId:long}")]
-    public async Task<ActionResult> Put(long characterId, byte phase, [FromBody] LootListSubmissionDto dto)
+    [HttpPut]
+    public async Task<ActionResult> Put([FromBody] LootListSubmissionDto dto)
     {
-        var character = await _context.Characters.FindAsync(characterId);
+        var character = await _context.Characters.FindAsync(dto.CharacterId);
         if (character is null)
         {
             return NotFound();
@@ -212,7 +253,7 @@ public class LootListsController : ApiControllerV1
             return Unauthorized();
         }
 
-        var list = await _context.CharacterLootLists.FindAsync(characterId, phase);
+        var list = await _context.CharacterLootLists.FindAsync(dto.CharacterId, dto.Phase, dto.Size);
         if (list is null)
         {
             return NotFound();
@@ -261,9 +302,9 @@ public class LootListsController : ApiControllerV1
         {
             return Unauthorized();
         }
-        if (character.TeamId.HasValue)
+        if (await _context.TeamMembers.AnyAsync(tm => tm.CharacterId == characterId && tm.Team!.TeamSize == dto.Size))
         {
-            return Problem("This action is only available for characters not on a raid team.");
+            return Problem($"Character is already on a {dto.Size}-man team.");
         }
         if (character.Deactivated)
         {
@@ -279,7 +320,7 @@ public class LootListsController : ApiControllerV1
         var currentPhases = await GetCurrentPhasesAsync();
 
         var lootLists = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase))
+            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase) && ll.Size == dto.Size)
             .ToListAsync();
 
         if (lootLists.Count != currentPhases.Count)
@@ -301,7 +342,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListSize == dto.Size)
             .ToListAsync();
 
         foreach (var id in dto.SubmitTo)
@@ -314,6 +355,7 @@ public class LootListsController : ApiControllerV1
                     {
                         LootListCharacterId = characterId,
                         LootListPhase = phase,
+                        LootListSize = dto.Size,
                         TeamId = id
                     });
                 }
@@ -343,7 +385,7 @@ public class LootListsController : ApiControllerV1
 
         await _messageSender.SendNewApplicationMessagesAsync(character, dto.SubmitTo);
 
-        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) };
+        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = dto.Size };
     }
 
     [HttpPost("{characterId:long}/RevokeAll")]
@@ -359,9 +401,9 @@ public class LootListsController : ApiControllerV1
         {
             return Unauthorized();
         }
-        if (character.TeamId.HasValue)
+        if (await _context.TeamMembers.AnyAsync(tm => tm.CharacterId == characterId && tm.Team!.TeamSize == dto.Size))
         {
-            return Problem("This action is only available for characters not on a raid team.");
+            return Problem($"Character is already on a {dto.Size}-man team.");
         }
         if (character.Deactivated)
         {
@@ -372,7 +414,7 @@ public class LootListsController : ApiControllerV1
         var currentPhases = await GetCurrentPhasesAsync();
 
         var lootLists = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase))
+            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase) && ll.Size == dto.Size)
             .ToListAsync();
 
         if (lootLists.Count != currentPhases.Count)
@@ -390,7 +432,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListSize == dto.Size)
             .ToListAsync();
 
         _context.LootListTeamSubmissions.RemoveRange(submissions);
@@ -408,7 +450,7 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(lootLists);
 
-        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) };
+        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = dto.Size };
     }
 
     [HttpPost("{characterId:long}/ApproveAll/{teamId:long}")]
@@ -427,13 +469,17 @@ public class LootListsController : ApiControllerV1
         {
             return NotFound();
         }
+        if (team.TeamSize != dto.Size)
+        {
+            return Problem("Requested team size does not match the size of the team.");
+        }
         if (!await AuthorizeTeamAsync(team, AppPolicies.RaidLeaderOrAdmin))
         {
             return Unauthorized();
         }
-        if (character.TeamId.HasValue)
+        if (await _context.TeamMembers.AnyAsync(tm => tm.CharacterId == characterId && tm.Team!.TeamSize == dto.Size))
         {
-            return Problem("This action is only available for characters not on a raid team.");
+            return Problem($"Character is already on a {dto.Size}-man team.");
         }
         if (character.Deactivated)
         {
@@ -444,7 +490,7 @@ public class LootListsController : ApiControllerV1
         var currentPhases = await GetCurrentPhasesAsync();
 
         var lootLists = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase))
+            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase) && ll.Size == dto.Size)
             .ToListAsync();
 
         if (lootLists.Count != currentPhases.Count)
@@ -462,10 +508,10 @@ public class LootListsController : ApiControllerV1
 
         if (character.OwnerId > 0)
         {
-            var existingCharacterName = await _context.Characters
+            var existingCharacterName = await _context.TeamMembers
                 .AsNoTracking()
-                .Where(c => c.OwnerId == character.OwnerId && c.TeamId == team.Id)
-                .Select(c => c.Name)
+                .Where(tm => tm.Character!.OwnerId == character.OwnerId && tm.TeamId == team.Id)
+                .Select(tm => tm.Character!.Name)
                 .FirstOrDefaultAsync();
 
             if (existingCharacterName?.Length > 0)
@@ -476,7 +522,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListSize == dto.Size)
             .ToListAsync();
 
         if (submissions.Find(s => s.TeamId == teamId) is null)
@@ -486,9 +532,15 @@ public class LootListsController : ApiControllerV1
 
         _context.LootListTeamSubmissions.RemoveRange(submissions);
 
-        character.TeamId = teamId;
-        character.MemberStatus = RaidMemberStatus.FullTrial;
-        character.JoinedTeamAt = _serverTimeZoneInfo.TimeZoneNow();
+        _context.TeamMembers.Add(new()
+        {
+            JoinedAt = _serverTimeZoneInfo.TimeZoneNow(),
+            TeamId = teamId,
+            CharacterId = characterId,
+            Disenchanter = false,
+            Enchanted = false,
+            Prepared = false
+        });
 
         foreach (var list in lootLists)
         {
@@ -508,7 +560,8 @@ public class LootListsController : ApiControllerV1
         return new ApproveAllListsResponseDto
         {
             Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp),
-            Member = await TryGetMemberDtoAsync(character, team)
+            Member = await TryGetMemberDtoAsync(character, team),
+            Size = team.TeamSize
         };
     }
 
@@ -528,13 +581,13 @@ public class LootListsController : ApiControllerV1
         {
             return NotFound();
         }
+        if (team.TeamSize != dto.Size)
+        {
+            return Problem("Requested team size does not match the size of the team.");
+        }
         if (!await AuthorizeTeamAsync(team, AppPolicies.RaidLeaderOrAdmin))
         {
             return Unauthorized();
-        }
-        if (character.TeamId.HasValue)
-        {
-            return Problem("This action is only available for characters not on a raid team.");
         }
         if (character.Deactivated)
         {
@@ -544,7 +597,7 @@ public class LootListsController : ApiControllerV1
         var currentPhases = await GetCurrentPhasesAsync();
 
         var lootLists = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase))
+            .Where(ll => ll.CharacterId == characterId && currentPhases.Contains(ll.Phase) && ll.Size == dto.Size)
             .ToListAsync();
 
         if (!ValidateAllTimestamps(lootLists, dto.Timestamps, out byte invalidPhase))
@@ -554,7 +607,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListSize == dto.Size)
             .ToListAsync();
 
         if (submissions.Find(s => s.TeamId == teamId) is null)
@@ -583,16 +636,15 @@ public class LootListsController : ApiControllerV1
 
         await _messageSender.SendDeniedApplicationMessagesAsync(character, team, dto.Message);
 
-        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp) };
+        return new MultiTimestampDto { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Size = dto.Size };
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}/Submit")]
-    public async Task<ActionResult<TimestampDto>> Submit(long characterId, byte phase, [FromBody] TimestampDto dto)
+    [HttpPost("{characterId:long}/Submit")]
+    public async Task<ActionResult<TimestampDto>> Submit(long characterId, [FromBody] LootListActionDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
-            .ThenInclude(c => c.Team)
             .SingleOrDefaultAsync();
 
         if (list is null)
@@ -607,16 +659,21 @@ public class LootListsController : ApiControllerV1
         {
             return Problem("Character has been deactivated.");
         }
-        if (list.Character.Team is null)
-        {
-            return Problem("This action is only available for characters on a raid team.");
-        }
         if (!ValidateTimestamp(list, dto.Timestamp))
         {
             return Problem("The loot list has been changed. Refresh before trying again.");
         }
 
-        long teamId = list.Character.Team.Id;
+        var member = await _context.TeamMembers.AsTracking()
+            .Where(m => m.Team!.TeamSize == dto.Size && m.CharacterId == characterId)
+            .Include(m => m.Team)
+            .FirstOrDefaultAsync();
+
+        if (member is null)
+        {
+            return Problem("This action is only available for characters on a raid team.");
+        }
+
         list.ApprovedBy = null;
         switch (list.Status)
         {
@@ -633,60 +690,65 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == phase)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == dto.Phase && s.LootListSize == dto.Size)
             .ToListAsync();
 
-        if (submissions.Find(s => s.TeamId == teamId) is null)
+        if (submissions.Find(s => s.TeamId == member.TeamId) is null)
         {
             _context.LootListTeamSubmissions.Add(new()
             {
                 LootListCharacterId = characterId,
-                LootListPhase = phase,
-                TeamId = teamId
+                LootListPhase = dto.Phase,
+                LootListSize = dto.Size,
+                TeamId = member.TeamId
             });
             _context.LootListTeamSubmissions.RemoveRange(submissions);
         }
         else if (submissions.Count > 1)
         {
-            _context.LootListTeamSubmissions.RemoveRange(submissions.Where(s => s.TeamId != teamId));
+            _context.LootListTeamSubmissions.RemoveRange(submissions.Where(s => s.TeamId != member.TeamId));
         }
 
         await _context.SaveChangesAsync();
 
         TrackListStatusChange(list);
 
-        await _messageSender.SendNewListMessagesAsync(list);
+        await _messageSender.SendNewListMessagesAsync(list, member.Team!);
 
         return new TimestampDto { Timestamp = list.Timestamp };
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}/Revoke")]
-    public async Task<ActionResult<TimestampDto>> Revoke(long characterId, byte phase, [FromBody] TimestampDto dto)
+    [HttpPost("{characterId:long}/Revoke")]
+    public async Task<ActionResult<TimestampDto>> Revoke(long characterId, [FromBody] LootListActionDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
-            .ThenInclude(c => c.Team)
             .SingleOrDefaultAsync();
 
         if (list is null)
         {
             return NotFound();
         }
-        if (!await AuthorizeCharacterAsync(list.Character, AppPolicies.CharacterOwnerOrAdmin))
+
+        var member = await _context.TeamMembers.AsTracking()
+            .Where(m => m.Team!.TeamSize == dto.Size && m.CharacterId == characterId)
+            .Include(m => m.Team)
+            .FirstOrDefaultAsync();
+
+        if (member is null)
         {
-            if (list.Character.Team is null || !await AuthorizeTeamAsync(list.Character.Team, AppPolicies.RaidLeaderOrAdmin))
-            {
-                return Unauthorized();
-            }
+            return Problem("This action is only available for characters on a raid team.");
+        }
+
+        if (!await AuthorizeCharacterAsync(list.Character, AppPolicies.CharacterOwnerOrAdmin) &&
+            !await AuthorizeTeamAsync(member.Team!, AppPolicies.RaidLeaderOrAdmin))
+        {
+            return Unauthorized();
         }
         if (list.Character.Deactivated)
         {
             return Problem("Character has been deactivated.");
-        }
-        if (list.Character.Team is null)
-        {
-            return Problem("This action is only available for characters on a raid team.");
         }
         if (!ValidateTimestamp(list, dto.Timestamp))
         {
@@ -708,7 +770,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == phase)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == dto.Phase && s.LootListSize == dto.Size)
             .ToListAsync();
 
         _context.LootListTeamSubmissions.RemoveRange(submissions);
@@ -720,24 +782,30 @@ public class LootListsController : ApiControllerV1
         return new TimestampDto { Timestamp = list.Timestamp };
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}/Approve")]
-    public async Task<ActionResult<TimestampDto>> Approve(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto)
+    [HttpPost("{characterId:long}/Approve")]
+    public async Task<ActionResult<TimestampDto>> Approve(long characterId, [FromBody] ApproveOrRejectLootListDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
-            .ThenInclude(c => c.Team)
             .SingleOrDefaultAsync();
 
         if (list is null)
         {
             return NotFound();
         }
-        if (list.Character.Team is null)
+
+        var member = await _context.TeamMembers.AsTracking()
+            .Where(m => m.Team!.TeamSize == dto.Size && m.CharacterId == characterId)
+            .Include(m => m.Team)
+            .FirstOrDefaultAsync();
+
+        if (member is null)
         {
             return Problem("This action is only available for characters on a raid team.");
         }
-        if (!await AuthorizeTeamAsync(list.Character.Team, AppPolicies.RaidLeaderOrAdmin))
+
+        if (!await AuthorizeTeamAsync(member.Team!, AppPolicies.RaidLeaderOrAdmin))
         {
             return Unauthorized();
         }
@@ -770,7 +838,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == phase)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == dto.Phase && s.LootListSize == dto.Size)
             .ToListAsync();
 
         _context.LootListTeamSubmissions.RemoveRange(submissions);
@@ -784,24 +852,28 @@ public class LootListsController : ApiControllerV1
         return new TimestampDto { Timestamp = list.Timestamp };
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}/Reject")]
-    public async Task<ActionResult<TimestampDto>> Reject(long characterId, byte phase, [FromBody] ApproveOrRejectLootListDto dto)
+    [HttpPost("{characterId:long}/Reject")]
+    public async Task<ActionResult<TimestampDto>> Reject(long characterId, [FromBody] ApproveOrRejectLootListDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
-            .ThenInclude(c => c.Team)
             .SingleOrDefaultAsync();
 
         if (list is null)
         {
             return NotFound();
         }
-        if (list.Character.Team is null)
+        var member = await _context.TeamMembers.AsTracking()
+            .Where(m => m.Team!.TeamSize == dto.Size && m.CharacterId == characterId)
+            .Include(m => m.Team)
+            .FirstOrDefaultAsync();
+
+        if (member is null)
         {
             return Problem("This action is only available for characters on a raid team.");
         }
-        if (!await AuthorizeTeamAsync(list.Character.Team, AppPolicies.RaidLeaderOrAdmin))
+        if (!await AuthorizeTeamAsync(member.Team!, AppPolicies.RaidLeaderOrAdmin))
         {
             return Unauthorized();
         }
@@ -834,7 +906,7 @@ public class LootListsController : ApiControllerV1
 
         var submissions = await _context.LootListTeamSubmissions
             .AsTracking()
-            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == phase)
+            .Where(s => s.LootListCharacterId == characterId && s.LootListPhase == dto.Phase && s.LootListSize == dto.Size)
             .ToListAsync();
 
         _context.LootListTeamSubmissions.RemoveRange(submissions);
@@ -848,24 +920,28 @@ public class LootListsController : ApiControllerV1
         return new TimestampDto { Timestamp = list.Timestamp };
     }
 
-    [HttpPost("Phase{phase:int}/{characterId:long}/Lock")]
-    public async Task<ActionResult<TimestampDto>> Lock(long characterId, byte phase, [FromBody] TimestampDto dto)
+    [HttpPost("{characterId:long}/Lock")]
+    public async Task<ActionResult<TimestampDto>> Lock(long characterId, [FromBody] LootListActionDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
-            .ThenInclude(c => c.Team)
             .SingleOrDefaultAsync();
 
         if (list is null)
         {
             return NotFound();
         }
-        if (list.Character.Team is null)
+        var member = await _context.TeamMembers.AsTracking()
+            .Where(m => m.Team!.TeamSize == dto.Size && m.CharacterId == characterId)
+            .Include(m => m.Team)
+            .FirstOrDefaultAsync();
+
+        if (member is null)
         {
             return Problem("This action is only available for characters on a raid team.");
         }
-        if (!await AuthorizeTeamAsync(list.Character.Team, AppPolicies.RaidLeaderOrAdmin))
+        if (!await AuthorizeTeamAsync(member.Team!, AppPolicies.RaidLeaderOrAdmin))
         {
             return Unauthorized();
         }
@@ -896,11 +972,11 @@ public class LootListsController : ApiControllerV1
     }
 
     [Authorize(AppPolicies.Administrator)]
-    [HttpPost("Phase{phase:int}/{characterId:long}/Unlock")]
-    public async Task<ActionResult<TimestampDto>> Unlock(long characterId, byte phase, [FromBody] TimestampDto dto)
+    [HttpPost("{characterId:long}/Unlock")]
+    public async Task<ActionResult<TimestampDto>> Unlock(long characterId, [FromBody] LootListActionDto dto)
     {
         var list = await _context.CharacterLootLists.AsTracking()
-            .Where(ll => ll.CharacterId == characterId && ll.Phase == phase)
+            .Where(ll => ll.CharacterId == characterId && ll.Phase == dto.Phase && ll.Size == dto.Size)
             .Include(ll => ll.Character)
             .SingleOrDefaultAsync();
 
@@ -943,16 +1019,14 @@ public class LootListsController : ApiControllerV1
 
     private async Task<MemberDto?> TryGetMemberDtoAsync(Character character, RaidTeam team)
     {
-        var scope = await _context.GetCurrentPriorityScopeAsync();
         var members = await HelperQueries.GetMembersAsync(
             _context,
             _serverTimeZoneInfo,
-            _context.Characters.AsNoTracking().Where(c => c.Id == character.Id),
-            scope,
             team.Id,
-            team.Name,
-            isLeader: true);
-        return members.Count == 1 ? members[0] : null;
+            team.TeamSize,
+            isLeader: true,
+            characterId: character.Id);
+        return members.Find(m => m.Character.Id == character.Id);
     }
 
     private void TrackListStatusChange(List<CharacterLootList> lists, [CallerMemberName] string method = null!)
@@ -1035,108 +1109,60 @@ public class LootListsController : ApiControllerV1
         return true;
     }
 
-    private async Task<IList<LootListDto>?> CreateDtosAsync(long? characterId, long? teamId, byte? phase, bool? includeApplicants)
+    private async Task<List<LootListDto>?> CreateDtosForTeamAsync(long teamId, bool includeApplicants)
     {
-        var lootListQuery = _context.CharacterLootLists.AsNoTracking();
-        var passQuery = _context.DropPasses.AsNoTracking().Where(pass => !pass.WonEntryId.HasValue && pass.RemovalId == null);
-        var entryQuery = _context.LootListEntries.AsNoTracking();
-
-        var now = _serverTimeZoneInfo.TimeZoneNow();
-        var lastMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0).AddMonths(-1);
-
-        Expression<Func<Donation, bool>> donationPredicate;
-
-        if (characterId.HasValue)
-        {
-            if (teamId.HasValue)
-            {
-                throw new ArgumentException("Either characterId or teamId must be set, but not both.");
-            }
-
-            var character = await _context.Characters.AsNoTracking().Where(c => c.Id == characterId).Select(c => new { c.Id, c.TeamId }).FirstOrDefaultAsync();
-
-            if (character is null)
-            {
-                return null;
-            }
-
-            lootListQuery = lootListQuery.Where(ll => ll.CharacterId == characterId);
-            passQuery = passQuery.Where(p => p.CharacterId == characterId);
-            entryQuery = entryQuery.Where(e => e.LootList.CharacterId == characterId);
-            donationPredicate = d => d.CharacterId == characterId;
-            teamId = character.TeamId;
-        }
-        else if (teamId.HasValue)
-        {
-            if (await _context.RaidTeams.CountAsync(team => team.Id == teamId) == 0)
-            {
-                return null;
-            }
-
-            if (includeApplicants == true)
-            {
-                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId || ll.Submissions.Any(s => s.TeamId == teamId));
-                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId || e.LootList.Submissions.Any(s => s.TeamId == teamId));
-            }
-            else
-            {
-                lootListQuery = lootListQuery.Where(ll => ll.Character.TeamId == teamId);
-                entryQuery = entryQuery.Where(e => e.LootList.Character.TeamId == teamId);
-            }
-
-            passQuery = passQuery.Where(p => p.Character.TeamId == teamId);
-            donationPredicate = d => d.Character.TeamId == teamId;
-        }
-        else
-        {
-            throw new ArgumentException("Either characterId or teamId must be set.");
-        }
-
-        if (phase.HasValue)
-        {
-            lootListQuery = lootListQuery.Where(ll => ll.Phase == phase.Value);
-            entryQuery = entryQuery.Where(e => e.LootList.Phase == phase.Value);
-        }
-
         var userId = User.GetDiscordId();
 
-        var dtos = await lootListQuery
+        var team = await _context.RaidTeams.FindAsync(teamId);
+
+        if (team is null)
+        {
+            return null;
+        }
+
+        var lootLists = await _context.CharacterLootLists.AsNoTracking()
+            .Where(ll => ll.Size == team.TeamSize && (ll.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && ll.Submissions.Any(s => s.TeamId == teamId))))
             .Select(ll => new
             {
                 ll.ApprovedBy,
                 ll.CharacterId,
                 CharacterName = ll.Character.Name,
-                CharacterMemberStatus = ll.Character.MemberStatus,
-                CharacterEnchanted = ll.Character.Enchanted,
-                CharacterPrepared = ll.Character.Prepared,
-                ll.Character.TeamId,
-                TeamName = ll.Character.Team!.Name,
                 ll.Status,
                 ll.MainSpec,
                 ll.OffSpec,
                 ll.Phase,
+                ll.Size,
                 ll.Timestamp,
                 SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
                 Entries = new List<LootListEntryDto>(),
                 Bonuses = new List<PriorityBonusDto>(),
-                Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId,
+                Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId
             })
             .AsSingleQuery()
             .ToListAsync();
 
-        var passes = await passQuery
-            .Select(pass => new { pass.CharacterId, pass.RelativePriority, pass.LootListEntryId })
+        if (lootLists.Count == 0)
+        {
+            return new();
+        }
+
+        var members = await _context.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId).ToListAsync();
+
+        var passes = await _context.Drops.AsNoTracking()
+            .Where(drop => drop.EncounterKill.Raid.RaidTeamId == teamId)
+            .Select(drop => new { drop.ItemId, drop.EncounterKill.KilledAt })
             .ToListAsync();
 
-        var scope = await _context.GetCurrentPriorityScopeAsync();
-        var attendanceTable = teamId.HasValue ? await _context.GetAttendanceTableAsync(teamId.Value, scope.ObservedAttendances, characterId) : new();
-        var donationMatrix = await _context.GetDonationMatrixAsync(donationPredicate, scope);
+        var bonusTable = await _context.GetBonusTableAsync(teamId, _serverTimeZoneInfo.TimeZoneNow());
 
-        foreach (var dto in dtos)
+        foreach (var dto in lootLists)
         {
-            attendanceTable.TryGetValue(dto.CharacterId, out var attended);
-            var characterDonations = donationMatrix.GetCreditForMonth(dto.CharacterId, now);
-            dto.Bonuses.AddRange(PrioCalculator.GetListBonuses(scope, attended, dto.CharacterMemberStatus, characterDonations, dto.CharacterEnchanted, dto.CharacterPrepared));
+            var member = members.Find(m => m.CharacterId == dto.CharacterId);
+
+            if (member is not null && bonusTable.TryGetValue(member.CharacterId, out var bonuses))
+            {
+                dto.Bonuses.AddRange(bonuses);
+            }
         }
 
         var brackets = await _context.Brackets
@@ -1144,25 +1170,24 @@ public class LootListsController : ApiControllerV1
             .OrderBy(b => b.Index)
             .ToListAsync();
 
-        var ownedTeams = new HashSet<long>();
+        bool userIsOnTeam = false;
 
-        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.LeadershipOrAdmin);
+        var adminOrLeaderOfThisTeamAuthorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.LeadershipOrAdmin);
 
-        if (!adminAuthorizationResult.Succeeded)
+        if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded)
         {
-            // querying owned teams is only necessary when not an administrator.
-            await foreach (var ownedTeamId in _context.Characters
+            userIsOnTeam = true;
+        }
+        else
+        {
+            userIsOnTeam = await _context.TeamMembers
                 .AsNoTracking()
-                .Where(c => c.OwnerId == userId && c.TeamId.HasValue)
-                .Select(c => c.TeamId!.Value)
-                .Distinct()
-                .AsAsyncEnumerable())
-            {
-                ownedTeams.Add(ownedTeamId);
-            }
+                .Where(tm => tm.Character!.OwnerId == userId && tm.TeamId == teamId)
+                .AnyAsync();
         }
 
-        await foreach (var entry in entryQuery
+        await foreach (var entry in _context.LootListEntries.AsNoTracking()
+            .Where(e => e.LootList.Size == team.TeamSize && (e.LootList.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && e.LootList.Submissions.Any(s => s.TeamId == teamId))))
             .Select(e => new
             {
                 e.Id,
@@ -1171,6 +1196,7 @@ public class LootListsController : ApiControllerV1
                 ItemName = (string?)e.Item!.Name,
                 Won = e.DropId != null,
                 e.Rank,
+                e.Heroic,
                 e.AutoPass,
                 e.Justification,
                 e.LootList.Phase,
@@ -1178,15 +1204,15 @@ public class LootListsController : ApiControllerV1
             })
             .AsAsyncEnumerable())
         {
-            var dto = dtos.Find(x => x.CharacterId == entry.CharacterId && x.Phase == entry.Phase);
-            if (dto is not null)
+            var list = lootLists.Find(x => x.CharacterId == entry.CharacterId && x.Phase == entry.Phase);
+            if (list is not null)
             {
                 var bonuses = new List<PriorityBonusDto>();
 
-                if (entry.ItemId.HasValue && !entry.Won)
+                if (entry.ItemId.HasValue && !entry.Won && members.Find(m => m.CharacterId == list.CharacterId) is { } member)
                 {
                     var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.LootListEntryId == entry.Id)));
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt)));
                 }
 
                 var entryDto = new LootListEntryDto
@@ -1197,16 +1223,17 @@ public class LootListsController : ApiControllerV1
                     RewardFromId = entry.RewardFromId,
                     ItemName = entry.ItemName,
                     AutoPass = entry.AutoPass,
-                    Won = entry.Won
+                    Won = entry.Won,
+                    Heroic = entry.Heroic
                 };
 
-                if (adminAuthorizationResult.Succeeded || // user is leadership/admin OR
-                    dto.Owned || // user owns this character OR
-                    (dto.Status == LootListStatus.Locked && dto.TeamId.HasValue && ownedTeams.Contains(dto.TeamId.Value))) // user is on this team and the list is locked
+                if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded || // user is an admin or a leader of this team OR
+                    list.Owned || // user owns this character OR
+                    (list.Status == LootListStatus.Locked && userIsOnTeam)) // user is on this team and the list is locked
                 {
                     entryDto.Justification = entry.Justification;
                     entryDto.Rank = entry.Rank;
-                    if (brackets.Find(b => b.Phase == dto.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank) is { } bracket)
+                    if (brackets.Find(b => b.Phase == list.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank) is { } bracket)
                     {
                         entryDto.Bracket = bracket.Index;
                         entryDto.BracketAllowsOffspec = bracket.AllowOffspec;
@@ -1214,34 +1241,253 @@ public class LootListsController : ApiControllerV1
                     }
                 }
 
-                dto.Entries.Add(entryDto);
+                list.Entries.Add(entryDto);
             }
         }
 
-        var typedDtos = new List<LootListDto>(dtos.Count);
+        var typedDtos = new List<LootListDto>(lootLists.Count);
 
-        foreach (var data in dtos)
+        foreach (var list in lootLists)
         {
-            data.Entries.Sort((l, r) => string.CompareOrdinal(l.ItemName, r.ItemName));
+            list.Entries.Sort((l, r) => string.CompareOrdinal(l.ItemName, r.ItemName));
             typedDtos.Add(new LootListDto
             {
-                ApprovedBy = data.ApprovedBy,
-                Bonuses = data.Bonuses,
-                CharacterId = data.CharacterId,
-                CharacterMemberStatus = data.CharacterMemberStatus,
-                CharacterName = data.CharacterName,
-                Entries = data.Entries,
-                MainSpec = data.MainSpec,
-                OffSpec = data.OffSpec,
-                Phase = data.Phase,
-                Status = data.Status,
-                SubmittedTo = data.SubmittedTo,
-                TeamId = data.TeamId,
-                TeamName = data.TeamName,
-                Timestamp = data.Timestamp
+                ApprovedBy = list.ApprovedBy,
+                Bonuses = list.Bonuses,
+                CharacterId = list.CharacterId,
+                CharacterMemberStatus = list.Bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault()?.Status ?? RaidMemberStatus.FullTrial,
+                CharacterName = list.CharacterName,
+                Entries = list.Entries,
+                MainSpec = list.MainSpec,
+                OffSpec = list.OffSpec,
+                Phase = list.Phase,
+                Size = list.Size,
+                Status = list.Status,
+                SubmittedTo = list.SubmittedTo,
+                TeamId = teamId,
+                TeamName = team.Name,
+                Timestamp = list.Timestamp
             });
         }
 
         return typedDtos;
+    }
+
+    private async Task<List<LootListDto>?> CreateDtosForCharacterAsync(long characterId)
+    {
+        var userId = User.GetDiscordId();
+
+        var lootLists = await _context.CharacterLootLists.AsNoTracking()
+            .Where(ll => ll.CharacterId == characterId)
+            .Select(ll => new
+            {
+                ll.ApprovedBy,
+                ll.CharacterId,
+                CharacterName = ll.Character.Name,
+                ll.Status,
+                ll.MainSpec,
+                ll.OffSpec,
+                ll.Phase,
+                ll.Size,
+                ll.Timestamp,
+                SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
+                Entries = new List<LootListEntryDto>(),
+                Bonuses = new List<PriorityBonusDto>(),
+                Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId
+            })
+            .AsSingleQuery()
+            .ToListAsync();
+
+        if (lootLists.Count == 0)
+        {
+            return new();
+        }
+
+        var members = await _context.TeamMembers.AsNoTracking()
+            .Where(tm => tm.CharacterId == characterId)
+            .Select(tm => new { tm.Enchanted, tm.Prepared, tm.TeamId, tm.Team!.TeamSize, TeamName = tm.Team.Name, tm.JoinedAt })
+            .ToListAsync();
+
+        var passesByTeam = new Dictionary<long, Dictionary<uint, int>>();
+
+        if (members.Count != 0)
+        {
+            var now = _serverTimeZoneInfo.TimeZoneNow();
+
+            foreach (var member in members)
+            {
+                var passes = await _context.Drops.AsNoTracking()
+                    .Where(drop => drop.EncounterKill.Raid.RaidTeamId == member.TeamId && drop.EncounterKill.KilledAt >= member.JoinedAt && drop.EncounterKill.Characters.Any(cek => cek.CharacterId == characterId))
+                    .GroupBy(drop => drop.ItemId)
+                    .Select(g => new { ItemId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(g => g.ItemId, g => g.Count);
+
+                passesByTeam[member.TeamId] = passes;
+
+                var bonusTable = await _context.GetBonusTableAsync(member.TeamId, now, characterId);
+
+                if (bonusTable.TryGetValue(characterId, out var bonuses))
+                {
+                    foreach (var lootList in lootLists.Where(ll => ll.Size == member.TeamSize))
+                    {
+                        lootList.Bonuses.AddRange(bonuses);
+                    }
+                }
+            }
+        }
+
+        var brackets = await _context.Brackets
+            .AsNoTracking()
+            .OrderBy(b => b.Index)
+            .ToListAsync();
+
+        List<long> userTeamLeaderships = new(), userTeamMemberships = new();
+        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
+
+        if (!adminAuthorizationResult.Succeeded)
+        {
+            await foreach (var teamId in _context.RaidTeamLeaders.Where(rtl => rtl.UserId == userId).Select(rtl => rtl.RaidTeamId).AsAsyncEnumerable())
+            {
+                userTeamLeaderships.Add(teamId);
+            }
+
+            await foreach (var teamId in _context.TeamMembers.Where(tm => tm.Character!.OwnerId == userId).Select(tm => tm.TeamId).AsAsyncEnumerable())
+            {
+                userTeamMemberships.Add(teamId);
+            }
+        }
+
+        await foreach (var entry in _context.LootListEntries.AsNoTracking()
+            .Where(e => e.LootList.CharacterId == characterId)
+            .Select(e => new
+            {
+                e.Id,
+                e.ItemId,
+                e.Item!.RewardFromId,
+                e.Heroic,
+                ItemName = (string?)e.Item!.Name,
+                Won = e.DropId != null,
+                e.Rank,
+                e.AutoPass,
+                Justification = (string?)e.Justification,
+                e.LootList.Phase,
+                e.LootList.CharacterId,
+                e.LootList.Size
+            })
+            .AsAsyncEnumerable())
+        {
+            var list = lootLists.Find(x => x.Size == entry.Size && x.Phase == entry.Phase);
+            if (list is not null)
+            {
+                var member = members.Find(m => m.TeamSize == list.Size);
+                var bonuses = new List<PriorityBonusDto>();
+
+                if (entry.ItemId.HasValue && !entry.Won && member is not null && passesByTeam.TryGetValue(member.TeamId, out var passesByItem))
+                {
+                    if (entry.RewardFromId is null || !passesByItem.TryGetValue(entry.RewardFromId.Value, out int passes))
+                    {
+                        passesByItem.TryGetValue(entry.ItemId.Value, out passes);
+                    }
+
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes));
+                }
+
+                var entryDto = new LootListEntryDto
+                {
+                    Bonuses = bonuses,
+                    Id = entry.Id,
+                    ItemId = entry.ItemId,
+                    RewardFromId = entry.RewardFromId,
+                    ItemName = entry.ItemName,
+                    AutoPass = entry.AutoPass,
+                    Won = entry.Won,
+                    Heroic = entry.Heroic
+                };
+
+                if (AllowedToSeeRanks(
+                    isAdmin: adminAuthorizationResult.Succeeded,
+                    isOwned: list.Owned,
+                    status: list.Status,
+                    teamId: member?.TeamId,
+                    userMemberships: userTeamMemberships,
+                    userLeaderships: userTeamLeaderships,
+                    submittedTeams: list.SubmittedTo))
+                {
+                    entryDto.Justification = entry.Justification;
+                    entryDto.Rank = entry.Rank;
+                    if (brackets.Find(b => b.Phase == list.Phase && entry.Rank <= b.MaxRank && entry.Rank >= b.MinRank) is { } bracket)
+                    {
+                        entryDto.Bracket = bracket.Index;
+                        entryDto.BracketAllowsOffspec = bracket.AllowOffspec;
+                        entryDto.BracketAllowsTypeDuplicates = bracket.AllowTypeDuplicates;
+                    }
+                }
+
+                list.Entries.Add(entryDto);
+            }
+        }
+
+        var typedDtos = new List<LootListDto>(lootLists.Count);
+
+        foreach (var list in lootLists)
+        {
+            var member = members.Find(m => m.TeamSize == list.Size);
+            list.Entries.Sort((l, r) => string.CompareOrdinal(l.ItemName, r.ItemName));
+            typedDtos.Add(new LootListDto
+            {
+                ApprovedBy = list.ApprovedBy,
+                Bonuses = list.Bonuses,
+                CharacterId = list.CharacterId,
+                CharacterMemberStatus = list.Bonuses.OfType<MembershipPriorityBonusDto>().FirstOrDefault()?.Status ?? RaidMemberStatus.FullTrial,
+                CharacterName = list.CharacterName,
+                Entries = list.Entries,
+                MainSpec = list.MainSpec,
+                OffSpec = list.OffSpec,
+                Phase = list.Phase,
+                Size = list.Size,
+                Status = list.Status,
+                SubmittedTo = list.SubmittedTo,
+                TeamId = member?.TeamId,
+                TeamName = member?.TeamName,
+                Timestamp = list.Timestamp
+            });
+        }
+
+        return typedDtos;
+    }
+
+    private static bool AllowedToSeeRanks(bool isAdmin, bool isOwned, LootListStatus status, long? teamId, List<long> userMemberships, List<long> userLeaderships, List<long> submittedTeams)
+    {
+        // admins and character owners may always see rankings.
+        if (isAdmin || isOwned)
+        {
+            return true;
+        }
+
+        if (teamId.HasValue)
+        {
+            // leadership of the list's target team may always see rankings.
+            if (userLeaderships.Contains(teamId.Value))
+            {
+                return true;
+            }
+
+            // members of the list's target team may only see rankings when the list is locked.
+            if (status == LootListStatus.Locked && userMemberships.Contains(teamId.Value))
+            {
+                return true;
+            }
+        }
+
+        foreach (var submittedTeam in submittedTeams)
+        {
+            // leadership of a team gets temporary access to view rankings when the character submits the list to them.
+            if (userMemberships.Contains(submittedTeam))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

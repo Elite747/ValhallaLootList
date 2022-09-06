@@ -7,7 +7,7 @@ public static class PriorityBonusTypes
 {
     public const string
         Trial = nameof(Trial),
-        Attendance = nameof(Attendance),
+        Absence = nameof(Absence),
         Donation = nameof(Donation),
         Lost = nameof(Lost),
         Enchanted = nameof(Enchanted),

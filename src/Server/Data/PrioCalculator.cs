@@ -7,61 +7,61 @@ namespace ValhallaLootList.Server.Data;
 
 public static class PrioCalculator
 {
-    public static int CalculateAttendanceBonus(int attendances, PriorityScope scope)
-    {
-        return (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint);
-    }
+    private const int _halfTrialPenalty = -12, _fullTrialPenalty = -24;
+    public const int MaxDonations = 3;
 
     public static IEnumerable<PriorityBonusDto> GetListBonuses(
-        PriorityScope scope,
+        int absences,
         int attendances,
-        RaidMemberStatus status,
-        long donatedCopper,
+        int donationTickets,
         bool enchanted,
-        bool prepared)
+        bool prepared,
+        byte teamSize)
     {
-        yield return GetAttendanceBonus(scope, attendances);
-        yield return GetStatusBonus(scope, status);
-        yield return GetDonationBonus(scope, donatedCopper);
-        yield return GetEnchantedBonus(enchanted);
-        yield return GetPreparedBonus(prepared);
+        yield return GetAbsencePenalty(absences);
+        yield return GetTrialPenalty(teamSize, attendances);
 
-        static PriorityBonusDto GetAttendanceBonus(PriorityScope scope, int attendances)
+        if (teamSize != 10)
         {
-            return new AttendancePriorityBonusDto
+            yield return GetDonationBonus(donationTickets);
+            yield return GetEnchantedBonus(enchanted);
+            yield return GetPreparedBonus(prepared);
+        }
+
+        static PriorityBonusDto GetAbsencePenalty(int absences)
+        {
+            return new AbsencePriorityBonusDto
             {
-                Type = PriorityBonusTypes.Attendance,
-                Value = (int)Math.Floor((double)Math.Min(attendances, scope.ObservedAttendances) / scope.AttendancesPerPoint),
-                AttendancePerPoint = scope.AttendancesPerPoint,
-                Attended = attendances,
-                ObservedAttendances = scope.ObservedAttendances
+                Absences = absences,
+                Type = PriorityBonusTypes.Absence,
+                Value = Fib(absences - 1)
             };
         }
 
-        static PriorityBonusDto GetStatusBonus(PriorityScope scope, RaidMemberStatus status)
+        static PriorityBonusDto GetTrialPenalty(byte teamSize, int attendances)
         {
+            var status = GetStatus(teamSize, attendances);
+
             return new MembershipPriorityBonusDto
             {
                 Type = PriorityBonusTypes.Trial,
                 Value = status switch
                 {
-                    RaidMemberStatus.HalfTrial => scope.HalfTrialPenalty,
-                    RaidMemberStatus.FullTrial => scope.FullTrialPenalty,
-                    RaidMemberStatus.Member => 0,
-                    _ => throw new ArgumentOutOfRangeException(nameof(status))
+                    RaidMemberStatus.HalfTrial => _halfTrialPenalty,
+                    RaidMemberStatus.FullTrial => _fullTrialPenalty,
+                    _ => 0,
                 },
                 Status = status
             };
         }
 
-        static PriorityBonusDto GetDonationBonus(PriorityScope scope, long donatedCopper)
+        static PriorityBonusDto GetDonationBonus(int donationTickets)
         {
             return new DonationPriorityBonusDto
             {
+                DonationTickets = donationTickets,
                 Type = PriorityBonusTypes.Donation,
-                Value = donatedCopper >= scope.RequiredDonationCopper ? 1 : 0,
-                DonatedCopper = donatedCopper,
-                RequiredDonations = scope.RequiredDonationCopper
+                Value = donationTickets,
             };
         }
 
@@ -94,15 +94,32 @@ public static class PrioCalculator
         };
     }
 
-    public static IEnumerable<PriorityBonusDto> GetAllBonuses(
-        PriorityScope scope,
-        int attendances,
-        RaidMemberStatus status,
-        long donatedCopper,
-        int timesSeen,
-        bool enchanted,
-        bool prepared)
+    public static RaidMemberStatus GetStatus(byte teamSize, int attendances)
     {
-        return GetListBonuses(scope, attendances, status, donatedCopper, enchanted, prepared).Concat(GetItemBonuses(timesSeen));
+        return (teamSize, attendances) switch
+        {
+            (teamSize: 10, attendances: < 1) => RaidMemberStatus.FullTrial,
+            (teamSize: 10, attendances: < 2) => RaidMemberStatus.HalfTrial,
+            (teamSize: 25, attendances: < 2) => RaidMemberStatus.FullTrial,
+            (teamSize: 25, attendances: < 4) => RaidMemberStatus.HalfTrial,
+            _ => RaidMemberStatus.Member
+        };
+    }
+
+    private static int Fib(int i)
+    {
+        if (i <= 0)
+        {
+            return 0;
+        }
+
+        int left = 0, right = 1;
+
+        for (int i2 = 2; i2 <= i; i2++)
+        {
+            (left, right) = (right, left + right);
+        }
+
+        return right;
     }
 }

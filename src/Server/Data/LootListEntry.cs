@@ -37,5 +37,8 @@ public class LootListEntry
 
     public bool AutoPass { get; set; }
 
+    public bool Heroic { get; set; }
+
+    [Obsolete("Passes counted from drops instead.")]
     public virtual ICollection<DropPass> Passes { get; set; } = new HashSet<DropPass>();
 }

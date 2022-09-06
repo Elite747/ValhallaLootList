@@ -36,12 +36,14 @@ public class TeamsController : ApiControllerV1
     {
         return _context.RaidTeams
             .AsNoTracking()
-            .OrderBy(team => team.Name)
+            .OrderByDescending(team => team.TeamSize)
+            .ThenBy(team => team.Name)
             .Select(team => new TeamNameDto
             {
                 Id = team.Id,
                 Name = team.Name,
                 Inactive = team.Inactive,
+                Size = team.TeamSize,
                 Schedules = team.Schedules.Select(s => new ScheduleDto
                 {
                     Day = s.Day,
@@ -74,6 +76,7 @@ public class TeamsController : ApiControllerV1
             {
                 Id = team.Id,
                 Name = team.Name,
+                Size = team.TeamSize,
                 Inactive = team.Inactive,
                 Schedules = team.Schedules.Select(s => new ScheduleDto
                 {
@@ -91,10 +94,8 @@ public class TeamsController : ApiControllerV1
         }
 
         var leaderResult = await _authorizationService.AuthorizeAsync(User, team, AppPolicies.Leadership);
-        var scope = await _context.GetCurrentPriorityScopeAsync();
-        var characterQuery = _context.Characters.AsNoTracking().Where(c => c.TeamId == team.Id);
 
-        foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, characterQuery, scope, team.Id, team.Name, leaderResult.Succeeded))
+        foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, team.Id, team.Size, leaderResult.Succeeded))
         {
             team.Roster.Add(member);
         }
@@ -117,9 +118,15 @@ public class TeamsController : ApiControllerV1
             ModelState.AddModelError(nameof(dto.Schedules), "At least one raid day schedule must be entered.");
         }
 
+        if (dto.Size is not (10 or 25))
+        {
+            ModelState.AddModelError(nameof(dto.Size), "Size must be set to 10 or 25.");
+        }
+
         var team = new RaidTeam(idGenerator.CreateId())
         {
             Name = dto.Name,
+            TeamSize = dto.Size,
             Inactive = dto.Inactive
         };
 
@@ -177,6 +184,11 @@ public class TeamsController : ApiControllerV1
             ModelState.AddModelError(nameof(dto.Schedules), "At least one raid day schedule must be entered.");
         }
 
+        if (dto.Size is not (10 or 25))
+        {
+            ModelState.AddModelError(nameof(dto.Size), "Size must be set to 10 or 25.");
+        }
+
         var team = await _context.RaidTeams.FindAsync(id);
 
         if (team is null)
@@ -186,6 +198,7 @@ public class TeamsController : ApiControllerV1
 
         team.Name = dto.Name;
         team.Inactive = dto.Inactive;
+        team.TeamSize = dto.Size;
 
         var schedules = await _context.RaidTeamSchedules.AsTracking().Where(s => s.RaidTeam == team).OrderBy(s => s.Id).ToListAsync();
 
@@ -243,56 +256,6 @@ public class TeamsController : ApiControllerV1
         });
     }
 
-    [HttpPut("{id:long}/members/{characterId:long}"), Authorize(AppPolicies.Recruiter)]
-    public async Task<IActionResult> PutMember(long id, long characterId, [FromBody] UpdateTeamMemberDto dto)
-    {
-        if (dto.MemberStatus < RaidMemberStatus.Member || dto.MemberStatus > RaidMemberStatus.FullTrial)
-        {
-            ModelState.AddModelError(nameof(dto.MemberStatus), "Unknown member status.");
-            return ValidationProblem();
-        }
-
-        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.Recruiter);
-
-        if (!auth.Succeeded)
-        {
-            return Unauthorized();
-        }
-
-        var team = await _context.RaidTeams.FindAsync(id);
-
-        if (team is null)
-        {
-            return NotFound();
-        }
-
-        var character = await _context.Characters.FindAsync(characterId);
-
-        if (character is null)
-        {
-            return NotFound();
-        }
-
-        if (character.TeamId != id)
-        {
-            return Problem("Character is not assigned to this team.");
-        }
-
-        character.MemberStatus = dto.MemberStatus;
-
-        await _context.SaveChangesAsync();
-
-        _telemetry.TrackEvent("TeamMemberStatusUpdated", User, props =>
-        {
-            props["TeamId"] = team.Id.ToString();
-            props["TeamName"] = team.Name;
-            props["CharacterId"] = character.Id.ToString();
-            props["CharacterName"] = character.Name;
-        });
-
-        return Accepted();
-    }
-
     [HttpPut("{id:long}/members/{characterId:long}/enchanted")]
     public async Task<IActionResult> PutMemberEnchanted(long id, long characterId, [FromBody] UpdateEnchantedDto dto, [FromServices] MessageSender messageSender)
     {
@@ -303,44 +266,30 @@ public class TeamsController : ApiControllerV1
             return Unauthorized();
         }
 
-        var team = await _context.RaidTeams.FindAsync(id);
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
 
-        if (team is null)
+        if (member is null)
         {
             return NotFound();
         }
 
-        var character = await _context.Characters.FindAsync(characterId);
-
-        if (character is null)
-        {
-            return NotFound();
-        }
-
-        if (character.TeamId != id)
-        {
-            return Problem("Character is not assigned to this team.");
-        }
-
-        if (character.Enchanted == dto.Enchanted)
+        if (member.Enchanted == dto.Enchanted)
         {
             return Problem(dto.Enchanted ? "Character is already marked as enchanted." : "Character's enchanted status is already removed.");
         }
 
-        character.Enchanted = dto.Enchanted;
+        member.Enchanted = dto.Enchanted;
 
         await _context.SaveChangesAsync();
 
         _telemetry.TrackEvent("TeamMemberEnchantedUpdated", User, props =>
         {
-            props["TeamId"] = team.Id.ToString();
-            props["TeamName"] = team.Name;
-            props["CharacterId"] = character.Id.ToString();
-            props["CharacterName"] = character.Name;
+            props["TeamId"] = id.ToString();
+            props["CharacterId"] = characterId.ToString();
             props["Enchanted"] = dto.Enchanted.ToString();
         });
 
-        await messageSender.SendGemEnchantMessagesAsync(character, dto.Enchanted, dto.Message);
+        await messageSender.SendGemEnchantMessagesAsync(id, characterId, dto.Enchanted, dto.Message);
 
         return Accepted();
     }
@@ -355,44 +304,30 @@ public class TeamsController : ApiControllerV1
             return Unauthorized();
         }
 
-        var team = await _context.RaidTeams.FindAsync(id);
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
 
-        if (team is null)
+        if (member is null)
         {
             return NotFound();
         }
 
-        var character = await _context.Characters.FindAsync(characterId);
-
-        if (character is null)
-        {
-            return NotFound();
-        }
-
-        if (character.TeamId != id)
-        {
-            return Problem("Character is not assigned to this team.");
-        }
-
-        if (character.Prepared == dto.Prepared)
+        if (member.Prepared == dto.Prepared)
         {
             return Problem(dto.Prepared ? "Character is already marked as prepared." : "Character's prepared status is already removed.");
         }
 
-        character.Prepared = dto.Prepared;
+        member.Prepared = dto.Prepared;
 
         await _context.SaveChangesAsync();
 
         _telemetry.TrackEvent("TeamMemberPreparedUpdated", User, props =>
         {
-            props["TeamId"] = team.Id.ToString();
-            props["TeamName"] = team.Name;
-            props["CharacterId"] = character.Id.ToString();
-            props["CharacterName"] = character.Name;
+            props["TeamId"] = member.TeamId.ToString();
+            props["CharacterId"] = member.CharacterId.ToString();
             props["Prepared"] = dto.Prepared.ToString();
         });
 
-        await messageSender.SendPreparedMessagesAsync(character, dto.Prepared, dto.Message);
+        await messageSender.SendPreparedMessagesAsync(id, characterId, dto.Prepared, dto.Message);
 
         return Accepted();
     }
@@ -407,40 +342,26 @@ public class TeamsController : ApiControllerV1
             return Unauthorized();
         }
 
-        var team = await _context.RaidTeams.FindAsync(id);
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
 
-        if (team is null)
+        if (member is null)
         {
             return NotFound();
         }
 
-        var character = await _context.Characters.FindAsync(characterId);
-
-        if (character is null)
-        {
-            return NotFound();
-        }
-
-        if (character.TeamId != id)
-        {
-            return Problem("Character is not assigned to this team.");
-        }
-
-        if (character.Disenchanter == disenchanter)
+        if (member.Disenchanter == disenchanter)
         {
             return Problem(disenchanter ? "Character is already marked as a disenchanter." : "Character is already not a disenchanter.");
         }
 
-        character.Disenchanter = disenchanter;
+        member.Disenchanter = disenchanter;
 
         await _context.SaveChangesAsync();
 
         _telemetry.TrackEvent("TeamMemberPreparedUpdated", User, props =>
         {
-            props["TeamId"] = team.Id.ToString();
-            props["TeamName"] = team.Name;
-            props["CharacterId"] = character.Id.ToString();
-            props["CharacterName"] = character.Name;
+            props["TeamId"] = member.TeamId.ToString();
+            props["CharacterId"] = member.CharacterId.ToString();
             props["Disenchanter"] = disenchanter.ToString();
         });
 
@@ -450,30 +371,18 @@ public class TeamsController : ApiControllerV1
     [HttpDelete("{id:long}/members/{characterId:long}")]
     public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
     {
-        var team = await _context.RaidTeams.FindAsync(id);
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
 
-        if (team is null)
+        if (member is null)
         {
             return NotFound();
         }
 
-        var character = await _context.Characters.FindAsync(characterId);
-
-        if (character is null)
-        {
-            return NotFound();
-        }
-
-        if (character.TeamId != id)
-        {
-            return Problem("Character is not assigned to this team.");
-        }
-
-        var auth = await _authorizationService.AuthorizeAsync(User, team, AppPolicies.RaidLeader);
+        var auth = await _authorizationService.AuthorizeAsync(User, member.TeamId, AppPolicies.RaidLeader);
 
         if (!auth.Succeeded)
         {
-            auth = await _authorizationService.AuthorizeAsync(User, character, AppPolicies.CharacterOwner);
+            auth = await _authorizationService.AuthorizeAsync(User, member.CharacterId, AppPolicies.CharacterOwner);
             if (!auth.Succeeded)
             {
                 return Unauthorized();
@@ -482,61 +391,44 @@ public class TeamsController : ApiControllerV1
 
         var removal = new TeamRemoval(idGenerator.CreateId())
         {
-            Character = character,
-            CharacterId = character.Id,
+            CharacterId = member.CharacterId,
             RemovedAt = _serverTimeZone.TimeZoneNow(),
-            JoinedAt = character.JoinedTeamAt,
-            Team = team,
-            TeamId = team.Id
+            JoinedAt = member.JoinedAt,
+            TeamId = member.TeamId
         };
 
-        character.TeamId = null;
-        character.MemberStatus = RaidMemberStatus.FullTrial;
-        character.JoinedTeamAt = default;
-        character.Enchanted = false;
-        character.Prepared = false;
-        character.Disenchanter = false;
-
-        await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == character.Id && a.Raid.RaidTeamId == id && !a.IgnoreAttendance && a.RemovalId == null).AsAsyncEnumerable())
+        await foreach (var attendance in _context.RaidAttendees.AsTracking().Where(a => a.CharacterId == member.CharacterId && a.Raid.RaidTeamId == id && a.RemovalId == null).AsAsyncEnumerable())
         {
-            attendance.IgnoreAttendance = true;
-            attendance.IgnoreReason = "Character was removed from the raid team.";
             attendance.Removal = removal;
             attendance.RemovalId = removal.Id;
         }
 
-        await foreach (var donation in _context.Donations.AsTracking().Where(d => d.CharacterId == character.Id && d.RemovalId == null).AsAsyncEnumerable())
-        {
-            donation.Removal = removal;
-            donation.RemovalId = removal.Id;
-        }
-
-        await foreach (var pass in _context.DropPasses.AsTracking().Where(p => p.CharacterId == character.Id && p.WonEntryId == null && p.RemovalId == null).AsAsyncEnumerable())
-        {
-            pass.Removal = removal;
-            pass.RemovalId = removal.Id;
-        }
-
+        _context.TeamMembers.Remove(member);
         _context.TeamRemovals.Add(removal);
 
-        await foreach (var lootList in _context.CharacterLootLists.AsTracking().Where(ll => ll.CharacterId == character.Id && ll.Status != LootListStatus.Locked).AsAsyncEnumerable())
+        var extraInfo = await _context.TeamMembers
+            .Where(m => m.TeamId == member.TeamId && m.CharacterId == member.CharacterId)
+            .Select(m => new { TeamName = m.Team!.Name, m.Team.TeamSize, CharacterName = m.Character!.Name, m.Character.OwnerId })
+            .FirstAsync();
+
+        await foreach (var lootList in _context.CharacterLootLists.AsTracking().Where(ll => ll.CharacterId == member.CharacterId && ll.Status != LootListStatus.Locked && ll.Size == extraInfo.TeamSize).AsAsyncEnumerable())
         {
             lootList.Status = LootListStatus.Editing;
         }
 
         await _context.SaveChangesAsync();
 
-        if (character.OwnerId > 0)
+        if (extraInfo.OwnerId > 0)
         {
-            await dcp.RemoveRoleAsync(character.OwnerId.Value, team.Name, "Removed from the raid team.");
+            await dcp.RemoveRoleAsync(extraInfo.OwnerId.Value, extraInfo.TeamName, "Removed from the raid team.");
         }
 
         _telemetry.TrackEvent("TeamMemberRemoved", User, props =>
         {
-            props["TeamId"] = team.Id.ToString();
-            props["TeamName"] = team.Name;
-            props["CharacterId"] = character.Id.ToString();
-            props["CharacterName"] = character.Name;
+            props["TeamId"] = member.TeamId.ToString();
+            props["TeamName"] = extraInfo.TeamName;
+            props["CharacterId"] = member.CharacterId.ToString();
+            props["CharacterName"] = extraInfo.CharacterName;
             props["RemovalId"] = removal.Id.ToString();
         });
 

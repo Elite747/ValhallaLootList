@@ -107,24 +107,25 @@ public class DropsController : ApiControllerV1
 
         drop.AwardedAt = now;
         drop.AwardedBy = User.GetDiscordId();
-        var scope = await _context.GetCurrentPriorityScopeAsync();
         var teamId = raid.RaidTeamId;
-        var attendances = await _context.GetAttendanceTableAsync(teamId, scope.ObservedAttendances);
-        var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
 
-        var presentTeamRaiders = await _context.CharacterEncounterKills
-            .AsTracking()
+        var bonusTable = await _context.GetBonusTableAsync(teamId, now);
+
+        var presentCharacters = await _context.CharacterEncounterKills
+            .AsNoTracking()
             .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId && cek.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
-            .Select(cek => cek.Character)
+            .Select(cek => new { cek.Character.Id, cek.Character.Name })
+            .ToListAsync();
+
+        var presentMembers = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(tm => tm.TeamId == raid.RaidTeamId)
             .Select(ConvertToDropInfo(drop.ItemId))
             .ToListAsync();
 
-        await _context.Entry(drop).Collection(drop => drop.Passes).LoadAsync();
-        drop.Passes.Clear();
-
         if (dto.WinnerId.HasValue)
         {
-            var winner = presentTeamRaiders.Find(e => e.Id == dto.WinnerId);
+            var winner = presentCharacters.Find(e => e.Id == dto.WinnerId);
 
             if (winner is null)
             {
@@ -132,65 +133,18 @@ public class DropsController : ApiControllerV1
                 return ValidationProblem();
             }
 
-            int? winnerPrio = null;
+            var member = presentMembers.Find(m => m.Id == dto.WinnerId);
 
-            if (winner.Entry is not null)
+            if (member?.Entries.Count > 0)
             {
-                winnerPrio = winner.Entry.Rank;
-
-                var passes = await _context.DropPasses
-                    .AsTracking()
-                    .Where(p => p.LootListEntryId == winner.Entry.Id && p.RemovalId == null)
-                    .ToListAsync();
-
-                Debug.Assert(passes.Count == winner.Entry.Passes);
-
-                var donated = donationMatrix.GetCreditForMonth(winner.Id, now);
-                attendances.TryGetValue(winner.Id, out int attended);
-
-                foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, winner.MemberStatus, donated, passes.Count, winner.Enchanted, winner.Prepared))
-                {
-                    winnerPrio = winnerPrio.Value + bonus.Value;
-                }
-
-                drop.WinningEntry = await _context.LootListEntries.FindAsync(winner.Entry.Id);
+                drop.WinningEntry = await _context.LootListEntries.FindAsync(member.Entries[0].Id);
                 Debug.Assert(drop.WinningEntry is not null);
                 drop.WinningEntry.Drop = drop;
                 drop.WinningEntry.DropId = drop.Id;
-
-                foreach (var pass in passes)
-                {
-                    pass.WonEntryId = winner.Entry.Id;
-                }
             }
 
             drop.WinnerId = winner.Id;
             drop.Disenchanted = dto.Disenchant;
-
-            foreach (var killer in presentTeamRaiders)
-            {
-                if (killer.Entry is not null && killer.TeamId == teamId && killer != winner)
-                {
-                    var thisPrio = (int)killer.Entry.Rank;
-
-                    var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
-                    attendances.TryGetValue(killer.Id, out int attended);
-
-                    foreach (var bonus in PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted, killer.Prepared))
-                    {
-                        thisPrio += bonus.Value;
-                    }
-
-                    _context.DropPasses.Add(new DropPass
-                    {
-                        Drop = drop,
-                        DropId = drop.Id,
-                        CharacterId = killer.Id,
-                        RelativePriority = thisPrio - (winnerPrio ?? 0),
-                        LootListEntryId = killer.Entry.Id
-                    });
-                }
-            }
         }
         else
         {
@@ -208,14 +162,6 @@ public class DropsController : ApiControllerV1
             {
                 oldWinningEntry.Drop = null;
                 oldWinningEntry.DropId = null;
-
-                await foreach (var pass in _context.DropPasses
-                    .AsTracking()
-                    .Where(pass => pass.WonEntryId == oldWinningEntry.Id)
-                    .AsAsyncEnumerable())
-                {
-                    pass.WonEntryId = null;
-                }
             }
         }
 
@@ -288,38 +234,39 @@ public class DropsController : ApiControllerV1
             unequippableSpecs |= specs;
         }
 
-        var now = _realmTimeZone.TimeZoneNow();
-        var scope = await _context.GetCurrentPriorityScopeAsync();
-        var attendances = await _context.GetAttendanceTableAsync(drop.TeamId, scope.ObservedAttendances);
+        var bonusTable = await _context.GetBonusTableAsync(drop.TeamId, _realmTimeZone.TimeZoneNow());
 
-        var presentTeamRaiders = await _context.RaidAttendees
+        var presentMembers = await _context.TeamMembers
             .AsNoTracking()
-            .Where(a => a.RaidId == drop.EncounterKillRaidId && a.Character.TeamId == drop.TeamId)
-            .Select(a => a.Character)
+            .Where(tm => tm.TeamId == drop.TeamId)
             .Select(ConvertToDropInfo(drop.ItemId))
             .ToListAsync();
 
-        var donationMatrix = await _context.GetDonationMatrixAsync(d => d.Character.Attendances.Any(a => a.RaidId == drop.EncounterKillRaidId), scope);
-
         var dto = new List<ItemPrioDto>();
 
-        foreach (var killer in presentTeamRaiders.Where(c => c.Entry?.AutoPass == false))
+        foreach (var killer in presentMembers)
         {
-            Debug.Assert(killer.Entry is not null);
-            var prio = new ItemPrioDto
+            var topEntry = killer.Entries.Find(e => !e.AutoPass);
+
+            if (topEntry is not null)
             {
-                CharacterId = killer.Id,
-                CharacterName = killer.Name,
-                Status = killer.Entry.Status,
-                Rank = killer.Entry.Rank,
-            };
+                var prio = new ItemPrioDto
+                {
+                    CharacterId = killer.Id,
+                    CharacterName = killer.Name,
+                    Status = topEntry.Status,
+                    Rank = topEntry.Rank,
+                };
 
-            var donated = donationMatrix.GetCreditForMonth(killer.Id, now);
-            attendances.TryGetValue(killer.Id, out int attended);
+                if (bonusTable.TryGetValue(killer.Id, out var bonuses))
+                {
+                    prio.Bonuses.AddRange(bonuses);
+                }
 
-            prio.Bonuses.AddRange(PrioCalculator.GetAllBonuses(scope, attended, killer.MemberStatus, donated, killer.Entry.Passes, killer.Enchanted, killer.Prepared));
+                prio.Bonuses.AddRange(PrioCalculator.GetItemBonuses(topEntry.Passes));
 
-            dto.Add(prio);
+                dto.Add(prio);
+            }
         }
 
         return dto;
@@ -330,10 +277,9 @@ public class DropsController : ApiControllerV1
         public long Id { get; init; }
         public string Name { get; init; } = string.Empty;
         public long? TeamId { get; init; }
-        public RaidMemberStatus MemberStatus { get; init; }
         public bool Enchanted { get; init; }
         public bool Prepared { get; init; }
-        public TargetEntry? Entry { get; init; }
+        public List<TargetEntry> Entries { get; init; } = null!;
     }
 
     private class TargetEntry
@@ -345,24 +291,23 @@ public class DropsController : ApiControllerV1
         public bool AutoPass { get; init; }
     }
 
-    private Expression<Func<Character, CharacterDropInfo>> ConvertToDropInfo(uint itemId) => character => new()
+    private Expression<Func<TeamMember, CharacterDropInfo>> ConvertToDropInfo(uint itemId) => member => new()
     {
-        Id = character.Id,
-        Name = character.Name,
-        TeamId = character.TeamId,
-        MemberStatus = character.MemberStatus,
-        Enchanted = character.Enchanted,
-        Prepared = character.Prepared,
-        Entry = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == character.Id && (e.ItemId == itemId || e.Item!.RewardFromId == itemId))
+        Id = member.CharacterId,
+        Name = member.Character!.Name,
+        TeamId = member.TeamId,
+        Enchanted = member.Enchanted,
+        Prepared = member.Prepared,
+        Entries = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == member.Character.Id && (e.ItemId == itemId || e.Item!.RewardFromId == itemId))
             .OrderByDescending(e => e.Rank)
             .Select(e => new TargetEntry
             {
                 Id = e.Id,
                 Rank = e.Rank,
                 Status = e.LootList.Status,
-                Passes = e.Passes.Count(p => p.RemovalId == null),
+                Passes = _context.Drops.Count(d => d.ItemId == itemId && d.EncounterKill.Raid.RaidTeamId == member.TeamId && d.EncounterKill.KilledAt >= member.JoinedAt),
                 AutoPass = e.AutoPass
             })
-            .FirstOrDefault()
+            .ToList()
     };
 }

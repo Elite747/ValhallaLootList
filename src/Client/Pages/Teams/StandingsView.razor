@@ -193,11 +193,11 @@
             itemStandings.Clear();
         }
 
-        await Api.Items.Get(Phase, includeTokens: true).OnSuccess(ConfigureItems).SendErrorTo(Snackbar).ExecuteAsync();
+        await Api.Items.Get(Phase, Team.Size, includeTokens: true).OnSuccess(ConfigureItems).SendErrorTo(Snackbar).ExecuteAsync();
         await Api.Instances.GetAll().OnSuccess(ConfigureInstances).SendErrorTo(Snackbar).ExecuteAsync();
         _filtersLoading = false;
 
-        await Api.LootLists.GetForTeam(Team.Id, Phase, includeApplicants: false).OnSuccess(ConfigureLootLists).SendErrorTo(Snackbar).ExecuteAsync();
+        await Api.LootLists.GetForTeam(Team.Id, includeApplicants: false).OnSuccess(ConfigureLootLists).SendErrorTo(Snackbar).ExecuteAsync();
         _lootListsLoading = false;
 
         SelectMode(_selectedModeItem);
@@ -239,7 +239,7 @@
 
             foreach (var encounter in instance.Encounters)
             {
-                _itemsByEncounter[encounter.Id] = encounter.Items;
+                _itemsByEncounter[encounter.Id] = encounter.Variants.Where(v => v.Size == Team.Size).SelectMany(v => v.Items).Distinct().ToList();
                 _encounterFilterItems.Add(new()
                 {
                     Header = false,

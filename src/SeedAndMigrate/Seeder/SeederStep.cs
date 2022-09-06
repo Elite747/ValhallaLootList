@@ -30,7 +30,7 @@ internal class SeederStep
         var existingItems = await _context.Items.ToDictionaryAsync(item => item.Id, cancellationToken);
         var existingInstances = await _context.Instances.ToDictionaryAsync(instance => instance.Id, cancellationToken);
         var existingEncounters = await _context.Encounters.ToDictionaryAsync(encounter => encounter.Id, cancellationToken);
-        var existingEncounterItems = await _context.EncounterItems.ToDictionaryAsync(encounterItem => (encounterItem.ItemId, encounterItem.EncounterId), cancellationToken);
+        var existingEncounterItems = await _context.EncounterItems.ToListAsync(cancellationToken);
 
         foreach (var seedItem in seedItems)
         {
@@ -42,44 +42,31 @@ internal class SeederStep
             }
 
             item.Agility = seedItem.Agility;
-            item.Armor = seedItem.Armor;
             item.ArmorPenetration = seedItem.ArmorPenetration;
             item.BlockRating = seedItem.BlockRating;
             item.BlockValue = seedItem.BlockValue;
             item.Defense = seedItem.Defense;
             item.Dodge = seedItem.Dodge;
-            item.DPS = seedItem.DPS;
             item.Expertise = seedItem.Expertise;
             item.HasOnUse = seedItem.HasOnUse;
             item.HasProc = seedItem.HasProc;
             item.HasSpecial = seedItem.HasSpecial;
             item.Haste = seedItem.Haste;
-            item.HealingPower = seedItem.HealingPower;
-            item.HealthPer5 = seedItem.HealthPer5;
             item.Intellect = seedItem.Intellect;
             item.ItemLevel = seedItem.ItemLevel;
             item.ManaPer5 = seedItem.ManaPer5;
-            item.MeleeAttackPower = seedItem.MeleeAttackPower;
-            item.MeleeCrit = seedItem.MeleeCrit;
+            item.AttackPower = seedItem.AttackPower;
+            item.Crit = seedItem.Crit;
             item.Name = seedItem.Name;
             item.Parry = seedItem.Parry;
-            item.PhysicalHit = seedItem.PhysicalHit;
-            item.RangedAttackPower = seedItem.RangedAttackPower;
-            item.RangedCrit = seedItem.RangedCrit;
-            item.Resilience = seedItem.Resilience;
+            item.Hit = seedItem.Hit;
             item.RewardFromId = seedItem.RewardFromId;
             item.Slot = seedItem.Slot;
-            item.Sockets = seedItem.Sockets;
-            item.Speed = seedItem.Speed;
-            item.SpellCrit = seedItem.SpellCrit;
-            item.SpellHaste = seedItem.SpellHaste;
-            item.SpellHit = seedItem.SpellHit;
             item.SpellPenetration = seedItem.SpellPenetration;
             item.SpellPower = seedItem.SpellPower;
             item.Spirit = seedItem.Spirit;
             item.Stamina = seedItem.Stamina;
             item.Strength = seedItem.Strength;
-            item.TopEndDamage = seedItem.TopEndDamage;
             item.Type = seedItem.Type;
             item.UsableClasses = seedItem.UsableClasses;
             item.IsUnique = seedItem.IsUnique;
@@ -110,18 +97,38 @@ internal class SeederStep
                 encounter.InstanceId = instance.Id;
                 encounter.Name = seedEncounter.Name;
 
-                foreach (var itemId in seedEncounter.Items)
+                var encounterItems = new List<(uint itemId, byte size, bool heroic)>();
+
+                foreach (var itemId in seedEncounter.Items10)
+                {
+                    encounterItems.Add((itemId, 10, false));
+                }
+                foreach (var itemId in seedEncounter.Items10H)
+                {
+                    encounterItems.Add((itemId, 10, true));
+                }
+                foreach (var itemId in seedEncounter.Items25)
+                {
+                    encounterItems.Add((itemId, 25, false));
+                }
+                foreach (var itemId in seedEncounter.Items25H)
+                {
+                    encounterItems.Add((itemId, 25, true));
+                }
+
+                foreach ((uint itemId, byte size, bool heroic) in encounterItems)
                 {
                     var item = existingItems[itemId];
+                    var is25 = size == 25;
                     item.Phase = seedInstance.Phase;
 
-                    if (existingEncounterItems.TryGetValue((itemId, encounter.Id), out var existingEncounterItem))
+                    if (existingEncounterItems.Find(ei => ei.ItemId == itemId && ei.EncounterId == encounter.Id && ei.Is25 == is25 && ei.Heroic == heroic) is { } existing)
                     {
-                        existingEncounterItems.Remove((itemId, encounter.Id));
+                        existingEncounterItems.Remove(existing);
                     }
                     else
                     {
-                        _context.EncounterItems.Add(new() { Encounter = encounter, EncounterId = encounter.Id, Item = item, ItemId = itemId });
+                        _context.EncounterItems.Add(new() { Encounter = encounter, EncounterId = encounter.Id, Item = item, ItemId = itemId, Is25 = is25, Heroic = heroic });
                     }
 
                     foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
@@ -132,7 +139,7 @@ internal class SeederStep
             }
         }
 
-        _context.EncounterItems.RemoveRange(existingEncounterItems.Values);
+        _context.EncounterItems.RemoveRange(existingEncounterItems);
 
         int changes = await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Application context saved with {ChangeCount} changes.", changes);

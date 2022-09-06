@@ -4,11 +4,11 @@
 <CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec" OnClick="OpenDetailsAsync">
     <div class="d-flex align-center">
         @Attendance.Character.Name
-        @if (Attendance.IgnoreAttendance)
+        @if (!Attendance.Character.Teams.Contains(Raid.TeamId))
         {
             <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
         }
-        else if (Attendance.Rto)
+        else if (Attendance.Standby)
         {
             <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info" Color="Color.Info" Style="margin-left: 4px; margin-right: -12px" />
         }

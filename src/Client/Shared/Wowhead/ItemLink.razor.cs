@@ -35,7 +35,7 @@ public partial class ItemLink
 
                 if (id > 0)
                 {
-                    return $"https://tbc.wowhead.com/item={id}";
+                    return $"https://www.wowhead.com/wotlk/item={id}";
                 }
             }
 
@@ -51,7 +51,7 @@ public partial class ItemLink
 
             if (id > 0)
             {
-                return $"item={id}&domain=tbc";
+                return $"item={id}&domain=wotlk";
             }
             return null;
         }

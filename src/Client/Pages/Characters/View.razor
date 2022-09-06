@@ -18,34 +18,9 @@
                     ShowTooltip="true"
                     Class="mr-2" />
         <MudText Typo="Typo.h4" GutterBottom="false" Class="mr-2">@character.Name</MudText>
-        @if (character.TeamName?.Length > 0)
+        @foreach (var teamId in character.Teams)
         {
-            <MudLink Href="@("teams/" + character.TeamName)" Typo="Typo.h5">&lt;@character.TeamName&gt;</MudLink>
-        }
-        else if (!character.Deactivated)
-        {
-            @if (_lootListsOperation?.HasResult() == true && _lootListsOperation.GetResult().Any(ll => ll.SubmittedTo.Count != 0))
-            {
-                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
-                           Variant="Variant.Text"
-                           Color="Color.Error"
-                           Size="Size.Medium"
-                           Class="ml-2"
-                           OnClick="RevokeAsync">
-                    Cancel Team Applications
-                </MudButton>
-            }
-            else
-            {
-                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
-                           Variant="Variant.Text"
-                           Color="Color.Success"
-                           Size="Size.Medium"
-                           Class="ml-2"
-                           OnClick="ApplyAsync">
-                    Apply to a Team
-                </MudButton>
-            }
+            <TeamLink TeamId="teamId" />
         }
         @if (character.Deactivated)
         {
@@ -80,8 +55,68 @@
         <MudTabs Elevation="5" Rounded="true" ApplyEffectsToContainer="true" @bind-ActivePanelIndex="_panelIndex">
             @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
             {
-                <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                    <LootListPhase Character="character" Phase="phase" LootLists="_lootListsOperation!.GetResult()" />
+                <MudTabPanel Text="@($"Phase {phase} (25-man)")" ID="(phase, 25)">
+                    @if (!character.Deactivated && _lootListsOperation!.GetResult().Any(ll => ll.Size == 25 && ll.TeamId is null))
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="character">
+                            @if (_lootListsOperation.GetResult().Any(ll => ll.Size == 25 && ll.SubmittedTo.Count != 0))
+                            {
+                                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
+                                           Variant="Variant.Text"
+                                           Color="Color.Error"
+                                           Size="Size.Medium"
+                                           Class="ml-2"
+                                           OnClick="() => RevokeAsync(25)">
+                                    Cancel Team Applications
+                                </MudButton>
+                            }
+                            else if (_lootListsOperation.GetResult().Any(ll => ll.Size == 25 && ll.SubmittedTo.Count == 0))
+                            {
+                                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
+                                           Variant="Variant.Text"
+                                           Color="Color.Success"
+                                           Size="Size.Medium"
+                                           Class="ml-2"
+                                           OnClick="() => ApplyAsync(25)">
+                                    Apply to a Team
+                                </MudButton>
+                            }
+                        </AuthorizeView>
+                    }
+                    <LootListPhase Character="character" Phase="phase" Size="25" LootLists="_lootListsOperation!.GetResult()" />
+                </MudTabPanel>
+            }
+            @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
+            {
+                <MudTabPanel Text="@($"Phase {phase} (10-man)")" ID="(phase, 10)">
+                    @if (!character.Deactivated && _lootListsOperation!.GetResult().Any(ll => ll.Size == 10 && ll.TeamId is null))
+                    {
+                        <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="character">
+                            @if (_lootListsOperation.GetResult().Any(ll => ll.Size == 10 && ll.SubmittedTo.Count != 0))
+                            {
+                                <MudButton Disabled="!_phaseConfigOperation.HasResult()"
+                               Variant="Variant.Text"
+                               Color="Color.Error"
+                               Size="Size.Medium"
+                               Class="ml-2"
+                               OnClick="() => RevokeAsync(10)">
+                                    Cancel Team Applications
+                                </MudButton>
+                            }
+                            else if (_lootListsOperation.GetResult().Any(ll => ll.Size == 10 && ll.SubmittedTo.Count == 0))
+                            {
+                                <MudButton Disabled="!(_lootListsOperation?.HasResult() == true && _phaseConfigOperation.HasResult())"
+                               Variant="Variant.Text"
+                               Color="Color.Success"
+                               Size="Size.Medium"
+                               Class="ml-2"
+                               OnClick="() => ApplyAsync(10)">
+                                    Apply to a Team
+                                </MudButton>
+                            }
+                        </AuthorizeView>
+                    }
+                    <LootListPhase Character="character" Phase="phase" Size="10" LootLists="_lootListsOperation!.GetResult()" />
                 </MudTabPanel>
             }
             <MudTabPanel Text="Won Items" ID="_wonId">
@@ -169,20 +204,20 @@
         }
     }
 
-    private async Task RevokeAsync()
+    private async Task RevokeAsync(byte size)
     {
         System.Diagnostics.Debug.Assert(_lootListsOperation?.HasResult() == true);
         System.Diagnostics.Debug.Assert(_phaseConfigOperation?.HasResult() == true);
         System.Diagnostics.Debug.Assert(_characterOperation?.HasResult() == true);
 
         var currentPhases = GetCurrentPhasesInDescendingOrder();
-        await Api.LootLists.RevokeAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList())
+        await Api.LootLists.RevokeAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase) && ll.Size == size).ToList(), size)
                 .SendErrorTo(Snackbar)
                 .ExecuteAsync();
         await RefreshLootListsAsync();
     }
 
-    private async Task ApplyAsync()
+    private async Task ApplyAsync(byte size)
     {
         System.Diagnostics.Debug.Assert(_lootListsOperation?.HasResult() == true);
         System.Diagnostics.Debug.Assert(_phaseConfigOperation?.HasResult() == true);
@@ -193,7 +228,7 @@
 
         foreach (byte phase in currentPhases)
         {
-            if (_lootListsOperation.GetResult().Find(ll => ll.Phase == phase) is not { } lootList)
+            if (_lootListsOperation.GetResult().Find(ll => ll.Phase == phase && ll.Size == size) is not { } lootList)
             {
                 await DialogService.ShowMessageBox(new MessageBoxOptions
                 {
@@ -235,15 +270,16 @@
             string.Empty,
             parameters: new()
             {
-                [nameof(PickTeamDialog.SelectedTeams)] = _lootListsOperation.GetResult().SelectMany(ll => ll.SubmittedTo).Distinct().ToList(),
-                [nameof(PickTeamDialog.CurrentPhases)] = currentPhases
+                [nameof(PickTeamDialog.SelectedTeams)] = _lootListsOperation.GetResult().Where(ll => ll.Size == size).SelectMany(ll => ll.SubmittedTo).Distinct().ToList(),
+                [nameof(PickTeamDialog.CurrentPhases)] = currentPhases,
+                [nameof(PickTeamDialog.Size)] = size
             });
 
         if (teams is not null)
         {
-            await Api.LootLists.SubmitAll(_lootListsOperation.GetResult().Where(ll => currentPhases.Contains(ll.Phase)).ToList(), teams)
-                    .SendErrorTo(Snackbar)
-                    .ExecuteAsync();
+            await Api.LootLists.SubmitAll(_lootListsOperation.GetResult().Where(ll => ll.Size == size && currentPhases.Contains(ll.Phase)).ToList(), teams, size)
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
             await RefreshLootListsAsync();
         }
     }

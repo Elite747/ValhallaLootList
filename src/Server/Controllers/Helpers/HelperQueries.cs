@@ -10,29 +10,46 @@ namespace ValhallaLootList.Server.Controllers;
 
 public static class HelperQueries
 {
-    public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, TimeZoneInfo timeZone, IQueryable<Character> characterQuery, PriorityScope scope, long teamId, string teamName, bool isLeader)
+    public static async Task<List<MemberDto>> GetMembersAsync(ApplicationDbContext context, TimeZoneInfo timeZone, long teamId, byte teamSize, bool isLeader, long? characterId = null)
     {
         var now = timeZone.TimeZoneNow();
+
+        if (now.Hour < 3)
+        {
+            // as a correction for when raids run past midnight, treat dates passed in here within 2 hours of midnight as the previous day.
+            // This way bonuses don't change at midnight when a raid is still likely to be running.
+            now = now.AddHours(-now.Hour - 1);
+        }
+
         var thisMonth = new DateTime(now.Year, now.Month, 1);
-        var lastMonth = thisMonth.AddMonths(-1);
+        var nextMonth = thisMonth.AddMonths(1);
 
         var members = new List<MemberDto>();
 
-        await foreach (var character in characterQuery
+        var query = context.TeamMembers.Where(m => m.TeamId == teamId);
+
+        if (characterId.HasValue)
+        {
+            query = query.Where(m => m.CharacterId == characterId.Value);
+        }
+
+        await foreach (var character in query
             .Select(c => new
             {
-                c.Class,
-                c.Id,
-                c.Name,
-                c.Race,
-                c.IsFemale,
-                c.MemberStatus,
-                c.JoinedTeamAt,
+                c.Character!.Class,
+                c.CharacterId,
+                c.Character.Name,
+                c.Character.Race,
+                c.Character.IsFemale,
+                c.JoinedAt,
                 c.Enchanted,
                 c.Prepared,
                 c.Disenchanter,
-                Verified = c.VerifiedById.HasValue,
-                LootLists = c.CharacterLootLists.Select(l => new
+                DonationsForThisMonth = c.Character.Donations.Count(d => d.TargetMonth == thisMonth.Month && d.TargetYear == thisMonth.Year),
+                DonationsForNextMonth = c.Character.Donations.Count(d => d.TargetMonth == nextMonth.Month && d.TargetYear == nextMonth.Year),
+                Verified = c.Character.VerifiedById.HasValue,
+                Teams = c.Character.Teams.Select(t => t.TeamId).ToList(),
+                LootLists = c.Character.CharacterLootLists.Where(ll => ll.Size == teamSize).Select(l => new
                 {
                     l.MainSpec,
                     l.ApprovedBy,
@@ -50,20 +67,19 @@ public static class HelperQueries
                 {
                     Class = character.Class,
                     Gender = character.IsFemale ? Gender.Female : Gender.Male,
-                    Id = character.Id,
+                    Id = character.CharacterId,
                     Name = character.Name,
                     Race = character.Race,
-                    TeamId = teamId,
-                    TeamName = teamName,
-                    Verified = character.Verified
+                    Verified = character.Verified,
+                    Teams = character.Teams
                 },
                 Enchanted = character.Enchanted,
-                JoinedAt = character.JoinedTeamAt,
-                Status = character.MemberStatus,
-                ThisMonthRequiredDonations = scope.RequiredDonationCopper,
-                NextMonthRequiredDonations = scope.RequiredDonationCopper,
+                JoinedAt = character.JoinedAt,
                 Prepared = character.Prepared,
-                Disenchanter = character.Disenchanter
+                Disenchanter = character.Disenchanter,
+                DonatedThisMonth = character.DonationsForThisMonth,
+                DonatedNextMonth = character.DonationsForNextMonth,
+                MaximumDonationTickets = PrioCalculator.MaxDonations
             };
 
             foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))
@@ -94,26 +110,36 @@ public static class HelperQueries
             members.Add(memberDto);
         }
 
-        var memberIds = members.ConvertAll(m => m.Character.Id);
-        var donationMatrix = await context.GetDonationMatrixAsync(d => memberIds.Contains(d.CharacterId), scope);
-        var attendanceTable = await context.GetAttendanceTableAsync(teamId, scope.ObservedAttendances);
+        var currentPhaseStart = await context.PhaseDetails.OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
+
+        var attendanceRecords = await context.RaidAttendees.AsNoTracking()
+            .Where(a => a.RemovalId == null && a.Raid.RaidTeamId == teamId && a.Raid.StartedAt >= currentPhaseStart && (characterId == null || a.CharacterId == characterId))
+            .Select(a => new { a.CharacterId, a.Raid.StartedAt })
+            .ToListAsync();
+
+        var raidsThisPhase = await context.Raids.AsNoTracking()
+            .Where(r => r.RaidTeamId == teamId && r.StartedAt >= currentPhaseStart)
+            .Select(r => r.StartedAt)
+            .ToListAsync();
 
         foreach (var member in members)
         {
-            member.DonatedThisMonth = donationMatrix.GetCreditForMonth(member.Character.Id, now);
-            member.DonatedNextMonth = donationMatrix.GetDonatedDuringMonth(member.Character.Id, now);
+            int attendancesThisPhase = 0, attendancesTotal = 0;
 
-            if (member.DonatedThisMonth > scope.RequiredDonationCopper)
+            foreach (var attendanceRecord in attendanceRecords)
             {
-                member.DonatedNextMonth += member.DonatedThisMonth - scope.RequiredDonationCopper;
+                if (attendanceRecord.CharacterId == member.Character.Id && attendanceRecord.StartedAt >= member.JoinedAt && attendanceRecord.StartedAt.Date < now.Date)
+                {
+                    attendancesTotal++;
+                    if (attendanceRecord.StartedAt >= currentPhaseStart)
+                    {
+                        attendancesThisPhase++;
+                    }
+                }
             }
 
-            if (attendanceTable.TryGetValue(member.Character.Id, out var attendance))
-            {
-                member.Attended = attendance;
-            }
-
-            member.ObservedAttendances = scope.ObservedAttendances;
+            member.Absences = raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt && raidDate.Date < now.Date) - attendancesThisPhase;
+            member.Status = PrioCalculator.GetStatus(teamSize, attendancesTotal);
         }
 
         return members;

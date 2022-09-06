@@ -15,5 +15,6 @@ public enum Classes
     Shaman = 0b_0000_0100_0000,
     Mage = 0b_0000_1000_0000,
     Warlock = 0b_0001_0000_0000,
-    Druid = 0b_0100_0000_0000
+    Druid = 0b_0100_0000_0000,
+    DeathKnight = 0b_0000_0010_0000
 }

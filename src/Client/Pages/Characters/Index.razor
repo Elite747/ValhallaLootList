@@ -67,7 +67,7 @@
                                 <MudSelectItem T="TeamNameDto" Value="null">No Team</MudSelectItem>
                                 @foreach (var team in TeamsSource.GetTeams())
                                 {
-                                    <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name</MudSelectItem>
+                                    <MudSelectItem T="TeamNameDto" Value="team" @key="team.Id">@team.Name (@team.Size-man)</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
@@ -137,7 +137,7 @@
 
             if (_searchTeams?.Count > 0)
             {
-                en = en.Where(ch => _searchTeams.Any(team => team?.Id == ch.TeamId));
+                en = en.Where(ch => _searchTeams.Any(team => team is null ? ch.Teams.Count == 0 : ch.Teams.Contains(team.Id)));
             }
 
             if (!_showDeactivated)

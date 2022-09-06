@@ -17,7 +17,7 @@ public class ItemsController : ApiControllerV1
         _context = context;
     }
 
-    public async Task<IEnumerable<ItemDto>> Get(byte phase, bool includeTokens = false)
+    public async Task<ActionResult<IEnumerable<ItemDto>>> Get(byte phase, byte size, bool includeTokens = false)
     {
         var itemQuery = _context.Items.AsNoTracking().Where(item => item.Phase == phase);
         var restrictionQuery = _context.ItemRestrictions.AsNoTracking().Where(r => r.Item.Phase == phase);
@@ -28,6 +28,25 @@ public class ItemsController : ApiControllerV1
             restrictionQuery = restrictionQuery.Where(r => r.Item.Slot != InventorySlot.Unknown);
         }
 
+        bool is25;
+
+        if (size == 10)
+        {
+            is25 = false;
+        }
+        else if (size == 25)
+        {
+            is25 = true;
+        }
+        else
+        {
+            ModelState.AddModelError("size", "Size must be set to either 10 or 25.");
+            return ValidationProblem();
+        }
+
+        itemQuery = itemQuery.Where(item => item.Encounters.Any(e => e.Is25 == is25));
+        restrictionQuery = restrictionQuery.Where(r => r.Item.Encounters.Any(e => e.Is25 == is25));
+
         var items = await itemQuery
             .Select(item => new ItemDto
             {
@@ -37,7 +56,8 @@ public class ItemsController : ApiControllerV1
                 Name = item.Name,
                 Slot = item.Slot,
                 Type = item.Type,
-                MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1
+                MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1,
+                Heroic = item.Encounters.Any(e => e.Heroic)
             })
             .ToDictionaryAsync(item => item.Id);
 

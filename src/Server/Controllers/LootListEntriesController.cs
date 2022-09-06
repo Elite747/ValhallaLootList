@@ -137,21 +137,6 @@ public class LootListEntriesController : ApiControllerV1
             swapEntry.ItemId = oldItemId;
             swapEntry.Justification = oldJustification;
 
-            await _context.Entry(entry).Collection(e => e.Passes).LoadAsync();
-            await _context.Entry(swapEntry).Collection(e => e.Passes).LoadAsync();
-
-            var swapPasses = swapEntry.Passes.ToList();
-
-            foreach (var pass in entry.Passes)
-            {
-                pass.LootListEntryId = swapEntry.Id;
-            }
-
-            foreach (var pass in swapPasses)
-            {
-                pass.LootListEntryId = entry.Id;
-            }
-
             (allowed, reason) = await CheckAllowedAsync(entry, swapEntry, dto.RemoveIfInvalid);
 
             if (!allowed)
@@ -207,9 +192,13 @@ public class LootListEntriesController : ApiControllerV1
                     i.Name,
                     i.Phase,
                     i.RewardFromId,
+                    Difficulties = i.Encounters.Select(e => new { e.Is25, e.Heroic }).ToList(),
                     QuestId = (uint?)i.RewardFrom!.QuestId,
-                    MaxCount = (!i.IsUnique && (i.Slot == InventorySlot.Trinket || i.Slot == InventorySlot.Finger || i.Slot == InventorySlot.OneHand)) ? 2 : 1
+                    i.IsUnique,
+                    i.Slot,
+                    //MaxCount = (!i.IsUnique && (i.Slot == InventorySlot.Trinket || i.Slot == InventorySlot.Finger || i.Slot == InventorySlot.OneHand)) ? 2 : 1
                 })
+                .AsSingleQuery()
                 .FirstOrDefaultAsync();
 
             if (item is null)
@@ -219,7 +208,17 @@ public class LootListEntriesController : ApiControllerV1
 
             if (item.Phase != entry.LootList.Phase)
             {
-                return (false, item.Name + " is not part of the same phase as the loot list.");
+                return (false, $"{item.Name} is not part of the same phase as the loot list.");
+            }
+
+            if (!item.Difficulties.Any(d => d.Is25 == (entry.LootList.Size is 25)))
+            {
+                return (false, $"{item.Name} is not available for the raid size.");
+            }
+
+            if (!item.Difficulties.Any(d => d.Heroic == entry.Heroic))
+            {
+                return (false, $"{item.Name} does not match the difficulty requirement for this space.");
             }
 
             var spec = entry.LootList.MainSpec | entry.LootList.OffSpec;
@@ -251,7 +250,7 @@ public class LootListEntriesController : ApiControllerV1
                 {
                     if (firstConflict.Id == item.Id)
                     {
-                        return (false, item.Name + " is already on this loot list.");
+                        return (false, $"{item.Name} is already on this loot list.");
                     }
                     else
                     {
@@ -259,13 +258,47 @@ public class LootListEntriesController : ApiControllerV1
                     }
                 }
             }
-            else if (await existingItemMutexQuery.Where(e => e.ItemId == dto.ItemId).CountAsync() >= item.MaxCount)
+            else
             {
-                if (item.MaxCount == 1)
+                var maxCount = 1;
+
+                if (!item.IsUnique)
                 {
-                    return (false, item.Name + " is already on this loot list.");
+                    if (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger)
+                    {
+                        maxCount = 2;
+                    }
+                    else if (item.Slot == InventorySlot.OneHand || item.Slot == InventorySlot.TwoHand)
+                    {
+                        var character = await _context.Characters.FindAsync(entry.LootList.CharacterId);
+
+                        switch (character?.Class)
+                        {
+                            case Classes.Warrior:
+                                maxCount = 2;
+                                break;
+                            case Classes.DeathKnight:
+                            case Classes.Hunter:
+                            case Classes.Rogue:
+                            case Classes.Shaman:
+                                if (item.Slot == InventorySlot.OneHand)
+                                {
+                                    maxCount = 2;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
-                return (false, $"{item.Name} has already been added {item.MaxCount:N0} times.");
+                if (await existingItemMutexQuery.Where(e => e.ItemId == dto.ItemId).CountAsync() >= maxCount)
+                {
+                    if (maxCount == 1)
+                    {
+                        return (false, $"{item.Name} is already on this loot list.");
+                    }
+                    return (false, $"{item.Name} has already been added {maxCount:N0} times.");
+                }
             }
         }
 
@@ -338,19 +371,17 @@ public class LootListEntriesController : ApiControllerV1
     private async Task<bool> BracketHasTypeAsync(Bracket bracket, LootListEntry entry)
     {
         Debug.Assert(entry.ItemId.HasValue);
-        var item = await _context.Items.FindAsync(entry.ItemId.Value);
-        Debug.Assert(item is not null);
-        var itemGroup = new ItemGroup(item.Type, item.Slot);
 
-        var bracketItems = await _context.LootListEntries
-            .AsNoTracking()
-            .Where(e => e.LootList == entry.LootList && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id)
-            .Select(e => e.Item)
-            .ToListAsync();
+        var item = await _context.Items.AsNoTracking()
+            .Where(item => item.Id == entry.ItemId.Value)
+            .Select(item => new { item.Slot, item.Type, Heroic = item.Encounters.Any(e => e.Heroic) })
+            .FirstAsync();
+
+        var itemGroup = new ItemGroup(item.Type, item.Slot);
 
         await foreach (var bracketItem in _context.LootListEntries
             .AsNoTracking()
-            .Where(e => e.LootList == entry.LootList && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id && e.ItemId.HasValue)
+            .Where(e => e.LootList == entry.LootList && e.Heroic == item.Heroic && e.Rank >= bracket.MinRank && e.Rank <= bracket.MaxRank && e.Id != entry.Id && e.ItemId.HasValue)
             .Select(e => new { e.Item!.Type, e.Item!.Slot })
             .AsAsyncEnumerable())
         {

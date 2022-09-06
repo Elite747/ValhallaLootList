@@ -9,7 +9,7 @@ internal static class LootListExtensions
 {
     public static int? GetCollapsibleBracket(this LootListDto lootList)
     {
-        foreach (var bracket in lootList.Entries.Where(e => !e.Won).GroupBy(e => e.Bracket))
+        foreach (var bracket in lootList.Entries.Where(e => !e.Won).GroupBy(e => new { e.Bracket, e.Heroic }))
         {
             bool hasUnselected = false;
 
@@ -20,7 +20,7 @@ internal static class LootListExtensions
                     if (hasUnselected)
                     {
                         // higher rank is not filled.
-                        return bracket.Key + 1;
+                        return bracket.Key.Bracket + 1;
                     }
                     else
                     {

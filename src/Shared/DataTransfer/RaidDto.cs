@@ -14,6 +14,8 @@ public class RaidDto
 
     public string TeamName { get; set; } = string.Empty;
 
+    public int TeamSize { get; set; }
+
     public int Phase { get; set; }
 
     public DateTimeOffset StartedAt { get; set; }

@@ -30,11 +30,11 @@ public static class PlayerRaceExtensions
 
     public static Classes GetClasses(this PlayerRace playerRace) => playerRace switch
     {
-        PlayerRace.Human => Classes.Mage | Classes.Paladin | Classes.Priest | Classes.Rogue | Classes.Warlock | Classes.Warrior,
-        PlayerRace.Dwarf => Classes.Hunter | Classes.Paladin | Classes.Priest | Classes.Rogue | Classes.Warrior,
-        PlayerRace.NightElf => Classes.Druid | Classes.Hunter | Classes.Priest | Classes.Rogue | Classes.Warrior,
-        PlayerRace.Gnome => Classes.Mage | Classes.Rogue | Classes.Warlock | Classes.Warrior,
-        PlayerRace.Draenei => Classes.Hunter | Classes.Mage | Classes.Paladin | Classes.Priest | Classes.Shaman | Classes.Warrior,
+        PlayerRace.Human => Classes.DeathKnight | Classes.Mage | Classes.Paladin | Classes.Priest | Classes.Rogue | Classes.Warlock | Classes.Warrior,
+        PlayerRace.Dwarf => Classes.DeathKnight | Classes.Hunter | Classes.Paladin | Classes.Priest | Classes.Rogue | Classes.Warrior,
+        PlayerRace.NightElf => Classes.DeathKnight | Classes.Druid | Classes.Hunter | Classes.Priest | Classes.Rogue | Classes.Warrior,
+        PlayerRace.Gnome => Classes.DeathKnight | Classes.Mage | Classes.Rogue | Classes.Warlock | Classes.Warrior,
+        PlayerRace.Draenei => Classes.DeathKnight | Classes.Hunter | Classes.Mage | Classes.Paladin | Classes.Priest | Classes.Shaman | Classes.Warrior,
         _ => throw new ArgumentOutOfRangeException(nameof(playerRace))
     };
 }

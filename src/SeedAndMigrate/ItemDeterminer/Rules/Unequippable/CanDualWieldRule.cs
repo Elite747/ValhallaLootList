@@ -17,6 +17,6 @@ internal class CanDualWieldRule : SimpleRule
     {
         // While only enhancement shaman are able to equip offhand weapons, don't report items as unequippable for non-enhancement shaman
         // as it will cause those items to not be selectable in loot list creation.
-        return (spec & (SpecializationGroups.Warrior | SpecializationGroups.Shaman | SpecializationGroups.Rogue | SpecializationGroups.Hunter)) == spec;
+        return (spec & (SpecializationGroups.Warrior | SpecializationGroups.Shaman | SpecializationGroups.Rogue | SpecializationGroups.Hunter | SpecializationGroups.DeathKnight)) == spec;
     }
 }

@@ -10,72 +10,46 @@
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
 </MudText>
 
-<AuthorizeView Policy="@AppPolicies.Recruiter" Resource="Team">
-    <Authorized>
-        <MudSelect T="RaidMemberStatus"
-                   Value="Member.Status"
-                   ValueChanged="OnStatusChangedAsync"
-                   Label="Status"
-                   ToStringFunc="GetDisplayString"
-                   FullWidth="true"
-                   Variant="Variant.Filled">
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.FullTrial">@GetDisplayString(RaidMemberStatus.FullTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.HalfTrial">@GetDisplayString(RaidMemberStatus.HalfTrial)</MudSelectItem>
-            <MudSelectItem T="RaidMemberStatus" Value="RaidMemberStatus.Member">@GetDisplayString(RaidMemberStatus.Member)</MudSelectItem>
-        </MudSelect>
-    </Authorized>
-    <NotAuthorized>
-        <MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
-    </NotAuthorized>
-</AuthorizeView>
+<MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
 
 <MudText Inline="false">
-    Attended @Member.Attended of the last @Member.ObservedAttendances raids.
+    Missed @(Member.Absences == 1 ? "1 raid" : Member.Absences + " raids") this phase.
 </MudText>
 
-<MudText Inline="false">
-    <MudIcon Class="text-icon" Icon="@CustomIcons.Diamond" />
-    Gem &amp; Enchant Bonus:
-    <MudText Inline Color="Member.Enchanted ? Color.Success : Color.Warning">
-        @(Member.Enchanted ? "Awarded" : "Not Awarded")
+@if (Team.Size != 10)
+{
+    <MudText Inline="false">
+        <MudIcon Class="text-icon" Icon="@CustomIcons.Diamond" />
+        Gem &amp; Enchant Bonus:
+        <MudText Inline Color="Member.Enchanted ? Color.Success : Color.Warning">
+            @(Member.Enchanted ? "Awarded" : "Not Awarded")
+        </MudText>
+        <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+            <MudIconButton OnClick="ToggleEnchantedAsync"
+                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Size="Size.Small"
+                           Color="Member.Enchanted ? Color.Error : Color.Success"
+                           Class="ml-2" />
+        </AuthorizeView>
     </MudText>
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        <MudIconButton OnClick="ToggleEnchantedAsync"
-                       Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
-                       Size="Size.Small"
-                       Color="Member.Enchanted ? Color.Error : Color.Success"
-                       Class="ml-2" />
-    </AuthorizeView>
-</MudText>
 
-<MudText Inline="false">
-    <MudIcon Class="text-icon" Icon="@CustomIcons.Illidan" />
-    Prepared Bonus:
-    <MudText Inline Color="Member.Prepared ? Color.Success : Color.Warning">
-        @(Member.Prepared ? "Awarded" : "Not Awarded")
+    <MudText Inline="false">
+        <MudIcon Class="text-icon" Icon="@CustomIcons.Illidan" />
+        Prepared Bonus:
+        <MudText Inline Color="Member.Prepared ? Color.Success : Color.Warning">
+            @(Member.Prepared ? "Awarded" : "Not Awarded")
+        </MudText>
+        <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
+            <MudIconButton OnClick="TogglePreparedAsync"
+                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Size="Size.Small"
+                           Color="Member.Prepared ? Color.Error : Color.Success"
+                           Class="ml-2" />
+        </AuthorizeView>
     </MudText>
-    <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
-        <MudIconButton OnClick="TogglePreparedAsync"
-                       Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
-                       Size="Size.Small"
-                       Color="Member.Prepared ? Color.Error : Color.Success"
-                       Class="ml-2" />
-    </AuthorizeView>
-</MudText>
 
-<DonationSummary Member="Member">
-    <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
-        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: false)"
-                       Icon="@Icons.Material.Filled.AddCircle"
-                       Size="Size.Small"
-                       Color="Color.Success"
-                       Class="mx-2" />
-        <MudIconButton OnClick="() => ChangeDonationAsync(isRemove: true)"
-                       Icon="@Icons.Material.Filled.RemoveCircle"
-                       Size="Size.Small"
-                       Color="Color.Error" />
-    </AuthorizeView>
-</DonationSummary>
+    <DonationSummary Member="Member" />
+}
 
 <AuthorizeView Policy="@AppPolicies.LootMasterOrAdmin" Resource="Team">
     <MudCheckBox T="bool" Label="Disenchanter" Checked="Member.Disenchanter" CheckedChanged="ToggleDisenchanterAsync" />
@@ -107,18 +81,6 @@
         if (Member is null) throw new ArgumentNullException(nameof(Member));
     }
 
-    private Task OnStatusChangedAsync(RaidMemberStatus status)
-    {
-        return Api.Teams.UpdateMember(Team.Id, Member.Character.Id, new() { MemberStatus = status })
-            .OnSuccess((_, _) =>
-            {
-                Member.Status = status;
-                return MemberUpdated.InvokeAsync();
-            })
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
-
     private async Task RemoveAsync()
     {
         if (await DialogService.ShowAsync<RemoveMemberDialog, bool>("Remove Member", new() { [nameof(RemoveMemberDialog.CharacterName)] = Member.Character.Name }))
@@ -127,36 +89,6 @@
                 .OnSuccess((_, _) =>
                 {
                     Team.Roster.Remove(Member);
-                    return MemberUpdated.InvokeAsync();
-                })
-                .SendErrorTo(Snackbar)
-                .ExecuteAsync();
-        }
-    }
-
-    private async Task ChangeDonationAsync(bool isRemove)
-    {
-        var result = await DialogService.ShowAsync<GameCurrencyDialog, GameCurrencyResult>($"{(isRemove ? "Remove" : "Add")} Donation ({Member.Character.Name})");
-        if (result is not null)
-        {
-            var actualAmount = result.GetAmount();
-
-            if (isRemove)
-            {
-                actualAmount = -actualAmount;
-            }
-
-            await Api.Donations.Add(new() { CopperAmount = actualAmount, CharacterId = Member.Character.Id, ApplyThisMonth = result.ApplyThisMonth })
-                .OnSuccess((_, _) =>
-                {
-                    if (result.ApplyThisMonth)
-                    {
-                        Member.DonatedThisMonth += actualAmount;
-                    }
-                    else
-                    {
-                        Member.DonatedNextMonth += actualAmount;
-                    }
                     return MemberUpdated.InvokeAsync();
                 })
                 .SendErrorTo(Snackbar)
@@ -226,8 +158,8 @@
     {
         return status switch
         {
-            RaidMemberStatus.FullTrial => "Full Trial (-18 prio)",
-            RaidMemberStatus.HalfTrial => "Half Trial (-9 prio)",
+            RaidMemberStatus.FullTrial => "Full Trial (-24 prio)",
+            RaidMemberStatus.HalfTrial => "Half Trial (-12 prio)",
             RaidMemberStatus.Member => "Member (no penalty)",
             _ => "Not Selected"
         };

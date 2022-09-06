@@ -11,8 +11,23 @@ public class ApiClientDonations
 
     public ApiClient Client { get; }
 
-    public IApiClientOperation Add(DonationSubmissionDto donation)
+    public IApiClientOperation<List<DonationDto>> GetForMonth(int month, int year)
     {
-        return Client.CreateRequest(HttpMethod.Post, "api/v1/donations", donation);
+        return Client.CreateRequest<List<DonationDto>>(HttpMethod.Get, $"api/v1/donations?month={month}&year={year}");
+    }
+
+    public IApiClientOperation<DonationDto> Add(DonationSubmissionDto donation)
+    {
+        return Client.CreateRequest<DonationSubmissionDto, DonationDto>(HttpMethod.Post, "api/v1/donations", donation);
+    }
+
+    public IApiClientOperation<List<DonationDto>> Import(DonationImportDto import, bool skipExcess = false)
+    {
+        return Client.CreateRequest<DonationImportDto, List<DonationDto>>(HttpMethod.Post, $"api/v1/donations/import?skipExcess={skipExcess}", import);
+    }
+
+    public IApiClientOperation Delete(long donationId)
+    {
+        return Client.CreateRequest(HttpMethod.Delete, $"api/v1/donations/{donationId}");
     }
 }

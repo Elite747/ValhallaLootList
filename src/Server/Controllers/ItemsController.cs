@@ -44,8 +44,8 @@ public class ItemsController : ApiControllerV1
             return ValidationProblem();
         }
 
-        itemQuery = itemQuery.Where(item => item.Encounters.Any(e => e.Is25 == is25));
-        restrictionQuery = restrictionQuery.Where(r => r.Item.Encounters.Any(e => e.Is25 == is25));
+        itemQuery = itemQuery.Where(item => item.Encounters.Any(e => e.Is25 == is25) || item.RewardFrom!.Encounters.Any(e => e.Is25 == is25));
+        restrictionQuery = restrictionQuery.Where(r => r.Item.Encounters.Any(e => e.Is25 == is25) || r.Item.RewardFrom!.Encounters.Any(e => e.Is25 == is25));
 
         var items = await itemQuery
             .Select(item => new ItemDto

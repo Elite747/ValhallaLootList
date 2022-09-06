@@ -52,23 +52,18 @@
     <EntryTemplate Context="entry">
         @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
         {
-            <div class="d-flex align-center">
+            <div class="d-flex align-center h-100">
                 <CascadingItemContext Id="entry.ItemId">
                     @if (entry.Won)
                     {
-                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                            <MudAvatar Rounded="true" Class="mr-2">
-                                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-                            </MudAvatar>
-                        </MudBadge>
-                    }
-                    else
-                    {
-                        <MudAvatar Rounded="true" Class="mr-2">
-                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
+                        <MudAvatar Size="Size.Small" Class="mr-2 h-100" Color="Color.Success">
+                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" />
                         </MudAvatar>
                     }
-                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@item.Name" />
+                    <MudAvatar Rounded Size="Size.Small" Class="mr-2 h-100">
+                        <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
+                    </MudAvatar>
+                    <ItemLink LinkEnabled Colorize Bracketize PlaceholderText="@item.Name" />
                 </CascadingItemContext>
             </div>
             <ul>
@@ -90,8 +85,8 @@
         }
         else
         {
-            <div class="d-flex align-center">
-                <MudAvatar Rounded="true" Class="mr-2" Color="Color.Dark" />
+            <div class="d-flex align-center h-100">
+                <MudAvatar Rounded Size="Size.Small" Class="mr-2 h-100" Color="Color.Dark" />
                 <span class="q0">[Empty Slot]</span>
             </div>
         }

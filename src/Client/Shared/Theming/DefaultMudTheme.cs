@@ -10,11 +10,11 @@ public static class DefaultMudTheme
     public static MudTheme Value { get; } = new()
     {
         Palette =
-            {
-                Primary = Colors.Purple.Darken1,
-                Secondary = Colors.Blue.Accent1,
-                Tertiary = Colors.Orange.Darken3,
-                AppbarBackground = Colors.Purple.Darken1
-            }
+        {
+            Primary = "#3949AB",
+            Secondary = Colors.Blue.Accent1,
+            Tertiary = Colors.Orange.Darken3,
+            AppbarBackground = "#3949AB"
+        }
     };
 }

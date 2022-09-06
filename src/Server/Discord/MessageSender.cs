@@ -273,7 +273,7 @@ public class MessageSender
         }
 
         var builder = new DiscordEmbedBuilder()
-            .WithColor(new DiscordColor("#8E24AA"))
+            .WithColor(new DiscordColor("#3949AB"))
             .WithAuthor(name: teamName, url: $"{request.Scheme}://{request.Host}{request.PathBase}/teams/{teamName}")
             .WithUrl($"{request.Scheme}://{request.Host}{request.PathBase}/raids/{raidId}")
             .WithDescription($"Killed <t:{killedAt.ToUnixTimeSeconds()}:f>");

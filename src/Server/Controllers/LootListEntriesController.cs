@@ -192,6 +192,7 @@ public class LootListEntriesController : ApiControllerV1
                     i.Name,
                     i.Phase,
                     i.RewardFromId,
+                    RewardDifficulties = i.RewardFrom!.Encounters.Select(e => new { e.Is25, e.Heroic }),
                     Difficulties = i.Encounters.Select(e => new { e.Is25, e.Heroic }).ToList(),
                     QuestId = (uint?)i.RewardFrom!.QuestId,
                     i.IsUnique,
@@ -211,12 +212,12 @@ public class LootListEntriesController : ApiControllerV1
                 return (false, $"{item.Name} is not part of the same phase as the loot list.");
             }
 
-            if (!item.Difficulties.Any(d => d.Is25 == (entry.LootList.Size is 25)))
+            if (!item.Difficulties.Concat(item.RewardDifficulties).Any(d => d.Is25 == (entry.LootList.Size is 25)))
             {
                 return (false, $"{item.Name} is not available for the raid size.");
             }
 
-            if (!item.Difficulties.Any(d => d.Heroic == entry.Heroic))
+            if (!item.Difficulties.Concat(item.RewardDifficulties).Any(d => d.Heroic == entry.Heroic))
             {
                 return (false, $"{item.Name} does not match the difficulty requirement for this space.");
             }

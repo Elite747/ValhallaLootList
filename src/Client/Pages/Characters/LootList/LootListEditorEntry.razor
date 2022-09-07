@@ -6,43 +6,48 @@
 {
     <div class="d-flex align-center py-1">
         <CascadingItemContext Id="_item.Id">
-            <MudAvatar Rounded="true"
-                        Size="Size.Medium"
-                        Class="mr-2"
-                        draggable="@(!Entry.Won)"
-                        ondragover="event.preventDefault();"
-                        @ondragstart="OnDragStart"
-                        @ondragend="OnDragEnd"
-                        @ondrop="OnDropAsync"
-                        @ondragenter="OnDragEnter"
-                        @ondragleave="OnDragLeave"
-                        Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark"
-                        Style="@(Entry.Won ? null : "cursor: move")">
+            <MudAvatar Rounded
+                       Size="Size.Small"
+                       Class="mr-2"
+                       draggable="@(!Entry.Won)"
+                       ondragover="event.preventDefault();"
+                       @ondragstart="OnDragStart"
+                       @ondragend="OnDragEnd"
+                       @ondrop="OnDropAsync"
+                       @ondragenter="OnDragEnter"
+                       @ondragleave="OnDragLeave"
+                       Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark"
+                       Style="@(Entry.Won ? null : "cursor: move")">
                 @if (_over && Editor.DraggingEntry != Entry)
                 {
                     <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : (Entry.Heroic ? CustomIcons.Skull : null))" Style="pointer-events: none" />
                 }
                 else
                 {
-                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" ondragstart="event.dataTransfer.clearData();event.dataTransfer.setData('', event.target.id);" />
+                    <ItemIcon Size="IconSize.Small" Width="24" Height="24" ondragstart="event.dataTransfer.clearData();event.dataTransfer.setData('', event.target.id);" />
                 }
             </MudAvatar>
             <div class="mr-auto">
-                <div>
-                    <ItemLink LinkEnabled="true" Colorize="true" Bracketize="true" PlaceholderText="@_item.Name" />
-                </div>
+                <ItemLink LinkEnabled Colorize Bracketize PlaceholderText="@_item.Name" />
                 @if (!Entry.Won)
                 {
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+@*                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
                         Change Item
-                    </MudButton>
+                    </MudButton>*@
                     <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Error" Size="Size.Small" OnClick="ClearAsync" />
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Disabled="true">
-                        Can't change
-                    </MudButton>
+                    <MudTooltip>
+                        <TooltipContent>
+                            <p style="max-width: 150px">
+                                You have won this item already and can't change it.
+                            </p>
+                        </TooltipContent>
+                        <ChildContent>
+                            <MudIcon Icon="@Icons.Material.Outlined.Lock" Color="Color.Error" Size="Size.Small" />
+                        </ChildContent>
+                    </MudTooltip>
                 }
             </div>
         </CascadingItemContext>
@@ -67,19 +72,18 @@
 else if (!Entry.Won)
 {
     <div class="d-flex align-center py-1">
-        <MudAvatar Rounded="true"
-                    Size="Size.Medium"
-                    Class="mr-2"
-                    ondragover="event.preventDefault();"
-                    @ondrop="OnDropAsync"
-                    @ondragenter="OnDragEnter"
-                    @ondragleave="OnDragLeave"
-                    Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark">
+        <MudAvatar Rounded
+                   Size="Size.Small"
+                   Class="mr-2"
+                   ondragover="event.preventDefault();"
+                   @ondrop="OnDropAsync"
+                   @ondragenter="OnDragEnter"
+                   @ondragleave="OnDragLeave"
+                   Color="_over ? Entry.Won ? Color.Error : Color.Success : Color.Dark">
             <MudIcon Icon="@(_over && Editor.DraggingEntry != Entry ? Entry.Won ? Icons.Material.Filled.Clear : Icons.Material.Filled.ArrowDownward : (Entry.Heroic ? CustomIcons.Skull : null))" Style="pointer-events: none" />
         </MudAvatar>
         <div class="mr-2">
-            <div><span>&nbsp;</span></div>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="SelectAsync">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Class="py-0" OnClick="SelectAsync">
                 Select Item
             </MudButton>
         </div>
@@ -92,7 +96,7 @@ else if (!Entry.Won)
                     </p>
                 </TooltipContent>
                 <ChildContent>
-                    <MudIcon Icon="@Icons.Material.Outlined.Info" Color="Color.Secondary" />
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Color="Color.Secondary" Size="Size.Small" />
                 </ChildContent>
             </MudTooltip>
         }

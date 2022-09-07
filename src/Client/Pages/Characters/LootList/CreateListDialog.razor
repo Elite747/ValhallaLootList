@@ -8,7 +8,7 @@
         <EditForm OnSubmit="OnSubmitAsync" Model="_model" id="createListForm">
             <DataAnnotationsValidator />
             <ProblemValidator @ref="_problemValidator" />
-            <MudSelect Label="Main Spec"
+            <MudSelect Label="Main-spec"
                        For="() => _model.MainSpec"
                        @bind-Value="@_model.MainSpec"
                        ToStringFunc="spec => spec == default ? string.Empty : spec.GetDisplayName()"
@@ -26,13 +26,13 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-            <MudSelect Label="Off Spec"
+            <MudSelect Label="Off-spec"
                        For="() => _model.OffSpec"
                        @bind-Value="@_model.OffSpec"
                        ToStringFunc='spec => spec == default ? "None" : spec.GetDisplayName()'
                        Variant="Variant.Filled"
                        Disabled="Specializations.Count == 1"
-                       HelperText="@(Specializations.Count == 1 ? "Off spec disabled. Your class only has one role." : null)">
+                       HelperText="@(Specializations.Count == 1 ? "Off-spec disabled. Your class only has one role." : null)">
                 <MudSelectItem Value="ValhallaLootList.Specializations.None">None</MudSelectItem>
                 @foreach (var spec in Specializations)
                 {

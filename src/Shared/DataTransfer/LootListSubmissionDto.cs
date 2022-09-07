@@ -21,11 +21,11 @@ public class LootListSubmissionDto : IValidatableObject
     {
         if (MainSpec == Specializations.None)
         {
-            yield return new ValidationResult("The Main Spec field is required.", new[] { nameof(MainSpec) });
+            yield return new ValidationResult("The Main-spec field is required.", new[] { nameof(MainSpec) });
         }
         else if (MainSpec == OffSpec)
         {
-            yield return new ValidationResult("Off Spec cannot be the same as Main Spec.", new[] { nameof(OffSpec) });
+            yield return new ValidationResult("Off-spec cannot be the same as Main-spec.", new[] { nameof(OffSpec) });
         }
 
         if (CharacterId == 0)

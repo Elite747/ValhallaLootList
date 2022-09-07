@@ -3,64 +3,66 @@
 
 <CascadingItemContext Id="Entry.ItemId">
     <div class="d-flex align-center">
-        @if (Entry.Won)
-        {
-            <MudBadge Overlap Origin="Origin.TopLeft" Icon="@Icons.Material.Filled.Check" Color="Color.Success">
-                <MudAvatar Rounded="true" Class="mr-2">
-                    <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-                </MudAvatar>
-            </MudBadge>
-        }
-        else if (Entry.Rank != 0)
+        @if (Entry.Rank != 0)
         {
             <MudTooltip>
                 <TooltipContent>
-                    <div>Rank @Entry.Rank</div>
-                    @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+                    @if (Entry.Won)
                     {
-                        <div>
-                            <PriorityBonusDisplay Bonus="bonus" />
-                        </div>
+                        <span>Item Won</span>
                     }
-                    @if (Entry.AutoPass)
+                    else
                     {
-                        <div>Automatically Passing</div>
+                        <div>Rank @Entry.Rank</div>
+                        @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+                        {
+                            <div>
+                                <PriorityBonusDisplay Bonus="bonus" />
+                            </div>
+                        }
+                        @if (Entry.AutoPass)
+                        {
+                            <div>Automatically Passing</div>
+                        }
                     }
                 </TooltipContent>
                 <ChildContent>
-                    <MudBadge Overlap Origin="Origin.TopLeft" Content="_prio" Color="Color.Info">
-                        <MudAvatar Rounded="true" Class="mr-2">
-                            <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-                        </MudAvatar>
-                    </MudBadge>
+                    <MudAvatar Size="Size.Small" Class="mr-2" Color="Entry.Won ? Color.Success : Color.Info">
+                        @if (Entry.Won)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                        }
+                        else
+                        {
+                            @_prio
+                        }
+                    </MudAvatar>
                 </ChildContent>
             </MudTooltip>
         }
-        else
+
+        <MudAvatar Rounded Size="Size.Small" Class="mr-2">
+            <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
+        </MudAvatar>
+
+        <ItemLink Colorize Bracketize LinkEnabled PlaceholderText="@Entry.ItemName" Class="mr-2" />
+
+        @if (!Entry.Won && Entry.Rank != 0)
         {
-            <MudAvatar Rounded="true" Class="mr-2">
-                <ItemIcon Size="IconSize.Medium" Width="40" Height="40" />
-            </MudAvatar>
+            <AuthorizeView Resource="LootList.CharacterId" Policy="@(AppPolicies.CharacterOwner)">
+                <Authorized>
+                    <MudTooltip Text="Toggling this will make it appear as if you don't have this item on your loot list.">
+                        <MudSwitch ReadOnly="_autoPassChanging" T="bool" Checked="Entry.AutoPass" CheckedChanged="SetAutoPassAsync" Label="Auto-Pass" Color="Color.Error" />
+                    </MudTooltip>
+                </Authorized>
+                <NotAuthorized>
+                    @if (Entry.AutoPass)
+                    {
+                        <MudText Color="Color.Info">Automatically Passing</MudText>
+                    }
+                </NotAuthorized>
+            </AuthorizeView>
         }
-        <div class="d-flex flex-column">
-            <ItemLink Colorize Bracketize LinkEnabled PlaceholderText="@Entry.ItemName" />
-            @if (!Entry.Won && Entry.Rank != 0)
-            {
-                <AuthorizeView Resource="LootList.CharacterId" Policy="@(AppPolicies.CharacterOwner)">
-                    <Authorized>
-                        <MudTooltip Text="Toggling this will make it appear as if you don't have this item on your loot list.">
-                            <MudSwitch ReadOnly="_autoPassChanging" T="bool" Checked="Entry.AutoPass" CheckedChanged="SetAutoPassAsync" Label="Auto-Pass" Color="Color.Error" />
-                        </MudTooltip>
-                    </Authorized>
-                    <NotAuthorized>
-                        @if (Entry.AutoPass)
-                        {
-                            <MudText Color="Color.Info">Automatically Passing</MudText>
-                        }
-                    </NotAuthorized>
-                </AuthorizeView>
-            }
-        </div>
     </div>
 </CascadingItemContext>
 

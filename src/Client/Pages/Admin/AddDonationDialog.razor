@@ -34,8 +34,8 @@
     private ProblemValidator? _problemValidator;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
-    [Parameter] public byte TargetMonth { get; set; }
-    [Parameter] public byte TargetYear { get; set; }
+    [Parameter] public int TargetMonth { get; set; }
+    [Parameter] public int TargetYear { get; set; }
 
     protected override void OnParametersSet()
     {

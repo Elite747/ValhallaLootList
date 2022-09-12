@@ -56,7 +56,7 @@ public class ItemsController : ApiControllerV1
                 Name = item.Name,
                 Slot = item.Slot,
                 Type = item.Type,
-                MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1,
+                //MaxCount = (!item.IsUnique && (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger || item.Slot == InventorySlot.OneHand)) ? 2 : 1,
                 Heroic = item.Encounters.Any(e => e.Heroic)
             })
             .ToDictionaryAsync(item => item.Id);

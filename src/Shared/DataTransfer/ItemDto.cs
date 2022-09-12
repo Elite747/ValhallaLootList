@@ -9,7 +9,7 @@ public class ItemDto
 
     public uint QuestId { get; set; }
 
-    public int MaxCount { get; set; }
+    //public int MaxCount { get; set; }
 
     public string? Name { get; set; }
 

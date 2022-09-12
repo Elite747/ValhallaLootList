@@ -18,6 +18,11 @@ public static class SpecializationsExtensions
 
     public static bool IsSingleSpecialization(this Specializations spec)
     {
+        if ((long)spec == -2147483648)
+        {
+            return true; // Blood DK fix. WHY does this not parse correctly?
+        }
+
         return spec > 0 && Enum.IsDefined(spec);
     }
 

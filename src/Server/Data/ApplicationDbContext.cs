@@ -291,9 +291,9 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             e.HasData(
                 // Phase 1 brackets
                 new Bracket(phase: 1, index: 0, minRank: 21, maxRank: 24, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
-                new Bracket(phase: 1, index: 1, minRank: 17, maxRank: 20, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
-                new Bracket(phase: 1, index: 2, minRank: 13, maxRank: 16, normalItems: 1, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
-                new Bracket(phase: 1, index: 3, minRank: 01, maxRank: 12, normalItems: 1, heroicItems: 0, allowOffspec: true, allowTypeDuplicates: true)
+                new Bracket(phase: 1, index: 1, minRank: 17, maxRank: 20, normalItems: 2, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 1, index: 2, minRank: 13, maxRank: 16, normalItems: 2, heroicItems: 0, allowOffspec: false, allowTypeDuplicates: false),
+                new Bracket(phase: 1, index: 3, minRank: 01, maxRank: 12, normalItems: 2, heroicItems: 0, allowOffspec: true, allowTypeDuplicates: true)
                 // Phase 2 brackets
                 //new Bracket(phase: 2, index: 0, minRank: 21, maxRank: 24, normalItems: 1, heroicItems: 1, allowOffspec: false, allowTypeDuplicates: false),
                 //new Bracket(phase: 2, index: 1, minRank: 17, maxRank: 20, normalItems: 1, heroicItems: 1, allowOffspec: false, allowTypeDuplicates: false),

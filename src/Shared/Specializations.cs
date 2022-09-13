@@ -38,7 +38,7 @@ public enum Specializations : long
     BloodDeathKnight = 1 << 28,
     FrostDeathKnight = 1 << 29,
     UnholyDeathKnight = 1 << 30,
-    BloodDeathKnightTank = 1 << 31,
+    BloodDeathKnightTank = 1L << 31,
     FrostDeathKnightTank = 1L << 32,
     UnholyDeathKnightTank = 1L << 33
 }

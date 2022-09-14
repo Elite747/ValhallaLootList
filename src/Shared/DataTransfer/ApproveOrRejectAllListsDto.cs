@@ -6,4 +6,6 @@ namespace ValhallaLootList.DataTransfer;
 public class ApproveOrRejectAllListsDto : MultiTimestampDto
 {
     public string? Message { get; set; }
+
+    public bool Bench { get; set; }
 }

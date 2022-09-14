@@ -56,10 +56,10 @@
     <br />
 </AuthorizeView>
 
-<MudButton Link="@("characters/" + Member.Character.Name)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
-
 <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team">
     <Authorized>
+        <MudCheckBox T="bool" Label="Bench" Checked="Member.Bench" CheckedChanged="ToggleBenchAsync" />
+        <br />
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
@@ -68,6 +68,8 @@
         </AuthorizeView>
     </NotAuthorized>
 </AuthorizeView>
+
+<MudButton Link="@("characters/" + Member.Character.Name)" Color="Color.Primary" Variant="Variant.Text">View List</MudButton>
 
 @code {
     [Parameter] public TeamDto Team { get; set; } = null!;
@@ -148,6 +150,18 @@
             .OnSuccess((_, _) =>
             {
                 Member.Disenchanter = disenchanter;
+                return MemberUpdated.InvokeAsync();
+            })
+            .SendErrorTo(Snackbar)
+            .ExecuteAsync();
+    }
+
+    private async Task ToggleBenchAsync(bool bench)
+    {
+        await Api.Teams.UpdateMemberBench(Team.Id, Member.Character.Id, bench)
+            .OnSuccess((_, _) =>
+            {
+                Member.Bench = bench;
                 return MemberUpdated.InvokeAsync();
             })
             .SendErrorTo(Snackbar)

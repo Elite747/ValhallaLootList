@@ -45,6 +45,7 @@ public static class HelperQueries
                 c.Enchanted,
                 c.Prepared,
                 c.Disenchanter,
+                c.Bench,
                 DonationsForThisMonth = c.Character.Donations.Count(d => d.TargetMonth == thisMonth.Month && d.TargetYear == thisMonth.Year),
                 DonationsForNextMonth = c.Character.Donations.Count(d => d.TargetMonth == nextMonth.Month && d.TargetYear == nextMonth.Year),
                 Verified = c.Character.VerifiedById.HasValue,
@@ -77,6 +78,7 @@ public static class HelperQueries
                 JoinedAt = character.JoinedAt,
                 Prepared = character.Prepared,
                 Disenchanter = character.Disenchanter,
+                Bench = character.Bench,
                 DonatedThisMonth = character.DonationsForThisMonth,
                 DonatedNextMonth = character.DonationsForNextMonth,
                 MaximumDonationTickets = PrioCalculator.MaxDonations

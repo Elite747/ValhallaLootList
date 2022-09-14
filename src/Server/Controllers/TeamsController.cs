@@ -368,6 +368,42 @@ public class TeamsController : ApiControllerV1
         return Accepted();
     }
 
+    [HttpPut("{id:long}/members/{characterId:long}/bench")]
+    public async Task<IActionResult> PutMemberBench(long id, long characterId, bool bench)
+    {
+        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.RaidLeaderOrAdmin);
+
+        if (!auth.Succeeded)
+        {
+            return Unauthorized();
+        }
+
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
+
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        if (member.Bench == bench)
+        {
+            return Problem(bench ? "Character is already marked as a bench member." : "Character is already marked as a full-time member.");
+        }
+
+        member.Bench = bench;
+
+        await _context.SaveChangesAsync();
+
+        _telemetry.TrackEvent("TeamMemberBenchUpdated", User, props =>
+        {
+            props["TeamId"] = member.TeamId.ToString();
+            props["CharacterId"] = member.CharacterId.ToString();
+            props["Bench"] = bench.ToString();
+        });
+
+        return Accepted();
+    }
+
     [HttpDelete("{id:long}/members/{characterId:long}")]
     public async Task<IActionResult> DeleteMember(long id, long characterId, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] DiscordClientProvider dcp)
     {

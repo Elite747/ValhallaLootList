@@ -4,25 +4,24 @@
 
 <MudDivider Class="my-2" />
 <MudNavLink Href="raids" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarToday">Raid Calendar</MudNavLink>
-<MudNavLink Href="characters" Icon="@Icons.Material.Filled.Person">Characters</MudNavLink>
+<MudNavLink Href="characters" Icon="@Icons.Material.Filled.FormatListBulleted">All Characters</MudNavLink>
 
 <AuthorizeView Policy="@AppPolicies.Administrator">
-    <MudNavGroup Title="Admin Tools" Icon="@Icons.Material.Filled.AdminPanelSettings">
-        <MudNavLink Href="admin/audit">Raid Audit</MudNavLink>
-        <MudNavLink Href="admin/donations">Donations</MudNavLink>
+    <MudNavGroup Title="Admin Tools" Expanded Icon="@Icons.Material.Filled.AdminPanelSettings">
+        <MudNavLink Href="admin/audit" Icon="@Icons.Material.Filled.FindInPage">Raid Audit</MudNavLink>
+        <MudNavLink Href="admin/donations" Icon="@CustomIcons.HandCoin">Donations</MudNavLink>
+        <MudNavLink Href="teams" Icon="@Icons.Material.Filled.PeopleAlt" Match="NavLinkMatch.All">All Teams</MudNavLink>
     </MudNavGroup>
 </AuthorizeView>
 
-<MudNavLink Href="teams" Match="NavLinkMatch.All">All Teams</MudNavLink>
-
-<MudNavGroup Title="25-Man Teams" Expanded Icon="@Icons.Material.Filled.PeopleAlt">
+<MudNavGroup Title="25-Man Teams" Expanded Icon="@CustomIcons.Numeric25">
     @foreach (var team in TeamsSource.GetTeams(25))
     {
         <MudNavLink Href="@("teams/" + team.Name)">@team.Name</MudNavLink>
     }
 </MudNavGroup>
 
-<MudNavGroup Title="10-Man Teams" Expanded Icon="@Icons.Material.Filled.PeopleAlt">
+<MudNavGroup Title="10-Man Teams" Icon="@CustomIcons.Numeric10">
     @foreach (var team in TeamsSource.GetTeams(10))
     {
         <MudNavLink Href="@("teams/" + team.Name)">@team.Name</MudNavLink>

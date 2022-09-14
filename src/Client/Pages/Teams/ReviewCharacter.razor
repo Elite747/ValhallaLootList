@@ -88,12 +88,13 @@ else
 
     private async Task ApproveAsync()
     {
-        var result = await DialogService.Show<SetMessageDialog>("Approve All Loot Lists").Result;
+        var result = await DialogService.Show<AddMemberDialog>("Approve All Loot Lists").Result;
 
         if (!result.Cancelled)
         {
+            var data = (AddMemberDialog.Response)result.Data;
             var lootLists = LootLists.ToList();
-            await Api.LootLists.ApproveAll(lootLists, Team, (string?)result.Data)
+            await Api.LootLists.ApproveAll(lootLists, Team, data.Message, data.Bench)
                 .OnSuccess(async (response, _) =>
                 {
                     foreach (var lootList in lootLists)

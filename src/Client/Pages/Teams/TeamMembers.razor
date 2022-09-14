@@ -3,7 +3,10 @@
 @inject ISnackbar Snackbar
 
 <MudExpansionPanels Elevation="5" Dense="true" Class="mt-3">
-    @foreach (var m in Team.Roster.OrderByRoleThenClassThenName(_phase))
+    @foreach (var m in Team.Roster
+        .OrderBy(m => m.Bench)
+        .ThenBy(m => (int?)(m.LootLists.FirstOrDefault(l => l.Phase == _phase)?.MainSpec.GetRole()) ?? int.MaxValue)
+        .ThenBy(m => m.Character.Name))
     {
         var member = m;
         var selected = member.Character.Id == _selectedMemberId;
@@ -18,6 +21,14 @@
                                 ShowTooltip="true"
                                 Class="mr-5 mb-1" />
                     <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
+                    @if (member.Bench)
+                    {
+                        <MudText Inline="true" Color="Color.Primary" Class="mr-2">Bench</MudText>
+                    }
+                    @if (member.Status != RaidMemberStatus.Member)
+                    {
+                        <MudText Inline="true" Color="Color.Warning" Class="mr-2">Trial</MudText>
+                    }
                     @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
                     {
                         <MudTooltip>
@@ -70,10 +81,6 @@
                                 </ChildContent>
                             </MudTooltip>
                         }
-                    }
-                    @if (member.Status != RaidMemberStatus.Member)
-                    {
-                        <MudText Inline="true" Color="Color.Warning">Trial</MudText>
                     }
                 </div>
             </TitleContent>

@@ -539,7 +539,8 @@ public class LootListsController : ApiControllerV1
             CharacterId = characterId,
             Disenchanter = false,
             Enchanted = false,
-            Prepared = false
+            Prepared = false,
+            Bench = dto.Bench
         });
 
         foreach (var list in lootLists)

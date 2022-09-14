@@ -85,6 +85,26 @@ public static class SpecializationsExtensions
         return specName;
     }
 
+    public static Classes ToClass(this Specializations spec)
+    {
+        return spec switch
+        {
+            Specializations.BalanceDruid or Specializations.BearDruid or Specializations.CatDruid or Specializations.RestoDruid => Classes.Druid,
+            Specializations.BeastMasterHunter or Specializations.MarksmanHunter or Specializations.SurvivalHunter => Classes.Hunter,
+            Specializations.ArcaneMage or Specializations.FireMage or Specializations.FrostMage => Classes.Mage,
+            Specializations.HolyPaladin or Specializations.ProtPaladin or Specializations.RetPaladin => Classes.Paladin,
+            Specializations.DiscPriest or Specializations.ShadowPriest or Specializations.HolyPriest => Classes.Priest,
+            Specializations.AssassinationRogue or Specializations.CombatRogue or Specializations.SubtletyRogue => Classes.Rogue,
+            Specializations.EleShaman or Specializations.EnhanceShaman or Specializations.RestoShaman => Classes.Shaman,
+            Specializations.AfflictionWarlock or Specializations.DemoWarlock or Specializations.DestroWarlock => Classes.Warlock,
+            Specializations.ProtWarrior or Specializations.ArmsWarrior or Specializations.FuryWarrior => Classes.Warrior,
+            Specializations.BloodDeathKnight or Specializations.BloodDeathKnightTank or
+            Specializations.FrostDeathKnight or Specializations.FrostDeathKnightTank or
+            Specializations.UnholyDeathKnight or Specializations.UnholyDeathKnightTank => Classes.DeathKnight,
+            _ => throw new ArgumentOutOfRangeException(nameof(spec))
+        };
+    }
+
     public static string GetClassName(this Specializations spec)
     {
         return spec switch

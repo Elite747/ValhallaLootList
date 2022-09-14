@@ -288,9 +288,25 @@ public class CharactersController : ApiControllerV1
             })
             .ToListAsync();
 
+        var otherCharacters = new List<string>();
+
+        if (character.OwnerId.HasValue)
+        {
+            await foreach (var charName in _context.Characters
+                .AsNoTracking()
+                .Where(c => c.OwnerId == character.OwnerId && c.Id != id)
+                .OrderBy(c => c.Name)
+                .Select(c => c.Name)
+                .AsAsyncEnumerable())
+            {
+                otherCharacters.Add(charName);
+            }
+        }
+
         return new CharacterAdminDto
         {
             TeamRemovals = removals,
+            OtherCharacters = otherCharacters,
             Owner = await dcp.GetMemberDtoAsync(character.OwnerId),
             VerifiedBy = await dcp.GetMemberDtoAsync(character.VerifiedById)
         };

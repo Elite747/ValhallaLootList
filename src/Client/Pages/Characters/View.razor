@@ -139,10 +139,16 @@
 
     [Parameter] public string? CharacterName { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
+    {
+        _phaseConfigOperation = Api.GetPhaseConfiguration().OnSuccess(config => _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase));
+    }
+
+    protected override async Task OnParametersSetAsync()
     {
         _characterOperation = Api.Characters.Get(CharacterName ?? string.Empty);
-        _phaseConfigOperation = Api.GetPhaseConfiguration().OnSuccess(config => _panelIndex = config.Phases.Count(phase => phase > config.CurrentPhase));
+        _lootListsOperation = null;
+        _lootListsAndPhaseConfigOperations = Array.Empty<IApiClientOperation>();
         await _characterOperation.ExecuteAsync();
         StateHasChanged();
         if (_characterOperation.HasResult())

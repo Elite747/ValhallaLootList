@@ -30,6 +30,17 @@
                 }
             }
 
+            @if (adminInfo.OtherCharacters.Count > 0)
+            {
+                <div>
+                    Other Characters:
+                    @foreach (var otherChar in adminInfo.OtherCharacters)
+                    {
+                        <MudLink Href="@($"characters/{otherChar}")" Class="mr-2">@otherChar</MudLink>
+                    }
+                </div>
+            }
+
             @if (!HideRemovals)
             {
                 <MudDivider DividerType="DividerType.Middle" Class="my-2" />
@@ -54,9 +65,13 @@
             <MudCardActions>
                 <MudButton OnClick="() => SetOwnerAsync(adminInfo.Owner)" Color="Color.Primary">@(adminInfo.Owner is null ? "Set" : "Change") Owner</MudButton>
 
-                @if (adminInfo.VerifiedBy is null && adminInfo.Owner is not null)
+                @if (adminInfo.Owner is not null)
                 {
-                    <MudButton OnClick="() => VerifyOwnerAsync(adminInfo.Owner)" Color="Color.Primary">Verify Owner</MudButton>
+                    @if (adminInfo.VerifiedBy is null)
+                    {
+                        <MudButton OnClick="() => VerifyOwnerAsync(adminInfo.Owner)" Color="Color.Primary">Verify Owner</MudButton>
+                    }
+                    <MudButton OnClick="() => DeleteOwnerAsync(adminInfo.Owner)" Color="Color.Error">Clear Owner</MudButton>
                 }
             </MudCardActions>
         }
@@ -87,6 +102,28 @@
                 {
                     var currentUserId = User.GetDiscordId();
                     if (oldOwner?.Id == currentUserId || result.Id == currentUserId)
+                    {
+                        await Permissions.RefreshAsync(ct);
+                    }
+                    if (_executor is not null)
+                    {
+                        await _executor.RestartAsync();
+                    }
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private async Task DeleteOwnerAsync(GuildMemberDto oldOwner)
+    {
+        if (await DialogService.ShowMessageBox("Clear Owner", "Are you sure you want to clear the owner?", yesText: "Clear", cancelText: "Cancel") == true)
+        {
+            await Api.Characters.DeleteOwner(Character.Id)
+                .OnSuccess(async (_, ct) =>
+                {
+                    var currentUserId = User.GetDiscordId();
+                    if (oldOwner.Id == currentUserId)
                     {
                         await Permissions.RefreshAsync(ct);
                     }

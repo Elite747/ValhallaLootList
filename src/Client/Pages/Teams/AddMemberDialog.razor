@@ -1,0 +1,30 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudText>
+            Set an optional message to send to the owner of this character. 
+        </MudText>
+
+        <MudTextField Label="Message"
+                      @bind-Value="_message"
+                      Variant="Variant.Filled"
+                      Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(new Response(_message, true)))" Color="Color.Primary" Variant="Variant.Filled">Add as Bench</MudButton>
+        <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(new Response(_message, false)))" Color="Color.Primary" Variant="Variant.Filled">Add as Full-Time</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string _message = string.Empty;
+
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+    }
+
+    public record Response(string Message, bool Bench);
+}

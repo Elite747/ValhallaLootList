@@ -80,13 +80,13 @@ public class ApiClientLootLists
         return request;
     }
 
-    public IApiClientOperation<ApproveAllListsResponseDto> ApproveAll(List<LootListDto> lootLists, TeamDto team, string? message)
+    public IApiClientOperation<ApproveAllListsResponseDto> ApproveAll(List<LootListDto> lootLists, TeamDto team, string? message, bool bench)
     {
         var characterId = lootLists.Select(ll => ll.CharacterId).Distinct().Single();
         var request = Client.CreateRequest<ApproveOrRejectAllListsDto, ApproveAllListsResponseDto>(
             HttpMethod.Post,
             $"api/v1/lootlists/{characterId}/approveall/{team.Id}",
-            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Message = message, Size = team.Size });
+            new() { Timestamps = lootLists.ToDictionary(ll => ll.Phase, ll => ll.Timestamp), Message = message, Bench = bench, Size = team.Size });
 
         request.ConfigureSuccess(response =>
         {

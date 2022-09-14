@@ -37,4 +37,6 @@ public class MemberDto
     public int Absences { get; set; }
 
     public bool Disenchanter { get; set; }
+
+    public bool Bench { get; set; }
 }

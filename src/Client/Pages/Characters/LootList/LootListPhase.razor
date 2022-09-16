@@ -5,7 +5,7 @@
             <LootListEditor LootList="_lootList" OnSubmit="StateHasChanged" />
         </Authorized>
         <NotAuthorized>
-            <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnSubmit="StateHasChanged" OnListUpdated="UpdateLootList" />
+            <LootListViewer Character="Character" Phase="Phase" TeamSize="Size" LootList="_lootList" OnSubmit="OnSubmit" OnListUpdated="UpdateLootList" />
         </NotAuthorized>
     </AuthorizeView>
 }
@@ -19,6 +19,8 @@ else
     [Parameter] public byte Size { get; set; }
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public IList<LootListDto> LootLists { get; set; } = null!;
+    [Parameter] public EventCallback<LootListDto> OnListUpdated { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
     private LootListDto? _lootList;
 
     protected override void OnParametersSet()
@@ -28,7 +30,7 @@ else
         _lootList = LootLists.FirstOrDefault(ll => ll.Phase == Phase && ll.Size == Size);
     }
 
-    private void UpdateLootList(LootListDto? lootList)
+    private Task UpdateLootList(LootListDto? lootList)
     {
         if (lootList != _lootList)
         {
@@ -43,5 +45,6 @@ else
             _lootList = lootList;
         }
         StateHasChanged();
+        return OnListUpdated.InvokeAsync(lootList);
     }
 }

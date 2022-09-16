@@ -6,7 +6,7 @@
 <LootListLayout LootList="LootList" Class="flex-grow-1">
     <HeaderContent>
         <MudText Color="_messageColor" Inline="false">@_message</MudText>
-        @if (LootList.TeamId == Team.Id)
+        @if (LootList.TeamId == Team.Id && LootList.RanksVisible)
         {
             <AuthorizeView Policy="@AppPolicies.RaidLeaderOrAdmin" Resource="Team" Context="auth">
                 @if (LootList.Status == LootListStatus.Locked && LootList.TeamId == Team.Id)

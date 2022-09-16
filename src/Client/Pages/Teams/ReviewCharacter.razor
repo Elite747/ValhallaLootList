@@ -22,7 +22,7 @@ else
             <AuthorizeView Context="auth">
                 <ValhallaLootList.Client.Pages.Characters.AdminView User="auth.User" Character="_character" @key="_character" />
             </AuthorizeView>
-            @if (!_character.Teams.Contains(Team.Id))
+            @if (!_character.Teams.Contains(Team.Id) && LootLists.All(ll => ll.RanksVisible))
             {
                 <AuthorizeView Policy=@(AppPolicies.RaidLeaderOrAdmin)>
                     <MudButton OnClick="ApproveAsync" Variant="Variant.Filled" Color="Color.Success" Class="ma-2">Approve All &amp; Add to Team</MudButton>

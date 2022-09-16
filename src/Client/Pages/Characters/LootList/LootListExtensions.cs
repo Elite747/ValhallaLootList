@@ -11,25 +11,21 @@ internal static class LootListExtensions
     {
         foreach (var bracket in lootList.Entries.Where(e => !e.Won).GroupBy(e => new { e.Bracket, e.Heroic }))
         {
-            bool hasUnselected = false;
+            int highestUnselected = 0;
 
             foreach (var entry in bracket.OrderByDescending(e => e.Rank))
             {
                 if (entry.ItemId.HasValue)
                 {
-                    if (hasUnselected)
+                    if (highestUnselected > entry.Rank)
                     {
                         // higher rank is not filled.
                         return bracket.Key.Bracket + 1;
                     }
-                    else
-                    {
-                        hasUnselected = false;
-                    }
                 }
                 else
                 {
-                    hasUnselected = true;
+                    highestUnselected = entry.Rank;
                 }
             }
         }

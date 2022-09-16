@@ -13,6 +13,8 @@ public class DiscordServiceOptions
 
     public long PublicNotificationChannelId { get; set; }
 
+    public long OfficerNotificationChannelId { get; set; }
+
     public long MemberRoleId { get; set; }
 
     public long AdminRoleId { get; set; }

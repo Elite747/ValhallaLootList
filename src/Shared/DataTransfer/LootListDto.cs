@@ -31,6 +31,8 @@ public class LootListDto
 
     public long? ApprovedBy { get; set; }
 
+    public bool RanksVisible { get; set; }
+
     public byte[] Timestamp { get; set; } = Array.Empty<byte>();
 
     public List<LootListEntryDto> Entries

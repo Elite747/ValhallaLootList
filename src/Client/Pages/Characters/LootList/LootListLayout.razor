@@ -21,24 +21,12 @@
             </MudText>
         }
     </div>
-    @if (_brackets.Count == 1 && _brackets[0].All(e => e.Rank == 0))
+    @if (!LootList.RanksVisible)
     {
         <div Class="bracket mx-4 mt-2 mb-4">
             <div class="mx-4 py-1">
                 <MudText Typo="Typo.body1">
                     Rankings hidden. Items are displayed in alphabetical order.
-                    <MudTooltip>
-                        <TooltipContent>
-                            <p>To view this character's rankings, one of the following conditions must be met:</p>
-                            <p>You are the owner of this character</p>
-                            <p>You are on the same team as this character and the loot list is locked.</p>
-                            <p>You are a raid leader</p>
-                            <p>You are an officer</p>
-                        </TooltipContent>
-                        <ChildContent>
-                            <MudIcon Style="font-size:1em" Icon=@(Icons.Material.Filled.Info) />
-                        </ChildContent>
-                    </MudTooltip>
                 </MudText>
             </div>
             @foreach (var entry in LootList.Entries.Where(e => e.ItemId > 0).OrderBy(e => e.ItemName))

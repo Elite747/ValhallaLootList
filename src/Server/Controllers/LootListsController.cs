@@ -193,7 +193,8 @@ public class LootListsController : ApiControllerV1
             Phase = list.Phase,
             Size = list.Size,
             Status = list.Status,
-            Timestamp = list.Timestamp
+            Timestamp = list.Timestamp,
+            RanksVisible = true
         };
 
         var member = await _context.TeamMembers.Where(tm => tm.CharacterId == character.Id && tm.Team!.TeamSize == dto.Size).FirstOrDefaultAsync();
@@ -1265,9 +1266,10 @@ public class LootListsController : ApiControllerV1
                 Size = list.Size,
                 Status = list.Status,
                 SubmittedTo = list.SubmittedTo,
-                TeamId = teamId,
+                TeamId = members?.Find(m => m.CharacterId == list.CharacterId)?.TeamId,
                 TeamName = team.Name,
-                Timestamp = list.Timestamp
+                Timestamp = list.Timestamp,
+                RanksVisible = list.Entries.All(e => e.Rank > 0)
             });
         }
 
@@ -1454,7 +1456,8 @@ public class LootListsController : ApiControllerV1
                 SubmittedTo = list.SubmittedTo,
                 TeamId = member?.TeamId,
                 TeamName = member?.TeamName,
-                Timestamp = list.Timestamp
+                Timestamp = list.Timestamp,
+                RanksVisible = list.Entries.All(e => e.Rank > 0)
             });
         }
 

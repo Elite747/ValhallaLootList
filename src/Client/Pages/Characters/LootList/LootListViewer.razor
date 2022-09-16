@@ -20,7 +20,6 @@ else
     <LootListLayout LootList="LootList">
         <HeaderContent>
             <div class="mb-3">
-                <MudButton OnClick="RefreshAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Class="mr-2">Refresh</MudButton>
                 @if (!Character.Deactivated && LootList.TeamId.HasValue && LootList.Status is LootListStatus.Submitted or LootListStatus.Approved)
                 {
                     <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="LootList.CharacterId">
@@ -64,14 +63,6 @@ else
     [Parameter] public LootListDto? LootList { get; set; }
     [Parameter] public EventCallback<LootListDto> OnListUpdated { get; set; }
     [Parameter] public EventCallback OnSubmit { get; set; }
-
-    public Task RefreshAsync()
-    {
-        return Api.LootLists.GetForCharacter(Character.Id)
-            .OnSuccess(lists => ChangeListRef(lists.SingleOrDefault()))
-            .SendErrorTo(Snackbar)
-            .ExecuteAsync();
-    }
 
     protected override void OnInitialized()
     {

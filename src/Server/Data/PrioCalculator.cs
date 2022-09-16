@@ -16,6 +16,7 @@ public static class PrioCalculator
         int donationTickets,
         bool enchanted,
         bool prepared,
+        bool bench,
         byte teamSize)
     {
         yield return GetAbsencePenalty(absences);
@@ -23,7 +24,7 @@ public static class PrioCalculator
 
         if (teamSize != 10)
         {
-            yield return GetDonationBonus(donationTickets);
+            yield return GetDonationBonus(donationTickets, bench);
             yield return GetEnchantedBonus(enchanted);
             yield return GetPreparedBonus(prepared);
         }
@@ -55,13 +56,16 @@ public static class PrioCalculator
             };
         }
 
-        static PriorityBonusDto GetDonationBonus(int donationTickets)
+        static PriorityBonusDto GetDonationBonus(int donationTickets, bool bench)
         {
+            int pointsPerDonation = bench ? MaxDonations : 1;
+            int countedDonations = bench ? 1 : MaxDonations;
+
             return new DonationPriorityBonusDto
             {
                 DonationTickets = donationTickets,
                 Type = PriorityBonusTypes.Donation,
-                Value = donationTickets,
+                Value = Math.Min(donationTickets, countedDonations) * pointsPerDonation
             };
         }
 

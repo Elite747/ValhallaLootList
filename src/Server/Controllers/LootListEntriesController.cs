@@ -261,18 +261,20 @@ public class LootListEntriesController : ApiControllerV1
             }
             else
             {
-                var maxCount = 1;
+                var maxMSCount = 1;
+                var maxTotalCount = 1;
 
                 if (!item.IsUnique)
                 {
                     if (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger)
                     {
                         // non-unique rings/trinkets
-                        maxCount = 2;
+                        maxTotalCount = maxMSCount = 2;
                     }
                     else if (spec == (Specializations.BearDruid | Specializations.CatDruid))
                     {
-                        maxCount = 2;
+                        maxMSCount = 1;
+                        maxTotalCount = 2;
                     }
                     else
                     {
@@ -281,13 +283,15 @@ public class LootListEntriesController : ApiControllerV1
                         if (playerClass == Classes.Warrior && item.Slot == InventorySlot.TwoHand)
                         {
                             // Titan's Grip warrior
-                            maxCount = 2;
+                            maxMSCount = entry.LootList.MainSpec == Specializations.FuryWarrior ? 2 : 1;
+                            maxTotalCount = (spec & Specializations.FuryWarrior) == Specializations.FuryWarrior ? 2 : 1;
                         }
                         else if ((playerClass == Classes.Warrior || playerClass == Classes.DeathKnight || playerClass == Classes.Hunter || playerClass == Classes.Rogue || playerClass == Classes.Shaman)
                             && item.Slot == InventorySlot.OneHand)
                         {
                             // dual-wielding classes
-                            maxCount = 2;
+                            maxMSCount = 2;
+                            maxTotalCount = 2;
                         }
                     }
                 }
@@ -296,21 +300,26 @@ public class LootListEntriesController : ApiControllerV1
 
                 if (existingItems.Count > 0)
                 {
-                    if (existingItems.Count >= maxCount)
+                    if (existingItems.Count >= maxTotalCount)
                     {
-                        if (maxCount == 1)
+                        if (maxTotalCount == 1)
                         {
                             return (false, $"{item.Name} is already on this loot list.");
                         }
                         return (false, $"{item.Name} has already been added {existingItems.Count:N0} times.");
                     }
-                    else if (spec == (Specializations.BearDruid | Specializations.CatDruid))
+                    else if (existingItems.Count >= maxMSCount)
                     {
                         var osMaxRank = await _context.Brackets.Where(b => b.Phase == entry.LootList.Phase && b.AllowOffspec).MaxAsync(b => b.MaxRank);
 
-                        if (entry.Rank > osMaxRank && existingItems.Any(i => i.Rank > osMaxRank))
+                        if (entry.Rank > osMaxRank)
                         {
-                            return (false, $"{item.Name} has already been added to a main-spec bracket {existingItems.Count:N0} times.");
+                            var existingMSCount = existingItems.Count(i => i.Rank > osMaxRank);
+
+                            if (existingMSCount >= maxMSCount)
+                            {
+                                return (false, $"{item.Name} has already been added to a main-spec bracket {existingMSCount:N0} times.");
+                            }
                         }
                     }
                 }

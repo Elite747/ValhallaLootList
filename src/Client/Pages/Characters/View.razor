@@ -88,7 +88,7 @@
                         @foreach (var phase in _phaseConfigOperation.GetResult().Phases.OrderByDescending(p => p))
                         {
                             <MudTabPanel Text="@($"Phase {phase}")" ID="phase">
-                                <LootListPhase Character="character" Phase="phase" Size="size" LootLists="_lootListsOperation!.GetResult()" />
+                                <LootListPhase Character="character" Phase="phase" Size="size" LootLists="_lootListsOperation!.GetResult()" OnSubmit="StateHasChanged" OnListUpdated="StateHasChanged" />
                             </MudTabPanel>
                         }
                     </MudTabs>

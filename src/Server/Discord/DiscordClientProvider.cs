@@ -331,6 +331,63 @@ public sealed class DiscordClientProvider : IDisposable
             || roleId == _options.RecruiterRoleId;
     }
 
+    public async Task<DiscordMessage?> SendOrUpdateOfficerNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
+    {
+        CheckStarted();
+        if (_options.SuppressOutgoingMessages || _options.OfficerNotificationChannelId == 0L)
+        {
+            return null;
+        }
+
+        var channel = await GetChannelAsync(_options.OfficerNotificationChannelId);
+
+        if (channel is null)
+        {
+            return null;
+        }
+
+        var messageBuilder = new DiscordMessageBuilder();
+        configureMessage(messageBuilder);
+
+        try
+        {
+            if (messageId > 0)
+            {
+                var message = await channel.GetMessageAsync((ulong)messageId);
+                return await message.ModifyAsync(messageBuilder);
+            }
+
+            return await channel.SendMessageAsync(messageBuilder);
+        }
+        catch (NotFoundException)
+        {
+            return null;
+        }
+    }
+
+    public async Task DeleteOfficerNotificationAsync(long messageId)
+    {
+        CheckStarted();
+        if (_options.SuppressOutgoingMessages || _options.OfficerNotificationChannelId == 0L)
+        {
+            return;
+        }
+
+        var channel = await GetChannelAsync(_options.OfficerNotificationChannelId);
+
+        if (channel is not null)
+        {
+            try
+            {
+                var message = await channel.GetMessageAsync((ulong)messageId);
+                await message.DeleteAsync();
+            }
+            catch (NotFoundException)
+            {
+            }
+        }
+    }
+
     public async Task<DiscordMessage?> SendOrUpdatePublicNotificationAsync(long? messageId, Action<DiscordMessageBuilder> configureMessage)
     {
         CheckStarted();

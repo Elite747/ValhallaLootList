@@ -1004,16 +1004,13 @@ public class LootListsController : ApiControllerV1
 
         TrackListStatusChange(list);
 
-        //await dcp.SendAsync(635355896020729866, m =>
-        //{
-        //    var userId = (ulong)User.GetDiscordId().GetValueOrDefault();
+        await _discordClientProvider.SendOrUpdateOfficerNotificationAsync(null, m =>
+        {
+            var userId = (ulong)User.GetDiscordId().GetValueOrDefault();
 
-        //    var request = Url.ActionContext.HttpContext.Request;
-
-        //    var link = request.Scheme + "://" + request.Host + Url.Content($"~/characters/{cname}/phase/{list.Phase}");
-        //    m.WithContent($"<@!{userId}> has just unlocked [{cname}'s Phase {list.Phase} Loot List]({link}).")
-        //        .WithAllowedMention(new UserMention(userId));
-        //});
+            m.WithContent($"<@!{userId}> has just unlocked {list.Character.Name}'s Phase {list.Phase} {list.Size}-Man Loot List.")
+                .WithAllowedMention(new DSharpPlus.Entities.UserMention(userId));
+        });
 
         return new TimestampDto { Timestamp = list.Timestamp };
     }

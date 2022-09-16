@@ -1121,6 +1121,8 @@ public class LootListsController : ApiControllerV1
             return null;
         }
 
+        var leaders = await _context.RaidTeamLeaders.Where(l => l.RaidTeamId == teamId).Select(l => l.UserId).ToListAsync();
+
         var lootLists = await _context.CharacterLootLists.AsNoTracking()
             .Where(ll => ll.Size == team.TeamSize && (ll.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && ll.Submissions.Any(s => s.TeamId == teamId))))
             .Select(ll => new
@@ -1137,7 +1139,7 @@ public class LootListsController : ApiControllerV1
                 SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
                 Entries = new List<LootListEntryDto>(),
                 Bonuses = new List<PriorityBonusDto>(),
-                Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId
+                ll.Character.OwnerId
             })
             .AsSingleQuery()
             .ToListAsync();
@@ -1171,21 +1173,19 @@ public class LootListsController : ApiControllerV1
             .OrderBy(b => b.Index)
             .ToListAsync();
 
-        bool userIsOnTeam = false;
+        var userLists = await _context.CharacterLootLists
+            .AsNoTracking()
+            .Where(ll => ll.Character.OwnerId == userId)
+            .Select(ll => new { ll.Status, ll.Phase, ll.Size })
+            .ToListAsync();
 
-        var adminOrLeaderOfThisTeamAuthorizationResult = await _authorizationService.AuthorizeAsync(User, teamId, AppPolicies.LeadershipOrAdmin);
+        var userTeams = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(m => m.Character!.OwnerId == userId)
+            .Select(m => m.TeamId)
+            .ToListAsync();
 
-        if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded)
-        {
-            userIsOnTeam = true;
-        }
-        else
-        {
-            userIsOnTeam = await _context.TeamMembers
-                .AsNoTracking()
-                .Where(tm => tm.Character!.OwnerId == userId && tm.TeamId == teamId)
-                .AnyAsync();
-        }
+        bool isAdmin = (await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator)).Succeeded;
 
         await foreach (var entry in _context.LootListEntries.AsNoTracking()
             .Where(e => e.LootList.Size == team.TeamSize && (e.LootList.Character.Teams.Any(tm => tm.TeamId == teamId) || (includeApplicants && e.LootList.Submissions.Any(s => s.TeamId == teamId))))
@@ -1199,7 +1199,7 @@ public class LootListsController : ApiControllerV1
                 e.Rank,
                 e.Heroic,
                 e.AutoPass,
-                e.Justification,
+                Justification = (string?)e.Justification,
                 e.LootList.Phase,
                 e.LootList.CharacterId
             })
@@ -1228,9 +1228,12 @@ public class LootListsController : ApiControllerV1
                     Heroic = entry.Heroic
                 };
 
-                if (adminOrLeaderOfThisTeamAuthorizationResult.Succeeded || // user is an admin or a leader of this team OR
-                    list.Owned || // user owns this character OR
-                    (list.Status == LootListStatus.Locked && userIsOnTeam)) // user is on this team and the list is locked
+                if (
+                    (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
+                    (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
+                    (list.Status == LootListStatus.Locked && userTeams.Contains(teamId) && userLists.Any(l => l.Size == list.Size && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked
+                    (userId.HasValue && list.OwnerId.HasValue && leaders.Contains(userId.Value) && leaders.Contains(list.OwnerId.Value)) // user is a leader of this team and target list is of a leader of this team
+                    )
                 {
                     entryDto.Justification = entry.Justification;
                     entryDto.Rank = entry.Rank;
@@ -1294,7 +1297,7 @@ public class LootListsController : ApiControllerV1
                 SubmittedTo = ll.Submissions.Select(s => s.TeamId).ToList(),
                 Entries = new List<LootListEntryDto>(),
                 Bonuses = new List<PriorityBonusDto>(),
-                Owned = ll.Character.OwnerId.HasValue && ll.Character.OwnerId == userId
+                ll.Character.OwnerId
             })
             .AsSingleQuery()
             .ToListAsync();
@@ -1303,6 +1306,11 @@ public class LootListsController : ApiControllerV1
         {
             return new();
         }
+
+        var leaders = await _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Select(rtl => new { rtl.RaidTeamId, rtl.UserId })
+            .ToListAsync();
 
         var members = await _context.TeamMembers.AsNoTracking()
             .Where(tm => tm.CharacterId == characterId)
@@ -1342,21 +1350,19 @@ public class LootListsController : ApiControllerV1
             .OrderBy(b => b.Index)
             .ToListAsync();
 
-        List<long> userTeamLeaderships = new(), userTeamMemberships = new();
-        var adminAuthorizationResult = await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator);
+        var userLists = await _context.CharacterLootLists
+            .AsNoTracking()
+            .Where(ll => ll.Character.OwnerId == userId)
+            .Select(ll => new { ll.Status, ll.Phase, ll.Size })
+            .ToListAsync();
 
-        if (!adminAuthorizationResult.Succeeded)
-        {
-            await foreach (var teamId in _context.RaidTeamLeaders.Where(rtl => rtl.UserId == userId).Select(rtl => rtl.RaidTeamId).AsAsyncEnumerable())
-            {
-                userTeamLeaderships.Add(teamId);
-            }
+        var userTeams = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(m => m.Character!.OwnerId == userId)
+            .Select(m => m.TeamId)
+            .ToListAsync();
 
-            await foreach (var teamId in _context.TeamMembers.Where(tm => tm.Character!.OwnerId == userId).Select(tm => tm.TeamId).AsAsyncEnumerable())
-            {
-                userTeamMemberships.Add(teamId);
-            }
-        }
+        bool isAdmin = (await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator)).Succeeded;
 
         await foreach (var entry in _context.LootListEntries.AsNoTracking()
             .Where(e => e.LootList.CharacterId == characterId)
@@ -1405,14 +1411,12 @@ public class LootListsController : ApiControllerV1
                     Heroic = entry.Heroic
                 };
 
-                if (AllowedToSeeRanks(
-                    isAdmin: adminAuthorizationResult.Succeeded,
-                    isOwned: list.Owned,
-                    status: list.Status,
-                    teamId: member?.TeamId,
-                    userMemberships: userTeamMemberships,
-                    userLeaderships: userTeamLeaderships,
-                    submittedTeams: list.SubmittedTo))
+                if (
+                    (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
+                    (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
+                    (list.Status == LootListStatus.Locked && member is not null && userTeams.Contains(member.TeamId) && userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked
+                    (userId.HasValue && list.OwnerId.HasValue && member is not null && leaders.Any(l => l.UserId == userId.Value && l.RaidTeamId == member.TeamId) && leaders.Any(l => l.UserId == list.OwnerId.Value && l.RaidTeamId == member.TeamId)) // user is a leader of this team and target list is of a leader of this team
+                    )
                 {
                     entryDto.Justification = entry.Justification;
                     entryDto.Rank = entry.Rank;
@@ -1455,40 +1459,5 @@ public class LootListsController : ApiControllerV1
         }
 
         return typedDtos;
-    }
-
-    private static bool AllowedToSeeRanks(bool isAdmin, bool isOwned, LootListStatus status, long? teamId, List<long> userMemberships, List<long> userLeaderships, List<long> submittedTeams)
-    {
-        // admins and character owners may always see rankings.
-        if (isAdmin || isOwned)
-        {
-            return true;
-        }
-
-        if (teamId.HasValue)
-        {
-            // leadership of the list's target team may always see rankings.
-            if (userLeaderships.Contains(teamId.Value))
-            {
-                return true;
-            }
-
-            // members of the list's target team may only see rankings when the list is locked.
-            if (status == LootListStatus.Locked && userMemberships.Contains(teamId.Value))
-            {
-                return true;
-            }
-        }
-
-        foreach (var submittedTeam in submittedTeams)
-        {
-            // leadership of a team gets temporary access to view rankings when the character submits the list to them.
-            if (userMemberships.Contains(submittedTeam))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

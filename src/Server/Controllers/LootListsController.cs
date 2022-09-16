@@ -1415,7 +1415,10 @@ public class LootListsController : ApiControllerV1
                     (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
                     (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
                     (list.Status == LootListStatus.Locked && member is not null && userTeams.Contains(member.TeamId) && userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked
-                    (userId.HasValue && list.OwnerId.HasValue && member is not null && leaders.Any(l => l.UserId == userId.Value && l.RaidTeamId == member.TeamId) && leaders.Any(l => l.UserId == list.OwnerId.Value && l.RaidTeamId == member.TeamId)) // user is a leader of this team and target list is of a leader of this team
+                    (userId.HasValue && list.OwnerId.HasValue &&
+                        leaders.Any(l => l.UserId == userId.Value && (l.RaidTeamId == member?.TeamId || list.SubmittedTo.Contains(l.RaidTeamId))) &&
+                        leaders.Any(l => l.UserId == list.OwnerId.Value && (l.RaidTeamId == member?.TeamId || list.SubmittedTo.Contains(l.RaidTeamId)))
+                        ) // user is a leader of this team and target list is of a leader of this team
                     )
                 {
                     entryDto.Justification = entry.Justification;

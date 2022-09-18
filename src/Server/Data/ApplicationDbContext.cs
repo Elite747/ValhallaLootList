@@ -104,6 +104,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
                 tm.JoinedAt,
                 tm.Prepared,
                 tm.Enchanted,
+                tm.Bench,
                 Donations = tm.Character!.Donations.Count(d => d.TargetMonth == date.Month && d.TargetYear == date.Year)
             })
             .AsAsyncEnumerable())
@@ -130,6 +131,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
                 donationTickets: member.Donations,
                 enchanted: member.Enchanted,
                 prepared: member.Prepared,
+                bench: member.Bench,
                 teamSize: team.TeamSize));
         }
 

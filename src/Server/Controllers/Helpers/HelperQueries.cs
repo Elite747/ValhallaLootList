@@ -81,7 +81,7 @@ public static class HelperQueries
                 Bench = character.Bench,
                 DonatedThisMonth = character.DonationsForThisMonth,
                 DonatedNextMonth = character.DonationsForNextMonth,
-                MaximumDonationTickets = PrioCalculator.MaxDonations
+                MaximumDonationTickets = character.Bench ? 1 : PrioCalculator.MaxDonations
             };
 
             foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))

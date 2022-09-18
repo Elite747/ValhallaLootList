@@ -52,39 +52,41 @@
     <EntryTemplate Context="entry">
         @if (Items.FirstOrDefault(item => item.Id == entry.ItemId) is ItemDto item)
         {
-            <div class="d-flex align-center h-100">
-                <CascadingItemContext Id="entry.ItemId">
-                    @if (entry.Won)
-                    {
-                        <MudAvatar Size="Size.Small" Class="mr-2 h-100" Color="Color.Success">
-                            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" />
+            <div class="d-flex flex-column h-100">
+                <div class="d-flex align-center flex-grow-1">
+                    <CascadingItemContext Id="entry.ItemId">
+                        @if (entry.Won)
+                        {
+                            <MudAvatar Size="Size.Small" Class="mr-2 h-100" Color="Color.Success">
+                                <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" />
+                            </MudAvatar>
+                        }
+                        <MudAvatar Rounded Size="Size.Small" Class="mr-2 h-100">
+                            <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
                         </MudAvatar>
-                    }
-                    <MudAvatar Rounded Size="Size.Small" Class="mr-2 h-100">
-                        <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
-                    </MudAvatar>
-                    <ItemLink LinkEnabled Colorize Bracketize PlaceholderText="@item.Name" />
-                </CascadingItemContext>
-            </div>
-            <ul>
-                @if (LootList.RanksVisible)
-                {
-                    @foreach (var restriction in GetRestrictions(item, entry))
-                    {
-                        <li>
-                            <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
-                                @restriction.Reason
-                            </MudText>
-                        </li>
-                    }
-                }
-            </ul>
-            @if (entry.Justification?.Length > 0)
-            {
-                <div>
-                    Justification: @entry.Justification
+                        <ItemLink LinkEnabled Colorize Bracketize PlaceholderText="@item.Name" />
+                    </CascadingItemContext>
                 </div>
-            }
+                @if (LootList.RanksVisible && GetRestrictions(item, entry).Any())
+                {
+                    <ul>
+                        @foreach (var restriction in GetRestrictions(item, entry))
+                        {
+                            <li>
+                                <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                                    @restriction.Reason
+                                </MudText>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (entry.Justification?.Length > 0)
+                {
+                    <div>
+                        Justification: @entry.Justification
+                    </div>
+                }
+            </div>
         }
         else
         {

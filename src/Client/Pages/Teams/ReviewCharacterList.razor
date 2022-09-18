@@ -67,13 +67,16 @@
                 </CascadingItemContext>
             </div>
             <ul>
-                @foreach (var restriction in GetRestrictions(item, entry))
+                @if (LootList.RanksVisible)
                 {
-                    <li>
-                        <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
-                            @restriction.Reason
-                        </MudText>
-                    </li>
+                    @foreach (var restriction in GetRestrictions(item, entry))
+                    {
+                        <li>
+                            <MudText Color="restriction.Level == ItemRestrictionLevel.ManualReview ? Color.Warning : Color.Error">
+                                @restriction.Reason
+                            </MudText>
+                        </li>
+                    }
                 }
             </ul>
             @if (entry.Justification?.Length > 0)

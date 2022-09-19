@@ -45,4 +45,10 @@ public class WizardSection : ComponentBase
             WizardDialog.NotifyStateChanged();
         }
     }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        WizardDialog.NotifyChildRendered(this);
+    }
 }

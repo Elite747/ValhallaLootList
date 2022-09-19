@@ -1,47 +1,35 @@
 ﻿@namespace ValhallaLootList.Client.Shared
 
-<MudDialog>
-    <TitleContent>
-        @(Title ?? Dialog.Title)
-    </TitleContent>
-    <DialogContent>
-        <CascadingValue Value="this" IsFixed="true">
-            @ChildContent
-            <ul class="mud-breadcrumbs mud-typography-body1 mx-auto">
-                @for (int i = 0; i < Sections.Count; i++)
-                {
-                    var sect = Sections[i];
-                    if (i != 0)
-                    {
-                        <li class="mud-breadcrumb-separator">/</li>
-                    }
-                    <li class="mud-breadcrumb-item">
-                        <MudButton OnClick="() => GoTo(sect)" Disabled="!CanGoTo(sect)" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
-                            @sect.Name
-                        </MudButton>
-                    </li>
-                }
-            </ul>
+<CascadingValue IsFixed Value="this">
+    @ChildContent
+    <MudDialog>
+        <TitleContent>
+            @(Title ?? Dialog.Title)
+            <WizardHeader WizardDialog="this" @ref="_header" />
+        </TitleContent>
+        <DialogContent>
             @CurrentSection?.ChildContent
-        </CascadingValue>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
-        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
-            <MudButton OnClick="GoToPrevious" Disabled="!CanGoPrevious()" StartIcon="@Icons.Material.Filled.ChevronLeft">
-                Back
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+            <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                <MudButton OnClick="GoToPrevious" Disabled="!CanGoPrevious()" StartIcon="@Icons.Material.Filled.ChevronLeft">
+                    Back
+                </MudButton>
+                <MudButton OnClick="GoToNext" Disabled="!CanGoNext()" EndIcon="@Icons.Material.Filled.ChevronRight">
+                    @GetContinueText()
+                </MudButton>
+            </MudButtonGroup>
+            <MudButton OnClick="FinishAsync" Disabled="!CanFinish()" Color="Color.Success" Variant="Variant.Filled">
+                Finish
             </MudButton>
-            <MudButton OnClick="GoToNext" Disabled="!CanGoNext()" EndIcon="@Icons.Material.Filled.ChevronRight">
-                @GetContinueText()
-            </MudButton>
-        </MudButtonGroup>
-        <MudButton OnClick="FinishAsync" Disabled="!CanFinish()" Color="Color.Success" Variant="Variant.Filled">
-            Finish
-        </MudButton>
-    </DialogActions>
-</MudDialog>
+        </DialogActions>
+    </MudDialog>
+</CascadingValue>
 
 @code {
+    private WizardHeader? _header;
+
     internal List<WizardSection> Sections { get; } = new();
     internal WizardSection? CurrentSection { get; set; }
 
@@ -199,6 +187,14 @@
     }
 
     internal void NotifyStateChanged() => StateHasChanged();
+
+    internal void NotifyChildRendered(WizardSection section)
+    {
+        if (section == CurrentSection)
+        {
+            _header?.NotifyChanged();
+        }
+    }
 
     private string GetContinueText()
     {

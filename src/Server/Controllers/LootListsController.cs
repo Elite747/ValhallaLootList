@@ -1229,7 +1229,7 @@ public class LootListsController : ApiControllerV1
                 if (
                     (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
                     (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
-                    (list.Status == LootListStatus.Locked && userTeams.Contains(teamId) && userLists.Any(l => l.Size == list.Size && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked
+                    ((list.Status == LootListStatus.Locked || (userId.HasValue && leaders.Contains(userId.Value))) && userTeams.Contains(teamId) && userLists.Any(l => l.Size == list.Size && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked, or user is a leader of this team with a locked list
                     (userId.HasValue && list.OwnerId.HasValue && leaders.Contains(userId.Value) && leaders.Contains(list.OwnerId.Value)) // user is a leader of this team and target list is of a leader of this team
                     )
                 {
@@ -1413,7 +1413,10 @@ public class LootListsController : ApiControllerV1
                 if (
                     (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
                     (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
-                    (list.Status == LootListStatus.Locked && member is not null && userTeams.Contains(member.TeamId) && userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked
+                    (member is not null &&
+                        (list.Status == LootListStatus.Locked || leaders.Any(l => l.UserId == userId && l.RaidTeamId == member.TeamId)) &&
+                        userTeams.Contains(member.TeamId) && userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase)
+                        ) || // user is on this team and both this and their list is locked OR user is a leader of this team
                     (userId.HasValue && list.OwnerId.HasValue &&
                         leaders.Any(l => l.UserId == userId.Value && (l.RaidTeamId == member?.TeamId || list.SubmittedTo.Contains(l.RaidTeamId))) &&
                         leaders.Any(l => l.UserId == list.OwnerId.Value && (l.RaidTeamId == member?.TeamId || list.SubmittedTo.Contains(l.RaidTeamId)))

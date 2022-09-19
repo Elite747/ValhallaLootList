@@ -178,31 +178,27 @@
             {
                 <div class="d-flex align-center py-1" @key="itemId">
                     <CascadingItemContext Id="itemId">
-                        <MudAvatar Class="mr-2" Rounded="true" Size="Size.Large">
-                            <ItemIcon Size="IconSize.Large" Width="56" Height="56" />
+                        <MudIconButton OnClick="() => _drops[itemId] = Math.Max(0, _drops[itemId] - 1)"
+                                   Disabled="_drops[itemId] <= 0"
+                                   Icon="@Icons.Material.Filled.RemoveCircle"
+                                   Size="Size.Small"
+                                   Color="Color.Error" />
+
+                        <MudText Typo="Typo.h6" Class="mx-2">@_drops[itemId]</MudText>
+
+                        <MudIconButton OnClick="() => _drops[itemId] = Math.Min(3, _drops[itemId] + 1)"
+                                   Disabled="_drops[itemId] >= 3"
+                                   Icon="@Icons.Material.Filled.AddCircle"
+                                   Size="Size.Small"
+                                   Color="Color.Success" />
+
+                        <MudAvatar Rounded Size="Size.Small" Class="mx-1">
+                            <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
                         </MudAvatar>
-                        <div class="mr-auto">
-                            <div>
-                                <ItemLink Colorize="true" Bracketize="true" />
-                            </div>
-                            <div class="d-flex align-center">
-                                <MudIconButton OnClick="() => _drops[itemId] = Math.Max(0, _drops[itemId] - 1)"
-                                               Disabled="_drops[itemId] <= 0"
-                                               Icon="@Icons.Material.Filled.RemoveCircle"
-                                               Size="Size.Small"
-                                               Color="Color.Error" />
-
-                                <MudText Typo="Typo.h6" Class="mx-2">@_drops[itemId]</MudText>
-
-                                <MudIconButton OnClick="() => _drops[itemId] = Math.Min(3, _drops[itemId] + 1)"
-                                               Disabled="_drops[itemId] >= 3"
-                                               Icon="@Icons.Material.Filled.AddCircle"
-                                               Size="Size.Small"
-                                               Color="Color.Success" />
-                            </div>
-                        </div>
+                        <ItemLink Colorize Bracketize Class="mr-1" />
                     </CascadingItemContext>
                 </div>
+                <MudDivider DividerType="DividerType.Middle" />
             }
         </WizardSection>
     </ApiView>

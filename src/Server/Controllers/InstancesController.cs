@@ -19,7 +19,7 @@ public class InstancesController : ApiControllerV1
     public async IAsyncEnumerable<InstanceDto> Get()
     {
         var items = await _context.EncounterItems.Select(item => new { item.ItemId, item.Is25, item.Heroic, item.EncounterId }).ToListAsync();
-        var encounters = await _context.Encounters.Select(e => new { e.Id, e.Index, e.InstanceId, e.Name }).ToListAsync();
+        var encounters = await _context.Encounters.Select(e => new { e.Id, e.Index, e.InstanceId, e.Name, e.Phase }).ToListAsync();
 
         await foreach (var instance in _context.Instances.AsNoTracking()
             .OrderBy(i => i.Phase)
@@ -30,7 +30,7 @@ public class InstancesController : ApiControllerV1
             foreach (var encounter in encounters
                 .Where(e => e.InstanceId == instance.Id)
                 .OrderBy(e => e.Index)
-                .Select(e => new EncounterDto { Id = e.Id, IsTrash = e.Index < 0, Name = e.Name }))
+                .Select(e => new EncounterDto { Id = e.Id, IsTrash = e.Index < 0, Name = e.Name, Phase = e.Phase }))
             {
                 encounter.Variants = items
                     .Where(i => i.EncounterId == encounter.Id)

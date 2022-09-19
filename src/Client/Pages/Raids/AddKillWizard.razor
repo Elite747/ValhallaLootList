@@ -128,7 +128,7 @@
                     <MudListSubheader @key="instance.Id">
                         @instance.Name
                     </MudListSubheader>
-                    @foreach (var encounter in instance.Encounters)
+                    @foreach (var encounter in instance.Encounters.Where(IsInActivePhase))
                     {
                         <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
                                      OnClick="() => SetEncounter(encounter)"
@@ -483,7 +483,18 @@
 
     private bool IsInActivePhase(InstanceDto instance)
     {
+        if (instance.Phase is null)
+        {
+            return true;
+        }
+
         var phaseConfig = _phaseConfigOperation.GetResult();
-        return instance.Phase <= phaseConfig.CurrentPhase && phaseConfig.Phases.Contains(instance.Phase);
+        return instance.Phase.Value <= phaseConfig.CurrentPhase && phaseConfig.Phases.Contains(instance.Phase.Value);
+    }
+
+    private bool IsInActivePhase(EncounterDto encounter)
+    {
+        var phaseConfig = _phaseConfigOperation.GetResult();
+        return encounter.Phase <= phaseConfig.CurrentPhase && phaseConfig.Phases.Contains(encounter.Phase);
     }
 }

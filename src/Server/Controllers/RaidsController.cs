@@ -682,7 +682,7 @@ public class RaidsController : ApiControllerV1
         var encounter = await _context.Encounters
             .AsTracking()
             .Where(e => e.Id == dto.EncounterId)
-            .Select(e => new { e.Id, e.Name, e.Instance.Phase, e.Index, Items = e.Items.Select(i => i.ItemId).ToList() })
+            .Select(e => new { e.Id, e.Name, e.Phase, e.Index, Items = e.Items.Select(i => i.ItemId).ToList() })
             .FirstOrDefaultAsync();
 
         if (encounter is null)

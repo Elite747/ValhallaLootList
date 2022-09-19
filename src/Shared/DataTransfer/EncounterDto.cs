@@ -13,6 +13,8 @@ public class EncounterDto
 
     public bool IsTrash { get; set; }
 
+    public byte Phase { get; set; }
+
     public IList<EncounterVariant> Variants
     {
         get => _items ??= new List<EncounterVariant>();

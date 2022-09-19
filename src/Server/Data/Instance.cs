@@ -28,7 +28,7 @@ public class Instance
     [Required, StringLength(255)]
     public string Name { get; set; } = string.Empty;
 
-    public byte Phase { get; set; }
+    public byte? Phase { get; set; }
 
     public virtual ICollection<Encounter> Encounters { get; set; } = new HashSet<Encounter>();
 }

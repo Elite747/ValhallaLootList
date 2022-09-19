@@ -33,6 +33,8 @@ public class Encounter
 
     public sbyte Index { get; set; }
 
+    public byte Phase { get; set; }
+
     [Required]
     public virtual Instance Instance { get; set; } = null!;
 

@@ -463,6 +463,10 @@ public class LootListsController : ApiControllerV1
         {
             return NotFound();
         }
+        if (character.Deactivated)
+        {
+            return Problem("Character has been deactivated.");
+        }
 
         var team = await _context.RaidTeams.FindAsync(teamId);
 
@@ -482,9 +486,9 @@ public class LootListsController : ApiControllerV1
         {
             return Problem($"Character is already on a {dto.Size}-man team.");
         }
-        if (character.Deactivated)
+        if (await _context.TeamMembers.CountAsync(tm => tm.TeamId == teamId) >= (team.TeamSize == 10 ? 13 : 30))
         {
-            return Problem("Character has been deactivated.");
+            return Problem($"{team.Name} already has the maximum number of members assigned to it.");
         }
 
         var submittedPhases = dto.Timestamps.Keys.ToHashSet();

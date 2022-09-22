@@ -50,6 +50,12 @@ public class CompByPositionGraph : CompGraph
                     case Specializations.FuryWarrior:
                     case Specializations.CombatRogue:
                     case Specializations.SubtletyRogue:
+                    case Specializations.BloodDeathKnight:
+                    case Specializations.FrostDeathKnight:
+                    case Specializations.UnholyDeathKnight:
+                    case Specializations.BloodDeathKnightTank:
+                    case Specializations.FrostDeathKnightTank:
+                    case Specializations.UnholyDeathKnightTank:
                         melee++;
                         break;
                     case Specializations.RestoDruid:

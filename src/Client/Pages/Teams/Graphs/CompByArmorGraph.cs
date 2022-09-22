@@ -18,7 +18,7 @@ public class CompByArmorGraph : CompGraph
     {
         return @class switch
         {
-            Classes.Warrior or Classes.Paladin => Weight.Plate,
+            Classes.Warrior or Classes.Paladin or Classes.DeathKnight => Weight.Plate,
             Classes.Hunter or Classes.Shaman => Weight.Mail,
             Classes.Rogue or Classes.Druid => Weight.Leather,
             Classes.Priest or Classes.Mage or Classes.Warlock => Weight.Cloth,

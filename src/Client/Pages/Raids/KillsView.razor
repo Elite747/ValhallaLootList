@@ -22,10 +22,14 @@
                         Not eligible for loot or bonuses: @string.Join(", ", GetIneligible(kill))
                     </MudText>
                 }
-                @if (Raid.LocksAt > DateTimeOffset.UtcNow && kill.Drops.All(drop => drop.WinnerId is null))
+                @if (Raid.LocksAt > DateTimeOffset.UtcNow)
                 {
                     <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
-                        <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(kill.EncounterId, kill.TrashIndex)">Delete</MudButton>
+                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => ShowKillWizard(kill)">Edit</MudButton>
+                        @if (kill.Drops.All(drop => drop.WinnerId is null))
+                        {
+                            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(kill.EncounterId, kill.TrashIndex)">Delete</MudButton>
+                        }
                     </AuthorizeView>
                 }
             </MudListSubheader>
@@ -74,7 +78,7 @@
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
         {
             <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
-                <MudButton OnClick="AddClickedAsync"
+                <MudButton OnClick="() => ShowKillWizard(null)"
                            StartIcon="@Icons.Material.Filled.Add"
                            Variant="Variant.Text"
                            Color="Color.Primary">

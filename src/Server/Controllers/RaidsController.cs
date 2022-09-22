@@ -2,10 +2,14 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using IdGen;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
+using ValhallaLootList.Client.Pages;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
@@ -189,6 +193,7 @@ public class RaidsController : ApiControllerV1
                 d.Disenchanted
             })
             .OrderBy(d => d.ItemName)
+            .ThenBy(d => d.Id)
             .AsAsyncEnumerable())
         {
             killDictionary[(drop.EncounterKillEncounterId, drop.EncounterKillTrashIndex)].Drops.Add(new EncounterDropDto
@@ -746,33 +751,31 @@ public class RaidsController : ApiControllerV1
         }
 
         var items = await _context.Items.AsTracking().Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
-        var drops = new List<(uint, string, string?)>();
 
-        for (int i = 0; i < dto.Drops.Count; i++)
+        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
         {
-            var itemId = dto.Drops[i];
-            var item = items.Find(c => c.Id == itemId);
-
-            if (item is null)
+            if (itemGroup.Item is null)
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not exist.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not exist.");
             }
-            else if (!encounter.Items.Contains(item.Id))
+            else if (!encounter.Items.Contains(itemGroup.Id))
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{i}]", "Item does not belong to the specified encounter.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
             }
             else
             {
-                kill.Drops.Add(new Drop(idGenerator.CreateId())
+                for (int i = 0; i < itemGroup.Count; i++)
                 {
-                    EncounterKill = kill,
-                    EncounterKillEncounterId = kill.EncounterId,
-                    EncounterKillRaidId = kill.RaidId,
-                    EncounterKillTrashIndex = kill.TrashIndex,
-                    Item = item,
-                    ItemId = item.Id
-                });
-                drops.Add((itemId, item.Name, null));
+                    kill.Drops.Add(new Drop(idGenerator.CreateId())
+                    {
+                        EncounterKill = kill,
+                        EncounterKillEncounterId = kill.EncounterId,
+                        EncounterKillRaidId = kill.RaidId,
+                        EncounterKillTrashIndex = kill.TrashIndex,
+                        Item = itemGroup.Item,
+                        ItemId = itemGroup.Id
+                    });
+                }
             }
         }
 
@@ -806,7 +809,7 @@ public class RaidsController : ApiControllerV1
         {
             KilledAt = kill.KilledAt,
             Characters = kill.Characters.Select(c => c.CharacterId).ToList(),
-            Drops = kill.Drops.Select(d => new EncounterDropDto
+            Drops = kill.Drops.OrderBy(d => d.Item.Name).ThenBy(d => d.Id).Select(d => new EncounterDropDto
             {
                 Id = d.Id,
                 AwardedAt = d.AwardedAt,
@@ -818,6 +821,208 @@ public class RaidsController : ApiControllerV1
             EncounterId = kill.EncounterId,
             EncounterName = encounter.Name,
             TrashIndex = kill.TrashIndex
+        };
+    }
+
+    [HttpPut("{id:long}/Kills/{encounterId}/{trashIndex:int}"), Authorize(AppPolicies.LootMaster)]
+    public async Task<ActionResult<EncounterKillDto>> PutKill(long id, string encounterId, byte trashIndex, [FromBody] KillSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender)
+    {
+        if (dto.Drops.Count == 0)
+        {
+            ModelState.AddModelError(nameof(dto.Drops), "At least one item drop must be specified.");
+            return ValidationProblem();
+        }
+
+        if (dto.Characters.Count == 0)
+        {
+            ModelState.AddModelError(nameof(dto.Characters), "At least one character must be specified.");
+            return ValidationProblem();
+        }
+
+        if (dto.EncounterId != encounterId)
+        {
+            ModelState.AddModelError(nameof(dto.EncounterId), "Encounter ID in body does not match the encounter id in the request path.");
+            return ValidationProblem();
+        }
+
+        var raid = await _context.Raids.FindAsync(id);
+
+        if (raid is null)
+        {
+            return NotFound();
+        }
+
+        var auth = await _authorizationService.AuthorizeAsync(User, raid.RaidTeamId, AppPolicies.LootMaster);
+
+        if (!auth.Succeeded)
+        {
+            return Unauthorized();
+        }
+
+        if (DateTimeOffset.UtcNow > raid.LocksAt)
+        {
+            return Problem("Can't alter a locked raid.");
+        }
+
+        var existingKill = await _context.EncounterKills.FindAsync(encounterId, id, trashIndex);
+
+        if (existingKill is null)
+        {
+            return NotFound();
+        }
+
+        await _context.Entry(existingKill).Collection(e => e.Characters).LoadAsync();
+
+        if (existingKill.Characters.Count != dto.Characters.Count || existingKill.Characters.Any(c => !dto.Characters.Contains(c.CharacterId)))
+        {
+            var requestedCharacters = await _context.Characters.AsTracking().Where(c => dto.Characters.Contains(c.Id)).ToListAsync();
+
+            foreach (var existingChar in existingKill.Characters.Where(c => !dto.Characters.Contains(c.CharacterId)).ToList())
+            {
+                existingKill.Characters.Remove(existingChar);
+                _context.CharacterEncounterKills.Remove(existingChar);
+            }
+
+            for (int i = 0; i < dto.Characters.Count; i++)
+            {
+                var charId = dto.Characters[i];
+                var character = requestedCharacters.Find(c => c.Id == charId);
+
+                if (character is null)
+                {
+                    ModelState.AddModelError($"{nameof(dto.Characters)}[{i}]", "Character does not exist.");
+                }
+                else if (!existingKill.Characters.Any(c => c.CharacterId == charId))
+                {
+                    existingKill.Characters.Add(new CharacterEncounterKill
+                    {
+                        Character = character,
+                        CharacterId = character.Id,
+                        EncounterKill = existingKill,
+                        EncounterKillEncounterId = existingKill.EncounterId,
+                        EncounterKillRaidId = existingKill.RaidId,
+                        EncounterKillTrashIndex = existingKill.TrashIndex
+                    });
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return ValidationProblem();
+            }
+        }
+
+        await _context.Entry(existingKill).Collection(e => e.Drops).LoadAsync();
+
+        foreach (var drop in existingKill.Drops.Where(d => !dto.Drops.Contains(d.ItemId)).ToList())
+        {
+            if (drop.WinnerId.HasValue)
+            {
+                return Problem("Can't delete a drop that has a winner assigned.");
+            }
+
+            existingKill.Drops.Remove(drop);
+            _context.Drops.Remove(drop);
+        }
+
+        var encounterItems = await _context.EncounterItems.Where(ei => ei.EncounterId == encounterId).Select(ei => ei.ItemId).ToListAsync();
+
+        var items = await _context.Items
+            .AsTracking()
+            .AsSingleQuery()
+            .Where(i => dto.Drops.Contains(i.Id))
+            .ToListAsync();
+
+        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
+        {
+            if (itemGroup.Item is null)
+            {
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not exist.");
+                return ValidationProblem();
+            }
+            else if (!encounterItems.Contains(itemGroup.Id))
+            {
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
+                return ValidationProblem();
+            }
+
+            var existingDrops = existingKill.Drops.Where(d => d.ItemId == itemGroup.Id).ToList();
+            int diff = existingDrops.Count - itemGroup.Count;
+
+            foreach (var drop in existingDrops)
+            {
+                drop.Item = itemGroup.Item;
+            }
+
+            if (diff > 0) // delete
+            {
+                var dropsToDelete = existingDrops.Where(d => d.WinnerId is null).Take(diff).ToList();
+
+                if (dropsToDelete.Count != diff)
+                {
+                    return Problem("Can't delete a drop that has a winner assigned.");
+                }
+
+                foreach (var drop in dropsToDelete)
+                {
+                    existingKill.Drops.Remove(drop);
+                    _context.Drops.Remove(drop);
+                }
+            }
+            else if (diff < 0) // add
+            {
+                while (diff++ < 0)
+                {
+                    var drop = new Drop(idGenerator.CreateId())
+                    {
+                        EncounterKill = existingKill,
+                        EncounterKillEncounterId = existingKill.EncounterId,
+                        EncounterKillRaidId = existingKill.RaidId,
+                        EncounterKillTrashIndex = existingKill.TrashIndex,
+                        ItemId = itemGroup.Id,
+                        Item = itemGroup.Item
+                    };
+                    _context.Drops.Add(drop);
+                    existingKill.Drops.Add(drop);
+                }
+            }
+        }
+
+        var teamName = await _context.RaidTeams
+            .AsNoTracking()
+            .Where(t => t.Id == raid.RaidTeamId)
+            .Select(t => t.Name)
+            .FirstAsync();
+
+        await _context.SaveChangesAsync();
+
+        await messageSender.SendKillMessageAsync(existingKill.RaidId, existingKill.EncounterId, existingKill.TrashIndex);
+
+        _telemetry.TrackEvent("KillChanged", User, props =>
+        {
+            props["RaidId"] = raid.Id.ToString();
+            props["TeamId"] = raid.RaidTeamId.ToString();
+            props["TeamName"] = teamName;
+            props["Phase"] = raid.Phase.ToString();
+            props["Encounter"] = encounterId;
+        });
+
+        return new EncounterKillDto
+        {
+            KilledAt = existingKill.KilledAt,
+            Characters = existingKill.Characters.Select(c => c.CharacterId).ToList(),
+            Drops = existingKill.Drops.OrderBy(d => d.Item.Name).ThenBy(d => d.Id).Select(d => new EncounterDropDto
+            {
+                Id = d.Id,
+                AwardedAt = d.AwardedAt,
+                AwardedBy = d.AwardedBy,
+                ItemId = d.ItemId,
+                WinnerId = d.WinnerId,
+                Disenchanted = d.Disenchanted
+            }).ToList(),
+            EncounterId = existingKill.EncounterId,
+            EncounterName = (await _context.Encounters.FindAsync(encounterId))?.Name ?? string.Empty,
+            TrashIndex = existingKill.TrashIndex
         };
     }
 

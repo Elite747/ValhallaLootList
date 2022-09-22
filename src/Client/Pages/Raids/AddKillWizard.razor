@@ -4,141 +4,145 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<WizardDialog Title="Add Kill" OnFinish="OnFinishAsync">
+<WizardDialog Title=@(ModifyingKill is null ? "Add Kill" : "Edit Kill") OnFinish="OnFinishAsync">
     <ApiView Operations="_apiOperations">
-        <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
-            <MudTextField T="string"
-                          Value="_importString"
-                          ValueChanged="ImportOrClear"
-                          FullWidth="true"
-                          Immediate="true"
-                          Label="Import Code"
-                          Variant="Variant.Filled" />
-            @if (_importString?.Length > 0 && ImportValid())
-            {
-                <MudAlert Severity="Severity.Success">
-                    @if (_encounter is not null)
-                    {
-                        <div>Imported @_encounter.Name</div>
-                    }
-                    else
-                    {
-                        <div>Imported!</div>
-                    }
-                    <br />
-                    @foreach ((uint itemId, int count) in _drops.Where(d => d.Value > 0))
-                    {
-                        <div>
-                            <ItemLink Colorize Bracketize Id="itemId" />
-                            @if (count > 1)
-                            {
-                                @($" x{count}")
-                            }
-                        </div>
-                    }
-                    <br />
-                    @if (_attendees.Count == Raid.Attendees.Count)
-                    {
-                        <div>All Raiders Present</div>
-                    }
-                    else
-                    {
-                        <div>Not Present: @GetNotPresent()</div>
-                    }
-                </MudAlert>
-            }
-
-            @if (_importError?.Length > 0)
-            {
-                <MudAlert Severity="Severity.Error">Import failed. @_importError</MudAlert>
-            }
-
-            @foreach (var warning in _importWarnings)
-            {
-                <MudAlert Severity="Severity.Warning">@warning</MudAlert>
-            }
-
-            @if (_nonExistantCharacters.Count != 0)
-            {
-                <MudList Dense="true" Class="my-2">
-                    <MudListSubheader>
-                        The following characters were imported but are not part of this raid. Add or remove these characters to continue.
-                    </MudListSubheader>
-                    @foreach (var character in _nonExistantCharacters)
-                    {
-                        <MudListItem>
-                            <div class="d-flex align-center">
-                                <PlayerIcon Gender="character.Gender"
-                                            PlayerClass="character.Class"
-                                            Race="character.Race"
-                                            ShowTooltip="true"
-                                            Size="Size.Small" />
-                                <MudText Class="mx-3">
-                                    @character.Name
-                                </MudText>
-                                <MudTooltip Class="mr-1" Text="Add">
-                                    <MudIconButton OnClick="() => AddNonExistantAsync(character)" Color="Color.Success" Icon="@Icons.Material.Filled.AddCircleOutline" />
-                                </MudTooltip>
-                                <MudTooltip Text="Remove">
-                                    <MudIconButton OnClick="() => RemoveNonExistant(character)" Color="Color.Error" Icon="@Icons.Material.Filled.RemoveCircleOutline" />
-                                </MudTooltip>
-                            </div>
-                        </MudListItem>
-                    }
-                </MudList>
-            }
-
-            @if (_importEncounters.Count != 0)
-            {
-                <MudList Dense="true" Clickable="true">
-                    <MudListSubheader>
-                        More than one kill was imported. Select the kill you would like to add.
-                    </MudListSubheader>
-                    @foreach (var encounter in _importEncounters)
-                    {
-                        <MudListItem OnClick="() => SetEncounter(encounter)" Disabled="encounter.Encounter is null">
-                            <MudText Typo="Typo.h6">
-                                @if (encounter.Encounter is not null)
-                                {
-                                    @encounter.Encounter.Name
-                                }
-                                else
-                                {
-                                    @:Unknown Items
-                                }
-                            </MudText>
-                            @foreach (var item in encounter.Items)
-                            {
-                                <div>
-                                    <ItemLink Id="item" Bracketize="true" Colorize="true" />
-                                </div>
-                            }
-                        </MudListItem>
-                    }
-                </MudList>
-            }
-        </WizardSection>
-        <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
-            <MudList Clickable Dense>
-                @foreach (var instance in _instancesOperation.GetResult()
-                    .Where(IsInActivePhase)
-                    .OrderByDescending(i => i.Phase)
-                    .ThenBy(i => i.Name))
+        @if (ModifyingKill is null)
+        {
+            <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
+                <MudTextField T="string"
+                              Value="_importString"
+                              ValueChanged="ImportOrClear"
+                              FullWidth="true"
+                              Immediate="true"
+                              Label="Import Code"
+                              Variant="Variant.Filled" />
+                @if (_importString?.Length > 0 && ImportValid())
                 {
-                    <MudListSubheader @key="instance.Id">
-                        @instance.Name
-                    </MudListSubheader>
-                    @foreach (var encounter in instance.Encounters.Where(IsInActivePhase))
-                    {
-                        <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                     OnClick="() => SetEncounter(encounter)"
-                                     Text="@encounter.Name"
-                                     Disabled='!encounter.IsTrash && Raid.Kills.Any(k => k.EncounterId == encounter.Id)'
-                                     @key="encounter.Id" />
-                    }
+                    <MudAlert Severity="Severity.Success">
+                        @if (_encounter is not null)
+                        {
+                            <div>Imported @_encounter.Name</div>
+                        }
+                        else
+                        {
+                            <div>Imported!</div>
+                        }
+                        <br />
+                        @foreach ((uint itemId, int count) in _drops.Where(d => d.Value > 0))
+                        {
+                            <div>
+                                <ItemLink Colorize Bracketize Id="itemId" />
+                                @if (count > 1)
+                                {
+                                    @($" x{count}")
+                                }
+                            </div>
+                        }
+                        <br />
+                        @if (_attendees.Count == Raid.Attendees.Count)
+                        {
+                            <div>All Raiders Present</div>
+                        }
+                        else
+                        {
+                            <div>Not Present: @GetNotPresent()</div>
+                        }
+                    </MudAlert>
                 }
-            </MudList>
-        </WizardSection>
+
+                @if (_importError?.Length > 0)
+                {
+                    <MudAlert Severity="Severity.Error">Import failed. @_importError</MudAlert>
+                }
+
+                @foreach (var warning in _importWarnings)
+                {
+                    <MudAlert Severity="Severity.Warning">@warning</MudAlert>
+                }
+
+                @if (_nonExistantCharacters.Count != 0)
+                {
+                    <MudList Dense="true" Class="my-2">
+                        <MudListSubheader>
+                            The following characters were imported but are not part of this raid. Add or remove these characters to continue.
+                        </MudListSubheader>
+                        @foreach (var character in _nonExistantCharacters)
+                        {
+                            <MudListItem>
+                                <div class="d-flex align-center">
+                                    <PlayerIcon Gender="character.Gender"
+                                                PlayerClass="character.Class"
+                                                Race="character.Race"
+                                                ShowTooltip="true"
+                                                Size="Size.Small" />
+                                    <MudText Class="mx-3">
+                                        @character.Name
+                                    </MudText>
+                                    <MudTooltip Class="mr-1" Text="Add">
+                                        <MudIconButton OnClick="() => AddNonExistantAsync(character)" Color="Color.Success" Icon="@Icons.Material.Filled.AddCircleOutline" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="Remove">
+                                        <MudIconButton OnClick="() => RemoveNonExistant(character)" Color="Color.Error" Icon="@Icons.Material.Filled.RemoveCircleOutline" />
+                                    </MudTooltip>
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+
+                @if (_importEncounters.Count != 0)
+                {
+                    <MudList Dense="true" Clickable="true">
+                        <MudListSubheader>
+                            More than one kill was imported. Select the kill you would like to add.
+                        </MudListSubheader>
+                        @foreach (var encounter in _importEncounters)
+                        {
+                            <MudListItem OnClick="() => SetEncounter(encounter)" Disabled="encounter.Encounter is null">
+                                <MudText Typo="Typo.h6">
+                                    @if (encounter.Encounter is not null)
+                                    {
+                                        @encounter.Encounter.Name
+                                    }
+                                    else
+                                    {
+                                        @:Unknown Items
+                                    }
+                                </MudText>
+                                @foreach (var item in encounter.Items)
+                                {
+                                    <div>
+                                        <ItemLink Id="item" Bracketize="true" Colorize="true" />
+                                    </div>
+                                }
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </WizardSection>
+            <WizardSection Name="Encounter" CanContinue="() => _encounter is not null">
+                <MudList Clickable Dense>
+                    @foreach (var instance in _instancesOperation.GetResult()
+                        .Where(IsInActivePhase)
+                        .OrderByDescending(i => i.Phase)
+                        .ThenBy(i => i.Name))
+                    {
+                        <MudListSubheader @key="instance.Id">
+                            @instance.Name
+                        </MudListSubheader>
+                        @foreach (var encounter in instance.Encounters.Where(IsInActivePhase))
+                        {
+                            <MudListItem Icon="@(_encounter?.Id == encounter.Id ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                         OnClick="() => SetEncounter(encounter)"
+                                         Text="@encounter.Name"
+                                         Disabled='!encounter.IsTrash && Raid.Kills.Any(k => k.EncounterId == encounter.Id)'
+                                         @key="encounter.Id" />
+                        }
+                    }
+                </MudList>
+            </WizardSection>
+        }
+
         <WizardSection Name="Attendees" CanContinue="() => _attendees.Count != 0">
             @if (_attendees.Count != Raid.Attendees.Count)
             {
@@ -174,32 +178,34 @@
             </div>
         </WizardSection>
         <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
-            @foreach (var itemId in _drops.Keys)
-            {
-                <div class="d-flex align-center py-1" @key="itemId">
-                    <CascadingItemContext Id="itemId">
-                        <MudIconButton OnClick="() => _drops[itemId] = Math.Max(0, _drops[itemId] - 1)"
-                                   Disabled="_drops[itemId] <= 0"
-                                   Icon="@Icons.Material.Filled.RemoveCircle"
-                                   Size="Size.Small"
-                                   Color="Color.Error" />
+            <ApiExecutor Operation="() => Api.Items.Get(_encounter?.Phase ?? 1, (byte)Raid.TeamSize, includeTokens: true)" Context="items">
+                @foreach (var item in _drops.Keys.Select(id => new { Id = id, Name = items.Find(i => i.Id == id)?.Name ?? string.Empty }).OrderBy(i => i.Name))
+                {
+                    <div class="d-flex align-center py-1" @key="item.Id">
+                        <CascadingItemContext Id="item.Id">
+                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Max(0, _drops[item.Id] - 1)"
+                                       Disabled="_drops[item.Id] <= (ModifyingKill?.Drops.Count(d => d.ItemId == item.Id && d.WinnerId.HasValue) ?? 0)"
+                                       Icon="@Icons.Material.Filled.RemoveCircle"
+                                       Size="Size.Small"
+                                       Color="Color.Error" />
 
-                        <MudText Typo="Typo.h6" Class="mx-2">@_drops[itemId]</MudText>
+                            <MudText Typo="Typo.h6" Class="mx-2">@_drops[item.Id]</MudText>
 
-                        <MudIconButton OnClick="() => _drops[itemId] = Math.Min(3, _drops[itemId] + 1)"
-                                   Disabled="_drops[itemId] >= 3"
-                                   Icon="@Icons.Material.Filled.AddCircle"
-                                   Size="Size.Small"
-                                   Color="Color.Success" />
+                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Min(3, _drops[item.Id] + 1)"
+                                       Disabled="_drops[item.Id] >= 3"
+                                       Icon="@Icons.Material.Filled.AddCircle"
+                                       Size="Size.Small"
+                                       Color="Color.Success" />
 
-                        <MudAvatar Rounded Size="Size.Small" Class="mx-1">
-                            <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
-                        </MudAvatar>
-                        <ItemLink Colorize Bracketize Class="mr-1" />
-                    </CascadingItemContext>
-                </div>
-                <MudDivider DividerType="DividerType.Middle" />
-            }
+                            <MudAvatar Rounded Size="Size.Small" Class="mx-1">
+                                <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
+                            </MudAvatar>
+                            <ItemLink Colorize Bracketize Class="mr-1" PlaceholderText="@item.Name" />
+                        </CascadingItemContext>
+                    </div>
+                    <MudDivider DividerType="DividerType.Middle" />
+                }
+            </ApiExecutor>
         </WizardSection>
     </ApiView>
 </WizardDialog>
@@ -217,6 +223,7 @@
     private EncounterDto? _encounter;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
+    [Parameter] public EncounterKillDto? ModifyingKill { get; set; }
 
     protected override void OnInitialized()
     {
@@ -225,34 +232,43 @@
         _apiOperations = new IApiClientOperation[] { _instancesOperation, _phaseConfigOperation };
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (Raid is null) throw new ArgumentNullException(nameof(Raid));
-        ResetState();
+        await ResetState();
     }
 
-    private void ResetState()
+    private async Task ResetState()
     {
-        SetEncounter(default(EncounterDto));
+        await _instancesOperation.ExecuteOrWaitAsync();
+
+        SetEncounter(ModifyingKill is null ? null : _instancesOperation.GetResult().SelectMany(i => i.Encounters).FirstOrDefault(e => e.Id == ModifyingKill.EncounterId));
 
         var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
         foreach (var attendee in Raid.Attendees)
         {
-            // Unless importing, default characters as present if: 1. is standby, 2. they were present for the last raid encounter kill, or 3. this is the first raid encounter.
-            SetPresent(attendee.Character, attendee.Standby || lastKill?.Characters.Contains(attendee.Character.Id) != false);
+            if (ModifyingKill is null)
+            {
+                // Unless importing, default characters as present if: 1. is standby, 2. they were present for the last raid encounter kill, or 3. this is the first raid encounter.
+                SetPresent(attendee.Character, attendee.Standby || lastKill?.Characters.Contains(attendee.Character.Id) != false);
+            }
+            else
+            {
+                SetPresent(attendee.Character, ModifyingKill.Characters.Contains(attendee.Character.Id));
+            }
         }
     }
 
     private bool ImportValid() => _nonExistantCharacters.Count == 0 && _importEncounters.Count == 0 && string.IsNullOrEmpty(_importError);
 
-    private void ImportOrClear(string importString)
+    private async Task ImportOrClear(string importString)
     {
         _importString = importString;
         _importError = null;
         _importWarnings.Clear();
         _nonExistantCharacters.Clear();
         _importEncounters.Clear();
-        ResetState();
+        await ResetState();
 
         if (importString?.Length > 0)
         {
@@ -422,7 +438,7 @@
             {
                 foreach (var itemId in variant.Items)
                 {
-                    _drops[itemId] = 0;
+                    _drops[itemId] = ModifyingKill?.Drops.Count(d => d.ItemId == itemId) ?? 0;
                 }
             }
         }
@@ -465,8 +481,19 @@
             }
         }
 
-        return Api.Raids.AddKill(Raid.Id, kill)
-            .OnSuccess(Raid.Kills.Add)
+        return (ModifyingKill is null ? Api.Raids.AddKill(Raid.Id, kill) : Api.Raids.ModifyKill(Raid.Id, ModifyingKill.TrashIndex, kill))
+            .OnSuccess(kill =>
+            {
+                if (ModifyingKill is not null)
+                {
+                    ModifyingKill.Drops = kill.Drops;
+                    ModifyingKill.Characters = kill.Characters;
+                }
+                else
+                {
+                    Raid.Kills.Add(kill);
+                }
+            })
             .OnFailure(_ => arg.Cancel = true)
             .SendErrorTo(Snackbar)
             .ExecuteAsync();

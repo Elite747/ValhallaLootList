@@ -77,4 +77,9 @@ public class ApiClientRaids
     {
         return Client.CreateRequest<KillSubmissionDto, EncounterKillDto>(HttpMethod.Post, $"api/v1/raids/{raidId}/kills", killSubmission);
     }
+
+    public IApiClientOperation<EncounterKillDto> ModifyKill(long raidId, byte trashIndex, KillSubmissionDto kill)
+    {
+        return Client.CreateRequest<KillSubmissionDto, EncounterKillDto>(HttpMethod.Put, $"api/v1/raids/{raidId}/kills/{kill.EncounterId}/{trashIndex}", kill);
+    }
 }

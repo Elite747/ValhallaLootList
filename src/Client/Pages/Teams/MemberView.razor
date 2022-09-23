@@ -41,7 +41,7 @@
         </MudText>
         <AuthorizeView Policy="@AppPolicies.LeadershipOrAdmin" Resource="Team">
             <MudIconButton OnClick="TogglePreparedAsync"
-                           Icon="@(Member.Enchanted ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
+                           Icon="@(Member.Prepared ? Icons.Material.Filled.RemoveCircle : Icons.Material.Filled.AddCircle)"
                            Size="Size.Small"
                            Color="Member.Prepared ? Color.Error : Color.Success"
                            Class="ml-2" />

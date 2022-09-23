@@ -5,7 +5,7 @@
             @HeaderContent
         </div>
     }
-    <div class="mx-4 my-2 d-flex">
+    <div class="mx-4 my-2 d-flex flex-column">
         <MudText Typo="Typo.h6" Class="mx-auto">
             Main-spec:
             <SpecIcon Spec="LootList.MainSpec" Size="IconSize.Tiny" />
@@ -13,7 +13,7 @@
         </MudText>
         @if (LootList.OffSpec != LootList.MainSpec && LootList.OffSpec != default)
         {
-            <MudDivider Vertical="true" FlexItem="true" />
+            <MudDivider FlexItem />
             <MudText Typo="Typo.h6" Class="mx-auto">
                 Off-spec:
                 <SpecIcon Spec="LootList.OffSpec" Size="IconSize.Tiny" />

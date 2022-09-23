@@ -26,13 +26,14 @@ public partial class KillsView
             .ExecuteAsync();
     }
 
-    private Task AddClickedAsync()
+    private Task ShowKillWizard(EncounterKillDto? modifyingKill)
     {
         return DialogService.ShowAsync<AddKillWizard, object?>(
             string.Empty,
             parameters: new()
             {
-                [nameof(AddKillWizard.Raid)] = Raid
+                [nameof(AddKillWizard.Raid)] = Raid,
+                [nameof(AddKillWizard.ModifyingKill)] = modifyingKill
             });
     }
 

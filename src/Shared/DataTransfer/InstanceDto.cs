@@ -11,7 +11,7 @@ public class InstanceDto
 
     public string? Name { get; set; }
 
-    public byte Phase { get; set; }
+    public byte? Phase { get; set; }
 
     public List<EncounterDto> Encounters
     {

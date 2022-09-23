@@ -15,27 +15,14 @@ public class CompByTokenGraph : CompGraph
             .ToList();
     }
 
-    private string GetToken(Classes @class)
+    private static string GetToken(Classes @class)
     {
-        if (Phase < 3)
+        return @class switch
         {
-            return @class switch
-            {
-                Classes.Warrior or Classes.Priest or Classes.Druid => "Warrior/Priest/Druid",
-                Classes.Paladin or Classes.Rogue or Classes.Shaman => "Paladin/Rogue/Shaman",
-                Classes.Hunter or Classes.Mage or Classes.Warlock => "Hunter/Mage/Warlock",
-                _ => "Unknown"
-            };
-        }
-        else
-        {
-            return @class switch
-            {
-                Classes.Warrior or Classes.Hunter or Classes.Shaman => "Warrior/Hunter/Shaman",
-                Classes.Rogue or Classes.Mage or Classes.Druid => "Rogue/Mage/Druid",
-                Classes.Paladin or Classes.Priest or Classes.Warlock => "Paladin/Priest/Warlock",
-                _ => "Unknown"
-            };
-        }
+            Classes.Warrior or Classes.Hunter or Classes.Shaman => "Warrior/Hunter/Shaman",
+            Classes.Rogue or Classes.DeathKnight or Classes.Mage or Classes.Druid => "Rogue/Death Knight/Mage/Druid",
+            Classes.Paladin or Classes.Priest or Classes.Warlock => "Paladin/Priest/Warlock",
+            _ => "Unknown"
+        };
     }
 }

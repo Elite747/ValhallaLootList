@@ -11,7 +11,7 @@ public class SeedInstance
 
     public string Name { get; set; } = string.Empty;
 
-    public byte Phase { get; set; }
+    public byte? Phase { get; set; }
 
     public List<SeedEncounter> Encounters
     {

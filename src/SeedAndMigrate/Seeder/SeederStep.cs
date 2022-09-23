@@ -96,6 +96,7 @@ internal class SeederStep
                 encounter.Instance = instance;
                 encounter.InstanceId = instance.Id;
                 encounter.Name = seedEncounter.Name;
+                encounter.Phase = seedInstance.Phase ?? seedEncounter.Phase ?? throw new Exception("Instance or encounter needs a phase set.");
 
                 var encounterItems = new List<(uint itemId, byte size, bool heroic)>();
 
@@ -120,7 +121,7 @@ internal class SeederStep
                 {
                     var item = existingItems[itemId];
                     var is25 = size == 25;
-                    item.Phase = seedInstance.Phase;
+                    item.Phase = encounter.Phase;
 
                     if (existingEncounterItems.Find(ei => ei.ItemId == itemId && ei.EncounterId == encounter.Id && ei.Is25 == is25 && ei.Heroic == heroic) is { } existing)
                     {
@@ -133,7 +134,7 @@ internal class SeederStep
 
                     foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
                     {
-                        sourceItem.Phase = seedInstance.Phase;
+                        sourceItem.Phase = encounter.Phase;
                     }
                 }
             }

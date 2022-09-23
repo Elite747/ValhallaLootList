@@ -58,6 +58,12 @@ public class CompByDamageTypeGraph : CompGraph
                     case Specializations.ProtPaladin:
                     case Specializations.RetPaladin:
                     case Specializations.EnhanceShaman:
+                    case Specializations.BloodDeathKnight:
+                    case Specializations.FrostDeathKnight:
+                    case Specializations.UnholyDeathKnight:
+                    case Specializations.BloodDeathKnightTank:
+                    case Specializations.FrostDeathKnightTank:
+                    case Specializations.UnholyDeathKnightTank:
                         both++;
                         break;
                     default:

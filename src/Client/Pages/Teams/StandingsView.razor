@@ -228,7 +228,7 @@
 
     private void ConfigureInstances(IList<InstanceDto> instances)
     {
-        foreach (var instance in instances.Where(i => i.Phase == Phase))
+        foreach (var instance in instances.Where(i => i.Phase == Phase || i.Phase is null))
         {
             _encounterFilterItems.Add(new()
             {
@@ -237,7 +237,7 @@
                 Text = instance.Name ?? string.Empty
             });
 
-            foreach (var encounter in instance.Encounters)
+            foreach (var encounter in instance.Encounters.Where(e => e.Phase == Phase))
             {
                 _itemsByEncounter[encounter.Id] = encounter.Variants.Where(v => v.Size == Team.Size).SelectMany(v => v.Items).Distinct().ToList();
                 _encounterFilterItems.Add(new()

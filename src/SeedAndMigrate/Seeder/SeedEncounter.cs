@@ -13,6 +13,8 @@ public class SeedEncounter
 
     public sbyte Index { get; set; }
 
+    public byte? Phase { get; set; }
+
     public List<uint> Items10
     {
         get => _items10 ??= new();

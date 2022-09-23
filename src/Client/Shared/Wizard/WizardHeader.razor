@@ -1,0 +1,24 @@
+﻿@namespace ValhallaLootList.Client.Shared
+
+<br />
+<ul class="mud-breadcrumbs mud-typography-body1 mx-auto pb-0 mb-0">
+    @for (int i = 0; i < WizardDialog.Sections.Count; i++)
+    {
+        var sect = WizardDialog.Sections[i];
+        if (i != 0)
+        {
+            <li class="mud-breadcrumb-separator">/</li>
+        }
+        <li class="mud-breadcrumb-item">
+            <MudButton OnClick="() => WizardDialog.GoTo(sect)" Disabled="!WizardDialog.CanGoTo(sect)" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Style="position:relative;top:unset;right:unset">
+                @sect.Name
+            </MudButton>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter] public WizardDialog WizardDialog { get; set; } = null!;
+
+    internal void NotifyChanged() => StateHasChanged();
+}

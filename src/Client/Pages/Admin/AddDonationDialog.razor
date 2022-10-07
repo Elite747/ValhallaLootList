@@ -1,10 +1,10 @@
 ﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
         <EditForm OnValidSubmit="OnSubmit" Model="_donation" id="createDonationForm">
             <DataAnnotationsValidator />
-            <ProblemValidator @ref="_problemValidator" />
 
             <ApiExecutor Operation="() => Api.Characters.GetActive()" Context="characters">
                 <MudSelect Label="Character"
@@ -31,7 +31,6 @@
 
 @code {
     private readonly DonationSubmissionDto _donation = new() { Unit = "gold" };
-    private ProblemValidator? _problemValidator;
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public int TargetMonth { get; set; }
@@ -52,7 +51,7 @@
             {
                 Dialog.Close(DialogResult.Ok(donation));
             })
-            .ValidateWith(_problemValidator)
+            .SendErrorTo(Snackbar)
             .ExecuteAsync();
     }
 }

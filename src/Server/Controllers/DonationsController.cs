@@ -70,10 +70,14 @@ public class DonationsController : ApiControllerV1
             return NotFound();
         }
 
+        var hasFulltimeMembership = await _context.TeamMembers.AnyAsync(m => m.CharacterId == dto.CharacterId && m.Team!.TeamSize == 25 && !m.Bench);
+
+        int maxDonations = hasFulltimeMembership ? PrioCalculator.MaxDonations : 1;
+
         var count = await _context.Donations.AsNoTracking()
             .CountAsync(donation => donation.TargetMonth == dto.TargetMonth && donation.TargetYear == dto.TargetYear && donation.CharacterId == dto.CharacterId);
 
-        if (count >= PrioCalculator.MaxDonations)
+        if (count >= maxDonations)
         {
             return Problem("Character already has the maximum donations for the target month.");
         }
@@ -133,7 +137,7 @@ public class DonationsController : ApiControllerV1
 
         var reverseCharacterLookup = await _context.Characters.AsNoTracking()
             .Where(c => !c.Deactivated)
-            .Select(c => new { c.Id, c.Name })
+            .Select(c => new { c.Id, c.Name, HasFulltimeMembership = c.Teams.Any(t => t.Team.TeamSize == 25 && !t.Bench) })
             .ToDictionaryAsync(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
         var response = new List<DonationDto>();
@@ -149,10 +153,16 @@ public class DonationsController : ApiControllerV1
 
             counts.TryGetValue(character.Id, out var count);
 
-            if (count >= PrioCalculator.MaxDonations)
+            int maxDonations = character.HasFulltimeMembership ? PrioCalculator.MaxDonations : 1;
+
+            if (count >= maxDonations)
             {
                 if (!skipExcess)
                 {
+                    if (dto.Records.Count(r => r.CharacterName == record.CharacterName) > maxDonations)
+                    {
+                        return Problem($"{character.Name} has more donations being imported than what's allowed for them.");
+                    }
                     return Problem($"{character.Name} has already donated {count} times for the target month.");
                 }
             }

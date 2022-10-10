@@ -24,7 +24,9 @@ public class ImportEncounter
 
     public static IEnumerable<ImportEncounter> CreateFromItems(IEnumerable<uint> items, IList<InstanceDto> instances)
     {
-        var itemsHashSet = items.ToHashSet();
+        var candidateEncounters = new List<ImportEncounter>();
+
+        var unknownItems = items.ToHashSet();
 
         foreach (var instance in instances)
         {
@@ -32,18 +34,27 @@ public class ImportEncounter
             {
                 foreach (var variant in encounter.Variants)
                 {
-                    if (variant.Items.Any(itemsHashSet.Contains))
+                    if (variant.Items.Any(items.Contains))
                     {
-                        itemsHashSet.ExceptWith(variant.Items);
-                        yield return new ImportEncounter(encounter, items.Where(variant.Items.Contains));
+                        unknownItems.ExceptWith(variant.Items);
+                        candidateEncounters.Add(new ImportEncounter(encounter, items.Where(variant.Items.Contains)));
                     }
                 }
             }
         }
 
-        if (itemsHashSet.Count != 0)
+        if (unknownItems.Count != 0)
         {
-            yield return new ImportEncounter(null, items.Where(itemsHashSet.Contains));
+            candidateEncounters.Add(new ImportEncounter(null, items.Where(unknownItems.Contains)));
         }
+
+        var completeCandidates = candidateEncounters.Where(e => items.All(e.Items.Contains)).ToList();
+
+        if (completeCandidates.Count > 0)
+        {
+            return completeCandidates;
+        }
+
+        return candidateEncounters;
     }
 }

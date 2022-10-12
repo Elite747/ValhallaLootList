@@ -1215,7 +1215,7 @@ public class LootListsController : ApiControllerV1
                 if (entry.ItemId.HasValue && !entry.Won && members.Find(m => m.CharacterId == list.CharacterId) is { } member)
                 {
                     var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt && p.ItemId == entry.ItemId)));
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt && p.ItemId == rewardFromId)));
                 }
 
                 var entryDto = new LootListEntryDto

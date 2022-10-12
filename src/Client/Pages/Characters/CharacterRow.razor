@@ -1,4 +1,6 @@
-﻿<div class="d-flex">
+﻿@inject ApiClient Api
+
+<div class="d-flex">
     <PlayerIcon Race="Character.Race"
                 Gender="Character.Gender"
                 PlayerClass="Character.Class"
@@ -6,23 +8,23 @@
                 Class="mr-1" />
     <MudText Inline="false">@Character.Name</MudText>
 
-@*    @if (Character.TeamName?.Length > 0)
-    {
-        <MudText Class="ml-2">
-            &lt;@(Character.TeamName)&gt;
-        </MudText>
-    }*@
-
     @if (Character.Deactivated)
     {
         <MudTooltip Class="ml-2" Text="Deactivated">
             <MudIcon Icon="@Icons.Material.Outlined.Warning" Color="Color.Error" Size="Size.Small" />
         </MudTooltip>
     }
+    else if (ShowDonations)
+    {
+        <ApiExecutor Operation="() => Api.Donations.GetSummary(Character.Id)" Context="donations">
+            <MudText Inline="false" Class="ml-2">(@donations.NextMonth of @donations.Maximum donated)</MudText>
+        </ApiExecutor>
+    }
 </div>
 
 @code {
     [Parameter] public CharacterDto Character { get; set; } = null!;
+    [Parameter] public bool ShowDonations { get; set; }
 
     protected override void OnParametersSet()
     {

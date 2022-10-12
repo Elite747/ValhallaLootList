@@ -74,14 +74,18 @@ public static class HelperQueries
                     Verified = character.Verified,
                     Teams = character.Teams
                 },
+                Donations = new()
+                {
+                    CharacterId = character.CharacterId,
+                    ThisMonth = character.DonationsForThisMonth,
+                    NextMonth = character.DonationsForNextMonth,
+                    Maximum = character.Bench ? 1 : PrioCalculator.MaxDonations
+                },
                 Enchanted = character.Enchanted,
                 JoinedAt = character.JoinedAt,
                 Prepared = character.Prepared,
                 Disenchanter = character.Disenchanter,
-                Bench = character.Bench,
-                DonatedThisMonth = character.DonationsForThisMonth,
-                DonatedNextMonth = character.DonationsForNextMonth,
-                MaximumDonationTickets = character.Bench ? 1 : PrioCalculator.MaxDonations
+                Bench = character.Bench
             };
 
             foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))

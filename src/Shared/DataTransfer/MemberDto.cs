@@ -7,11 +7,18 @@ public class MemberDto
 {
     private CharacterDto? _character;
     private List<MemberLootListDto>? _lootLists;
+    private DonationSummaryDto? _donations;
 
     public CharacterDto Character
     {
         get => _character ?? throw new InvalidOperationException("Characer has not been set.");
         set => _character = value;
+    }
+
+    public DonationSummaryDto Donations
+    {
+        get => _donations ??= new();
+        set => _donations = value;
     }
 
     public List<MemberLootListDto> LootLists
@@ -27,12 +34,6 @@ public class MemberDto
     public bool Enchanted { get; set; }
 
     public bool Prepared { get; set; }
-
-    public int DonatedThisMonth { get; set; }
-
-    public int DonatedNextMonth { get; set; }
-
-    public int MaximumDonationTickets { get; set; }
 
     public int Absences { get; set; }
 

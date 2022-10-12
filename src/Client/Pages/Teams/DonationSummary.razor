@@ -2,10 +2,10 @@
     <MudTooltip Text="This was what was donated last month for priority in the current month.">
         <MudText Inline="false">
             <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
-            Completed @Member.DonatedThisMonth of @Member.MaximumDonationTickets donations for this month.
+            Completed @Donations.ThisMonth of @Donations.Maximum donations for this month.
         </MudText>
     </MudTooltip>
-    @if (Member.DonatedThisMonth >= Member.MaximumDonationTickets)
+    @if (Donations.ThisMonth >= Donations.Maximum)
     {
         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
     }
@@ -14,26 +14,26 @@
     <MudTooltip>
         <TooltipContent>
             <p>This is what has been donated so far for next month.</p>
-            <p>Complete up to @Member.MaximumDonationTickets donations before the end of the month to get a priority bonus next month.</p>
+            <p>Complete up to @Donations.Maximum donations before the end of the month to get a priority bonus next month.</p>
         </TooltipContent>
         <ChildContent>
             <MudText Inline="false">
                 <MudIcon Class="text-icon" Icon="@CustomIcons.HandCoin" />
-                Completed @Member.DonatedNextMonth of @Member.MaximumDonationTickets donations for next month.
+                Completed @Donations.NextMonth of @Donations.Maximum donations for next month.
             </MudText>
         </ChildContent>
     </MudTooltip>
-    @if (Member.DonatedNextMonth >= Member.MaximumDonationTickets)
+    @if (Donations.NextMonth >= Donations.Maximum)
     {
         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-1" />
     }
 </div>
 
 @code {
-    [Parameter] public MemberDto Member { get; set; } = null!;
+    [Parameter] public DonationSummaryDto Donations { get; set; } = null!;
 
     protected override void OnParametersSet()
     {
-        if (Member is null) throw new ArgumentNullException(nameof(Member));
+        if (Donations is null) throw new ArgumentNullException(nameof(Donations));
     }
 }

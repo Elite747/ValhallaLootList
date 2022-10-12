@@ -16,6 +16,11 @@ public class ApiClientDonations
         return Client.CreateRequest<List<DonationDto>>(HttpMethod.Get, $"api/v1/donations?month={month}&year={year}");
     }
 
+    public IApiClientOperation<DonationSummaryDto> GetSummary(long characterId)
+    {
+        return Client.CreateRequest<DonationSummaryDto>(HttpMethod.Get, $"api/v1/donations/summary/{characterId}");
+    }
+
     public IApiClientOperation<DonationDto> Add(DonationSubmissionDto donation)
     {
         return Client.CreateRequest<DonationSubmissionDto, DonationDto>(HttpMethod.Post, "api/v1/donations", donation);

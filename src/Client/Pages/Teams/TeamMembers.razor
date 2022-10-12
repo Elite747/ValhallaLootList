@@ -70,11 +70,11 @@
                                 <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
                             </MudTooltip>
                         }
-                        @if (member.DonatedNextMonth < member.MaximumDonationTickets)
+                        @if (member.Donations.NextMonth < member.Donations.Maximum)
                         {
                             <MudTooltip>
                                 <TooltipContent>
-                                    Completed @member.DonatedNextMonth of @member.MaximumDonationTickets donations for next month.
+                                    Completed @member.Donations.NextMonth of @member.Donations.Maximum donations for next month.
                                 </TooltipContent>
                                 <ChildContent>
                                     <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />

@@ -260,6 +260,40 @@ public class CharactersController : ApiControllerV1
         };
     }
 
+    [HttpGet("{characterId:long}/Donations")]
+    public async Task<ActionResult<DonationSummaryDto>> GetDonationSummary(long characterId, [FromServices] TimeZoneInfo serverTimeZoneInfo)
+    {
+        if (await _context.Characters.FindAsync(characterId) is null)
+        {
+            return NotFound();
+        }
+
+        var thisMonth = serverTimeZoneInfo.TimeZoneNow();
+        var nextMonth = thisMonth.AddMonths(1);
+
+        var donations = await _context.Donations
+            .AsNoTracking()
+            .Where(d => d.CharacterId == characterId && (
+                (d.TargetYear == thisMonth.Year && d.TargetMonth == thisMonth.Month) ||
+                (d.TargetYear == nextMonth.Year && d.TargetMonth == nextMonth.Month)
+            ))
+            .GroupBy(d => d.TargetMonth)
+            .Select(g => new { Month = (int)g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Month, g => g.Count);
+
+        var isFulltime = await _context.TeamMembers
+            .AsNoTracking()
+            .Where(m => m.CharacterId == characterId && m.Team!.TeamSize == 25 && !m.Bench)
+            .AnyAsync();
+
+        return new DonationSummaryDto
+        {
+            ThisMonth = donations.GetValueOrDefault(thisMonth.Month),
+            NextMonth = donations.GetValueOrDefault(nextMonth.Month),
+            Maximum = isFulltime ? PrioCalculator.MaxDonations : 1
+        };
+    }
+
     [HttpGet("{id:long}/Admin"), Authorize(AppPolicies.LeadershipOrAdmin)]
     public async Task<ActionResult<CharacterAdminDto>> GetAdmin(long id, [FromServices] DiscordClientProvider dcp)
     {

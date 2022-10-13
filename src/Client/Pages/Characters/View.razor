@@ -48,7 +48,7 @@
     </div>
 
     <AuthorizeView Policy="@AppPolicies.CharacterOwnerOrAdmin" Resource="character">
-        <ApiExecutor Operation="() => Api.Donations.GetSummary(character.Id)" Context="donations">
+        <ApiExecutor Operation="() => Api.Characters.GetDonationSummary(character.Id)" Context="donations">
             <ValhallaLootList.Client.Pages.Teams.DonationSummary Donations="donations" />
         </ApiExecutor>
     </AuthorizeView>

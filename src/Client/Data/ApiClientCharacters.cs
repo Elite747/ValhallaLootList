@@ -61,6 +61,11 @@ public sealed class ApiClientCharacters
         return Client.CreateRequest(HttpMethod.Delete, "api/v1/characters/" + id);
     }
 
+    public IApiClientOperation<DonationSummaryDto> GetDonationSummary(long characterId)
+    {
+        return Client.CreateRequest<DonationSummaryDto>(HttpMethod.Get, $"api/v1/characters/{characterId}/donations");
+    }
+
     public IApiClientOperation<CharacterAdminDto> GetAdminInfo(long id)
     {
         return Client.CreateRequest<CharacterAdminDto>(HttpMethod.Get, "api/v1/characters/" + id + "/admin");

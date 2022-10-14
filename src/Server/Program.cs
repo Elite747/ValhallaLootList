@@ -81,20 +81,21 @@ else
 }
 
 identityServerBuilder.AddProfileService<IdentityProfileService>()
-    .AddInMemoryClients(new List<Client>
-    {
-        new()
-        {
-            ClientId = "admin.daemon",
-            ClientSecrets = { new(builder.Configuration["DaemonKey"].Sha512()) },
-            Claims = { new(AppClaimTypes.Id, builder.Configuration["DaemonId"]) },
-            ClientClaimsPrefix = string.Empty,
-            AllowedGrantTypes = { GrantType.ClientCredentials },
-            AllowedScopes = { "ValhallaLootList.ServerAPI" },
-            RequireClientSecret = true,
-            Enabled = true,
-        }
-    });
+    //.AddInMemoryClients(new List<Client>
+    //{
+    //    new()
+    //    {
+    //        ClientId = "admin.daemon",
+    //        ClientSecrets = { new(builder.Configuration["DaemonKey"].Sha512()) },
+    //        Claims = { new(AppClaimTypes.Id, builder.Configuration["DaemonId"]) },
+    //        ClientClaimsPrefix = string.Empty,
+    //        AllowedGrantTypes = { GrantType.ClientCredentials },
+    //        AllowedScopes = { "ValhallaLootList.ServerAPI" },
+    //        RequireClientSecret = true,
+    //        Enabled = true,
+    //    }
+    //})
+    ;
 
 builder.Services.AddAuthentication()
     .AddDiscord(options =>

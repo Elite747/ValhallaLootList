@@ -32,9 +32,9 @@
            For="() => Character.Race"
            ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty"
            Variant="Variant.Filled">
-    @foreach (var race in _allRaces)
+    @foreach (var race in PlayerRaceExtensions.GetAll())
     {
-        <MudSelectItem T="PlayerRace?" Value="@race" Disabled="Array.IndexOf(_classRaces, race) < 0">
+        <MudSelectItem T="PlayerRace?" Value="@race" Disabled="!_classRaces.Contains(race)">
             <div class="d-flex align-center">
                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                     <RaceIcon Race="race" Gender="Character.Gender ?? Gender.Male" Size="IconSize.Medium" Width="24" Height="24" />
@@ -52,9 +52,9 @@
            Disabled="DisableClassChange"
            ToStringFunc="pc => pc == default ? string.Empty : pc.GetDisplayName()"
            Variant="Variant.Filled">
-    @foreach (var playerClass in _allClasses)
+    @foreach (var playerClass in ClassesExtensions.GetAll())
     {
-        <MudSelectItem T="Classes" Value="@playerClass" Disabled="Array.IndexOf(GetRaceClasses(), playerClass) < 0">
+        <MudSelectItem T="Classes" Value="@playerClass" Disabled="!GetRaceClasses().Contains(playerClass)">
             <div class="d-flex align-center">
                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
                     <ClassIcon PlayerClass="playerClass" Size="IconSize.Medium" Width="24" Height="24" />
@@ -76,44 +76,8 @@
 }
 
 @code {
-    private static readonly Dictionary<PlayerRace, Classes[]> _classLookup = new()
-    {
-        [PlayerRace.Human] = new[] { Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warlock, Classes.Warrior },
-        [PlayerRace.Dwarf] = new[] { Classes.Hunter, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warrior },
-        [PlayerRace.NightElf] = new[] { Classes.Druid, Classes.Hunter, Classes.Priest, Classes.Rogue, Classes.Warrior },
-        [PlayerRace.Gnome] = new[] { Classes.Mage, Classes.Rogue, Classes.Warlock, Classes.Warrior },
-        [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior }
-    };
-
-    private static readonly Dictionary<Classes, PlayerRace[]> _raceLookup = new()
-    {
-        [Classes.Druid] = new[] { PlayerRace.NightElf },
-        [Classes.Hunter] = new[] { PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
-        [Classes.Mage] = new[] { PlayerRace.Human, PlayerRace.Gnome, PlayerRace.Draenei },
-        [Classes.Paladin] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.Draenei },
-        [Classes.Priest] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
-        [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
-        [Classes.Shaman] = new[] { PlayerRace.Draenei },
-        [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
-        [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei }
-    };
-
-    private static readonly Classes[] _allClasses = new[] {
-        Classes.Druid,
-        Classes.Hunter,
-        Classes.Mage,
-        Classes.Paladin,
-        Classes.Priest,
-        Classes.Rogue,
-        Classes.Shaman,
-        Classes.Warlock,
-        Classes.Warrior
-    };
-
-    private static readonly PlayerRace[] _allRaces;
-
     private CharacterSubmissionDto? _character;
-    private PlayerRace[] _classRaces = _allRaces;
+    private IEnumerable<PlayerRace> _classRaces = PlayerRaceExtensions.GetAll();
 
     [Parameter] public CharacterSubmissionDto Character
     {
@@ -121,7 +85,7 @@
         set
         {
             _character = value;
-            if (_raceLookup.TryGetValue(_character.Class, out var classRaces))
+            if (_character.Class.TryGetRaces(out var classRaces))
             {
                 _classRaces = classRaces;
             }
@@ -132,16 +96,16 @@
 
     [Parameter] public bool DisableClassChange { get; set; }
 
-    private Classes[] GetRaceClasses()
+    private IEnumerable<Classes> GetRaceClasses()
     {
-        return Character.Race.HasValue && _classLookup.TryGetValue(Character.Race.Value, out var raceClasses) ? raceClasses : _allClasses;
+        return Character.Race?.TryGetClasses(out var raceClasses) == true ? raceClasses : ClassesExtensions.GetAll();
     }
 
     private void RaceChanged(PlayerRace? newValue)
     {
         Character.Race = newValue;
 
-        if (Array.IndexOf(GetRaceClasses(), Character.Class) < 0)
+        if (!GetRaceClasses().Contains(Character.Class))
         {
             Character.Class = default;
         }

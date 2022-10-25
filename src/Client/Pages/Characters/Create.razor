@@ -37,7 +37,7 @@
                            For="() => _character.Race"
                            ToStringFunc="r => r.HasValue ? r.Value.GetDisplayName() : string.Empty"
                            Variant="Variant.Filled">
-                    @foreach (var race in _allRaces)
+                    @foreach (var race in PlayerRaceExtensions.GetAll())
                     {
                         <MudSelectItem T="PlayerRace?" Value="@race" Disabled="!_classRaces.Contains(race)">
                             <div class="d-flex align-center">
@@ -56,7 +56,7 @@
                            Disabled="EditingCharacter is not null"
                            ToStringFunc="pc => pc == default ? string.Empty : pc.GetDisplayName()"
                            Variant="Variant.Filled">
-                    @foreach (var playerClass in _allClasses)
+                    @foreach (var playerClass in ClassesExtensions.GetAll())
                     {
                         <MudSelectItem T="Classes" Value="@playerClass" Disabled="!_raceClasses.Contains(playerClass)">
                             <div class="d-flex align-center">
@@ -89,8 +89,8 @@
 @code {
     private readonly CharacterSubmissionDto _character = new();
     private ProblemValidator? _problemValidator;
-    private Classes[] _raceClasses = _allClasses;
-    private PlayerRace[] _classRaces = _allRaces;
+    private IEnumerable<Classes> _raceClasses = ClassesExtensions.GetAll();
+    private IEnumerable<PlayerRace> _classRaces = PlayerRaceExtensions.GetAll();
 
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
     [Parameter] public CharacterDto? EditingCharacter { get; set; }
@@ -107,7 +107,7 @@
             _character.Gender = EditingCharacter.Gender;
             _character.Name = EditingCharacter.Name;
             _character.Race = EditingCharacter.Race;
-            if (_raceLookup.TryGetValue(EditingCharacter.Class, out var classRaces))
+            if (EditingCharacter.Class.TryGetRaces(out var classRaces))
             {
                 _classRaces = classRaces;
             }

@@ -162,7 +162,7 @@ public class CharactersController : ApiControllerV1
             return ValidationProblem();
         }
 
-        if ((dto.Class & dto.Race.Value.GetClasses()) == 0)
+        if (!dto.Race.Value.GetClasses().Contains(dto.Class))
         {
             ModelState.AddModelError(nameof(dto.Class), "Class is not available to the selected race.");
             return ValidationProblem();

@@ -9,44 +9,6 @@ namespace ValhallaLootList.Client.Pages.Characters;
 
 public partial class Create
 {
-    private static readonly Dictionary<PlayerRace, Classes[]> _classLookup = new()
-    {
-        [PlayerRace.Human] = new[] { Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warlock, Classes.Warrior, Classes.DeathKnight },
-        [PlayerRace.Dwarf] = new[] { Classes.Hunter, Classes.Paladin, Classes.Priest, Classes.Rogue, Classes.Warrior, Classes.DeathKnight },
-        [PlayerRace.NightElf] = new[] { Classes.Druid, Classes.Hunter, Classes.Priest, Classes.Rogue, Classes.Warrior, Classes.DeathKnight },
-        [PlayerRace.Gnome] = new[] { Classes.Mage, Classes.Rogue, Classes.Warlock, Classes.Warrior, Classes.DeathKnight },
-        [PlayerRace.Draenei] = new[] { Classes.Hunter, Classes.Mage, Classes.Paladin, Classes.Priest, Classes.Shaman, Classes.Warrior, Classes.DeathKnight }
-    };
-
-    private static readonly Dictionary<Classes, PlayerRace[]> _raceLookup = new()
-    {
-        [Classes.Druid] = new[] { PlayerRace.NightElf },
-        [Classes.Hunter] = new[] { PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
-        [Classes.Mage] = new[] { PlayerRace.Human, PlayerRace.Gnome, PlayerRace.Draenei },
-        [Classes.Paladin] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.Draenei },
-        [Classes.Priest] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
-        [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
-        [Classes.Shaman] = new[] { PlayerRace.Draenei },
-        [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
-        [Classes.Warrior] = _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei },
-        [Classes.DeathKnight] = _allRaces
-    };
-
-    private static readonly Classes[] _allClasses = new[] {
-            Classes.DeathKnight,
-            Classes.Druid,
-            Classes.Hunter,
-            Classes.Mage,
-            Classes.Paladin,
-            Classes.Priest,
-            Classes.Rogue,
-            Classes.Shaman,
-            Classes.Warlock,
-            Classes.Warrior
-        };
-
-    private static readonly PlayerRace[] _allRaces;
-
     private Task OnSubmit()
     {
         return (EditingCharacter is null ? Api.Characters.Create(_character) : Api.Characters.Update(EditingCharacter.Id, _character))
@@ -66,9 +28,9 @@ public partial class Create
     private void RaceChanged(PlayerRace? newValue)
     {
         _character.Race = newValue;
-        _raceClasses = (newValue.HasValue && _classLookup.TryGetValue(newValue.Value, out var raceClasses)) ? raceClasses : _allClasses;
+        _raceClasses = newValue?.TryGetClasses(out var raceClasses) == true ? raceClasses : ClassesExtensions.GetAll();
 
-        if (Array.IndexOf(_raceClasses, _character.Class) < 0)
+        if (!_raceClasses.Contains(_character.Class))
         {
             _character.Class = default;
         }

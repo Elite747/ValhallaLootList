@@ -1,10 +1,59 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace ValhallaLootList;
 
 public static class ClassesExtensions
 {
+    private static readonly Classes[] _allClasses = new[]
+    {
+        Classes.DeathKnight,
+        Classes.Druid,
+        Classes.Hunter,
+        Classes.Mage,
+        Classes.Paladin,
+        Classes.Priest,
+        Classes.Rogue,
+        Classes.Shaman,
+        Classes.Warlock,
+        Classes.Warrior
+    };
+
+    public static readonly Dictionary<Classes, IEnumerable<PlayerRace>> _raceLookup = new()
+    {
+        [Classes.Druid] = new[] { PlayerRace.NightElf },
+        [Classes.Hunter] = new[] { PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+        [Classes.Mage] = new[] { PlayerRace.Human, PlayerRace.Gnome, PlayerRace.Draenei },
+        [Classes.Paladin] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.Draenei },
+        [Classes.Priest] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Draenei },
+        [Classes.Rogue] = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome },
+        [Classes.Shaman] = new[] { PlayerRace.Draenei },
+        [Classes.Warlock] = new[] { PlayerRace.Human, PlayerRace.Gnome },
+        [Classes.Warrior] = PlayerRaceExtensions.GetAll(),
+        [Classes.DeathKnight] = PlayerRaceExtensions.GetAll()
+    };
+
+    public static IEnumerable<Classes> GetAll()
+    {
+        return _allClasses;
+    }
+
+    public static IEnumerable<PlayerRace> GetRaces(this Classes playerClass)
+    {
+        if (_raceLookup.TryGetValue(playerClass, out var races))
+        {
+            return races;
+        }
+        throw new ArgumentOutOfRangeException(nameof(playerClass));
+    }
+
+    public static bool TryGetRaces(this Classes playerClass, [NotNullWhen(true)] out IEnumerable<PlayerRace>? races)
+    {
+        return _raceLookup.TryGetValue(playerClass, out races);
+    }
+
     public static string GetDisplayName(this Classes classes) => classes switch
     {
         Classes.Warrior => "Warrior",

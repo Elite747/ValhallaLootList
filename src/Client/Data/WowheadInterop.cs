@@ -16,6 +16,6 @@ public class WowheadInterop
 
     public ValueTask HideTooltipAsync(CancellationToken cancellationToken = default)
     {
-        return _js.InvokeVoidAsync("WH.Tooltip.hide", cancellationToken);
+        return _js.InvokeVoidAsync("WhInterop.hide", cancellationToken);
     }
 }

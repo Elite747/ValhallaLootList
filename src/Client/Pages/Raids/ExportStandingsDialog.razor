@@ -1,0 +1,30 @@
+﻿@inject ApiClient Api
+
+<MudDialog DisableSidePadding="true">
+    <TitleContent>
+        Export Standings
+    </TitleContent>
+    <DialogContent>
+        <MudTextField T="string"
+                      Value="Code"
+                      ReadOnly
+                      FullWidth
+                      Label="Export Code"
+                      Variant="Variant.Filled" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter] public string Code { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Code is null) throw new ArgumentNullException(nameof(Code));
+    }
+}

@@ -99,45 +99,49 @@ public partial class KillsView
 
     private async Task ExportAsync()
     {
-        var items = new List<ExportItem>();
+        var operation = Api.LootLists.GetForTeam(Raid.TeamId, includeApplicants: false);
+        operation.SendErrorTo(Snackbar);
+        var lists = await operation.ExecuteAndTryReturnAsync();
 
-        foreach (var kill in Raid.Kills)
+        if (lists?.Count > 0)
         {
-            foreach (var drop in kill.Drops)
+            var items = new Dictionary<uint, Dictionary<int, HashSet<string>>>();
+
+            foreach (var list in lists.Where(l => l.RanksVisible))
             {
-                if (drop.WinnerId.HasValue)
+                foreach (var entry in list.Entries)
                 {
-                    continue;
+                    var itemId = entry.RewardFromId ?? entry.ItemId ?? 0;
+                    if (itemId > 0)
+                    {
+                        if (!items.TryGetValue(itemId, out var item))
+                        {
+                            items[itemId] = item = new();
+                        }
+
+                        var prio = entry.Rank + entry.Bonuses.Sum(b => b.Value) + list.Bonuses.Sum(b => b.Value);
+
+                        if (!item.TryGetValue(prio, out var names))
+                        {
+                            item[prio] = names = new();
+                        }
+
+                        names.Add(list.CharacterName);
+                    }
                 }
-
-                var operation = Api.Drops.GetPriorityRankings(drop.Id);
-                operation.SendErrorTo(Snackbar);
-                var standings = await operation.ExecuteAndTryReturnAsync();
-
-                if (standings is null)
-                {
-                    return;
-                }
-
-                var exportStandings = standings.Select(p => new { Name = p.CharacterName, Prio = p.Rank + p.Bonuses.Sum(b => b.Value) })
-                    .GroupBy(x => x.Prio)
-                    .Select(g => new ExportStanding(g.Key, g.Select(p => p.Name).ToList()))
-                    .OrderByDescending(p => p.Prio)
-                    .ToList();
-
-                items.Add(new ExportItem(
-                    drop.ItemId,
-                    exportStandings
-                ));
             }
-        }
 
-        await DialogService.ShowAsync<ExportStandingsDialog, object?>(
-            string.Empty,
-            parameters: new()
-            {
-                [nameof(ExportStandingsDialog.Code)] = JsonSerializer.Serialize(items)
-            });
+            var exportItems = items.Select(x => new ExportItem(x.Key, x.Value.Select(y => new ExportStanding(y.Key, y.Value.OrderBy(n => n).ToList())).OrderByDescending(s => s.Prio).ToList()))
+                .OrderBy(x => x.Id)
+                .ToList();
+
+            await DialogService.ShowAsync<ExportStandingsDialog, object?>(
+                string.Empty,
+                parameters: new()
+                {
+                    [nameof(ExportStandingsDialog.Code)] = JsonSerializer.Serialize(exportItems)
+                });
+        }
     }
 
     record ExportItem(uint Id, List<ExportStanding> Standings);

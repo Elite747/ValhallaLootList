@@ -84,6 +84,13 @@
                            Color="Color.Primary">
                     Add Kill
                 </MudButton>
+                <MudButton OnClick="ExportAsync"
+                           StartIcon="@Icons.Material.Filled.ImportExport"
+                           Variant="Variant.Text"
+                           Color="Color.Secondary"
+                           Class="ml-2">
+                    Export Standings
+                </MudButton>
 
                 @if (Raid.Kills.Count == 0)
                 {
@@ -93,16 +100,6 @@
                                Color="Color.Error"
                                Class="ml-2">
                         Delete Raid
-                    </MudButton>
-                }
-                else
-                {
-                    <MudButton OnClick="ExportAsync"
-                               StartIcon="@Icons.Material.Filled.ImportExport"
-                               Variant="Variant.Text"
-                               Color="Color.Secondary"
-                               Class="ml-2">
-                        Export Standings
                     </MudButton>
                 }
             </AuthorizeView>

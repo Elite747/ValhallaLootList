@@ -109,7 +109,7 @@ public partial class KillsView
 
             foreach (var list in lists.Where(l => l.RanksVisible))
             {
-                foreach (var entry in list.Entries)
+                foreach (var entry in list.Entries.Where(l => !l.AutoPass))
                 {
                     var itemId = entry.RewardFromId ?? entry.ItemId ?? 0;
                     if (itemId > 0)

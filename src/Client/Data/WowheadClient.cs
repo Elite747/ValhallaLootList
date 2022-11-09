@@ -25,7 +25,7 @@ public sealed class WowheadClient : IDisposable
 
     public async Task<object?> GetItemAsync(uint id, CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.GetAsync($"https://www.wowhead.com/wotlk/tooltip/item/{id}", cancellationToken);
+        using var response = await _httpClient.GetAsync($"https://nether.wowhead.com/tooltip/item/{id}?dataEnv=8&locale=0", cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {

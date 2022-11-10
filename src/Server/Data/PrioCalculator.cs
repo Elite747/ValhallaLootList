@@ -35,7 +35,7 @@ public static class PrioCalculator
             {
                 Absences = absences,
                 Type = PriorityBonusTypes.Absence,
-                Value = Fib(absences - 1)
+                Value = -Fib(absences - 1)
             };
         }
 

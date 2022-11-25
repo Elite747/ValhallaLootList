@@ -9,6 +9,6 @@ public partial class ApiClient
 {
     public IApiClientOperation<PhaseConfigDto> GetPhaseConfiguration()
     {
-        return CreateRequest<PhaseConfigDto>(HttpMethod.Get, "api/v1/config/phases").CacheFor(TimeSpan.FromHours(2));
+        return CreateRequest<PhaseConfigDto>(HttpMethod.Get, "api/v1/config/phases").CacheFor(TimeSpan.FromHours(6));
     }
 }

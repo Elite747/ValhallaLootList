@@ -13,6 +13,6 @@ public class ApiClientInstances
 
     public IApiClientOperation<IList<InstanceDto>> GetAll()
     {
-        return Client.CreateRequest<IList<InstanceDto>>(HttpMethod.Get, "api/v1/instances").CacheFor(TimeSpan.FromHours(2));
+        return Client.CreateRequest<IList<InstanceDto>>(HttpMethod.Get, "api/v1/instances").CacheFor(TimeSpan.FromHours(6));
     }
 }

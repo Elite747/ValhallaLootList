@@ -4,7 +4,7 @@
 <CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec" OnClick="OpenDetailsAsync">
     <div class="d-flex align-center">
         @Attendance.Character.Name
-        @if (!Attendance.Character.Teams.Contains(Raid.TeamId))
+        @if (!Attendance.Character.Teams.Contains(Raid.TeamId) || Attendance.IgnoreAttendance)
         {
             <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Error" Color="Color.Error" Style="margin-left: 4px; margin-right: -12px" />
         }

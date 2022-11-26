@@ -8,4 +8,9 @@ namespace ValhallaLootList.DataTransfer;
 public class UpdateAttendanceSubmissionDto
 {
     public bool Standby { get; set; }
+
+    public bool IgnoreAttendance { get; set; }
+
+    [StringLength(256)]
+    public string? IgnoreReason { get; set; }
 }

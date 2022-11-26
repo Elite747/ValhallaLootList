@@ -129,6 +129,8 @@ public class RaidsController : ApiControllerV1
             .Select(a => new AttendanceDto
             {
                 MainSpec = ((Specializations?)a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == dto.TeamSize)!.MainSpec).GetValueOrDefault(),
+                IgnoreAttendance = a.IgnoreAttendance,
+                IgnoreReason = a.IgnoreReason,
                 Standby = a.Standby,
                 Character = new CharacterDto
                 {
@@ -332,6 +334,8 @@ public class RaidsController : ApiControllerV1
             {
                 MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == team.TeamSize)?.MainSpec ?? Specializations.None,
                 Standby = a.Standby,
+                IgnoreAttendance = a.IgnoreAttendance,
+                IgnoreReason= a.IgnoreReason,
                 Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == a.CharacterId),
                 Character = new CharacterDto
                 {
@@ -506,6 +510,8 @@ public class RaidsController : ApiControllerV1
         {
             MainSpec = spec,
             Standby = attendee.Standby,
+            IgnoreAttendance = attendee.IgnoreAttendance,
+            IgnoreReason = attendee.IgnoreReason,
             Disenchanter = await _context.TeamMembers.CountAsync(tm => tm.CharacterId == character.Id && tm.TeamId == raid.RaidTeamId && tm.Disenchanter) > 0,
             Character = new CharacterDto
             {
@@ -550,6 +556,8 @@ public class RaidsController : ApiControllerV1
         }
 
         attendee.Standby = dto.Standby;
+        attendee.IgnoreAttendance = dto.IgnoreAttendance;
+        attendee.IgnoreReason = dto.IgnoreReason;
 
         await _context.SaveChangesAsync();
 

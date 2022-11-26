@@ -24,10 +24,23 @@
                 {
                     <EditForm OnValidSubmit="OnSubmitAsync" Model="_model" id="attendanceForm">
                         <ProblemValidator @ref="_problemValidator" />
-                        <MudCheckBox T="bool" @bind-Checked="_model.Standby">
+                        <MudCheckBox T="bool" Checked="_model.Standby" CheckedChanged="ToggleStandby">
                             Standby
                         </MudCheckBox>
+                        <MudCheckBox @bind-Checked="_model.IgnoreAttendance" Disabled="_model.Standby">
+                            Ignore Attendance
+                        </MudCheckBox>
+                        <MudTextField Label="Ignore Reason"
+                                      For="() => _model.IgnoreReason"
+                                      @bind-Value="_model.IgnoreReason"
+                                      Disabled="!_model.IgnoreAttendance || _model.Standby"
+                                      Variant="Variant.Filled"
+                                      Lines="3" />
                     </EditForm>
+                }
+                else if (Attendance.IgnoreAttendance)
+                {
+                    <MudText Typo="Typo.caption" Inline="false" Color="Color.Error">Attendance Ignored: @Attendance.IgnoreReason</MudText>
                 }
                 else if (Attendance.Standby)
                 {
@@ -49,7 +62,7 @@
                 {
                     <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnRemoveClickedAsync">Remove</MudButton>
                 }
-                @if (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin())
+                @if (Attendance.Character.Teams.Contains(Raid.TeamId) && (Raid.LocksAt > DateTimeOffset.UtcNow || auth.User.IsAdmin()))
                 {
                     <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Inherit" OnClick="BeginEdit">Edit</MudButton>
                 }
@@ -89,15 +102,34 @@
 
     private void BeginEdit()
     {
+        _model.IgnoreAttendance = Attendance.IgnoreAttendance;
+        _model.IgnoreReason = Attendance.IgnoreReason;
         _model.Standby = Attendance.Standby;
         _editing = true;
     }
 
+    private void ToggleStandby(bool standby)
+    {
+        _model.Standby = standby;
+        if (standby)
+        {
+            _model.IgnoreAttendance = false;
+            _model.IgnoreReason = null;
+        }
+    }
+
     private Task OnSubmitAsync()
     {
+        if (!_model.IgnoreAttendance)
+        {
+            _model.IgnoreReason = null;
+        }
+
         return Api.Raids.UpdateAttendee(Raid.Id, Attendance.Character.Id, _model)
             .OnSuccess(attendance =>
             {
+                Attendance.IgnoreAttendance = attendance.IgnoreAttendance;
+                Attendance.IgnoreReason = attendance.IgnoreReason;
                 Attendance.Standby = attendance.Standby;
                 Dialog.Close(DialogResult.Ok(false));
             })

@@ -4,6 +4,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography.X509Certificates;
 using IdentityServer4.Models;
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -80,22 +81,23 @@ else
     identityServerBuilder.AddApiAuthorization<AppUser, ApplicationDbContext>();
 }
 
-identityServerBuilder.AddProfileService<IdentityProfileService>()
-    //.AddInMemoryClients(new List<Client>
-    //{
-    //    new()
-    //    {
-    //        ClientId = "admin.daemon",
-    //        ClientSecrets = { new(builder.Configuration["DaemonKey"].Sha512()) },
-    //        Claims = { new(AppClaimTypes.Id, builder.Configuration["DaemonId"]) },
-    //        ClientClaimsPrefix = string.Empty,
-    //        AllowedGrantTypes = { GrantType.ClientCredentials },
-    //        AllowedScopes = { "ValhallaLootList.ServerAPI" },
-    //        RequireClientSecret = true,
-    //        Enabled = true,
-    //    }
-    //})
-    ;
+identityServerBuilder.AddProfileService<IdentityProfileService>();
+
+builder.Services.Configure<ApiAuthorizationOptions>(options =>
+{
+    options.Clients[0].AccessTokenLifetime = 10800;
+    options.Clients.Add(new Client
+    {
+        ClientId = "admin.daemon",
+        ClientSecrets = { new(builder.Configuration["DaemonKey"].Sha512()) },
+        Claims = { new(AppClaimTypes.Id, builder.Configuration["DaemonId"]) },
+        ClientClaimsPrefix = string.Empty,
+        AllowedGrantTypes = { GrantType.ClientCredentials },
+        AllowedScopes = { "ValhallaLootList.ServerAPI" },
+        RequireClientSecret = true,
+        Enabled = true
+    });
+});
 
 builder.Services.AddAuthentication()
     .AddDiscord(options =>

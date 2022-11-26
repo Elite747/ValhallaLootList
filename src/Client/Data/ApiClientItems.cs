@@ -13,7 +13,7 @@ public class ApiClientItems
 
     public IApiClientOperation<List<ItemDto>> Get(byte phase, byte size, bool includeTokens = false)
     {
-        return Client.CreateRequest<List<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}&size={size}&includeTokens={includeTokens}").CacheFor(TimeSpan.FromHours(1));
+        return Client.CreateRequest<List<ItemDto>>(HttpMethod.Get, $"api/v1/items?phase={phase}&size={size}&includeTokens={includeTokens}").CacheFor(TimeSpan.FromHours(6));
     }
 
     public IApiClientOperation<List<RestrictionDto>> GetRestrictions(uint itemId)

@@ -128,6 +128,11 @@ public class PhasesController : ApiControllerV1
             return NotFound();
         }
 
+        if (await _context.CharacterLootLists.AnyAsync(ll => ll.Phase == id && ll.Status == LootListStatus.Locked))
+        {
+            return Problem("Phase has locked loot lists and cannot be edited.");
+        }
+
         phase.StartsAt = dto.StartsAt;
 
         var brackets = await _context.Brackets.Where(b => b.Phase == id).OrderBy(b => b.Index).ToListAsync();

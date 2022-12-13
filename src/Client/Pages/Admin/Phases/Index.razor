@@ -1,0 +1,81 @@
+﻿@page "/admin/phases"
+@attribute [Authorize(AppPolicies.Administrator)]
+@inject ApiClient Api
+@inject IDialogService DialogService
+
+<AppPageTitle Title="Phases" />
+<div class="layout-container content">
+    <div class="d-flex align-center mb-3">
+        <MudText Typo="Typo.h4" GutterBottom="false">Phases</MudText>
+
+        <MudTooltip Text="Refresh">
+            <MudIconButton OnClick="() => _executor?.RestartAsync() ?? Task.CompletedTask" Icon="@Icons.Material.Filled.Refresh" />
+        </MudTooltip>
+    </div>
+
+    <ApiExecutor Operation="Api.Phases.GetAll" @ref="_executor" Context="phases">
+        <MudPaper Elevation="5" Class="layout-container content">
+            <MudList DisablePadding Clickable Class="layout-container content">
+                <div class="content">
+                    @foreach (var phase in phases)
+                    {
+                        <MudListItem @key="phase.Phase" OnClick="() => EditPhaseAsync(phases, phase)">
+                            Phase @phase.Phase (<DateTimeDisplay Format="d" Date="phase.StartsAt" />)
+                        </MudListItem>
+                    }
+                    <MudListItem OnClick="() => CreatePhaseAsync(phases)" Icon="@Icons.Material.Filled.AddCircle" IconColor="Color.Success">
+                        New Phase
+                    </MudListItem>
+                </div>
+            </MudList>
+        </MudPaper>
+    </ApiExecutor>
+</div>
+
+
+@code {
+    private IApiExecutor? _executor;
+
+    private async Task CreatePhaseAsync(List<PhaseDto> phases)
+    {
+        var phase = phases.Count == 0 ? 1 : (phases.Max(p => p.Phase) + 1);
+        var result = await DialogService.ShowAsync<NewPhaseDialog, PhaseDto>(
+            "New Phase",
+            parameters: new()
+            {
+                [nameof(NewPhaseDialog.Phase)] = phase
+            },
+            options: new()
+            {
+                MaxWidth = MaxWidth.ExtraLarge
+            });
+        if (result is not null)
+        {
+            phases.Add(result);
+            phases.Sort((l, r) => l.Phase.CompareTo(r.Phase));
+        }
+    }
+
+    private async Task EditPhaseAsync(List<PhaseDto> phases, PhaseDto phase)
+    {
+        var result = await DialogService.ShowAsync<EditPhaseDialog, PhaseDto>(
+            "Edit Phase",
+            parameters: new()
+            {
+                [nameof(EditPhaseDialog.Phase)] = phase
+            },
+            options: new()
+            {
+                MaxWidth = MaxWidth.ExtraLarge
+            });
+        if (result is not null)
+        {
+            phases.Remove(phase);
+            if (result.Phase < byte.MaxValue)
+            {
+                phases.Add(result);
+                phases.Sort((l, r) => l.Phase.CompareTo(r.Phase));
+            }
+        }
+    }
+}

@@ -1,0 +1,56 @@
+﻿@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <PhaseEditor DisablePhaseChange Id="editPhaseForm" Phase="Phase" OnSubmit="OnSubmitAsync" @ref="_phaseEditor" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="DeleteAsync" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="editPhaseForm">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private PhaseEditor? _phaseEditor;
+
+    [Parameter] public PhaseDto Phase { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        if (Phase is null) throw new ArgumentNullException(nameof(Phase));
+    }
+
+    private async Task OnSubmitAsync(PhaseDto phase)
+    {
+        await Api.Phases.Update(phase)
+            .OnSuccess(phase => Dialog.Close(DialogResult.Ok(phase)))
+            .ValidateWith(_phaseEditor?.Validator)
+            .ExecuteAsync();
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (await DialogService.ShowMessageBox(new MessageBoxOptions
+            {
+                YesText = "Delete",
+                CancelText = "Cancel",
+                Title = "Delete Phase",
+                Message = "Deleting this phase will delete all loot lists created for it. Are you sure you want to continue?"
+            }) == true)
+        {
+            await Api.Phases.Delete(Phase.Phase)
+                .OnSuccess(_ =>
+                {
+                    Phase.Phase = byte.MaxValue;
+                    Dialog.Close(DialogResult.Ok(Phase));
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+}

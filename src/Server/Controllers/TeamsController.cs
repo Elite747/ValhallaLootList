@@ -95,10 +95,7 @@ public class TeamsController : ApiControllerV1
 
         var leaderResult = await _authorizationService.AuthorizeAsync(User, team, AppPolicies.Leadership);
 
-        foreach (var member in await HelperQueries.GetMembersAsync(_context, _serverTimeZone, team.Id, team.Size, leaderResult.Succeeded))
-        {
-            team.Roster.Add(member);
-        }
+        team.Roster.AddRange(await HelperQueries.GetMembersAsync(_context, _serverTimeZone, team.Id, team.Size, leaderResult.Succeeded));
 
         return team;
     }

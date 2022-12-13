@@ -77,7 +77,7 @@
                                     Completed @member.Donations.NextMonth of @member.Donations.Maximum donations for next month.
                                 </TooltipContent>
                                 <ChildContent>
-                                    <MudIcon Color="Color.Warning" Icon="@CustomIcons.HandCoin" Class="mr-2" />
+                                    <MudIcon Color="member.Donations.NextMonth == 0 ? Color.Warning : Color.Info" Icon="@CustomIcons.HandCoin" Class="mr-2" />
                                 </ChildContent>
                             </MudTooltip>
                         }

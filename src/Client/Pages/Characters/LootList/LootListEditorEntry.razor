@@ -87,7 +87,7 @@ else if (!Entry.Won)
                 Select Item
             </MudButton>
         </div>
-        @if (Editor.LootList.Entries.Any(e => !e.Won && e.Bracket == Entry.Bracket && e.ItemId.HasValue && e.Rank < Entry.Rank))
+        @if (Editor.LootList.Entries.Any(e => !e.Won && e.Heroic == Entry.Heroic && e.Bracket == Entry.Bracket && e.ItemId.HasValue && e.Rank < Entry.Rank))
         {
             <MudTooltip>
                 <TooltipContent>

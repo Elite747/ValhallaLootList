@@ -1,6 +1,6 @@
 ## Environments
 
-Integration: https://valhallalootlistdev.azurewebsites.net
+Integration: https://valhallalootlist-linux-dev.azurewebsites.net
 
 Production: https://www.valhalla-wow.com
 

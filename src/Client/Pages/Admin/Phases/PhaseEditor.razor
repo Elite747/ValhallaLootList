@@ -1,0 +1,181 @@
+﻿@inject UserTimeProvider TimeProvider
+
+<EditForm OnValidSubmit="OnSubmitAsync" Model="_phase" id="@Id" @key="_phase">
+    <DataAnnotationsValidator />
+    <ProblemValidator @ref="_problemValidator" />
+    <MudNumericField Label="Phase"
+                     Disabled="DisablePhaseChange"
+                     @bind-Value="_phase.Phase"
+                     For="() => _phase.Phase"
+                     Variant="Variant.Filled" />
+    <MudDatePicker Label="Phase Start Date"
+                   Date="_phase.StartsAt.ToLocalTime().Date"
+                   DateChanged="(value) => _phase.StartsAt = new DateTimeOffset(value.GetValueOrDefault())"
+                   MinDate="DateTime.Today"
+                   Variant="Variant.Filled" />
+
+    <MudList Dense>
+        <MudListSubheader>
+            <MudButton OnClick="NewBracket" StartIcon="@Icons.Material.Filled.AddCircle" Variant="Variant.Filled" Color="Color.Success">
+                New Bracket
+            </MudButton>
+        </MudListSubheader>
+        @for (int i = 0; i < _phase.Brackets.Count; i++)
+        {
+            int bracketIndex = i;
+            var bracket = _phase.Brackets[bracketIndex];
+            <MudListItem @key="bracketIndex">
+                <MudCard Elevation="1">
+                    <MudCardHeader>
+                        Bracket @(bracketIndex + 1)
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mr-1"></MudText>
+                        <MudNumericField T="int"
+                                         Label="Max Rank"
+                                         Class="mr-1"
+                                         Value="bracket.MaxRank"
+                                         ValueChanged="v => UpdateMaxRank(bracketIndex, v)"
+                                         For="() => _phase.Brackets[bracketIndex].MaxRank"
+                                         Min="bracketIndex < (_phase.Brackets.Count - 1) ? (_phase.Brackets[bracketIndex + 1].MaxRank + 1) : 1"
+                                         Max="bracketIndex > 0 ? (_phase.Brackets[bracketIndex - 1].MaxRank - 1) : 999"
+                                         Variant="Variant.Filled" />
+                        <MudNumericField Label="Normal Items Per Rank"
+                                         Class="mr-1"
+                                         @bind-Value="bracket.NormalItems"
+                                         For="() => _phase.Brackets[bracketIndex].MaxRank"
+                                         Min="0"
+                                         Max="999"
+                                         Variant="Variant.Filled" />
+                        <MudNumericField Label="Heroic Items Per Rank"
+                                         Class="mr-1"
+                                         @bind-Value="bracket.HeroicItems"
+                                         For="() => _phase.Brackets[bracketIndex].MaxRank"
+                                         Min="0"
+                                         Max="999"
+                                         Variant="Variant.Filled" />
+                        <MudCheckBox Label="Allow Offspec Items"
+                                     @bind-Checked="bracket.AllowOffspec"
+                                     For="() => _phase.Brackets[bracketIndex].AllowOffspec" />
+                        <MudCheckBox Label="Allow more than one item per type"
+                                     @bind-Checked="bracket.AllowTypeDuplicates"
+                                     For="() => _phase.Brackets[bracketIndex].AllowTypeDuplicates" />
+                    </MudCardContent>
+                    @if (bracketIndex == 0)
+                    {
+                        <MudCardActions>
+                            <MudIconButton OnClick="() => _phase.Brackets.Remove(bracket)" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                        </MudCardActions>
+                    }
+                </MudCard>
+            </MudListItem>
+        }
+    </MudList>
+
+    <MudSimpleTable Hover Bordered Dense Class="m-2">
+        @{
+            int width = _phase.Brackets.Count == 0 ? 0 : _phase.Brackets.Max(b => b.NormalItems + b.HeroicItems);
+        }
+        <thead>
+            <tr>
+                <th colspan="2"></th>
+                <th colspan="@width" style="width: 100%">Loot List Preview</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int bracketIndex = 0; bracketIndex < _phase.Brackets.Count; bracketIndex++)
+            {
+                var bracket = _phase.Brackets[bracketIndex];
+                int oversizeWidth = width - bracket.NormalItems - bracket.HeroicItems;
+                @for (int rank = bracket.MaxRank; rank >= bracket.MinRank; rank--)
+                {
+                    <tr>
+                        @if (rank == bracket.MaxRank)
+                        {
+                            <td style="white-space: nowrap" rowspan="@(bracket.MaxRank - bracket.MinRank + 1)">Bracket @(bracketIndex + 1)</td>
+                        }
+                        <td style="white-space: nowrap">Rank @rank</td>
+                        @for (int i = 0; i < bracket.NormalItems; i++)
+                        {
+                            <th>N</th>
+                        }
+                        @for (int i = 0; i < bracket.HeroicItems; i++)
+                        {
+                            <th>H</th>
+                        }
+                        @for (int i = 0; i < oversizeWidth; i++)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </MudSimpleTable>
+</EditForm>
+
+@code {
+    private ProblemValidator? _problemValidator;
+    private PhaseDto _phase = null!;
+    private PhaseDto? _originalPhase;
+
+    [Parameter] public PhaseDto Phase { get; set; } = null!;
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public EventCallback<PhaseDto> OnSubmit { get; set; }
+    [Parameter] public bool DisablePhaseChange { get; set; }
+    public ProblemValidator? Validator => _problemValidator;
+
+    protected override void OnParametersSet()
+    {
+        if (_originalPhase != Phase)
+        {
+            _originalPhase = Phase;
+            _phase = new();
+
+            if (Phase is null)
+            {
+                _phase.Phase = 1;
+                _phase.StartsAt = DateTimeOffset.Now;
+                _phase.Brackets.Add(new() { AllowOffspec = true, AllowTypeDuplicates = true, HeroicItems = 1, NormalItems = 1, MaxRank = 4, MinRank = 1 });
+            }
+            else
+            {
+                _phase.Phase = Phase.Phase;
+                _phase.StartsAt = Phase.StartsAt;
+                foreach (var bracket in Phase.Brackets)
+                {
+                    _phase.Brackets.Add(new()
+                        {
+                            AllowOffspec = bracket.AllowOffspec,
+                            AllowTypeDuplicates = bracket.AllowTypeDuplicates,
+                            NormalItems = bracket.NormalItems,
+                            HeroicItems = bracket.HeroicItems,
+                            MinRank = bracket.MinRank,
+                            MaxRank = bracket.MaxRank
+                        });
+                }
+            }
+        }
+    }
+
+    private void UpdateMaxRank(int bracketIndex, int newValue)
+    {
+        var bracket = _phase.Brackets[bracketIndex];
+        bracket.MaxRank = newValue;
+
+        if (bracketIndex > 0)
+        {
+            _phase.Brackets[bracketIndex - 1].MinRank = newValue + 1;
+        }
+    }
+
+    private void NewBracket()
+    {
+        var firstBracket = _phase.Brackets.FirstOrDefault();
+        var minRank = (firstBracket?.MaxRank ?? 0) + 1;
+        var bracket = new BracketDto { HeroicItems = 1, NormalItems = 1, MinRank = minRank, MaxRank = minRank + 3 };
+        _phase.Brackets.Insert(0, bracket);
+    }
+
+    private Task OnSubmitAsync() => OnSubmit.InvokeAsync(_phase);
+}

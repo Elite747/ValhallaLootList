@@ -31,6 +31,7 @@ public sealed partial class ApiClient : IDisposable
         LootListEntries = new(this);
         Members = new(this);
         Permissions = new(this);
+        Phases = new(this);
         Raids = new(this);
         Teams = new(this);
     }
@@ -54,6 +55,8 @@ public sealed partial class ApiClient : IDisposable
     public ApiClientMembers Members { get; }
 
     public ApiClientPermissions Permissions { get; }
+
+    public ApiClientPhases Phases { get; }
 
     public ApiClientRaids Raids { get; }
 

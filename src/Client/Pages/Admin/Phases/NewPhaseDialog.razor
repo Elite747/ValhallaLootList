@@ -1,0 +1,33 @@
+﻿@inject ApiClient Api
+
+<MudDialog>
+    <DialogContent>
+        <PhaseEditor Id="createPhaseForm" Phase="_phase" OnSubmit="OnSubmitAsync" @ref="_phaseEditor" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" form="createPhaseForm">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private PhaseEditor? _phaseEditor;
+    private PhaseDto _phase = null!;
+
+    [Parameter] public int Phase { get; set; } = 1;
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
+        _phase ??= new() { Phase = (byte)Phase, StartsAt = DateTimeOffset.Now, Brackets = new() { new() { AllowOffspec = true, AllowTypeDuplicates = true, NormalItems = 1, HeroicItems = 1, MinRank = 1, MaxRank = 4 } } };
+    }
+
+    private async Task OnSubmitAsync(PhaseDto phase)
+    {
+        await Api.Phases.Create(phase)
+            .OnSuccess(phase => Dialog.Close(DialogResult.Ok(phase)))
+            .ValidateWith(_phaseEditor?.Validator)
+            .ExecuteAsync();
+    }
+}

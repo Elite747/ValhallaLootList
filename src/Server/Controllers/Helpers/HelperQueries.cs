@@ -116,10 +116,10 @@ public static class HelperQueries
             members.Add(memberDto);
         }
 
-        var currentPhaseStart = await context.PhaseDetails.OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
+        var currentPhaseStart = await context.PhaseDetails.Where(p => p.StartsAt <= now).OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
 
         var attendanceRecords = await context.RaidAttendees.AsNoTracking()
-            .Where(a => a.RemovalId == null && !a.IgnoreAttendance && a.Raid.RaidTeamId == teamId && a.Raid.StartedAt >= currentPhaseStart && (characterId == null || a.CharacterId == characterId))
+            .Where(a => a.RemovalId == null && !a.IgnoreAttendance && a.Raid.RaidTeamId == teamId && (characterId == null || a.CharacterId == characterId))
             .Select(a => new { a.CharacterId, a.Raid.StartedAt })
             .ToListAsync();
 

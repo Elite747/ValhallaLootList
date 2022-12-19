@@ -82,10 +82,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
         Debug.Assert(team is not null);
 
-        var currentPhaseStart = await PhaseDetails.OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
+        var currentPhaseStart = await PhaseDetails.Where(p => p.StartsAt <= date).OrderByDescending(p => p.StartsAt).Select(p => p.StartsAt).FirstAsync();
 
         var attendanceRecords = await RaidAttendees.AsNoTracking()
-            .Where(a => a.RemovalId == null && !a.IgnoreAttendance && a.Raid.RaidTeamId == teamId && a.Raid.StartedAt >= currentPhaseStart && (characterId == null || a.CharacterId == characterId))
+            .Where(a => a.RemovalId == null && !a.IgnoreAttendance && a.Raid.RaidTeamId == teamId && (characterId == null || a.CharacterId == characterId))
             .Select(a => new { a.CharacterId, a.Raid.StartedAt })
             .ToListAsync();
 

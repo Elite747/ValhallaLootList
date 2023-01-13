@@ -292,7 +292,7 @@ public class MessageSender
 
         foreach (var drop in drops.OrderBy(x => x.ItemName))
         {
-            itemsBuilder.Append('[').Append(drop.ItemName).Append("](https://tbc.wowhead.com/item=").Append(drop.ItemId).Append("): ");
+            itemsBuilder.Append('[').Append(drop.ItemName).Append("](https://www.wowhead.com/wotlk/item=").Append(drop.ItemId).Append("): ");
 
             if (drop.Disenchanted)
             {

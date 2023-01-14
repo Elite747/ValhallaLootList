@@ -111,6 +111,7 @@
                         <Review Team="team"
                                 StatusUpdated="arg => OnReviewStatusUpdated(arg, team, context.User)"
                                 RosterChanged="StateHasChanged"
+                                Phase="GetDisplayPhase(phaseConfig)"
                                 @ref="_review" />
                     </AuthorizeView>
                     break;

@@ -5,9 +5,7 @@
 <MudCard Elevation="5" Class="mt-3">
     <div class="d-flex">
         <ApiExecutor Operation="() => Api.LootLists.GetForTeam(Team.Id, includeApplicants: true)" Context="lootLists" @ref="_executor" @key="Team.Id">
-            <ApiExecutor Operation="() => Api.GetPhaseConfiguration()" Context="phaseConfig">
-                <ReviewList LootLists="lootLists" RosterChanged="RosterChanged" StatusUpdated="StatusUpdated" Team="Team" CurrentPhase="phaseConfig.CurrentPhase" />
-            </ApiExecutor>
+            <ReviewList LootLists="lootLists" RosterChanged="RosterChanged" StatusUpdated="StatusUpdated" Team="Team" CurrentPhase="Phase" />
         </ApiExecutor>
     </div>
 </MudCard>
@@ -18,6 +16,7 @@
     [Parameter] public TeamDto Team { get; set; } = null!;
     [Parameter] public EventCallback<LootListDto> StatusUpdated { get; set; }
     [Parameter] public EventCallback RosterChanged { get; set; }
+    [Parameter] public byte Phase { get; set; }
 
     protected override void OnParametersSet()
     {

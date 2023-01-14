@@ -42,6 +42,6 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="7.0.0" />
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="4.9.4" />
-    <PackageVersion Include="MudBlazor" Version="6.0.17" />
+    <PackageVersion Include="MudBlazor" Version="6.1.6" />
   </ItemGroup>
 </Project>

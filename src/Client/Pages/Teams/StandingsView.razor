@@ -150,6 +150,7 @@
     private byte _phase;
     private TeamDto _team = null!;
 
+#pragma warning disable BL0007 // Component parameters should be auto properties
     [Parameter] public TeamDto Team
     {
         get => _team;
@@ -164,6 +165,7 @@
     }
 
     [Parameter] public byte Phase
+#pragma warning restore BL0007 // Component parameters should be auto properties
     {
         get => _phase;
         set

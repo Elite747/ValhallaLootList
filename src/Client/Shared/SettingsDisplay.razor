@@ -1,6 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager Nav
-@inject SignOutSessionStateManager SignOutManager
 @inject IThemeProvider ThemeProvider
 
 <MudMenu Direction="Direction.Left" OffsetX="true" OffsetY="true" Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" IconColor="Color.Inherit" Class="ml-1">
@@ -39,9 +38,8 @@
         (Theme.Dark, "Dark")
     };
 
-    private async Task BeginSignOut()
+    private void BeginSignOut()
     {
-        await SignOutManager.SetSignOutState();
-        Nav.NavigateTo("authentication/logout");
+        Nav.NavigateToLogout("authentication/logout");
     }
 }

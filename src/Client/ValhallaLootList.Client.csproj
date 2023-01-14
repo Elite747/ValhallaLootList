@@ -16,18 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="29.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.10" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.8.4">
+    <PackageReference Include="CsvHelper" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MudBlazor" Version="6.0.17" />
+    <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,11 +35,11 @@
   </ItemGroup>
 
   <Target Name="MinifyJs" AfterTargets="CompileTypeScript">
-    <Exec Command="dotnet run --no-build --no-restore --configuration $(Configuration) --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="dotnet run --no-restore --configuration $(Configuration) --project ../Minify js wwwroot/scripts/app.js" StandardOutputImportance="high" StandardErrorImportance="high" />
   </Target>
 
   <Target Name="MinifyScss" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet run --no-build --no-restore --configuration $(Configuration) --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="dotnet run --no-restore --configuration $(Configuration) --project ../Minify scss wwwroot/styles/app.scss" StandardOutputImportance="high" StandardErrorImportance="high" />
   </Target>
 
 </Project>

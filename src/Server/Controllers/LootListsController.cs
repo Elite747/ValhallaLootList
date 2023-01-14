@@ -963,10 +963,6 @@ public class LootListsController : ApiControllerV1
         {
             return Problem("Loot list must be approved before locking.");
         }
-        if (!await _context.PhaseActiveAsync(list.Phase))
-        {
-            return Problem("Phase is not yet active.");
-        }
 
         list.Status = LootListStatus.Locked;
 

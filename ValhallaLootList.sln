@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Server", "src\Server\ValhallaLootList.Server.csproj", "{1944253D-1B64-4F32-90C6-B0E096CD0D83}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6693FEFD-C156-4925-A36A-FB396BAFEAB2} = {6693FEFD-C156-4925-A36A-FB396BAFEAB2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Client", "src\Client\ValhallaLootList.Client.csproj", "{AEE9E97F-F020-4F56-9C5B-7CEF2CD4E5B5}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -11,6 +14,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Client", "
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Shared", "src\Shared\ValhallaLootList.Shared.csproj", "{235034AF-95C5-437F-9D6F-E437144332E0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6693FEFD-C156-4925-A36A-FB396BAFEAB2} = {6693FEFD-C156-4925-A36A-FB396BAFEAB2}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFD128CE-9F14-4408-A4B1-78EC2AA3AFC7}"
 	ProjectSection(SolutionItems) = preProject
@@ -23,6 +29,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{4F0534C3-DE91-4933-9B7E-BF3B6FAE3D7F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.SeedAndMigrate", "src\SeedAndMigrate\ValhallaLootList.SeedAndMigrate.csproj", "{2D1E16A6-42BF-4D86-90C3-EF8F0C6E0A49}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6693FEFD-C156-4925-A36A-FB396BAFEAB2} = {6693FEFD-C156-4925-A36A-FB396BAFEAB2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValhallaLootList.Minify", "src\Minify\ValhallaLootList.Minify.csproj", "{6693FEFD-C156-4925-A36A-FB396BAFEAB2}"
 EndProject

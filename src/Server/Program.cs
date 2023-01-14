@@ -22,7 +22,7 @@ using ValhallaLootList.Server.Discord;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration.GetValue<string>("RealmTimeZone")));
+builder.Services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration.GetValue<string>("RealmTimeZone")!));
 builder.Services.AddScoped<IAuthorizationHandler, CharacterOwnerPolicyHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TeamLeaderPolicyHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminPolicyHandler>();
@@ -160,12 +160,7 @@ app.UseCors();
 app.UseIdentityServer();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapRazorPages();
-    endpoints.MapControllers();
-    endpoints.MapFallbackToPage("/_Host");
-});
-
+app.MapRazorPages();
+app.MapControllers();
+app.MapFallbackToPage("/_Host");
 app.Run();

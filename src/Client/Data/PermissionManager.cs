@@ -23,9 +23,9 @@ public class PermissionManager
 
     public async Task<IEnumerable<long>> GetOwnedCharacterIdsAsync(CancellationToken cancellationToken = default)
     {
-        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto permissions))
+        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto? permissions))
         {
-            return permissions.Characters;
+            return permissions!.Characters;
         }
         else
         {
@@ -33,7 +33,7 @@ public class PermissionManager
 
             if (_memoryCache.TryGetValue(_cacheKey, out permissions))
             {
-                return permissions.Characters;
+                return permissions!.Characters;
             }
         }
         return Array.Empty<long>();
@@ -41,16 +41,16 @@ public class PermissionManager
 
     public async Task<bool> IsOwnerOfAsync(long characterId, CancellationToken cancellationToken = default)
     {
-        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto permissions))
+        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto? permissions))
         {
-            return permissions.Characters.Contains(characterId);
+            return permissions!.Characters.Contains(characterId);
         }
 
         await RefreshAsync(cancellationToken);
 
         if (_memoryCache.TryGetValue(_cacheKey, out permissions))
         {
-            return permissions.Characters.Contains(characterId);
+            return permissions!.Characters.Contains(characterId);
         }
 
         return false;
@@ -58,16 +58,16 @@ public class PermissionManager
 
     public async Task<bool> IsLeaderOfAsync(long teamId, CancellationToken cancellationToken = default)
     {
-        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto permissions))
+        if (_memoryCache.TryGetValue(_cacheKey, out PermissionsDto? permissions))
         {
-            return permissions.Teams.Contains(teamId);
+            return permissions!.Teams.Contains(teamId);
         }
 
         await RefreshAsync(cancellationToken);
 
         if (_memoryCache.TryGetValue(_cacheKey, out permissions))
         {
-            return permissions.Teams.Contains(teamId);
+            return permissions!.Teams.Contains(teamId);
         }
 
         return false;

@@ -79,7 +79,9 @@
     private CharacterSubmissionDto? _character;
     private IEnumerable<PlayerRace> _classRaces = PlayerRaceExtensions.GetAll();
 
+#pragma warning disable BL0007 // Component parameters should be auto properties
     [Parameter] public CharacterSubmissionDto Character
+#pragma warning restore BL0007 // Component parameters should be auto properties
     {
         get => _character ??= new();
         set

@@ -598,7 +598,7 @@ public class TeamsController : ApiControllerV1
             props["TeamId"] = team.Id.ToString();
             props["TeamName"] = team.Name;
             props["LeaderId"] = leader.Id.ToString();
-            props["LeaderName"] = leader.UserName;
+            props["LeaderName"] = leader.UserName ?? string.Empty;
         });
 
         return Ok();

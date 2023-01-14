@@ -21,13 +21,13 @@ public abstract class Cache<TItem, TKey> where TItem : class where TKey : notnul
         return new MemoryCacheEntryOptions().RegisterPostEvictionCallback(OnEvictedInternal);
     }
 
-    protected virtual void OnEvicted(TKey key, TItem value, EvictionReason reason, object state)
+    protected virtual void OnEvicted(TKey key, TItem value, EvictionReason reason, object? state)
     {
     }
 
-    private void OnEvictedInternal(object key, object value, EvictionReason reason, object state)
+    private void OnEvictedInternal(object key, object? value, EvictionReason reason, object? state)
     {
-        OnEvicted((TKey)key, (TItem)value, reason, state);
+        OnEvicted((TKey)key, (TItem)value!, reason, state);
     }
 
     public void Update(TItem item)
@@ -35,16 +35,16 @@ public abstract class Cache<TItem, TKey> where TItem : class where TKey : notnul
         _memoryCache.Set(GetKey(item), item, CreateCacheEntryOptions(item));
     }
 
-    public bool TryGet(TKey key, out TItem item)
+    public bool TryGet(TKey key, out TItem? item)
     {
         return _memoryCache.TryGetValue(key, out item);
     }
 
     public TItem GetOrAdd(TKey key, Func<TKey, TItem> getter)
     {
-        if (_memoryCache.TryGetValue(key, out TItem item))
+        if (_memoryCache.TryGetValue(key, out TItem? item))
         {
-            return item;
+            return item!;
         }
 
         item = getter(key);
@@ -56,9 +56,9 @@ public abstract class Cache<TItem, TKey> where TItem : class where TKey : notnul
 
     public ValueTask<TItem> GetOrAddAsync(TKey key, Func<TKey, Task<TItem>> getter)
     {
-        if (_memoryCache.TryGetValue(key, out TItem item))
+        if (_memoryCache.TryGetValue(key, out TItem? item))
         {
-            return new(item);
+            return new(item!);
         }
 
         return new(AddAndReturnAsync(getter(key)));
@@ -66,9 +66,9 @@ public abstract class Cache<TItem, TKey> where TItem : class where TKey : notnul
 
     public ValueTask<TItem> GetOrAddAsync(TKey key, Func<TKey, CancellationToken, Task<TItem>> getter, CancellationToken cancellationToken)
     {
-        if (_memoryCache.TryGetValue(key, out TItem item))
+        if (_memoryCache.TryGetValue(key, out TItem? item))
         {
-            return new(item);
+            return new(item!);
         }
 
         return new(AddAndReturnAsync(getter(key, cancellationToken)));

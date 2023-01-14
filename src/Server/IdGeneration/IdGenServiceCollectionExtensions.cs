@@ -27,7 +27,10 @@ public static class IdGenServiceCollectionExtensions
 
     public static IServiceCollection ConfigureIdGen(this IServiceCollection services, Action<IdGeneratorConfiguration>? config)
     {
-        services.Configure(config);
+        if (config is not null)
+        {
+            services.Configure(config);
+        }
         return services;
     }
 }

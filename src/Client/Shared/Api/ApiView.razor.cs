@@ -11,6 +11,7 @@ public partial class ApiView : IDisposable
     private readonly List<IApiClientOperation> _operations = new();
     private bool _disposedValue, _contextChanged, _renderedSuccess;
 
+#pragma warning disable BL0007 // Component parameters should be auto properties
     [Parameter]
     public IApiClientOperation Operation
     {
@@ -28,6 +29,7 @@ public partial class ApiView : IDisposable
 
     [Parameter]
     public IEnumerable<IApiClientOperation> Operations
+#pragma warning restore BL0007 // Component parameters should be auto properties
     {
         get => _operations;
         set

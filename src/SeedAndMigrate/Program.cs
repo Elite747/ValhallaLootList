@@ -20,8 +20,8 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.Configure<Config>(config =>
         {
-            config.SeedInstancesPath = context.Configuration.GetValue<string>(nameof(config.SeedInstancesPath));
-            config.SeedItemsPath = context.Configuration.GetValue<string>(nameof(config.SeedItemsPath));
+            config.SeedInstancesPath = context.Configuration.GetValue<string>(nameof(config.SeedInstancesPath)) ?? throw new Exception("Missing configuration: SeedInstancesPath");
+            config.SeedItemsPath = context.Configuration.GetValue<string>(nameof(config.SeedItemsPath)) ?? throw new Exception("Missing configuration: SeedItemsPath");
         });
 
         services.AddDbContext<ApplicationDbContext>(options =>

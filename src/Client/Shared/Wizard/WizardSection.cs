@@ -14,8 +14,10 @@ public class WizardSection : ComponentBase
     [Parameter] public string? Name { get; set; }
     [Parameter] public Func<bool>? CanContinue { get; set; }
 
+#pragma warning disable BL0007 // Component parameters should be auto properties
     [Parameter]
     public string? ContinueText
+#pragma warning restore BL0007 // Component parameters should be auto properties
     {
         get => _continueText;
         set

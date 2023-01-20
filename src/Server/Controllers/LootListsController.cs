@@ -1174,13 +1174,13 @@ public class LootListsController : ApiControllerV1
         var userLists = await _context.CharacterLootLists
             .AsNoTracking()
             .Where(ll => ll.Character.OwnerId == userId)
-            .Select(ll => new { ll.Status, ll.Phase, ll.Size })
+            .Select(ll => new { ll.Status, ll.Phase, ll.Size, ll.CharacterId })
             .ToListAsync();
 
         var userTeams = await _context.TeamMembers
             .AsNoTracking()
             .Where(m => m.Character!.OwnerId == userId)
-            .Select(m => m.TeamId)
+            .Select(m => new { m.CharacterId, m.TeamId })
             .ToListAsync();
 
         bool isAdmin = (await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator)).Succeeded;
@@ -1229,7 +1229,13 @@ public class LootListsController : ApiControllerV1
                 if (
                     (list.OwnerId is null && isAdmin) || // user is an admin and the list has no owner
                     (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
-                    ((list.Status == LootListStatus.Locked || (userId.HasValue && leaders.Contains(userId.Value))) && userTeams.Contains(teamId) && userLists.Any(l => l.Size == list.Size && l.Status == LootListStatus.Locked && l.Phase == list.Phase)) || // user is on this team and both this and their list is locked, or user is a leader of this team with a locked list
+                    (
+                        (
+                            list.Status == LootListStatus.Locked ||
+                            (userId.HasValue && leaders.Contains(userId.Value))
+                        ) &&
+                        userLists.Any(l => l.Size == list.Size && l.Status == LootListStatus.Locked && l.Phase == list.Phase && userTeams.Any(team => team.TeamId == teamId && team.CharacterId == l.CharacterId))
+                    ) || // user is on this team and both this and their list is locked, or user is a leader of this team with a locked list
                     (userId.HasValue && list.OwnerId.HasValue && leaders.Contains(userId.Value) && leaders.Contains(list.OwnerId.Value)) // user is a leader of this team and target list is of a leader of this team
                     )
                 {
@@ -1352,13 +1358,13 @@ public class LootListsController : ApiControllerV1
         var userLists = await _context.CharacterLootLists
             .AsNoTracking()
             .Where(ll => ll.Character.OwnerId == userId)
-            .Select(ll => new { ll.Status, ll.Phase, ll.Size })
+            .Select(ll => new { ll.Status, ll.Phase, ll.Size, ll.CharacterId })
             .ToListAsync();
 
         var userTeams = await _context.TeamMembers
             .AsNoTracking()
             .Where(m => m.Character!.OwnerId == userId)
-            .Select(m => m.TeamId)
+            .Select(m => new { m.TeamId, m.CharacterId })
             .ToListAsync();
 
         bool isAdmin = (await _authorizationService.AuthorizeAsync(User, AppPolicies.Administrator)).Succeeded;
@@ -1415,7 +1421,7 @@ public class LootListsController : ApiControllerV1
                     (userId.HasValue && list.OwnerId == userId) || // user owns this character OR
                     (member is not null &&
                         (list.Status == LootListStatus.Locked || leaders.Any(l => l.UserId == userId && l.RaidTeamId == member.TeamId)) &&
-                        userTeams.Contains(member.TeamId) && userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase)
+                        userLists.Any(l => l.Size == member.TeamSize && l.Status == LootListStatus.Locked && l.Phase == list.Phase && userTeams.Any(team => team.TeamId == member.TeamId && team.CharacterId == l.CharacterId))
                         ) || // user is on this team and both this and their list is locked OR user is a leader of this team
                     (userId.HasValue && list.OwnerId.HasValue &&
                         leaders.Any(l => l.UserId == userId.Value && (l.RaidTeamId == member?.TeamId || list.SubmittedTo.Contains(l.RaidTeamId))) &&

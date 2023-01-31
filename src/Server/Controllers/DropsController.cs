@@ -305,7 +305,7 @@ public class DropsController : ApiControllerV1
                 Id = e.Id,
                 Rank = e.Rank,
                 Status = e.LootList.Status,
-                Passes = _context.Drops.Count(d => (d.ItemId == itemId || d.Item!.RewardFromId == itemId) && d.EncounterKill.Raid.RaidTeamId == member.TeamId && d.EncounterKill.KilledAt >= member.JoinedAt),
+                Passes = _context.Drops.Count(d => (d.ItemId == itemId || d.Item!.RewardFromId == itemId) && d.EncounterKill.Raid.RaidTeamId == member.TeamId && d.EncounterKill.KilledAt >= member.JoinedAt && d.EncounterKill.Characters.Any(c => c.CharacterId == member.CharacterId)),
                 AutoPass = e.AutoPass
             })
             .ToList()

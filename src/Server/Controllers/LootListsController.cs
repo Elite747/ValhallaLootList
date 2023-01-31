@@ -1151,7 +1151,7 @@ public class LootListsController : ApiControllerV1
 
         var passes = await _context.Drops.AsNoTracking()
             .Where(drop => drop.EncounterKill.Raid.RaidTeamId == teamId)
-            .Select(drop => new { drop.ItemId, drop.EncounterKill.KilledAt })
+            .Select(drop => new { drop.ItemId, drop.EncounterKill.KilledAt, Characters = drop.EncounterKill.Characters.Select(c => c.CharacterId).ToList() })
             .ToListAsync();
 
         var bonusTable = await _context.GetBonusTableAsync(teamId, _serverTimeZoneInfo.TimeZoneNow());
@@ -1211,7 +1211,7 @@ public class LootListsController : ApiControllerV1
                 if (entry.ItemId.HasValue && !entry.Won && members.Find(m => m.CharacterId == list.CharacterId) is { } member)
                 {
                     var rewardFromId = entry.RewardFromId ?? entry.ItemId.Value;
-                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt && p.ItemId == rewardFromId)));
+                    bonuses.AddRange(PrioCalculator.GetItemBonuses(passes.Count(p => p.KilledAt >= member.JoinedAt && p.ItemId == rewardFromId && p.Characters.Contains(member.CharacterId))));
                 }
 
                 var entryDto = new LootListEntryDto

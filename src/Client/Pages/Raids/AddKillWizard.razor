@@ -459,12 +459,12 @@
         }
     }
 
-    private Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
+    private async Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
     {
         if (_encounter is null)
         {
             arg.Cancel = true;
-            return Task.CompletedTask;
+            return;
         }
 
         var kill = new KillSubmissionDto
@@ -481,13 +481,14 @@
             }
         }
 
-        return (ModifyingKill is null ? Api.Raids.AddKill(Raid.Id, kill) : Api.Raids.ModifyKill(Raid.Id, ModifyingKill.TrashIndex, kill))
+        await (ModifyingKill is null ? Api.Raids.AddKill(Raid.Id, kill) : Api.Raids.ModifyKill(Raid.Id, ModifyingKill.TrashIndex, kill))
             .OnSuccess(kill =>
             {
-                if (ModifyingKill is not null)
+                var modified = ModifyingKill ?? Raid.Kills.Find(k => k.EncounterId == kill.EncounterId && k.TrashIndex == kill.TrashIndex);
+                if (modified is not null)
                 {
-                    ModifyingKill.Drops = kill.Drops;
-                    ModifyingKill.Characters = kill.Characters;
+                    modified.Drops = kill.Drops;
+                    modified.Characters = kill.Characters;
                 }
                 else
                 {

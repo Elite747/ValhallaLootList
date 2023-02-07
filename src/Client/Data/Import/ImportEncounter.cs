@@ -32,13 +32,18 @@ public class ImportEncounter
         {
             foreach (var encounter in instance.Encounters)
             {
+                var encounterItems = new List<uint>();
                 foreach (var variant in encounter.Variants)
                 {
                     if (variant.Items.Any(items.Contains))
                     {
                         unknownItems.ExceptWith(variant.Items);
-                        candidateEncounters.Add(new ImportEncounter(encounter, items.Where(variant.Items.Contains)));
+                        encounterItems.AddRange(items.Where(variant.Items.Contains));
                     }
+                }
+                if (encounterItems.Count > 0)
+                {
+                    candidateEncounters.Add(new ImportEncounter(encounter, encounterItems));
                 }
             }
         }

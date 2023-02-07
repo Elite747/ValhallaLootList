@@ -329,6 +329,49 @@ public class TeamsController : ApiControllerV1
         return Accepted();
     }
 
+    [HttpPut("{id:long}/members/{characterId:long}/status")]
+    public async Task<IActionResult> PutMemberStatus(long id, long characterId, [FromBody] UpdateMembershipDto dto, [FromServices] MessageSender messageSender)
+    {
+        var auth = await _authorizationService.AuthorizeAsync(User, id, AppPolicies.RaidLeaderOrAdmin);
+
+        if (!auth.Succeeded)
+        {
+            return Unauthorized();
+        }
+
+        var member = await _context.TeamMembers.FindAsync(id, characterId);
+
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        if (member.OverrideStatus == dto.Status)
+        {
+            return Problem($"Membership status is already set to {dto.Status switch {
+                RaidMemberStatus.Member => "Member",
+                RaidMemberStatus.HalfTrial => "Half Trial",
+                RaidMemberStatus.FullTrial => "Full Trial",
+                _ => "Automatic",
+            }}.");
+        }
+
+        member.OverrideStatus = dto.Status;
+
+        await _context.SaveChangesAsync();
+
+        _telemetry.TrackEvent("TeamMemberStatusUpdated", User, props =>
+        {
+            props["TeamId"] = member.TeamId.ToString();
+            props["CharacterId"] = member.CharacterId.ToString();
+            props["Status"] = dto.Status?.ToString() ?? string.Empty;
+        });
+
+        await messageSender.SendMembershipStatusMessagesAsync(id, characterId, dto.Status, dto.Message);
+
+        return Accepted();
+    }
+
     [HttpPut("{id:long}/members/{characterId:long}/disenchanter")]
     public async Task<IActionResult> PutMemberDisenchanter(long id, long characterId, bool disenchanter)
     {

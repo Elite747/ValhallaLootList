@@ -46,6 +46,7 @@ public static class HelperQueries
                 c.Prepared,
                 c.Disenchanter,
                 c.Bench,
+                c.OverrideStatus,
                 DonationsForThisMonth = c.Character.Donations.Count(d => d.TargetMonth == thisMonth.Month && d.TargetYear == thisMonth.Year),
                 DonationsForNextMonth = c.Character.Donations.Count(d => d.TargetMonth == nextMonth.Month && d.TargetYear == nextMonth.Year),
                 Verified = c.Character.VerifiedById.HasValue,
@@ -85,7 +86,8 @@ public static class HelperQueries
                 JoinedAt = character.JoinedAt,
                 Prepared = character.Prepared,
                 Disenchanter = character.Disenchanter,
-                Bench = character.Bench
+                Bench = character.Bench,
+                OverrideStatus = character.OverrideStatus
             };
 
             foreach (var lootList in character.LootLists.OrderBy(ll => ll.Phase))

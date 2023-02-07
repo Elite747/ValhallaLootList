@@ -51,6 +51,11 @@ public class ApiClientTeams
         return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/prepared", dto);
     }
 
+    public IApiClientOperation UpdateMemberStatus(long teamId, long characterId, UpdateMembershipDto dto)
+    {
+        return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/status", dto);
+    }
+
     public IApiClientOperation UpdateMemberDisenchanter(long teamId, long characterId, bool disenchanter)
     {
         return Client.CreateRequest(HttpMethod.Put, $"api/v1/teams/{teamId}/members/{characterId}/disenchanter?disenchanter={disenchanter}");

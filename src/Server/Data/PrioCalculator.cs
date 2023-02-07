@@ -17,10 +17,11 @@ public static class PrioCalculator
         bool enchanted,
         bool prepared,
         bool bench,
-        byte teamSize)
+        byte teamSize,
+        RaidMemberStatus? overrideStatus)
     {
         yield return GetAbsencePenalty(absences);
-        yield return GetTrialPenalty(teamSize, attendances);
+        yield return GetTrialPenalty(teamSize, attendances, overrideStatus);
 
         if (teamSize != 10)
         {
@@ -39,9 +40,9 @@ public static class PrioCalculator
             };
         }
 
-        static PriorityBonusDto GetTrialPenalty(byte teamSize, int attendances)
+        static PriorityBonusDto GetTrialPenalty(byte teamSize, int attendances, RaidMemberStatus? overrideStatus)
         {
-            var status = GetStatus(teamSize, attendances);
+            var status = overrideStatus ?? GetStatus(teamSize, attendances);
 
             return new MembershipPriorityBonusDto
             {

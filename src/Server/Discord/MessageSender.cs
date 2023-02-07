@@ -256,6 +256,68 @@ public class MessageSender
         }
     }
 
+    public async Task SendMembershipStatusMessagesAsync(long teamId, long characterId, RaidMemberStatus? status, string? message)
+    {
+        var messageTargets = new HashSet<long>(capacity: 4);
+
+        var character = await _context.Characters.Where(c => c.Id == characterId).Select(c => new { c.Name, c.OwnerId }).FirstAsync();
+
+        if (character.OwnerId > 0)
+        {
+            messageTargets.Add(character.OwnerId.Value);
+        }
+
+        await foreach (var leaderId in _context.RaidTeamLeaders
+            .AsNoTracking()
+            .Where(rtl => rtl.RaidTeamId == teamId)
+            .Select(rtl => rtl.UserId)
+            .AsAsyncEnumerable())
+        {
+            messageTargets.Add(leaderId);
+        }
+
+        if (messageTargets.Count > 0)
+        {
+            var sb = new StringBuilder(character.Name)
+                .Append(" has had their membership status ");
+
+            if (status is null)
+            {
+                sb.Append(" set to automatic");
+            }
+            else
+            {
+                sb.Append("manually overridden to ")
+                    .Append(status switch
+                    {
+                        RaidMemberStatus.Member => "member",
+                        RaidMemberStatus.HalfTrial => "half trial",
+                        RaidMemberStatus.FullTrial => "full trial",
+                        _ => "automatic",
+                    });
+            }
+
+            sb.Append(" by <@")
+                .Append(GetUserDiscordId())
+                .Append(">.");
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                foreach (var line in message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine().Append("> ").Append(line);
+                }
+            }
+
+            var completeMessage = sb.ToString();
+
+            foreach (var discordId in messageTargets)
+            {
+                await _discordClientProvider.SendDmAsync(discordId, completeMessage);
+            }
+        }
+    }
+
     private void ConfigureKillMessage(
         DiscordMessageBuilder message,
         long raidId,

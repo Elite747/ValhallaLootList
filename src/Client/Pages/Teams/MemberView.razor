@@ -10,7 +10,7 @@
     Joined <DateTimeDisplay Date="Member.JoinedAt" Format="d" />
 </MudText>
 
-<MudText Color="Member.Status == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status)</MudText>
+<MudText Color="(Member.OverrideStatus ?? Member.Status) == RaidMemberStatus.Member ? Color.Inherit : Color.Warning" Inline="false">Status: @GetDisplayString(Member.Status, Member.OverrideStatus)</MudText>
 
 <MudText Inline="false">
     Missed @(Member.Absences == 1 ? "1 raid" : Member.Absences + " raids") this phase.
@@ -60,6 +60,12 @@
     <Authorized>
         <MudCheckBox T="bool" Label="Bench" Checked="Member.Bench" CheckedChanged="ToggleBenchAsync" />
         <br />
+        <MudMenu Label="Set Membership Status" Color="Color.Warning">
+            <MudMenuItem OnClick="() => SetMembershipAsync(null)">Automatic</MudMenuItem>
+            <MudMenuItem OnClick="() => SetMembershipAsync(RaidMemberStatus.Member)">Manual: Member</MudMenuItem>
+            <MudMenuItem OnClick="() => SetMembershipAsync(RaidMemberStatus.HalfTrial)">Manual: Half Trial</MudMenuItem>
+            <MudMenuItem OnClick="() => SetMembershipAsync(RaidMemberStatus.FullTrial)">Manual: Full Trial</MudMenuItem>
+        </MudMenu>
         <MudButton OnClick="RemoveAsync" Color="Color.Error" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DeleteForever">Remove Member</MudButton>
     </Authorized>
     <NotAuthorized>
@@ -168,14 +174,39 @@
             .ExecuteAsync();
     }
 
-    private static string GetDisplayString(RaidMemberStatus status)
+    private async Task SetMembershipAsync(RaidMemberStatus? status)
     {
-        return status switch
+        var result = await DialogService.Show<SetMessageDialog>("Override Membership Status for " + Member.Character.Name).Result;
+
+        if (!result.Cancelled)
         {
-            RaidMemberStatus.FullTrial => "Full Trial (-24 prio)",
-            RaidMemberStatus.HalfTrial => "Half Trial (-12 prio)",
-            RaidMemberStatus.Member => "Member (no penalty)",
-            _ => "Not Selected"
+            var dto = new UpdateMembershipDto
+            {
+                Status = status,
+                Message = (string?)result.Data
+            };
+
+            await Api.Teams.UpdateMemberStatus(Team.Id, Member.Character.Id, dto)
+                .OnSuccess((_, _) =>
+                {
+                    Member.OverrideStatus = dto.Status;
+                    return MemberUpdated.InvokeAsync();
+                })
+                .SendErrorTo(Snackbar)
+                .ExecuteAsync();
+        }
+    }
+
+    private static string GetDisplayString(RaidMemberStatus status, RaidMemberStatus? overrideStatus)
+    {
+        string text = (overrideStatus ?? status) switch
+        {
+            RaidMemberStatus.FullTrial => "Full Trial",
+            RaidMemberStatus.HalfTrial => "Half Trial",
+            RaidMemberStatus.Member => "Member",
+            _ => "Unknown"
         };
+
+        return overrideStatus.HasValue ? (text + " (Manual)") : text;
     }
 }

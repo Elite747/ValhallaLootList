@@ -19,6 +19,8 @@ public class TeamMember
 
     public bool Bench { get; set; }
 
+    public RaidMemberStatus? OverrideStatus { get; set; }
+
     public virtual Character? Character { get; set; }
 
     public virtual RaidTeam? Team { get; set; }

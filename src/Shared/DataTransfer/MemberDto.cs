@@ -29,6 +29,8 @@ public class MemberDto
 
     public RaidMemberStatus Status { get; set; }
 
+    public RaidMemberStatus? OverrideStatus { get; set; }
+
     public DateTimeOffset JoinedAt { get; set; }
 
     public bool Enchanted { get; set; }

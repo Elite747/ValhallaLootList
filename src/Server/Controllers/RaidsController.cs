@@ -716,7 +716,12 @@ public class RaidsController : ApiControllerV1
 
         if (encounter.Index >= 0 && existingKillIndex.HasValue)
         {
-            return Problem("That boss already has a recorded kill for this raid.");
+            var existingDrops = await _context.Drops.AsNoTracking()
+                .Where(d => d.EncounterKillRaidId == id && d.EncounterKillEncounterId == encounter.Id && d.EncounterKillTrashIndex == existingKillIndex)
+                .Select(d => d.ItemId)
+                .ToListAsync();
+            dto.Drops.AddRange(existingDrops);
+            return await PutKill(id, encounter.Id, existingKillIndex.Value, dto, idGenerator, messageSender);
         }
 
         var kill = new EncounterKill

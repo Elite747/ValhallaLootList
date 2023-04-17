@@ -1,4 +1,6 @@
 ﻿@inject ApiClient Api
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
 
 <MudDialog DisableSidePadding="true">
     <TitleContent>
@@ -13,6 +15,7 @@
                       Variant="Variant.Filled" />
     </DialogContent>
     <DialogActions>
+        <MudButton OnClick="CopyExportAsync" Variant="Variant.Filled" Color="Color.Primary">Copy Code</MudButton>
         <MudButton OnClick="() => Dialog.Cancel()" Variant="Variant.Text">Close</MudButton>
     </DialogActions>
 </MudDialog>
@@ -26,5 +29,17 @@
     {
         if (Dialog is null) throw new ArgumentNullException(nameof(Dialog));
         if (Code is null) throw new ArgumentNullException(nameof(Code));
+    }
+
+    private async Task CopyExportAsync()
+    {
+        if (await JS.InvokeAsync<bool>("copyManager.copy", Code))
+        {
+            Snackbar.Add("Copied!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Couldn't copy text.", Severity.Error);
+        }
     }
 }

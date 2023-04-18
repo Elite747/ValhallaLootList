@@ -33,6 +33,8 @@
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;
 
+    public void Refresh() => StateHasChanged();
+
     protected override void OnParametersSet()
     {
         if (Raid is null) throw new ArgumentNullException(nameof(Raid));

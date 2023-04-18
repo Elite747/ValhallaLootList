@@ -136,7 +136,7 @@ public static class HelperQueries
 
             foreach (var attendanceRecord in attendanceRecords)
             {
-                if (attendanceRecord.CharacterId == member.Character.Id && attendanceRecord.StartedAt >= member.JoinedAt && attendanceRecord.StartedAt.Date < now.Date)
+                if (attendanceRecord.CharacterId == member.Character.Id && attendanceRecord.StartedAt >= member.JoinedAt)
                 {
                     attendancesTotal++;
                     if (attendanceRecord.StartedAt >= currentPhaseStart)
@@ -146,7 +146,7 @@ public static class HelperQueries
                 }
             }
 
-            member.Absences = raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt && raidDate.Date < now.Date) - attendancesThisPhase;
+            member.Absences = raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt) - attendancesThisPhase;
             member.Status = PrioCalculator.GetStatus(teamSize, attendancesTotal);
         }
 

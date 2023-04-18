@@ -7,41 +7,41 @@
     <PackageVersion Include="Roslynator.Analyzers" Version="4.2.0" />
     <!--Minify-->
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
-    <PackageVersion Include="DartSassHost" Version="1.0.1" />
-    <PackageVersion Include="JavaScriptEngineSwitcher.V8" Version="3.20.8" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-arm64" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-arm" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-arm64" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.3.6" />
-    <PackageVersion Include="Microsoft.ClearScript.V8.Native.osx-arm64" Version="7.3.6" />
+    <PackageVersion Include="DartSassHost" Version="1.0.2" />
+    <PackageVersion Include="JavaScriptEngineSwitcher.V8" Version="3.21.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-arm64" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-arm" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-arm64" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.4.1" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.osx-arm64" Version="7.4.1" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="7.0.0" />
-    <PackageVersion Include="NUglify" Version="1.20.4" />
+    <PackageVersion Include="NUglify" Version="1.20.6" />
     <!--Shared-->
-    <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="7.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="7.0.5" />
     <!--Server-->
-    <PackageVersion Include="AspNet.Security.OAuth.Discord" Version="7.0.0" />
-    <PackageVersion Include="DSharpPlus" Version="4.3.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.Discord" Version="7.0.2" />
+    <PackageVersion Include="DSharpPlus" Version="4.4.0" />
     <PackageVersion Include="IdGen" Version="3.0.3" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="[5.0.13,6.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.6" />
     <!--Client-->
     <PackageVersion Include="CsvHelper" Version="30.0.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="7.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="7.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="4.9.4" />
+    <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.0.4" />
     <PackageVersion Include="MudBlazor" Version="6.1.6" />
   </ItemGroup>
 </Project>

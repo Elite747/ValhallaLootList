@@ -475,7 +475,9 @@ public class RaidsController : ApiControllerV1
             CharacterId = character.Id,
             Raid = raid,
             RaidId = raid.Id,
-            Standby = dto.Standby
+            Standby = dto.Standby,
+            IgnoreAttendance = dto.IgnoreAttendance,
+            IgnoreReason = dto.IgnoreReason
         };
 
         var characterTeams = await _context.TeamMembers.Where(tm => tm.CharacterId == character.Id).Select(tm => tm.TeamId).ToListAsync();

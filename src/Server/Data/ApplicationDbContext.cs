@@ -116,7 +116,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
 
             foreach (var attendanceRecord in attendanceRecords)
             {
-                if (attendanceRecord.CharacterId == member.CharacterId && attendanceRecord.StartedAt >= member.JoinedAt && attendanceRecord.StartedAt.Date < date.Date)
+                if (attendanceRecord.CharacterId == member.CharacterId && attendanceRecord.StartedAt >= member.JoinedAt)
                 {
                     attendancesTotal++;
                     if (attendanceRecord.StartedAt >= currentPhaseStart)

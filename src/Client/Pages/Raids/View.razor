@@ -39,17 +39,17 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <MudGrid Spacing="0" Class="content flex-grow-1">
                 <MudItem xs="6" Class="layout-container h-100">
-                    <KillsView Raid="raid" @key=@("kills") />
+                    <KillsView Raid="raid" @key=@("kills") KillAdded="OnKillAdded" />
                 </MudItem>
                 <MudItem xs="6" Class="layout-container h-100">
-                    <AttendeesView Raid="raid" @key=@("attendees") />
+                    <AttendeesView Raid="raid" @key=@("attendees") @ref="_attendeesView1" />
                 </MudItem>
             </MudGrid>
         </MudHidden>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <div class="content">
-                <AttendeesView Raid="raid" @key=@("attendees") />
-                <KillsView Raid="raid" @key=@("kills") />
+                <AttendeesView Raid="raid" @key=@("attendees") @ref="_attendeesView2" />
+                <KillsView Raid="raid" @key=@("kills") KillAdded="OnKillAdded" />
             </div>
         </MudHidden>
     </div>
@@ -57,11 +57,18 @@
 
 @code {
     private IApiExecutor? _executor;
+    private AttendeesView? _attendeesView1, _attendeesView2;
 
     [Parameter] public long RaidId { get; set; }
 
     private async Task UnlockAsync(RaidDto raid)
     {
         await Api.Raids.Unlock(raid).SendErrorTo(Snackbar).ExecuteAsync();
+    }
+
+    private void OnKillAdded()
+    {
+        _attendeesView1?.Refresh();
+        _attendeesView2?.Refresh();
     }
 }

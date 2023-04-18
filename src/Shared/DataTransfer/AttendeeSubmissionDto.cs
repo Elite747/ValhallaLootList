@@ -11,4 +11,8 @@ public class AttendeeSubmissionDto
     public long? CharacterId { get; set; }
 
     public bool Standby { get; set; }
+
+    public bool IgnoreAttendance { get; set; }
+
+    public string? IgnoreReason { get; set; }
 }

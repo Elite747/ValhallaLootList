@@ -27,15 +27,16 @@ public partial class KillsView
             .ExecuteAsync();
     }
 
-    private Task ShowKillWizard(EncounterKillDto? modifyingKill)
+    private async Task ShowKillWizard(EncounterKillDto? modifyingKill)
     {
-        return DialogService.ShowAsync<AddKillWizard, object?>(
+        await DialogService.ShowAsync<AddKillWizard, object?>(
             string.Empty,
             parameters: new()
             {
                 [nameof(AddKillWizard.Raid)] = Raid,
                 [nameof(AddKillWizard.ModifyingKill)] = modifyingKill
             });
+        await KillAdded.InvokeAsync();
     }
 
     private string GetWinnerName(long? id)

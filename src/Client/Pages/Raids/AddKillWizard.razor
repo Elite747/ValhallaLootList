@@ -84,6 +84,7 @@
                                     <MudTooltip Text="Remove">
                                         <MudIconButton OnClick="() => RemoveNonExistant(character)" Color="Color.Error" Icon="@Icons.Material.Filled.RemoveCircleOutline" />
                                     </MudTooltip>
+                                    <MudCheckBox Label="Mark As Late (attendance penalty)" @bind-Checked="character.MarkAbsent" />
                                 </div>
                             </MudListItem>
                         }
@@ -393,7 +394,7 @@
 
         if (characterDto is not null)
         {
-            await Api.Raids.AddAttendee(Raid.Id, characterDto.Id, false)
+            await Api.Raids.AddAttendee(Raid.Id, characterDto.Id, false, character.MarkAbsent ? "Late to Raid" : null)
                 .OnSuccess(a =>
                 {
                     Raid.Attendees.Add(a);

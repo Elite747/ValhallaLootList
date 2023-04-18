@@ -137,7 +137,7 @@ public class DonationsController : ApiControllerV1
 
         var reverseCharacterLookup = await _context.Characters.AsNoTracking()
             .Where(c => !c.Deactivated)
-            .Select(c => new { c.Id, c.Name, HasFulltimeMembership = c.Teams.Any(t => t.Team.TeamSize == 25 && !t.Bench) })
+            .Select(c => new { c.Id, c.Name, HasFulltimeMembership = c.Teams.Any(t => t.Team!.TeamSize == 25 && !t.Bench) })
             .ToDictionaryAsync(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
         var response = new List<DonationDto>();

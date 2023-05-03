@@ -109,8 +109,6 @@ public class DropsController : ApiControllerV1
         drop.AwardedBy = User.GetDiscordId();
         var teamId = raid.RaidTeamId;
 
-        var bonusTable = await _context.GetBonusTableAsync(teamId, now);
-
         var presentCharacters = await _context.CharacterEncounterKills
             .AsNoTracking()
             .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId && cek.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)

@@ -127,7 +127,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             }
 
             bonuses.AddRange(PrioCalculator.GetListBonuses(
-                absences: raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt && raidDate.Date < date.Date) - attendancesThisPhase,
+                absences: raidsThisPhase.Count(raidDate => raidDate >= member.JoinedAt) - attendancesThisPhase,
                 attendances: attendancesTotal,
                 donationTickets: member.Donations,
                 enchanted: member.Enchanted,

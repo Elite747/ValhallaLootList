@@ -25,12 +25,7 @@ public class MessageSender
 
     public async Task SendKillMessageAsync(long raidId, string encounterId, byte trashIndex)
     {
-        var kill = await _context.EncounterKills.FindAsync(encounterId, raidId, trashIndex);
-
-        if (kill is null)
-        {
-            throw new Exception("Kill not found.");
-        }
+        var kill = await _context.EncounterKills.FindAsync(encounterId, raidId, trashIndex) ?? throw new Exception("Kill not found.");
 
         var drops = new List<DropData>();
         string? teamName = null, encounterName = null;
@@ -198,14 +193,7 @@ public class MessageSender
 
     private long GetUserDiscordId()
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.GetDiscordId();
-
-        if (userId is null)
-        {
-            throw new InvalidOperationException("Couldn't access the calling user's discord id.");
-        }
-
-        return userId.Value;
+        return _httpContextAccessor.HttpContext?.User?.GetDiscordId() ?? throw new InvalidOperationException("Couldn't access the calling user's discord id.");
     }
 
     private async Task SendBonusMessageAsync(string bonusName, long teamId, long characterId, bool awarded, string? message)
@@ -327,12 +315,7 @@ public class MessageSender
         string encounterId,
         List<DropData> drops)
     {
-        var request = _httpContextAccessor.HttpContext?.Request;
-
-        if (request is null)
-        {
-            throw new InvalidOperationException("Messages must be sent within an http request.");
-        }
+        var request = _httpContextAccessor.HttpContext?.Request ?? throw new InvalidOperationException("Messages must be sent within an http request.");
 
         var builder = new DiscordEmbedBuilder()
             .WithColor(new DiscordColor("#3949AB"))

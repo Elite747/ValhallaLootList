@@ -180,7 +180,7 @@
         </WizardSection>
         <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
             <ApiExecutor Operation="() => Api.Items.Get(_encounter?.Phase ?? 1, (byte)Raid.TeamSize, includeTokens: true)" Context="items">
-                @foreach (var item in _drops.Keys.Select(id => new { Id = id, Name = items.Find(i => i.Id == id)?.Name ?? string.Empty }).OrderBy(i => i.Name))
+                @foreach (var item in _drops.Keys.Select(id => new { Id = id, Dto = items.Find(i => i.Id == id) }).OrderBy(i => i.Dto?.Name))
                 {
                     <div class="d-flex align-center py-1" @key="item.Id">
                         <CascadingItemContext Id="item.Id">
@@ -201,7 +201,11 @@
                             <MudAvatar Rounded Size="Size.Small" Class="mx-1">
                                 <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
                             </MudAvatar>
-                            <ItemLink Colorize Bracketize Class="mr-1" PlaceholderText="@item.Name" />
+                            <ItemLink Colorize Bracketize Class="mr-1" PlaceholderText="@item.Dto?.Name" />
+                            @if (item.Dto?.Heroic == true)
+                            {
+                                <span class="ml-1">(H)</span>
+                            }
                         </CascadingItemContext>
                     </div>
                     <MudDivider DividerType="DividerType.Middle" />

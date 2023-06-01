@@ -396,9 +396,11 @@ public class LootListEntriesController : ApiControllerV1
     {
         Debug.Assert(entry.ItemId.HasValue);
 
+        bool is25 = entry.LootList.Size == 25;
+
         var item = await _context.Items.AsNoTracking()
             .Where(item => item.Id == entry.ItemId.Value)
-            .Select(item => new { item.Slot, item.Type, Heroic = item.Encounters.Any(e => e.Heroic) })
+            .Select(item => new { item.Slot, item.Type, Heroic = item.Encounters.Any(e => e.Is25 == is25 && e.Heroic) || (item.RewardFromId.HasValue && item.RewardFrom!.Encounters.Any(e => e.Is25 == is25 && e.Heroic)) })
             .FirstAsync();
 
         var itemGroup = new ItemGroup(item.Type, item.Slot);

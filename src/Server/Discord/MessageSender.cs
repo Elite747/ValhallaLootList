@@ -170,7 +170,7 @@ public class MessageSender
     {
         if (character.OwnerId > 0)
         {
-            var sb = new StringBuilder("Your phase")
+            var sb = new StringBuilder("Your phase ")
                 .Append(list.Phase)
                 .Append(" loot list for ")
                 .Append(character.Name)

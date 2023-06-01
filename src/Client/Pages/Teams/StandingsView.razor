@@ -79,28 +79,30 @@
                                                             {
                                                                 <MudTooltip>
                                                                     <TooltipContent>
-                                                                        @if (itemStanding.Won)
-                                                                        {
-                                                                            <span>Won</span>
-                                                                        }
-                                                                        else if (itemStanding.Rank == 0)
-                                                                        {
-                                                                            <span>Rank Hidden</span>
-                                                                        }
-                                                                        else
-                                                                        {
-                                                                            <div>Rank @itemStanding.Rank</div>
-                                                                            @foreach (var bonus in itemStanding.Bonuses)
+                                                                        <div>
+                                                                            @if (itemStanding.Won)
                                                                             {
-                                                                                <div>
-                                                                                    <PriorityBonusDisplay Bonus="bonus" />
-                                                                                </div>
+                                                                                <span>Won</span>
                                                                             }
-                                                                            @if (itemStanding.AutoPass)
+                                                                            else if (itemStanding.Rank == 0)
                                                                             {
-                                                                                <div>Automatically Passing</div>
+                                                                                <span>Rank Hidden</span>
                                                                             }
-                                                                        }
+                                                                            else
+                                                                            {
+                                                                                <div>Rank @itemStanding.Rank</div>
+                                                                                @foreach (var bonus in itemStanding.Bonuses)
+                                                                                {
+                                                                                    <div>
+                                                                                        <PriorityBonusDisplay Bonus="bonus" />
+                                                                                    </div>
+                                                                                }
+                                                                                @if (itemStanding.AutoPass)
+                                                                                {
+                                                                                    <div>Automatically Passing</div>
+                                                                                }
+                                                                            }
+                                                                        </div>
                                                                     </TooltipContent>
                                                                     <ChildContent>
                                                                         <span class="mr-2 @(itemStanding.CharacterId == _selectedFilterItem as long?  ? "mud-success-text" : null)"

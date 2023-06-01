@@ -2,8 +2,9 @@
 @inherits MudComponentBase
 @implements IAsyncDisposable
 @inject WowheadInterop WH
+@inject IJSRuntime JS
 
-<a data-wowhead="@DataWowhead" href="@Href" target="@Target" class="@Classname" style="@CompleteStyle" @attributes="UserAttributes">
+<a data-wowhead="@DataWowhead" href="@Href" target="@Target" class="@Classname" style="@CompleteStyle" @attributes="UserAttributes" @onclick="OnClickAsync" @onclick:preventDefault="true">
     @if (Context?.Item is not null)
     {
         @Context.Item.Name

@@ -2,6 +2,7 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor.Utilities;
 using ValhallaLootList.Client.Data.Items;
 
@@ -39,7 +40,7 @@ public partial class ItemLink
                 }
             }
 
-            return null;
+            return "#";
         }
     }
 
@@ -113,6 +114,14 @@ public partial class ItemLink
         else
         {
             _item = Context.Item;
+        }
+    }
+
+    private async Task OnClickAsync()
+    {
+        if (LinkEnabled)
+        {
+            await JS.InvokeAsync<object>("open", Href, Target);
         }
     }
 

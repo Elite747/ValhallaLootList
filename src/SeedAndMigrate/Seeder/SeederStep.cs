@@ -119,22 +119,24 @@ internal class SeederStep
 
                 foreach ((uint itemId, byte size, bool heroic) in encounterItems)
                 {
-                    var item = existingItems[itemId];
-                    var is25 = size == 25;
-                    item.Phase = encounter.Phase;
+                    if (existingItems.TryGetValue(itemId, out var item))
+                    {
+                        var is25 = size == 25;
+                        item.Phase = encounter.Phase;
 
-                    if (existingEncounterItems.Find(ei => ei.ItemId == itemId && ei.EncounterId == encounter.Id && ei.Is25 == is25 && ei.Heroic == heroic) is { } existing)
-                    {
-                        existingEncounterItems.Remove(existing);
-                    }
-                    else
-                    {
-                        _context.EncounterItems.Add(new() { Encounter = encounter, EncounterId = encounter.Id, Item = item, ItemId = itemId, Is25 = is25, Heroic = heroic });
-                    }
+                        if (existingEncounterItems.Find(ei => ei.ItemId == itemId && ei.EncounterId == encounter.Id && ei.Is25 == is25 && ei.Heroic == heroic) is { } existing)
+                        {
+                            existingEncounterItems.Remove(existing);
+                        }
+                        else
+                        {
+                            _context.EncounterItems.Add(new() { Encounter = encounter, EncounterId = encounter.Id, Item = item, ItemId = itemId, Is25 = is25, Heroic = heroic });
+                        }
 
-                    foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
-                    {
-                        sourceItem.Phase = encounter.Phase;
+                        foreach (var sourceItem in existingItems.Values.Where(item2 => item2.RewardFromId == itemId))
+                        {
+                            sourceItem.Phase = encounter.Phase;
+                        }
                     }
                 }
             }

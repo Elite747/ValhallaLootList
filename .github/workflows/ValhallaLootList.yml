@@ -9,7 +9,7 @@ env:
   AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.ValhallaLootList_linux_6617 }}
   ConnectionStrings:DefaultConnection: ${{ secrets.DEFAULTCONNECTION }}
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 7.0.x
+  DOTNET_CORE_VERSION: '7.0.203'
   WORKING_DIRECTORY: src/Server
   MIGRATE_DIRECTORY: src/SeedAndMigrate
 jobs:

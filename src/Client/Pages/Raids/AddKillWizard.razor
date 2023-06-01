@@ -192,8 +192,8 @@
 
                             <MudText Typo="Typo.h6" Class="mx-2">@_drops[item.Id]</MudText>
 
-                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Min(3, _drops[item.Id] + 1)"
-                                       Disabled="_drops[item.Id] >= 3"
+                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Min(8, _drops[item.Id] + 1)"
+                                       Disabled="_drops[item.Id] >= 8"
                                        Icon="@Icons.Material.Filled.AddCircle"
                                        Size="Size.Small"
                                        Color="Color.Success" />

@@ -2,30 +2,32 @@
 
 <MudTooltip Text="@Context.Message">
     <TooltipContent>
-        @if (Context.Standby)
-        {
-            <div><b>Standby</b></div>
-        }
-        @if (Disenchant)
-        {
-            <span>Disenchant</span>
-        }
-        else if (Context.Message.Length > 0)
-        {
-            <span>@Context.Message</span>
-        }
-        else
-        {
-            <div>
-                Rank @Context.Rank
-            </div>
-            @foreach (var bonus in Context.Bonuses)
+        <div>
+            @if (Context.Standby)
+            {
+                <div><b>Standby</b></div>
+            }
+            @if (Disenchant)
+            {
+                <span>Disenchant</span>
+            }
+            else if (Context.Message.Length > 0)
+            {
+                <span>@Context.Message</span>
+            }
+            else
             {
                 <div>
-                    <PriorityBonusDisplay Bonus="bonus" />
+                    Rank @Context.Rank
                 </div>
+                @foreach (var bonus in Context.Bonuses)
+                {
+                    <div>
+                        <PriorityBonusDisplay Bonus="bonus" />
+                    </div>
+                }
             }
-        }
+        </div>
     </TooltipContent>
     <ChildContent>
         <CharacterChip Character="Context.Character" OnClick="OnClick" Disabled="Context.Disabled">

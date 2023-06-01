@@ -7,24 +7,26 @@
         {
             <MudTooltip>
                 <TooltipContent>
-                    @if (Entry.Won)
-                    {
-                        <span>Item Won</span>
-                    }
-                    else
-                    {
-                        <div>Rank @Entry.Rank</div>
-                        @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+                    <div>
+                        @if (Entry.Won)
                         {
-                            <div>
-                                <PriorityBonusDisplay Bonus="bonus" />
-                            </div>
+                            <span>Item Won</span>
                         }
-                        @if (Entry.AutoPass)
+                        else
                         {
-                            <div>Automatically Passing</div>
+                            <div>Rank @Entry.Rank</div>
+                            @foreach (var bonus in LootList.Bonuses.Concat(Entry.Bonuses))
+                            {
+                                <div>
+                                    <PriorityBonusDisplay Bonus="bonus" />
+                                </div>
+                            }
+                            @if (Entry.AutoPass)
+                            {
+                                <div>Automatically Passing</div>
+                            }
                         }
-                    }
+                    </div>
                 </TooltipContent>
                 <ChildContent>
                     <MudAvatar Size="Size.Small" Class="mr-2" Color="Entry.Won ? Color.Success : Color.Info">

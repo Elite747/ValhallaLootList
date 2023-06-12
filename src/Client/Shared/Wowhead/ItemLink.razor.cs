@@ -121,7 +121,7 @@ public partial class ItemLink
     {
         if (LinkEnabled)
         {
-            await JS.InvokeAsync<object>("open", Href, Target);
+            await JS.InvokeVoidAsync("open", Href, Target);
         }
     }
 

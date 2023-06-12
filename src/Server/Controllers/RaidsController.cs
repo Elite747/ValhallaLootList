@@ -589,6 +589,8 @@ public class RaidsController : ApiControllerV1
         {
             Standby = attendee.Standby,
             Disenchanter = await _context.TeamMembers.CountAsync(tm => tm.CharacterId == character.Id && tm.TeamId == raid.RaidTeamId && tm.Disenchanter) > 0,
+            IgnoreAttendance = attendee.IgnoreAttendance,
+            IgnoreReason = attendee.IgnoreReason,
             Character = new CharacterDto
             {
                 Class = character.Class,

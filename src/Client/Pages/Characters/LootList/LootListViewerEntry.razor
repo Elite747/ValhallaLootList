@@ -49,7 +49,7 @@
 
         <ItemLink Colorize Bracketize LinkEnabled PlaceholderText="@Entry.ItemName" Class="mr-2" />
 
-        @if (!Entry.Won && Entry.Rank != 0)
+        @if (!Entry.Won && Entry.Rank != 0 && Entry.AutoPass)
         {
             <AuthorizeView Resource="LootList.CharacterId" Policy="@(AppPolicies.CharacterOwner)">
                 <Authorized>
@@ -58,10 +58,7 @@
                     </MudTooltip>
                 </Authorized>
                 <NotAuthorized>
-                    @if (Entry.AutoPass)
-                    {
-                        <MudText Color="Color.Info">Automatically Passing</MudText>
-                    }
+                    <MudText Color="Color.Info">Automatically Passing</MudText>
                 </NotAuthorized>
             </AuthorizeView>
         }

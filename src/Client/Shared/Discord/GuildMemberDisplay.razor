@@ -1,12 +1,26 @@
 ﻿@namespace ValhallaLootList.Client.Shared
 
-@if (Member?.Nickname?.Length > 0)
+@if (Member is not null)
 {
-    <span>@Member.Nickname <span class="mud-text-secondary">(@Member.Username#@Member.Discriminator)</span></span>
-}
-else if (Member is not null)
-{
-    <span>@Member.Username<span class="mud-text-secondary">#@Member.Discriminator</span></span>
+    if (Member.Discriminator?.Length > 1)
+    {
+        @if (Member.Nickname?.Length > 0)
+        {
+            <span>@Member.Nickname <span class="mud-text-secondary">(@Member.Username#@Member.Discriminator)</span></span>
+        }
+        else
+        {
+            <span>@Member.Username<span class="mud-text-secondary">#@Member.Discriminator</span></span>
+        }
+    }
+    else if (Member.Nickname?.Length > 0)
+    {
+        <span>@Member.Nickname <span class="mud-text-secondary">(@Member.Username)</span></span>
+    }
+    else
+    {
+        <span>@Member.Username</span>
+    }
 }
 
 @code {

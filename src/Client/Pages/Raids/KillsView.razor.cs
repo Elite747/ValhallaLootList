@@ -112,12 +112,12 @@ public partial class KillsView
             {
                 foreach (var entry in list.Entries.Where(l => !l.AutoPass && !l.Won))
                 {
-                    //var itemId = entry.RewardFromId ?? entry.ItemId ?? 0;
-                    if (entry.ItemId > 0)
+                    var itemId = entry.RewardFromId ?? entry.ItemId ?? 0;
+                    if (itemId > 0)
                     {
-                        if (!items.TryGetValue(entry.ItemId.Value, out var item))
+                        if (!items.TryGetValue(itemId, out var item))
                         {
-                            items[entry.ItemId.Value] = item = new();
+                            items[itemId] = item = new();
                         }
 
                         var prio = entry.Rank + entry.Bonuses.Sum(b => b.Value) + list.Bonuses.Sum(b => b.Value);

@@ -6,33 +6,6 @@
 
 <WizardDialog Title="Start Raid" OnFinish="OnFinishAsync">
     <ApiView Operations="new IApiClientOperation[] { _instancesOperation, _charactersOperation }">
-        <WizardSection Name="Standby">
-            <MudText Color="Color.Info">
-                Standby: 
-                @if (_standby.Count != 0)
-                {
-                    @string.Join(", ", _standby.Values.OrderBy(c => c.Name).Select(c => c.Name))
-                }
-                else
-                {
-                    @:None
-                }
-            </MudText>
-            <div>
-                @foreach (var classGroup in Team.Roster.GroupBy(m => m.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
-                {
-                    <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
-
-                    @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
-                    {
-                        <MemberChip Member="member"
-                                    Phase="Phase"
-                                    IsSelected="_standby.ContainsKey(member.Character.Id)"
-                                    IsSelectedChanged="selected => SetStandby(member.Character, selected)" />
-                    }
-                }
-            </div>
-        </WizardSection>
         <WizardSection Name="Import" CanContinue="ImportValid" ContinueText="@(string.IsNullOrWhiteSpace(_importString) ? "Skip" : "Next")">
             <MudTextField T="string"
                           Value="_importString"
@@ -46,13 +19,21 @@
                 <MudAlert Severity="Severity.Success">
                     <div>Imported!</div>
                     <br />
-                    @if (_absent.Count == 0)
+                    @if (_roster.Any(x => x.SelectionState == MemberSelectionState.Unselected))
                     {
-                        <div>All Raiders Present</div>
+                        <MudText Color="Color.Warning">
+                            Absent: @GetNames(MemberSelectionState.Unselected)
+                        </MudText>
                     }
                     else
                     {
-                        <div>Absent: @GetAbsent()</div>
+                        <div>All Raiders Present</div>
+                    }
+                    @if (_roster.Any(x => x.SelectionState == MemberSelectionState.Standby))
+                    {
+                        <MudText Color="Color.Info">
+                            Standby: @GetNames(MemberSelectionState.Standby)
+                        </MudText>
                     }
                     @if (_unrostered.Count != 0)
                     {
@@ -102,31 +83,29 @@
                 </MudList>
             }
         </WizardSection>
-        <WizardSection Name="Roster" CanContinue="() => _absent.Count < Team.Roster.Count">
-            @if (_absent.Count > 0)
+        <WizardSection Name="Roster" CanContinue="() => _roster.Any(x => x.SelectionState == MemberSelectionState.Selected)">
+            @if (_roster.Any(x => x.SelectionState == MemberSelectionState.Unselected))
             {
                 <MudText Color="Color.Warning">
-                    Absent: @GetAbsent()
+                    Absent: @GetNames(MemberSelectionState.Unselected)
+                </MudText>
+            }
+            @if (_roster.Any(x => x.SelectionState == MemberSelectionState.Standby))
+            {
+                <MudText Color="Color.Info">
+                    Standby: @GetNames(MemberSelectionState.Standby)
                 </MudText>
             }
             <div>
-                @foreach (var classGroup in Team.Roster.GroupBy(m => m.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
+                @foreach (var classGroup in _roster.GroupBy(x => x.Member.Character.Class).OrderBy(g => g.Key.GetSortingIndex()))
                 {
                     <MudText Typo="Typo.subtitle2" Class="mt-1">@classGroup.Key.GetDisplayName()</MudText>
 
-                    @foreach (var member in classGroup.OrderBy(m => m.Character.Name))
+                    @foreach (var rosterState in classGroup.OrderBy(x => x.Member.Character.Name))
                     {
-                        @if (_standby.ContainsKey(member.Character.Id))
-                        {
-                            <MemberChip Disabled IsSelected Member="member" Phase="Phase" />
-                        }
-                        else
-                        {
-                            <MemberChip Member="member"
-                                        Phase="Phase"
-                                        IsSelected="!_absent.ContainsKey(member.Character.Id)"
-                                        IsSelectedChanged="selected => SetAttending(member.Character, selected)" />
-                        }
+                        <MemberChip Member="rosterState.Member"
+                                    Phase="Phase"
+                                    @bind-SelectionState="rosterState.SelectionState" />
                     }
                 }
             </div>
@@ -147,13 +126,24 @@
 </WizardDialog>
 
 @code {
+    private class RosterState
+    {
+        public RosterState(MemberDto member, MemberSelectionState selectionState)
+        {
+            Member = member;
+            SelectionState = selectionState;
+        }
+
+        public MemberDto Member { get; set; }
+        public MemberSelectionState SelectionState { get; set; }
+    }
+
     private IApiClientOperation<IList<InstanceDto>> _instancesOperation = null!;
     private IApiClientOperation<IList<CharacterDto>> _charactersOperation = null!;
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
     private readonly List<string> _importWarnings = new();
     private string? _importString, _importError;
-    private readonly Dictionary<long, CharacterDto> _absent = new();
-    private readonly Dictionary<long, CharacterDto> _standby = new();
+    private readonly List<RosterState> _roster = new();
     private readonly Dictionary<long, CharacterDto> _unrostered = new();
 
     [Parameter] public TeamDto Team { get; set; } = null!;
@@ -169,9 +159,10 @@
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
 
-        foreach (var member in Team.Roster.Where(m => m.Bench))
+        _roster.Clear();
+        foreach (var member in Team.Roster)
         {
-            _standby[member.Character.Id] = member.Character;
+            _roster.Add(new(member, member.Bench ? MemberSelectionState.Standby : MemberSelectionState.Selected));
         }
     }
 
@@ -201,13 +192,12 @@
                 if (model.Characters?.Count > 0)
                 {
                     var allCharacters = _charactersOperation.GetResult();
-                    _absent.Clear();
                     _unrostered.Clear();
 
-                    // When importing, default all characters as absent.
-                    foreach (var member in Team.Roster)
+                    // When importing, default all main roster members as absent.
+                    foreach (var state in _roster)
                     {
-                        SetAttending(member.Character, false);
+                        state.SelectionState = state.Member.Bench ? MemberSelectionState.Standby : MemberSelectionState.Unselected;
                     }
 
                     foreach (var importCharacter in model.Characters)
@@ -250,7 +240,7 @@
                                     $"but is supposed to be a {character.Gender} {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
                             }
 
-                            SetAttending(character, true);
+                            SetState(character, MemberSelectionState.Selected);
                         }
                     }
                 }
@@ -269,7 +259,7 @@
             {
                 _nonExistantCharacters.Remove(character);
                 _charactersOperation.GetResult().Add(c);
-                SetAttending(c, true);
+                _unrostered[c.Id] = c;
                 StateHasChanged();
             })
             .SendErrorTo(Snackbar)
@@ -281,60 +271,41 @@
         _nonExistantCharacters.Remove(character);
     }
 
-    private void SetAttending(CharacterDto character, bool attending)
+    private void SetState(CharacterDto character, MemberSelectionState state)
     {
-        if (!_standby.ContainsKey(character.Id))
-        {
-            if (attending)
-            {
-                if (character.Teams.Contains(Team.Id))
-                {
-                    _absent.Remove(character.Id);
-                }
-                else
-                {
-                    _unrostered[character.Id] = character;
-                }
-            }
-            else if (character.Teams.Contains(Team.Id))
-            {
-                _absent[character.Id] = character;
-            }
-            else
-            {
-                _unrostered.Remove(character.Id);
-            }
-        }
-    }
+        var memberState = _roster.Find(x => x.Member.Character.Id == character.Id);
 
-    private void SetStandby(CharacterDto character, bool standby)
-    {
-        System.Diagnostics.Debug.Assert(character.Teams.Contains(Team.Id));
-
-        if (_standby.ContainsKey(character.Id))
+        if (memberState is not null)
         {
-            if (!standby)
-            {
-                _standby.Remove(character.Id);
-                _absent[character.Id] = character;
-            }
+            memberState.SelectionState = state;
+            StateHasChanged();
         }
-        else if (standby)
+        else if (state == MemberSelectionState.Selected)
         {
-            _standby[character.Id] = character;
-            _absent.Remove(character.Id);
+            _unrostered[character.Id] = character;
+            StateHasChanged();
+        }
+        else if (state == MemberSelectionState.Unselected)
+        {
+            _unrostered.Remove(character.Id);
+            StateHasChanged();
         }
     }
 
     private async Task OnFinishAsync(System.ComponentModel.CancelEventArgs arg)
     {
         var attendees = new List<long>();
+        var standby = new List<long>();
 
-        foreach (var rosteredId in Team.Roster.Select(m => m.Character.Id))
+        foreach (var state in _roster)
         {
-            if (!_standby.ContainsKey(rosteredId) && !_absent.ContainsKey(rosteredId))
+            if (state.SelectionState == MemberSelectionState.Selected)
             {
-                attendees.Add(rosteredId);
+                attendees.Add(state.Member.Character.Id);
+            }
+            else if (state.SelectionState == MemberSelectionState.Standby)
+            {
+                standby.Add(state.Member.Character.Id);
             }
         }
 
@@ -343,7 +314,7 @@
         var dto = new RaidSubmissionDto
         {
             Attendees = attendees,
-                Standby = _standby.Keys.ToList(),
+            Standby = standby,
             Phase = Phase,
             TeamId = Team.Id
         };
@@ -368,9 +339,14 @@
 
         if (character is not null)
         {
-            SetAttending(character, true);
+            SetState(character, MemberSelectionState.Selected);
         }
     }
 
-    private string GetAbsent() => string.Join(", ", _absent.Values.OrderBy(c => c.Name).Select(c => c.Name));
+    private string GetNames(MemberSelectionState state) => string.Join(
+        ", ",
+        _roster.Where(x => x.SelectionState == state)
+            .OrderBy(x => x.Member.Character.Name)
+            .Select(x => x.Member.Character.Name)
+        );
 }

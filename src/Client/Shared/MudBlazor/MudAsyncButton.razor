@@ -1,0 +1,78 @@
+﻿@namespace MudBlazor
+@inherits MudButton
+@using MudBlazor.Extensions
+
+<MudElement @bind-Ref="@_elementReference"
+            HtmlTag="@HtmlTag"
+            Class="@Classname"
+            Style="@Style"
+            @attributes="UserAttributes"
+            @onclick="OnClickHandler"
+            type="@ButtonType.ToDescriptionString()"
+            href="@Href"
+            target="@Target"
+            rel="@(Target=="_blank"?"noopener":null)"
+            disabled="@(_executing || Disabled)">
+    <span class="mud-button-label">
+        @if (_executing)
+        {
+            @if (ForceStartProgress || !string.IsNullOrWhiteSpace(StartIcon))
+            {
+                <span class="@StartIconClass">
+                    <MudProgressCircular Indeterminate Size="Size.Small" Color="@IconColor" />
+                </span>
+            }
+            @if (ExecutingText?.Length > 0)
+            {
+                @ExecutingText
+            }
+            else
+            {
+                @ChildContent
+            }
+            @if (ForceEndProgress || !string.IsNullOrWhiteSpace(EndIcon))
+            {
+                <span class="@EndIconClass">
+                    <MudProgressCircular Indeterminate Size="Size.Small" Color="@IconColor" />
+                </span>
+            }
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(StartIcon))
+            {
+                <span class="@StartIconClass">
+                    <MudIcon Icon="@StartIcon" Size="@Size" Color="@IconColor" />
+                </span>
+            }
+            @ChildContent
+            @if (!string.IsNullOrWhiteSpace(@EndIcon))
+            {
+                <span class="@EndIconClass">
+                    <MudIcon Icon="@EndIcon" Size="@Size" Color="@IconColor" />
+                </span>
+            }
+        }
+    </span>
+</MudElement>
+
+@code {
+    private bool _executing;
+
+    [Parameter] public string? ExecutingText { get; set; }
+    [Parameter] public bool ForceStartProgress { get; set; }
+    [Parameter] public bool ForceEndProgress { get; set; }
+
+    protected override async Task OnClickHandler(MouseEventArgs ev)
+    {
+        try
+        {
+            _executing = true;
+            await base.OnClickHandler(ev);
+        }
+        finally
+        {
+            _executing = false;
+        }
+    }
+}

@@ -17,8 +17,6 @@ public class CharacterDto
 
     public Classes Class { get; set; }
 
-    public Gender Gender { get; set; }
-
     public bool Deactivated { get; set; }
 
     public List<long> Teams { get; set; } = new();

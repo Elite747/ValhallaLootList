@@ -6,25 +6,6 @@
               For="() => Character.Name"
               Variant="Variant.Filled" />
 
-<MudSelect Label="Gender"
-           Class="mt-3"
-           @bind-Value="Character.Gender"
-           For="() => Character.Gender"
-           Variant="Variant.Filled">
-    <MudSelectItem T="Gender?" Value="@Gender.Male">
-        <div class="d-flex align-center">
-            <MudAvatar Rounded="true" Image="images/male.png" Size="Size.Small" Class="mr-2" />
-            <span>Male</span>
-        </div>
-    </MudSelectItem>
-    <MudSelectItem T="Gender?" Value="@Gender.Female">
-        <div class="d-flex align-center">
-            <MudAvatar Rounded="true" Image="images/female.png" Size="Size.Small" Class="mr-2" />
-            <span>Female</span>
-        </div>
-    </MudSelectItem>
-</MudSelect>
-
 <MudSelect Label="Race"
            Class="mt-3"
            ValueChanged="(PlayerRace? race) => RaceChanged(race)"
@@ -37,7 +18,10 @@
         <MudSelectItem T="PlayerRace?" Value="@race" Disabled="!_classRaces.Contains(race)">
             <div class="d-flex align-center">
                 <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
-                    <RaceIcon Race="race" Gender="Character.Gender ?? Gender.Male" Size="IconSize.Medium" Width="24" Height="24" />
+                    <RaceIcon Race="race" Size="IconSize.Medium" Width="24" Height="24" />
+                </MudAvatar>
+                <MudAvatar Rounded="true" Size="Size.Small" Class="mr-2">
+                    <RaceIcon Female Race="race" Size="IconSize.Medium" Width="24" Height="24" />
                 </MudAvatar>
                 <span>@race.GetDisplayName()</span>
             </div>

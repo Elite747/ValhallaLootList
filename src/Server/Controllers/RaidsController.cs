@@ -130,7 +130,6 @@ public class RaidsController : ApiControllerV1
                 Character = new CharacterDto
                 {
                     Class = a.Character.Class,
-                    Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                     Id = a.CharacterId,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
@@ -336,7 +335,6 @@ public class RaidsController : ApiControllerV1
                 {
                     Id = a.CharacterId,
                     Class = a.Character.Class,
-                    Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
                     Teams = a.Character.Teams.Select(tm => tm.TeamId).ToList(),
@@ -513,7 +511,6 @@ public class RaidsController : ApiControllerV1
             Character = new CharacterDto
             {
                 Class = character.Class,
-                Gender = character.IsFemale ? Gender.Female : Gender.Male,
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
@@ -567,7 +564,7 @@ public class RaidsController : ApiControllerV1
         var character = await _context.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
-            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, Teams = c.Teams.Select(t => t.TeamId).ToList(), c.VerifiedById })
+            .Select(c => new { c.Id, c.Name, c.Class, c.Race, Teams = c.Teams.Select(t => t.TeamId).ToList(), c.VerifiedById })
             .FirstAsync();
 
         _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -589,7 +586,6 @@ public class RaidsController : ApiControllerV1
             Character = new CharacterDto
             {
                 Class = character.Class,
-                Gender = character.Gender,
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,

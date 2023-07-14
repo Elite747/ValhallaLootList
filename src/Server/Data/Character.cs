@@ -27,6 +27,7 @@ public class Character
 
     public Classes Class { get; set; }
 
+    [Obsolete("No longer used")]
     public bool IsFemale { get; set; }
 
     public bool Deactivated { get; set; }

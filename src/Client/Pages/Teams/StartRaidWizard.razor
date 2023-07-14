@@ -63,8 +63,7 @@
                     {
                         <MudListItem>
                             <div class="d-flex align-center">
-                                <PlayerIcon Gender="character.Gender"
-                                            PlayerClass="character.Class"
+                                <PlayerIcon PlayerClass="character.Class"
                                             Race="character.Race"
                                             ShowTooltip="true"
                                             Size="Size.Small" />
@@ -218,12 +217,6 @@
                                 return;
                             }
 
-                            if (!Enum.IsDefined(importCharacter.Gender))
-                            {
-                                _importError = $"One or more characters does not have a valid gender.";
-                                return;
-                            }
-
                             if (!Enum.IsDefined(importCharacter.Race))
                             {
                                 _importError = $"One or more characters does not have a valid race.";
@@ -234,10 +227,10 @@
                         }
                         else
                         {
-                            if (importCharacter.Class != character.Class || importCharacter.Gender != character.Gender || importCharacter.Race != character.Race)
+                            if (importCharacter.Class != character.Class || importCharacter.Race != character.Race)
                             {
-                                _importWarnings.Add($"{character.Name} was imported as a {importCharacter.Gender} {importCharacter.Race.GetDisplayName()} {importCharacter.Class.GetDisplayName()}, " +
-                                    $"but is supposed to be a {character.Gender} {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
+                                _importWarnings.Add($"{character.Name} was imported as a {importCharacter.Race.GetDisplayName()} {importCharacter.Class.GetDisplayName()}, " +
+                                    $"but is supposed to be a {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
                             }
 
                             SetState(character, MemberSelectionState.Selected);
@@ -254,7 +247,7 @@
 
     private Task AddNonExistantAsync(ImportCharacter character)
     {
-        return Api.Characters.Create(new() { Class = character.Class, Gender = character.Gender, Race = character.Race, Name = character.Name, SenderIsOwner = false })
+        return Api.Characters.Create(new() { Class = character.Class, Race = character.Race, Name = character.Name, SenderIsOwner = false })
             .OnSuccess(c =>
             {
                 _nonExistantCharacters.Remove(character);

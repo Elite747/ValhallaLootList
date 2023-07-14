@@ -357,7 +357,7 @@
                     }
                 }
 
-                if (model.Items?.Count > 0)
+                if (model.Items?.Count > 0 || model.Drops?.Count > 0)
                 {
                     _importEncounters.AddRange(ImportEncounter.Create(model, _instancesOperation.GetResult()));
 
@@ -472,10 +472,15 @@
 
         if (encounter is not null)
         {
+            var items = new HashSet<uint>();
             foreach (var variant in encounter.Variants.Where(v => v.Size == Raid.TeamSize))
             {
-                _encounterItems = variant.Items;
+                foreach (var itemId in variant.Items)
+                {
+                    items.Add(itemId);
+                }
             }
+            _encounterItems = items.ToList();
         }
     }
 

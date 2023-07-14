@@ -15,73 +15,75 @@
             <TitleContent>
                 <div class="d-flex align-center">
                     <PlayerIcon Race="member.Character.Race"
-                                Gender="member.Character.Gender"
                                 PlayerClass="member.Character.Class"
                                 Spec="phaseLootList?.MainSpec ?? Specializations.None"
                                 ShowTooltip="true"
                                 Class="mr-5 mb-1" />
-                    <MudText Inline="true" Typo="Typo.h5" Class="mr-2">@member.Character.Name</MudText>
-                    @if (member.Bench)
-                    {
-                        <MudText Inline="true" Color="Color.Primary" Class="mr-2">Bench</MudText>
-                    }
-                    @if (member.Status != RaidMemberStatus.Member)
-                    {
-                        <MudText Inline="true" Color="Color.Warning" Class="mr-2">Trial</MudText>
-                    }
-                    @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
-                    {
-                        <MudTooltip>
-                            <TooltipContent>
-                                @if (phaseLootList is null)
-                                {
-                                    <p>No loot list for this phase!</p>
-                                }
-                                else if (phaseLootList.Approved == false)
-                                {
-                                    <p>Loot list has not been approved yet!</p>
-                                }
-                                else if (phaseLootList.Status != LootListStatus.Locked)
-                                {
-                                    <p>Loot list has not been locked yet!</p>
-                                }
-                                @if (!member.Character.Verified)
-                                {
-                                    <p>Character ownership has not been verified!</p>
-                                    <p>Have an officer verify the owner of this character.</p>
-                                }
-                            </TooltipContent>
-                            <ChildContent>
-                                <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
-                            </ChildContent>
-                        </MudTooltip>
-                    }
-                    @if (Team.Size != 10)
-                    {
-                        @if (!member.Enchanted)
+                    <div class="d-flex align-baseline">
+                        <MudText Inline Class="mr-2" Typo="Typo.h5">@member.Character.Name</MudText>
+                        <MudText Inline Class="mr-2" Typo="Typo.caption">@member.Character.Race.GetDisplayName() @member.Character.Class.GetDisplayName()</MudText>
+                        @if (member.Bench)
                         {
-                            <MudTooltip Text="Gem & enchant bonus is not active">
-                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
-                            </MudTooltip>
+                            <MudText Inline Color="Color.Primary" Typo="Typo.caption" Class="mr-2">Bench</MudText>
                         }
-                        @if (member is not { Prepared: true })
+                        @if (member.Status != RaidMemberStatus.Member)
                         {
-                            <MudTooltip Text="Prepared bonus is not active">
-                                <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
-                            </MudTooltip>
+                            <MudText Inline Color="Color.Warning" Typo="Typo.caption" Class="mr-2">Trial</MudText>
                         }
-                        @if (member.Donations.NextMonth < member.Donations.Maximum)
+                        @if (phaseLootList is null || phaseLootList.Approved == false || phaseLootList.Status != LootListStatus.Locked || !member.Character.Verified)
                         {
                             <MudTooltip>
                                 <TooltipContent>
-                                    Completed @member.Donations.NextMonth of @member.Donations.Maximum donations for next month.
+                                    @if (phaseLootList is null)
+                                    {
+                                        <p>No loot list for this phase!</p>
+                                    }
+                                    else if (phaseLootList.Approved == false)
+                                    {
+                                        <p>Loot list has not been approved yet!</p>
+                                    }
+                                    else if (phaseLootList.Status != LootListStatus.Locked)
+                                    {
+                                        <p>Loot list has not been locked yet!</p>
+                                    }
+                                    @if (!member.Character.Verified)
+                                    {
+                                        <p>Character ownership has not been verified!</p>
+                                        <p>Have an officer verify the owner of this character.</p>
+                                    }
                                 </TooltipContent>
                                 <ChildContent>
-                                    <MudIcon Color="member.Donations.NextMonth == 0 ? Color.Warning : Color.Info" Icon="@CustomIcons.HandCoin" Class="mr-2" />
+                                    <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
                                 </ChildContent>
                             </MudTooltip>
                         }
-                    }
+                        @if (Team.Size != 10)
+                        {
+                            @if (!member.Enchanted)
+                            {
+                                <MudTooltip Text="Gem & enchant bonus is not active">
+                                    <MudIcon Color="Color.Warning" Icon="@CustomIcons.Diamond" Class="mr-2" />
+                                </MudTooltip>
+                            }
+                            @if (member is not { Prepared: true })
+                            {
+                                <MudTooltip Text="Prepared bonus is not active">
+                                    <MudIcon Color="Color.Warning" Icon="@CustomIcons.Illidan" Class="mr-2" />
+                                </MudTooltip>
+                            }
+                            @if (member.Donations.NextMonth < member.Donations.Maximum)
+                            {
+                                <MudTooltip>
+                                    <TooltipContent>
+                                        Completed @member.Donations.NextMonth of @member.Donations.Maximum donations for next month.
+                                    </TooltipContent>
+                                    <ChildContent>
+                                        <MudIcon Color="member.Donations.NextMonth == 0 ? Color.Warning : Color.Info" Icon="@CustomIcons.HandCoin" Class="mr-2" />
+                                    </ChildContent>
+                                </MudTooltip>
+                            }
+                        }
+                    </div>
                 </div>
             </TitleContent>
             <ChildContent>

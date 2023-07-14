@@ -1,9 +1,13 @@
 ﻿<CharacterChip Character="Member.Character" Spec="_spec" OnClick="ToggleSelected" Disabled="Disabled">
     <div class="d-flex align-center">
         @Member.Character.Name
-        @if (IsSelected)
+        @if (SelectionState == MemberSelectionState.Selected)
         {
-            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
+        }
+        else if (SelectionState == MemberSelectionState.Standby)
+        {
+            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.ModeStandby" Color="Color.Info" Style="margin-left: 4px; margin-right: -12px" />
         }
     </div>
 </CharacterChip>
@@ -13,9 +17,9 @@
 
     [Parameter] public MemberDto Member { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
-    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public MemberSelectionState SelectionState { get; set; }
     [Parameter] public bool Disabled { get; set; }
-    [Parameter] public EventCallback<bool> IsSelectedChanged { get; set; }
+    [Parameter] public EventCallback<MemberSelectionState> SelectionStateChanged { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -30,7 +34,12 @@
 
     private Task ToggleSelected()
     {
-        IsSelected = !IsSelected;
-        return IsSelectedChanged.InvokeAsync(IsSelected);
+        SelectionState = SelectionState switch
+        {
+            MemberSelectionState.Selected => MemberSelectionState.Standby,
+            MemberSelectionState.Standby => MemberSelectionState.Unselected,
+            _ => MemberSelectionState.Selected
+        };
+        return SelectionStateChanged.InvokeAsync(SelectionState);
     }
 }

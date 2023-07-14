@@ -3,7 +3,14 @@
 <span class="@Class">
     <MudTooltip Text="@_tooltipText">
         <div style="position:relative">
-            <RaceIcon Gender="Gender" Race="Race" Size="_iconSize" Class="@IconClass" />
+            @if (Spec != Specializations.None)
+            {
+                <SpecIcon Spec="Spec" Size="_iconSize" Class="@IconClass" />
+            }
+            else
+            {
+                <ClassIcon PlayerClass="PlayerClass" Size="_iconSize" Class="@IconClass" />
+            }
             @if (_role?.Length > 0)
             {
                 <span class="player-icon-role @_role">
@@ -18,7 +25,6 @@
     private string? _roleIcon, _role, _tooltipText;
     private IconSize _iconSize;
 
-    [Parameter] public Gender Gender { get; set; }
     [Parameter] public PlayerRace Race { get; set; }
     [Parameter] public Classes PlayerClass { get; set; }
     [Parameter] public Specializations Spec { get; set; }

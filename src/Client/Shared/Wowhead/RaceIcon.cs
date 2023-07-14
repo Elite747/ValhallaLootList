@@ -8,7 +8,7 @@ namespace ValhallaLootList.Client.Shared;
 public class RaceIcon : WowIcon
 {
     [Parameter] public PlayerRace Race { get; set; }
-    [Parameter] public Gender Gender { get; set; }
+    [Parameter] public bool Female { get; set; }
 
     protected override string GetIconId()
     {
@@ -22,18 +22,13 @@ public class RaceIcon : WowIcon
             _ => throw new ArgumentOutOfRangeException(nameof(Race))
         };
 
-        var gender = Gender switch
-        {
-            Gender.Male => "male",
-            Gender.Female => "female",
-            _ => throw new ArgumentOutOfRangeException(nameof(Gender))
-        };
+        var gender = Female ? "female" : "male";
 
         return string.Join('_', "race", race, gender);
     }
 
     protected override string GetAltText()
     {
-        return Race.GetDisplayName() + " " + Gender.ToString();
+        return Race.GetDisplayName();
     }
 }

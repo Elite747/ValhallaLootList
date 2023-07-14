@@ -61,7 +61,6 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
                 Verified = c.VerifiedById.HasValue,
                 Teams = c.Teams.Select(tm => tm.TeamId).ToList()
@@ -96,7 +95,6 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
                 Verified = c.VerifiedById.HasValue,
                 Teams = c.Teams.Select(tm => tm.TeamId).ToList()
@@ -115,7 +113,6 @@ public class CharactersController : ApiControllerV1
                 Id = c.Id,
                 Name = c.Name,
                 Race = c.Race,
-                Gender = c.IsFemale ? Gender.Female : Gender.Male,
                 Deactivated = c.Deactivated,
                 Verified = c.VerifiedById.HasValue,
                 Teams = c.Teams.Select(tm => tm.TeamId).ToList()
@@ -173,7 +170,6 @@ public class CharactersController : ApiControllerV1
             Class = dto.Class,
             Name = normalizedName,
             Race = dto.Race.Value,
-            IsFemale = dto.Gender == Gender.Female
         };
 
         if (dto.SenderIsOwner)
@@ -198,7 +194,6 @@ public class CharactersController : ApiControllerV1
             Id = character.Id,
             Name = character.Name,
             Race = character.Race,
-            Gender = character.IsFemale ? Gender.Female : Gender.Male,
             Deactivated = character.Deactivated,
             Verified = character.VerifiedById.HasValue
         });
@@ -238,11 +233,6 @@ public class CharactersController : ApiControllerV1
             character.Race = dto.Race.Value;
         }
 
-        if (dto.Gender.HasValue)
-        {
-            character.IsFemale = dto.Gender == Gender.Female;
-        }
-
         await _context.SaveChangesAsync();
 
         TrackTelemetry("CharacterUpdated", character);
@@ -253,7 +243,6 @@ public class CharactersController : ApiControllerV1
             Id = character.Id,
             Name = character.Name,
             Race = character.Race,
-            Gender = character.IsFemale ? Gender.Female : Gender.Male,
             Deactivated = character.Deactivated,
             Verified = character.VerifiedById.HasValue,
             Teams = await _context.TeamMembers.Where(tm => tm.CharacterId == id).Select(tm => tm.TeamId).ToListAsync()

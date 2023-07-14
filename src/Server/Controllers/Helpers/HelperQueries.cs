@@ -40,7 +40,6 @@ public static class HelperQueries
                 c.CharacterId,
                 c.Character.Name,
                 c.Character.Race,
-                c.Character.IsFemale,
                 c.JoinedAt,
                 c.Enchanted,
                 c.Prepared,
@@ -68,7 +67,6 @@ public static class HelperQueries
                 Character = new()
                 {
                     Class = character.Class,
-                    Gender = character.IsFemale ? Gender.Female : Gender.Male,
                     Id = character.CharacterId,
                     Name = character.Name,
                     Race = character.Race,

@@ -16,9 +16,6 @@ public class CharacterSubmissionDto : IValidatableObject
 
     public Classes Class { get; set; }
 
-    [Required]
-    public Gender? Gender { get; set; }
-
     public bool SenderIsOwner { get; set; } = true;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

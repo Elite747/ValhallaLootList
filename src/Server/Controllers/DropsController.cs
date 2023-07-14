@@ -1,8 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Diagnostics;
-using System.Linq.Expressions;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,23 +105,14 @@ public class DropsController : ApiControllerV1
 
         drop.AwardedAt = now;
         drop.AwardedBy = User.GetDiscordId();
-        var teamId = raid.RaidTeamId;
-
-        var presentCharacters = await _context.CharacterEncounterKills
-            .AsNoTracking()
-            .Where(cek => cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId && cek.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
-            .Select(cek => new { cek.Character.Id, cek.Character.Name })
-            .ToListAsync();
-
-        var presentMembers = await _context.TeamMembers
-            .AsNoTracking()
-            .Where(tm => tm.TeamId == raid.RaidTeamId)
-            .Select(ConvertToDropInfo(drop.ItemId))
-            .ToListAsync();
 
         if (dto.WinnerId.HasValue)
         {
-            var winner = presentCharacters.Find(e => e.Id == dto.WinnerId);
+            var winner = await _context.CharacterEncounterKills
+                .AsNoTracking()
+                .Where(cek => cek.CharacterId == dto.WinnerId.Value && cek.EncounterKillEncounterId == drop.EncounterKillEncounterId && cek.EncounterKillRaidId == drop.EncounterKillRaidId && cek.EncounterKillTrashIndex == drop.EncounterKillTrashIndex)
+                .Select(cek => new { cek.Character.Id, cek.Character.Name })
+                .FirstOrDefaultAsync();
 
             if (winner is null)
             {
@@ -131,14 +120,18 @@ public class DropsController : ApiControllerV1
                 return ValidationProblem();
             }
 
-            var member = presentMembers.Find(m => m.Id == dto.WinnerId);
+            var topEntry = await _context.LootListEntries
+                .AsTracking()
+                .Where(e => e.LootList.CharacterId == winner.Id && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                .OrderByDescending(e => e.Rank)
+                .ThenBy(e => e.Id)
+                .FirstOrDefaultAsync();
 
-            if (member?.Entries.Count > 0)
+            if (topEntry is not null)
             {
-                drop.WinningEntry = await _context.LootListEntries.FindAsync(member.Entries[0].Id);
-                Debug.Assert(drop.WinningEntry is not null);
-                drop.WinningEntry.Drop = drop;
-                drop.WinningEntry.DropId = drop.Id;
+                drop.WinningEntry = topEntry;
+                topEntry.Drop = drop;
+                topEntry.DropId = drop.Id;
             }
 
             drop.WinnerId = winner.Id;
@@ -237,14 +230,42 @@ public class DropsController : ApiControllerV1
         var presentMembers = await _context.TeamMembers
             .AsNoTracking()
             .Where(tm => tm.TeamId == drop.TeamId)
-            .Select(ConvertToDropInfo(drop.ItemId))
+            .Select(tm => new
+            {
+                Id = tm.CharacterId,
+                tm.Character!.Name,
+                tm.Enchanted,
+                tm.Prepared,
+                tm.JoinedAt
+            })
+            .ToListAsync();
+
+        var allEntries = await _context.LootListEntries
+            .AsNoTracking()
+            .Where(e => !e.DropId.HasValue && !e.AutoPass && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId) && e.LootList.Character.Teams.Any(t => t.TeamId == drop.TeamId))
+            .Select(e => new
+            {
+                e.Id,
+                e.Rank,
+                e.LootList.Status,
+                e.LootList.CharacterId
+            })
+            .ToListAsync();
+
+        var allPasses = await _context.Drops
+            .AsNoTracking()
+            .Where(d => (d.ItemId == drop.ItemId || d.Item!.RewardFromId == drop.ItemId) && d.EncounterKill.Raid.RaidTeamId == drop.TeamId)
+            .Select(d => new
+            {
+                d.EncounterKill.KilledAt,
+                Characters = d.EncounterKill.Characters.Select(c => c.CharacterId).ToList()
+            })
             .ToListAsync();
 
         var dto = new List<ItemPrioDto>();
-
         foreach (var killer in presentMembers)
         {
-            var topEntry = killer.Entries.Find(e => !e.AutoPass);
+            var topEntry = allEntries.Where(e => e.CharacterId == killer.Id).OrderByDescending(e => e.Rank).FirstOrDefault();
 
             if (topEntry is not null)
             {
@@ -261,7 +282,7 @@ public class DropsController : ApiControllerV1
                     prio.Bonuses.AddRange(bonuses);
                 }
 
-                prio.Bonuses.AddRange(PrioCalculator.GetItemBonuses(topEntry.Passes));
+                prio.Bonuses.AddRange(PrioCalculator.GetItemBonuses(allPasses.Count(p => p.KilledAt >= killer.JoinedAt && p.Characters.Contains(killer.Id))));
 
                 dto.Add(prio);
             }
@@ -269,43 +290,4 @@ public class DropsController : ApiControllerV1
 
         return dto;
     }
-
-    private class CharacterDropInfo
-    {
-        public long Id { get; init; }
-        public string Name { get; init; } = string.Empty;
-        public long? TeamId { get; init; }
-        public bool Enchanted { get; init; }
-        public bool Prepared { get; init; }
-        public List<TargetEntry> Entries { get; init; } = null!;
-    }
-
-    private class TargetEntry
-    {
-        public long Id { get; init; }
-        public int Rank { get; init; }
-        public LootListStatus Status { get; init; }
-        public int Passes { get; init; }
-        public bool AutoPass { get; init; }
-    }
-
-    private Expression<Func<TeamMember, CharacterDropInfo>> ConvertToDropInfo(uint itemId) => member => new()
-    {
-        Id = member.CharacterId,
-        Name = member.Character!.Name,
-        TeamId = member.TeamId,
-        Enchanted = member.Enchanted,
-        Prepared = member.Prepared,
-        Entries = _context.LootListEntries.Where(e => !e.DropId.HasValue && e.LootList.CharacterId == member.Character.Id && (e.ItemId == itemId || e.Item!.RewardFromId == itemId))
-            .OrderByDescending(e => e.Rank)
-            .Select(e => new TargetEntry
-            {
-                Id = e.Id,
-                Rank = e.Rank,
-                Status = e.LootList.Status,
-                Passes = _context.Drops.Count(d => (d.ItemId == itemId || d.Item!.RewardFromId == itemId) && d.EncounterKill.Raid.RaidTeamId == member.TeamId && d.EncounterKill.KilledAt >= member.JoinedAt && d.EncounterKill.Characters.Any(c => c.CharacterId == member.CharacterId)),
-                AutoPass = e.AutoPass
-            })
-            .ToList()
-    };
 }

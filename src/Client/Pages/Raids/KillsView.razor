@@ -25,10 +25,10 @@
                 @if (Raid.LocksAt > DateTimeOffset.UtcNow)
                 {
                     <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
-                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => ShowKillWizard(kill)">Edit</MudButton>
+                        <MudAsyncButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => ShowKillWizard(kill)">Edit</MudAsyncButton>
                         @if (kill.Drops.All(drop => drop.WinnerId is null))
                         {
-                            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(kill.EncounterId, kill.TrashIndex)">Delete</MudButton>
+                            <MudAsyncButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(kill.EncounterId, kill.TrashIndex)">Delete</MudAsyncButton>
                         }
                     </AuthorizeView>
                 }
@@ -60,11 +60,11 @@
                             <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
                                 @if (drop.WinnerId is null)
                                 {
-                                    <MudButton OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudButton>
+                                    <MudAsyncButton ForceStartProgress OnClick="() => BeginAssignAsync(drop)" Variant="Variant.Text" Color="Color.Primary">Assign</MudAsyncButton>
                                 }
                                 else
                                 {
-                                    <MudButton OnClick="() => AssignAsync(drop, null, false)" Variant="Variant.Text" Color="Color.Error">Unassign</MudButton>
+                                    <MudAsyncButton ForceStartProgress OnClick="() => AssignAsync(drop, null, false)" Variant="Variant.Text" Color="Color.Error">Unassign</MudAsyncButton>
                                 }
                             </AuthorizeView>
                         }
@@ -78,29 +78,29 @@
         @if (Raid.LocksAt > DateTimeOffset.UtcNow)
         {
             <AuthorizeView Policy="@AppPolicies.LootMaster" Resource="@Raid.TeamId">
-                <MudButton OnClick="() => ShowKillWizard(null)"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           Variant="Variant.Text"
-                           Color="Color.Primary">
+                <MudAsyncButton OnClick="() => ShowKillWizard(null)"
+                                StartIcon="@Icons.Material.Filled.Add"
+                                Variant="Variant.Text"
+                                Color="Color.Primary">
                     Add Kill
-                </MudButton>
-                <MudButton OnClick="ExportAsync"
-                           StartIcon="@Icons.Material.Filled.ImportExport"
-                           Variant="Variant.Text"
-                           Color="Color.Secondary"
-                           Class="ml-2">
+                </MudAsyncButton>
+                <MudAsyncButton OnClick="ExportAsync"
+                                StartIcon="@Icons.Material.Filled.ImportExport"
+                                Variant="Variant.Text"
+                                Color="Color.Secondary"
+                                Class="ml-2">
                     Export Standings
-                </MudButton>
+                </MudAsyncButton>
 
                 @if (Raid.Kills.Count == 0)
                 {
-                    <MudButton OnClick="DeleteRaidAsync"
-                               StartIcon="@Icons.Material.Filled.Delete"
-                               Variant="Variant.Text"
-                               Color="Color.Error"
-                               Class="ml-2">
+                    <MudAsyncButton OnClick="DeleteRaidAsync"
+                                    StartIcon="@Icons.Material.Filled.Delete"
+                                    Variant="Variant.Text"
+                                    Color="Color.Error"
+                                    Class="ml-2">
                         Delete Raid
-                    </MudButton>
+                    </MudAsyncButton>
                 }
             </AuthorizeView>
         }

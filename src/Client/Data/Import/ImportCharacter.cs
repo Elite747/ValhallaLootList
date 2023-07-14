@@ -11,7 +11,5 @@ public class ImportCharacter
 
     public PlayerRace Race { get; set; }
 
-    public Gender Gender { get; set; }
-
     public bool MarkAbsent { get; set; }
 }

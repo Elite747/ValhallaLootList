@@ -2,19 +2,14 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using IdGen;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
-using ValhallaLootList.Client.Pages;
 using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
-using static AutoMapper.Internal.ExpressionFactory;
 
 namespace ValhallaLootList.Server.Controllers;
 
@@ -135,7 +130,6 @@ public class RaidsController : ApiControllerV1
                 Character = new CharacterDto
                 {
                     Class = a.Character.Class,
-                    Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                     Id = a.CharacterId,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
@@ -335,13 +329,12 @@ public class RaidsController : ApiControllerV1
                 MainSpec = a.Character.CharacterLootLists.FirstOrDefault(ll => ll.Phase == dto.Phase && ll.Size == team.TeamSize)?.MainSpec ?? Specializations.None,
                 Standby = a.Standby,
                 IgnoreAttendance = a.IgnoreAttendance,
-                IgnoreReason= a.IgnoreReason,
+                IgnoreReason = a.IgnoreReason,
                 Disenchanter = members.Any(m => m.Disenchanter && m.CharacterId == a.CharacterId),
                 Character = new CharacterDto
                 {
                     Id = a.CharacterId,
                     Class = a.Character.Class,
-                    Gender = a.Character.IsFemale ? Gender.Female : Gender.Male,
                     Name = a.Character.Name,
                     Race = a.Character.Race,
                     Teams = a.Character.Teams.Select(tm => tm.TeamId).ToList(),
@@ -518,7 +511,6 @@ public class RaidsController : ApiControllerV1
             Character = new CharacterDto
             {
                 Class = character.Class,
-                Gender = character.IsFemale ? Gender.Female : Gender.Male,
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
@@ -572,7 +564,7 @@ public class RaidsController : ApiControllerV1
         var character = await _context.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
-            .Select(c => new { c.Id, c.Name, c.Class, Gender = c.IsFemale ? Gender.Female : Gender.Male, c.Race, Teams = c.Teams.Select(t => t.TeamId).ToList(), c.VerifiedById })
+            .Select(c => new { c.Id, c.Name, c.Class, c.Race, Teams = c.Teams.Select(t => t.TeamId).ToList(), c.VerifiedById })
             .FirstAsync();
 
         _telemetry.TrackEvent("AttendeeUpdated", User, props =>
@@ -594,7 +586,6 @@ public class RaidsController : ApiControllerV1
             Character = new CharacterDto
             {
                 Class = character.Class,
-                Gender = character.Gender,
                 Id = character.Id,
                 Name = character.Name,
                 Race = character.Race,
@@ -663,7 +654,8 @@ public class RaidsController : ApiControllerV1
     }
 
     [HttpPost("{id:long}/Kills"), Authorize(AppPolicies.LootMaster)]
-    public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto, [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender)
+    public async Task<ActionResult<EncounterKillDto>> PostKill(long id, [FromBody] KillSubmissionDto dto,
+        [FromServices] TimeZoneInfo realmTimeZoneInfo, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender, [FromServices] TimeZoneInfo realmTimeZone)
     {
         if (dto.Drops.Count == 0)
         {
@@ -722,15 +714,15 @@ public class RaidsController : ApiControllerV1
         {
             var existingDrops = await _context.Drops.AsNoTracking()
                 .Where(d => d.EncounterKillRaidId == id && d.EncounterKillEncounterId == encounter.Id && d.EncounterKillTrashIndex == existingKillIndex)
-                .Select(d => d.ItemId)
+                .Select(d => new KillDropSubmissionDto { ItemId = d.ItemId, WinnerId = d.WinnerId, Disenchanted = d.Disenchanted })
                 .ToListAsync();
             dto.Drops.AddRange(existingDrops);
-            return await PutKill(id, encounter.Id, existingKillIndex.Value, dto, idGenerator, messageSender);
+            return await PutKill(id, encounter.Id, existingKillIndex.Value, dto, idGenerator, messageSender, realmTimeZone);
         }
 
         var kill = new EncounterKill
         {
-            KilledAt = realmTimeZoneInfo.TimeZoneNow(),
+            KilledAt = dto.Date ?? realmTimeZoneInfo.TimeZoneNow(),
             EncounterId = encounter.Id,
             Raid = raid,
             RaidId = raid.Id,
@@ -767,15 +759,16 @@ public class RaidsController : ApiControllerV1
             return ValidationProblem();
         }
 
-        var items = await _context.Items.AsTracking().Where(i => dto.Drops.Contains(i.Id)).ToListAsync();
+        var dropIds = dto.Drops.ConvertAll(x => x.ItemId);
+        var items = await _context.Items.AsTracking().Where(i => dropIds.Contains(i.Id)).ToListAsync();
 
-        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
+        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key.ItemId) }).OrderBy(g => g.Item?.Name))
         {
             if (itemGroup.Item is null)
             {
                 ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not exist.");
             }
-            else if (!encounter.Items.Contains(itemGroup.Id))
+            else if (!encounter.Items.Contains(itemGroup.Id.ItemId))
             {
                 ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
             }
@@ -790,7 +783,8 @@ public class RaidsController : ApiControllerV1
                         EncounterKillRaidId = kill.RaidId,
                         EncounterKillTrashIndex = kill.TrashIndex,
                         Item = itemGroup.Item,
-                        ItemId = itemGroup.Id
+                        ItemId = itemGroup.Id.ItemId,
+                        WinnerId = itemGroup.Id.WinnerId
                     });
                 }
             }
@@ -842,7 +836,8 @@ public class RaidsController : ApiControllerV1
     }
 
     [HttpPut("{id:long}/Kills/{encounterId}/{trashIndex:int}"), Authorize(AppPolicies.LootMaster)]
-    public async Task<ActionResult<EncounterKillDto>> PutKill(long id, string encounterId, byte trashIndex, [FromBody] KillSubmissionDto dto, [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender)
+    public async Task<ActionResult<EncounterKillDto>> PutKill(long id, string encounterId, byte trashIndex, [FromBody] KillSubmissionDto dto,
+        [FromServices] IdGen.IIdGenerator<long> idGenerator, [FromServices] MessageSender messageSender, [FromServices] TimeZoneInfo realmTimeZone)
     {
         if (dto.Drops.Count == 0)
         {
@@ -931,7 +926,7 @@ public class RaidsController : ApiControllerV1
 
         await _context.Entry(existingKill).Collection(e => e.Drops).LoadAsync();
 
-        foreach (var drop in existingKill.Drops.Where(d => !dto.Drops.Contains(d.ItemId)).ToList())
+        foreach (var drop in existingKill.Drops.Where(d => !dto.Drops.Any(x => x.ItemId == d.ItemId)).ToList())
         {
             if (drop.WinnerId.HasValue)
             {
@@ -944,64 +939,136 @@ public class RaidsController : ApiControllerV1
 
         var encounterItems = await _context.EncounterItems.Where(ei => ei.EncounterId == encounterId).Select(ei => ei.ItemId).ToListAsync();
 
+        var dropIds = dto.Drops.ConvertAll(x => x.ItemId);
         var items = await _context.Items
             .AsTracking()
             .AsSingleQuery()
-            .Where(i => dto.Drops.Contains(i.Id))
+            .Where(i => dropIds.Contains(i.Id))
             .ToListAsync();
+        var userId = User.GetDiscordId();
 
-        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
+        foreach (var itemGroup in dto.Drops.GroupBy(d => d.ItemId).Select(g => new { ItemId = g.Key, Drops = g.ToList(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
         {
             if (itemGroup.Item is null)
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not exist.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(d => d.ItemId == itemGroup.ItemId)}]", "Item does not exist.");
                 return ValidationProblem();
             }
-            else if (!encounterItems.Contains(itemGroup.Id))
+            else if (!encounterItems.Contains(itemGroup.ItemId))
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(d => d.ItemId == itemGroup.ItemId)}]", "Item does not belong to the specified encounter.");
                 return ValidationProblem();
             }
 
-            var existingDrops = existingKill.Drops.Where(d => d.ItemId == itemGroup.Id).ToList();
-            int diff = existingDrops.Count - itemGroup.Count;
+            var existingDrops = existingKill.Drops.Where(d => d.ItemId == itemGroup.ItemId).OrderByDescending(d => d.WinnerId).ToList();
 
             foreach (var drop in existingDrops)
             {
-                drop.Item = itemGroup.Item;
-            }
-
-            if (diff > 0) // delete
-            {
-                var dropsToDelete = existingDrops.Where(d => d.WinnerId is null).Take(diff).ToList();
-
-                if (dropsToDelete.Count != diff)
+                if (itemGroup.Drops.Count == 0)
                 {
-                    return Problem("Can't delete a drop that has a winner assigned.");
-                }
+                    if (drop.WinnerId.HasValue)
+                    {
+                        return Problem("Can't delete a drop that has a winner assigned.");
+                    }
 
-                foreach (var drop in dropsToDelete)
-                {
                     existingKill.Drops.Remove(drop);
                     _context.Drops.Remove(drop);
                 }
-            }
-            else if (diff < 0) // add
-            {
-                while (diff++ < 0)
+
+                var matchingDrop = itemGroup.Drops.Find(d => d.WinnerId == drop.WinnerId && d.ItemId == drop.ItemId);
+
+                if (matchingDrop is not null)
                 {
-                    var drop = new Drop(idGenerator.CreateId())
-                    {
-                        EncounterKill = existingKill,
-                        EncounterKillEncounterId = existingKill.EncounterId,
-                        EncounterKillRaidId = existingKill.RaidId,
-                        EncounterKillTrashIndex = existingKill.TrashIndex,
-                        ItemId = itemGroup.Id,
-                        Item = itemGroup.Item
-                    };
-                    _context.Drops.Add(drop);
-                    existingKill.Drops.Add(drop);
+                    // Existing drop matches the winner and item ids. Don't modify.
+                    itemGroup.Drops.Remove(matchingDrop);
                 }
+                else
+                {
+                    var closestDrop = itemGroup.Drops.Find(d => d.ItemId == drop.ItemId) ?? itemGroup.Drops[0];
+                    itemGroup.Drops.Remove(closestDrop);
+
+                    drop.Item = itemGroup.Item;
+                    drop.ItemId = itemGroup.ItemId;
+
+                    if (closestDrop.WinnerId.HasValue)
+                    {
+                        drop.WinnerId = closestDrop.WinnerId;
+                        drop.AwardedAt = realmTimeZone.TimeZoneNow();
+                        drop.AwardedBy = userId;
+                        drop.Disenchanted = closestDrop.Disenchanted;
+
+                        var topEntry = await _context.LootListEntries
+                            .AsTracking()
+                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                            .OrderByDescending(e => e.Rank)
+                            .ThenBy(e => e.Id)
+                            .FirstOrDefaultAsync();
+
+                        if (topEntry is not null)
+                        {
+                            drop.WinningEntry = topEntry;
+                            topEntry.Drop = drop;
+                            topEntry.DropId = drop.Id;
+                        }
+                    }
+                    else
+                    {
+                        drop.WinnerId = null;
+                        drop.AwardedAt = default;
+                        drop.AwardedBy = null;
+                        drop.Disenchanted = false;
+
+                        var oldWinningEntry = await _context.LootListEntries
+                            .AsTracking()
+                            .Where(e => e.DropId == drop.Id)
+                            .SingleOrDefaultAsync();
+
+                        if (oldWinningEntry is not null)
+                        {
+                            oldWinningEntry.Drop = null;
+                            oldWinningEntry.DropId = null;
+                            drop.WinningEntry = null;
+                        }
+                    }
+                }
+            }
+
+            foreach (var overflowDrop in itemGroup.Drops)
+            {
+                var drop = new Drop(idGenerator.CreateId())
+                {
+                    EncounterKill = existingKill,
+                    EncounterKillEncounterId = existingKill.EncounterId,
+                    EncounterKillRaidId = existingKill.RaidId,
+                    EncounterKillTrashIndex = existingKill.TrashIndex,
+                    ItemId = itemGroup.ItemId,
+                    Item = itemGroup.Item,
+                    WinnerId = overflowDrop.WinnerId
+                };
+
+                if (overflowDrop.WinnerId.HasValue)
+                {
+                    drop.AwardedAt = realmTimeZone.TimeZoneNow();
+                    drop.AwardedBy = userId;
+                    drop.Disenchanted = overflowDrop.Disenchanted;
+
+                    var topEntry = await _context.LootListEntries
+                        .AsTracking()
+                        .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                        .OrderByDescending(e => e.Rank)
+                        .ThenBy(e => e.Id)
+                        .FirstOrDefaultAsync();
+
+                    if (topEntry is not null)
+                    {
+                        drop.WinningEntry = topEntry;
+                        topEntry.Drop = drop;
+                        topEntry.DropId = drop.Id;
+                    }
+                }
+
+                _context.Drops.Add(drop);
+                existingKill.Drops.Add(drop);
             }
         }
 

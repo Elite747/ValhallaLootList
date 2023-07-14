@@ -28,13 +28,13 @@
                             <div>Imported!</div>
                         }
                         <br />
-                        @foreach ((uint itemId, int count) in _drops.Where(d => d.Value > 0))
+                        @foreach (var item in _drops.GroupBy(d => d.ItemId).Select(g => new { Id = g.Key, Count = g.Count() }))
                         {
                             <div>
-                                <ItemLink Colorize Bracketize Id="itemId" />
-                                @if (count > 1)
+                                <ItemLink Colorize Bracketize Id="item.Id" />
+                                @if (item.Count > 1)
                                 {
-                                    @($" x{count}")
+                                    @($" x{item.Count}")
                                 }
                             </div>
                         }
@@ -99,7 +99,7 @@
                         </MudListSubheader>
                         @foreach (var encounter in _importEncounters)
                         {
-                            <MudListItem OnClick="() => SetEncounter(encounter)" Disabled="encounter.Encounter is null">
+                            <MudListItem OnClick="() => SetEncounter(encounter)" Disabled="encounter.Encounter is null || _nonExistantCharacters.Count > 0">
                                 <MudText Typo="Typo.h6">
                                     @if (encounter.Encounter is not null)
                                     {
@@ -110,10 +110,10 @@
                                         @:Unknown Items
                                     }
                                 </MudText>
-                                @foreach (var item in encounter.Items)
+                                @foreach (var drop in encounter.Drops)
                                 {
                                     <div>
-                                        <ItemLink Id="item" Bracketize="true" Colorize="true" />
+                                        <ItemLink Id="drop.ItemId" Bracketize="true" Colorize="true" />
                                     </div>
                                 }
                             </MudListItem>
@@ -178,25 +178,25 @@
                 }
             </div>
         </WizardSection>
-        <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0 && _drops.Values.Sum() > 0">
+        <WizardSection Name="Drops" CanContinue="() => _drops.Count != 0">
             <ApiExecutor Operation="() => Api.Items.Get(_encounter?.Phase ?? 1, (byte)Raid.TeamSize, includeTokens: true)" Context="items">
-                @foreach (var item in _drops.Keys.Select(id => new { Id = id, Dto = items.Find(i => i.Id == id) }).OrderBy(i => i.Dto?.Name))
+                @foreach (var item in (_encounterItems ?? Array.Empty<uint>()).Select(itemId => new { Id = itemId, Dto = items.Find(i => i.Id == itemId) }).OrderBy(item => item.Dto?.Name))
                 {
                     <div class="d-flex align-center py-1" @key="item.Id">
                         <CascadingItemContext Id="item.Id">
-                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Max(0, _drops[item.Id] - 1)"
-                                       Disabled="_drops[item.Id] <= (ModifyingKill?.Drops.Count(d => d.ItemId == item.Id && d.WinnerId.HasValue) ?? 0)"
-                                       Icon="@Icons.Material.Filled.RemoveCircle"
-                                       Size="Size.Small"
-                                       Color="Color.Error" />
+                            <MudIconButton OnClick="() => RemoveDrop(item.Id)"
+                                           Disabled="!CanRemoveDrop(item.Id)"
+                                           Icon="@Icons.Material.Filled.RemoveCircle"
+                                           Size="Size.Small"
+                                           Color="Color.Error" />
 
-                            <MudText Typo="Typo.h6" Class="mx-2">@_drops[item.Id]</MudText>
+                            <MudText Typo="Typo.h6" Class="mx-2">@_drops.Count(d => d.ItemId == item.Id)</MudText>
 
-                            <MudIconButton OnClick="() => _drops[item.Id] = Math.Min(8, _drops[item.Id] + 1)"
-                                       Disabled="_drops[item.Id] >= 8"
-                                       Icon="@Icons.Material.Filled.AddCircle"
-                                       Size="Size.Small"
-                                       Color="Color.Success" />
+                            <MudIconButton OnClick="() => AddDrop(item.Id)"
+                                           Disabled="!CanAddDrop(item.Id)"
+                                           Icon="@Icons.Material.Filled.AddCircle"
+                                           Size="Size.Small"
+                                           Color="Color.Success" />
 
                             <MudAvatar Rounded Size="Size.Small" Class="mx-1">
                                 <ItemIcon Size="IconSize.Small" Width="24" Height="24" />
@@ -217,7 +217,7 @@
 
 @code {
     private readonly Dictionary<long, CharacterDto> _attendees = new();
-    private readonly Dictionary<uint, int> _drops = new();
+    private readonly List<KillDropSubmissionDto> _drops = new();
     private readonly List<ImportCharacter> _nonExistantCharacters = new();
     private readonly List<ImportEncounter> _importEncounters = new();
     private readonly List<string> _importWarnings = new();
@@ -226,6 +226,8 @@
     private IApiClientOperation[] _apiOperations = null!;
     private string? _importString, _importError;
     private EncounterDto? _encounter;
+    private IList<uint>? _encounterItems;
+    private DateTimeOffset? _timestamp;
 
     [Parameter] public RaidDto Raid { get; set; } = null!;
     [Parameter] public EncounterKillDto? ModifyingKill { get; set; }
@@ -247,7 +249,27 @@
     {
         await _instancesOperation.ExecuteOrWaitAsync();
 
-        SetEncounter(ModifyingKill is null ? null : _instancesOperation.GetResult().SelectMany(i => i.Encounters).FirstOrDefault(e => e.Id == ModifyingKill.EncounterId));
+        if (ModifyingKill is null)
+        {
+            SetEncounter(default(ImportEncounter));
+        }
+        else
+        {
+            _importEncounters.Clear();
+            SetEncounter(_instancesOperation.GetResult().SelectMany(i => i.Encounters).FirstOrDefault(e => e.Id == ModifyingKill.EncounterId));
+            _timestamp = ModifyingKill.KilledAt;
+
+            foreach (var drop in ModifyingKill.Drops)
+            {
+                _drops.Add(new()
+                {
+                    Disenchanted = drop.Disenchanted,
+                    ItemId = drop.ItemId,
+                    WinnerId = drop.WinnerId
+                });
+            }
+        }
+
 
         var lastKill = Raid.Kills.Count == 0 ? null : Raid.Kills[^1];
         foreach (var attendee in Raid.Attendees)
@@ -289,23 +311,6 @@
             }
             if (model is not null)
             {
-                if (model.Items?.Count > 0)
-                {
-                    _importEncounters.AddRange(ImportEncounter.CreateFromItems(model.Items, _instancesOperation.GetResult()));
-
-                    if (_importEncounters.Count == 1)
-                    {
-                        var singleEncounter = _importEncounters[0];
-                        SetEncounter(singleEncounter);
-
-                        if (singleEncounter.Encounter is null)
-                        {
-                            _importError = "No imported items were valid for importing.";
-                            return;
-                        }
-                    }
-                }
-
                 if (model.Characters?.Count > 0)
                 {
                     // When importing, default all non-standby raiders as absent, and all standby raiders as present.
@@ -355,6 +360,27 @@
                             }
 
                             SetPresent(character, true);
+                        }
+                    }
+                }
+
+                if (model.Items?.Count > 0)
+                {
+                    _importEncounters.AddRange(ImportEncounter.Create(model, _instancesOperation.GetResult()));
+
+                    if (_importEncounters.Count == 1)
+                    {
+                        var singleEncounter = _importEncounters[0];
+
+                        if (_nonExistantCharacters.Count == 0)
+                        {
+                            SetEncounter(singleEncounter);
+                        }
+
+                        if (singleEncounter.Encounter is null)
+                        {
+                            _importError = "No imported items were valid for importing.";
+                            return;
                         }
                     }
                 }
@@ -413,21 +439,33 @@
     private void RemoveNonExistant(ImportCharacter character)
     {
         _nonExistantCharacters.Remove(character);
+        if (_importEncounters.Count == 1 && _nonExistantCharacters.Count == 0)
+        {
+            SetEncounter(_importEncounters[0]);
+        }
     }
 
-    private void SetEncounter(ImportEncounter encounter)
+    private void SetEncounter(ImportEncounter? encounter)
     {
         _importEncounters.Clear();
-        SetEncounter(encounter.Encounter);
+        SetEncounter(encounter?.Encounter);
+        _timestamp = encounter?.Timestamp;
 
-        if (encounter.Encounter is not null)
+        if (encounter?.Encounter is not null)
         {
-            foreach (var item in encounter.Items)
+            foreach (var drop in encounter.Drops)
             {
-                if (_drops.TryGetValue(item, out int count))
+                long? winnerId = null;
+                if (drop.WinnerName?.Length > 0)
                 {
-                    _drops[item] = count + 1;
+                    winnerId = Raid.Attendees.Find(a => string.Equals(a.Character.Name, drop.WinnerName, StringComparison.OrdinalIgnoreCase))?.Character.Id;
                 }
+                _drops.Add(new()
+                {
+                    Disenchanted = drop.Disenchanted,
+                    ItemId = drop.ItemId,
+                    WinnerId = winnerId
+                });
             }
         }
     }
@@ -435,16 +473,15 @@
     private void SetEncounter(EncounterDto? encounter)
     {
         _encounter = encounter;
+        _encounterItems = null;
+        _timestamp = null;
         _drops.Clear();
 
         if (encounter is not null)
         {
             foreach (var variant in encounter.Variants.Where(v => v.Size == Raid.TeamSize))
             {
-                foreach (var itemId in variant.Items)
-                {
-                    _drops[itemId] = ModifyingKill?.Drops.Count(d => d.ItemId == itemId) ?? 0;
-                }
+                _encounterItems = variant.Items;
             }
         }
     }
@@ -475,16 +512,10 @@
         var kill = new KillSubmissionDto
         {
             Characters = _attendees.Keys.ToList(),
-            EncounterId = _encounter.Id
+            EncounterId = _encounter.Id,
+            Drops = _drops,
+            Date = _timestamp
         };
-
-        foreach (var (id, count) in _drops)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                kill.Drops.Add(id);
-            }
-        }
 
         await (ModifyingKill is null ? Api.Raids.AddKill(Raid.Id, kill) : Api.Raids.ModifyKill(Raid.Id, ModifyingKill.TrashIndex, kill))
             .OnSuccess(kill =>
@@ -525,5 +556,32 @@
     {
         var phaseConfig = _phaseConfigOperation.GetResult();
         return encounter.Phase <= phaseConfig.CurrentPhase && phaseConfig.Phases.Contains(encounter.Phase);
+    }
+
+    private bool CanAddDrop(uint itemId)
+    {
+        return _drops.Count(d => d.ItemId == itemId) < 8;
+    }
+
+    private void AddDrop(uint itemId)
+    {
+        _drops.Add(new()
+        {
+            ItemId = itemId
+        });
+    }
+
+    private bool CanRemoveDrop(uint itemId)
+    {
+        return _drops.Any(d => d.ItemId == itemId && !d.WinnerId.HasValue);
+    }
+
+    private void RemoveDrop(uint itemId)
+    {
+        var drop = _drops.Find(d => d.ItemId == itemId && d.WinnerId is null);
+        if (drop is not null)
+        {
+            _drops.Remove(drop);
+        }
     }
 }

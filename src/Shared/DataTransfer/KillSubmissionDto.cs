@@ -8,10 +8,12 @@ namespace ValhallaLootList.DataTransfer;
 public class KillSubmissionDto
 {
     private List<long>? _characters;
-    private List<uint>? _drops;
+    private List<KillDropSubmissionDto>? _drops;
 
     [Required]
     public string? EncounterId { get; set; }
+
+    public DateTimeOffset? Date { get; set; }
 
     public List<long> Characters
     {
@@ -19,9 +21,18 @@ public class KillSubmissionDto
         set => _characters = value;
     }
 
-    public List<uint> Drops
+    public List<KillDropSubmissionDto> Drops
     {
         get => _drops ??= new();
         set => _drops = value;
     }
+}
+
+public class KillDropSubmissionDto
+{
+    public uint ItemId { get; set; }
+
+    public long? WinnerId { get; set; }
+
+    public bool Disenchanted { get; set; }
 }

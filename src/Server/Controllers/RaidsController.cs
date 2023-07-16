@@ -10,6 +10,7 @@ using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace ValhallaLootList.Server.Controllers;
 
@@ -761,31 +762,55 @@ public class RaidsController : ApiControllerV1
 
         var dropIds = dto.Drops.ConvertAll(x => x.ItemId);
         var items = await _context.Items.AsTracking().Where(i => dropIds.Contains(i.Id)).ToListAsync();
+        var userId = User.GetDiscordId();
 
-        foreach (var itemGroup in dto.Drops.GroupBy(id => id).Select(g => new { Id = g.Key, Count = g.Count(), Item = items.Find(item => item.Id == g.Key.ItemId) }).OrderBy(g => g.Item?.Name))
+        foreach (var itemGroup in dto.Drops.GroupBy(drop => drop.ItemId).Select(g => new { Id = g.Key, Entries = g.Select(x => new { x.WinnerId, x.Disenchanted }).ToList(), Item = items.Find(item => item.Id == g.Key) }).OrderBy(g => g.Item?.Name))
         {
             if (itemGroup.Item is null)
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not exist.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(drop => drop.ItemId == itemGroup.Id)}]", "Item does not exist.");
             }
-            else if (!encounter.Items.Contains(itemGroup.Id.ItemId))
+            else if (!encounter.Items.Contains(itemGroup.Id))
             {
-                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(id => id == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
+                ModelState.AddModelError($"{nameof(dto.Drops)}[{dto.Drops.FindIndex(drop => drop.ItemId == itemGroup.Id)}]", "Item does not belong to the specified encounter.");
             }
             else
             {
-                for (int i = 0; i < itemGroup.Count; i++)
+                foreach (var entry in itemGroup.Entries)
                 {
-                    kill.Drops.Add(new Drop(idGenerator.CreateId())
+                    var drop = new Drop(idGenerator.CreateId())
                     {
                         EncounterKill = kill,
                         EncounterKillEncounterId = kill.EncounterId,
                         EncounterKillRaidId = kill.RaidId,
                         EncounterKillTrashIndex = kill.TrashIndex,
                         Item = itemGroup.Item,
-                        ItemId = itemGroup.Id.ItemId,
-                        WinnerId = itemGroup.Id.WinnerId
-                    });
+                        ItemId = itemGroup.Id,
+                        WinnerId = entry.WinnerId
+                    };
+
+                    if (entry.WinnerId.HasValue)
+                    {
+                        drop.AwardedAt = realmTimeZone.TimeZoneNow();
+                        drop.AwardedBy = userId;
+                        drop.Disenchanted = entry.Disenchanted;
+
+                        var topEntry = await _context.LootListEntries
+                            .AsTracking()
+                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                            .OrderByDescending(e => e.Rank)
+                            .ThenBy(e => e.Id)
+                            .FirstOrDefaultAsync();
+
+                        if (topEntry is not null)
+                        {
+                            drop.WinningEntry = topEntry;
+                            topEntry.Drop = drop;
+                            topEntry.DropId = drop.Id;
+                        }
+                    }
+
+                    kill.Drops.Add(drop);
                 }
             }
         }

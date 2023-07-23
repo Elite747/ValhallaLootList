@@ -998,6 +998,7 @@ public class RaidsController : ApiControllerV1
 
                     existingKill.Drops.Remove(drop);
                     _context.Drops.Remove(drop);
+                    continue;
                 }
 
                 var matchingDrop = itemGroup.Drops.Find(d => d.WinnerId == drop.WinnerId && d.ItemId == drop.ItemId);

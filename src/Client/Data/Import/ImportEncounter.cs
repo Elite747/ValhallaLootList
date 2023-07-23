@@ -40,13 +40,18 @@ public sealed class ImportEncounter
         {
             foreach (var encounter in instance.Encounters)
             {
+                var allDropsCopy = allDrops.ToList();
                 var encounterDrops = new List<ImportDrop>();
                 foreach (var variant in encounter.Variants)
                 {
-                    if (variant.Items.Any(itemId => allDrops.Any(drop => drop.ItemId == itemId)))
+                    if (variant.Items.Any(itemId => allDropsCopy.Any(drop => drop.ItemId == itemId)))
                     {
                         unknownItems.ExceptWith(variant.Items);
-                        encounterDrops.AddRange(allDrops.Where(d => variant.Items.Contains(d.ItemId)));
+                        foreach (var drop in allDropsCopy.Where(d => variant.Items.Contains(d.ItemId)).ToList())
+                        {
+                            encounterDrops.Add(drop);
+                            allDropsCopy.Remove(drop);
+                        }
                     }
                 }
                 if (encounterDrops.Count > 0)

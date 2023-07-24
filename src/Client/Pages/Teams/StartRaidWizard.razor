@@ -233,7 +233,7 @@
                                     $"but is supposed to be a {character.Race.GetDisplayName()} {character.Class.GetDisplayName()}.");
                             }
 
-                            SetState(character, MemberSelectionState.Selected);
+                            SetState(character, MemberSelectionState.Selected, setBenchAsBench: true);
                         }
                     }
                 }
@@ -264,13 +264,20 @@
         _nonExistantCharacters.Remove(character);
     }
 
-    private void SetState(CharacterDto character, MemberSelectionState state)
+    private void SetState(CharacterDto character, MemberSelectionState state, bool setBenchAsBench)
     {
         var memberState = _roster.Find(x => x.Member.Character.Id == character.Id);
 
         if (memberState is not null)
         {
-            memberState.SelectionState = state;
+            if (setBenchAsBench && memberState.Member.Bench && state == MemberSelectionState.Selected)
+            {
+                memberState.SelectionState = MemberSelectionState.Standby;
+            }
+            else
+            {
+                memberState.SelectionState = state;
+            }
             StateHasChanged();
         }
         else if (state == MemberSelectionState.Selected)
@@ -332,7 +339,7 @@
 
         if (character is not null)
         {
-            SetState(character, MemberSelectionState.Selected);
+            SetState(character, MemberSelectionState.Selected, setBenchAsBench: false);
         }
     }
 

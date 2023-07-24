@@ -16,7 +16,12 @@
     else if (ShowDonations)
     {
         <ApiExecutor Operation="() => Api.Characters.GetDonationSummary(Character.Id)" Context="donations">
-            <MudText Inline="false" Class="ml-2">(@donations.NextMonth of @donations.Maximum donated)</MudText>
+            <Running>
+                <MudSkeleton Class="ml-2" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="14ch" />
+            </Running>
+            <ChildContent>
+                <MudText Inline="false" Class="ml-2">(@donations.NextMonth of @donations.Maximum donated)</MudText>
+            </ChildContent>
         </ApiExecutor>
     }
 </div>

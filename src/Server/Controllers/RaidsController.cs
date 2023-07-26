@@ -409,7 +409,7 @@ public class RaidsController : ApiControllerV1
             return NotFound();
         }
 
-        raid.LocksAt = realmTimeZoneInfo.TimeZoneNow().AddMinutes(10);
+        raid.LocksAt = realmTimeZoneInfo.TimeZoneNow().AddHours(1);
 
         await _context.SaveChangesAsync();
 
@@ -776,6 +776,7 @@ public class RaidsController : ApiControllerV1
             }
             else
             {
+                var usedEntries = new List<long>();
                 foreach (var entry in itemGroup.Entries)
                 {
                     var drop = new Drop(idGenerator.CreateId())
@@ -797,13 +798,14 @@ public class RaidsController : ApiControllerV1
 
                         var topEntry = await _context.LootListEntries
                             .AsTracking()
-                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId) && !usedEntries.Contains(e.Id))
                             .OrderByDescending(e => e.Rank)
                             .ThenBy(e => e.Id)
                             .FirstOrDefaultAsync();
 
                         if (topEntry is not null)
                         {
+                            usedEntries.Add(topEntry.Id);
                             drop.WinningEntry = topEntry;
                             topEntry.Drop = drop;
                             topEntry.DropId = drop.Id;
@@ -986,6 +988,7 @@ public class RaidsController : ApiControllerV1
             }
 
             var existingDrops = existingKill.Drops.Where(d => d.ItemId == itemGroup.ItemId).OrderByDescending(d => d.WinnerId).ToList();
+            var usedEntries = new List<long>();
 
             foreach (var drop in existingDrops)
             {
@@ -1025,13 +1028,14 @@ public class RaidsController : ApiControllerV1
 
                         var topEntry = await _context.LootListEntries
                             .AsTracking()
-                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                            .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId) && !usedEntries.Contains(id))
                             .OrderByDescending(e => e.Rank)
                             .ThenBy(e => e.Id)
                             .FirstOrDefaultAsync();
 
                         if (topEntry is not null)
                         {
+                            usedEntries.Add(topEntry.Id);
                             drop.WinningEntry = topEntry;
                             topEntry.Drop = drop;
                             topEntry.DropId = drop.Id;
@@ -1051,6 +1055,7 @@ public class RaidsController : ApiControllerV1
 
                         if (oldWinningEntry is not null)
                         {
+                            usedEntries.Remove(oldWinningEntry.Id);
                             oldWinningEntry.Drop = null;
                             oldWinningEntry.DropId = null;
                             drop.WinningEntry = null;
@@ -1080,13 +1085,14 @@ public class RaidsController : ApiControllerV1
 
                     var topEntry = await _context.LootListEntries
                         .AsTracking()
-                        .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId))
+                        .Where(e => e.LootList.CharacterId == drop.WinnerId && !e.DropId.HasValue && (e.ItemId == drop.ItemId || e.Item!.RewardFromId == drop.ItemId) && !usedEntries.Contains(e.Id))
                         .OrderByDescending(e => e.Rank)
                         .ThenBy(e => e.Id)
                         .FirstOrDefaultAsync();
 
                     if (topEntry is not null)
                     {
+                        usedEntries.Add(topEntry.Id);
                         drop.WinningEntry = topEntry;
                         topEntry.Drop = drop;
                         topEntry.DropId = drop.Id;

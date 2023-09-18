@@ -148,41 +148,15 @@
 
     private IList<ItemDto>? _items;
     private object? _selectedModeItem, _selectedFilterItem;
-    private bool _filtersLoading, _lootListsLoading, _teamOrPhaseChanged, _ranksHidden;
-    private byte _phase;
-    private TeamDto _team = null!;
+    private bool _filtersLoading, _lootListsLoading, _ranksHidden;
+    private byte _oldPhase;
+    private TeamDto? _oldTeam;
 
-#pragma warning disable BL0007 // Component parameters should be auto properties
-    [Parameter] public TeamDto Team
-    {
-        get => _team;
-        set
-        {
-            if (_team != value)
-            {
-                _team = value;
-                _teamOrPhaseChanged = true;
-            }
-        }
-    }
-
-    [Parameter] public byte Phase
-#pragma warning restore BL0007 // Component parameters should be auto properties
-    {
-        get => _phase;
-        set
-        {
-            if (_phase != value)
-            {
-                _phase = value;
-                _teamOrPhaseChanged = true;
-            }
-        }
-    }
+    [Parameter, EditorRequired] public required TeamDto Team { get; set; }
+    [Parameter, EditorRequired] public required byte Phase { get; set; }
 
     public async Task RefreshAsync()
     {
-        _teamOrPhaseChanged = false;
         _items = null;
         _encounterFilterItems.Clear();
         _characterFilterItems.Clear();
@@ -210,9 +184,20 @@
 
     protected override Task OnParametersSetAsync()
     {
-        if (Team is null) throw new ArgumentNullException(nameof(Team));
+        bool teamOrPhaseChanged = false;
 
-        if (_teamOrPhaseChanged)
+        if (_oldPhase != Phase)
+        {
+            _oldPhase = Phase;
+            teamOrPhaseChanged = true;
+        }
+        if (_oldTeam != Team)
+        {
+            _oldTeam = Team;
+            teamOrPhaseChanged = true;
+        }
+
+        if (teamOrPhaseChanged)
         {
             return RefreshAsync();
         }

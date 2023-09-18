@@ -60,27 +60,21 @@
 }
 
 @code {
-    private CharacterSubmissionDto? _character;
     private IEnumerable<PlayerRace> _classRaces = PlayerRaceExtensions.GetAll();
 
-#pragma warning disable BL0007 // Component parameters should be auto properties
-    [Parameter] public CharacterSubmissionDto Character
-#pragma warning restore BL0007 // Component parameters should be auto properties
-    {
-        get => _character ??= new();
-        set
-        {
-            _character = value;
-            if (_character.Class.TryGetRaces(out var classRaces))
-            {
-                _classRaces = classRaces;
-            }
-        }
-    }
+    [Parameter, EditorRequired] public required CharacterSubmissionDto Character { get; set; }
 
     [Parameter] public bool AllowSubmitNonOwned { get; set; }
 
     [Parameter] public bool DisableClassChange { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Character.Class.TryGetRaces(out var classRaces))
+        {
+            _classRaces = classRaces;
+        }
+    }
 
     private IEnumerable<Classes> GetRaceClasses()
     {

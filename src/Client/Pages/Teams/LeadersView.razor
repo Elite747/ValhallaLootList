@@ -53,24 +53,9 @@
 
 @code {
     private IApiExecutor? _executor;
-    private TeamDto _team = null!;
-    private bool _teamChanged;
+    private TeamDto? _oldTeam;
 
-    [Parameter]
-#pragma warning disable BL0007 // Component parameters should be auto properties
-    public TeamDto Team
-#pragma warning restore BL0007 // Component parameters should be auto properties
-    {
-        get => _team;
-        set
-        {
-            if (_team != value)
-            {
-                _team = value;
-                _teamChanged = true;
-            }
-        }
-    }
+    [Parameter, EditorRequired] public required TeamDto Team { get; set; }
 
     public Task RefreshAsync() => _executor?.RestartAsync() ?? Task.CompletedTask;
 
@@ -78,9 +63,9 @@
     {
         if (Team is null) throw new ArgumentNullException(nameof(Team));
 
-        if (_teamChanged)
+        if (_oldTeam != Team)
         {
-            _teamChanged = false;
+            _oldTeam = Team;
             if (_executor is not null)
             {
                 return _executor.RestartAsync();

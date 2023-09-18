@@ -7,28 +7,12 @@ namespace ValhallaLootList.Client.Shared;
 
 public class WizardSection : ComponentBase
 {
-    private string? _continueText;
-    private bool _continueTextChanged;
+    private string? _lastContinueText;
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? Name { get; set; }
     [Parameter] public Func<bool>? CanContinue { get; set; }
-
-#pragma warning disable BL0007 // Component parameters should be auto properties
-    [Parameter]
-    public string? ContinueText
-#pragma warning restore BL0007 // Component parameters should be auto properties
-    {
-        get => _continueText;
-        set
-        {
-            if (_continueText != value)
-            {
-                _continueText = value;
-                _continueTextChanged = true;
-            }
-        }
-    }
+    [Parameter] public string? ContinueText { get; set; }
 
     [CascadingParameter] public WizardDialog WizardDialog { get; set; } = null!;
 
@@ -41,9 +25,9 @@ public class WizardSection : ComponentBase
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        if (_continueTextChanged)
+        if (_lastContinueText != ContinueText)
         {
-            _continueTextChanged = false;
+            _lastContinueText = ContinueText;
             WizardDialog.NotifyStateChanged();
         }
     }

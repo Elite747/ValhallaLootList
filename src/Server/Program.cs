@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MudBlazor.Services;
 using ValhallaLootList;
 using ValhallaLootList.Client.Shared;
 using ValhallaLootList.Serialization;
@@ -125,7 +124,6 @@ builder.Services.AddApplicationInsightsTelemetry();
 
 builder.Services.AddSingleton(_ => new RenderLocation { IsServer = true });
 builder.Services.AddServerSideBlazor();
-builder.Services.AddMudServices();
 
 var app = builder.Build();
 

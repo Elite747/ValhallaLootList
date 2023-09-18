@@ -113,7 +113,7 @@
             <div>
                 @foreach (var character in _unrostered.Values.OrderBy(c => c.Name))
                 {
-                    <CharacterChip Closeable Character="character" OnClose="() => _unrostered.Remove(character.Id)" />
+                    <CharacterChip Character="character" OnClose="() => _unrostered.Remove(character.Id)" />
                 }
                 <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
                                Color="Color.Success"

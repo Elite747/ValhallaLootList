@@ -19,7 +19,7 @@ public static class DialogServiceExtensions
 
         var result = await dialog.Result;
 
-        if (result.Cancelled)
+        if (result.Canceled)
         {
             return default;
         }

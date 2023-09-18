@@ -1,13 +1,9 @@
-﻿
-<CharacterChip Character="Attendance.Character" Spec="Attendance.MainSpec" OnClick="ToggleSelected" Disabled="Attendance.Standby">
-    <div class="d-flex align-center">
-        @Attendance.Character.Name
-        @if (IsSelected)
-        {
-            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
-        }
-    </div>
-</CharacterChip>
+﻿<CharacterChip Character="Attendance.Character"
+               Spec="Attendance.MainSpec"
+               OnClick="ToggleSelected"
+               Disabled="Attendance.Standby"
+               EndIcon="@(IsSelected ? Icons.Material.Filled.Check : null)"
+               EndIconColor="Color.Success" />
 
 @code {
     [Parameter] public RaidDto Raid { get; set; } = null!;

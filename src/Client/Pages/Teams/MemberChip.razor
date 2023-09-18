@@ -1,19 +1,14 @@
-﻿<CharacterChip Character="Member.Character" Spec="_spec" OnClick="ToggleSelected" Disabled="Disabled">
-    <div class="d-flex align-center">
-        @Member.Character.Name
-        @if (SelectionState == MemberSelectionState.Selected)
-        {
-            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Success" Style="margin-left: 4px; margin-right: -12px" />
-        }
-        else if (SelectionState == MemberSelectionState.Standby)
-        {
-            <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.ModeStandby" Color="Color.Info" Style="margin-left: 4px; margin-right: -12px" />
-        }
-    </div>
-</CharacterChip>
+﻿<CharacterChip Character="Member.Character"
+               Spec="_spec"
+               OnClick="ToggleSelected"
+               Disabled="Disabled"
+               EndIcon="@_icon"
+               EndIconColor="_color" />
 
 @code {
     private Specializations _spec = Specializations.None;
+    private string? _icon;
+    private Color _color;
 
     [Parameter] public MemberDto Member { get; set; } = null!;
     [Parameter] public byte Phase { get; set; }
@@ -30,6 +25,21 @@
             Member.LootLists.OrderByDescending(ll => ll.Phase).FirstOrDefault();
 
         _spec = lootList?.MainSpec ?? Specializations.None;
+
+        if (SelectionState == MemberSelectionState.Selected)
+        {
+            _icon = Icons.Material.Filled.CheckCircleOutline;
+            _color = Color.Success;
+        }
+        else if (SelectionState == MemberSelectionState.Standby)
+        {
+            _icon = Icons.Material.Filled.ModeStandby;
+            _color = Color.Info;
+        }
+        else
+        {
+            _icon = null;
+        }
     }
 
     private Task ToggleSelected()

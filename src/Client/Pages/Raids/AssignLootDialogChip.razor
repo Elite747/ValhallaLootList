@@ -30,15 +30,11 @@
         </div>
     </TooltipContent>
     <ChildContent>
-        <CharacterChip Character="Context.Character" OnClick="OnClick" Disabled="Context.Disabled">
-            <div class="d-flex align-center">
-                @Context.Character.Name
-                @if (Context.Standby || (Context.Message.Length > 0 && !Disenchant))
-                {
-                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Error" Color="Context.Standby ? Color.Info : Color.Error" Style="margin-left: 4px; margin-right: -12px" />
-                }
-            </div>
-        </CharacterChip>
+        <CharacterChip Character="Context.Character"
+                       OnClick="OnClick"
+                       EndIcon="@(Context.Standby || (Context.Message.Length > 0 && !Disenchant) ? Icons.Material.Filled.Error : null)"
+                       EndIconColor="Context.Standby ? Color.Info : Color.Error"
+                       Disabled="Context.Disabled" />
     </ChildContent>
 </MudTooltip>
 

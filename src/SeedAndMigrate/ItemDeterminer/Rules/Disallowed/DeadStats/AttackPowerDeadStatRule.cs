@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class AttackPowerDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.CasterDps | SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.CasterDps | SpecializationGroups.Healer;
+    }
 
-    protected override int GetStat(Item item) => item.AttackPower;
+    protected override int GetStat(Item item)
+    {
+        return item.AttackPower;
+    }
 
-    protected override string GetStatDisplayName() => "Attack Power";
+    protected override string GetStatDisplayName()
+    {
+        return "Attack Power";
+    }
 }

@@ -11,9 +11,18 @@ internal class BindingLightRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Id is 47728u or 47947u;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Id is 47728u or 47947u;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.Healer;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

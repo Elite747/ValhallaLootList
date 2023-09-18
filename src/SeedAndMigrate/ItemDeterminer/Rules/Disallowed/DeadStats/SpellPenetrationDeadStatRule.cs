@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class SpellPenetrationDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.PhysicalDps | SpecializationGroups.Tank | SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.PhysicalDps | SpecializationGroups.Tank | SpecializationGroups.Healer;
+    }
 
-    protected override int GetStat(Item item) => item.SpellPenetration;
+    protected override int GetStat(Item item)
+    {
+        return item.SpellPenetration;
+    }
 
-    protected override string GetStatDisplayName() => "Spell Penetration";
+    protected override string GetStatDisplayName()
+    {
+        return "Spell Penetration";
+    }
 }

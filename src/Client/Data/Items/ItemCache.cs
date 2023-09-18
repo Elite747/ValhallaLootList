@@ -11,7 +11,13 @@ public class ItemCache : Cache<Item, uint>
     {
     }
 
-    protected override uint GetKey(Item item) => item.Id;
+    protected override uint GetKey(Item item)
+    {
+        return item.Id;
+    }
 
-    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(Item item) => base.CreateCacheEntryOptions(item).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(Item item)
+    {
+        return base.CreateCacheEntryOptions(item).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    }
 }

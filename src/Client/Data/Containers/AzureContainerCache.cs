@@ -11,7 +11,13 @@ public class AzureContainerCache : Cache<AzureContainerResponse, string>
     {
     }
 
-    protected override string GetKey(AzureContainerResponse response) => response.ContainerName;
+    protected override string GetKey(AzureContainerResponse response)
+    {
+        return response.ContainerName;
+    }
 
-    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(AzureContainerResponse response) => base.CreateCacheEntryOptions(response).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(AzureContainerResponse response)
+    {
+        return base.CreateCacheEntryOptions(response).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    }
 }

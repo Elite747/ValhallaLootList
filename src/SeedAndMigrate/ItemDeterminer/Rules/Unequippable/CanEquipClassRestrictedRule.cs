@@ -12,7 +12,10 @@ internal class CanEquipClassRestrictedRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
 
-    protected override bool AppliesTo(Item item) => item.UsableClasses.HasValue;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.UsableClasses.HasValue;
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

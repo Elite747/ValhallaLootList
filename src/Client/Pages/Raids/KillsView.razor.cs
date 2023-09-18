@@ -144,7 +144,7 @@ public partial class KillsView
         }
     }
 
-    record ExportItem(uint Id, List<ExportStanding> Standings);
+    private record ExportItem(uint Id, List<ExportStanding> Standings);
 
-    record ExportStanding(int Prio, List<string> Names);
+    private record ExportStanding(int Prio, List<string> Names);
 }

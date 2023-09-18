@@ -10,7 +10,6 @@ using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace ValhallaLootList.Server.Controllers;
 
@@ -183,8 +182,8 @@ public class RaidsController : ApiControllerV1
                 d.EncounterKillEncounterId,
                 d.EncounterKillTrashIndex,
                 d.AwardedAt,
-                AwardedBy = (long?)d.AwardedBy,
-                WinnerId = (long?)d.WinnerId,
+                d.AwardedBy,
+                d.WinnerId,
                 d.ItemId,
                 ItemName = d.Item.Name,
                 d.Disenchanted

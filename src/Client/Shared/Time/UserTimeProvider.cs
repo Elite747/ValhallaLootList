@@ -70,5 +70,8 @@ public class UserTimeProvider
         return TimeFormatterMode.Original;
     }
 
-    private async Task InitializeAsync() => Mode = await GetModeAsync();
+    private async Task InitializeAsync()
+    {
+        Mode = await GetModeAsync();
+    }
 }

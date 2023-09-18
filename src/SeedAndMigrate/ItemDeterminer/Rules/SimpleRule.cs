@@ -7,7 +7,7 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules;
 
 internal abstract class SimpleRule : Rule
 {
-    protected override sealed ItemDetermination MakeDetermination(Item item, Specializations spec)
+    protected sealed override ItemDetermination MakeDetermination(Item item, Specializations spec)
     {
         if (!IsAllowed(item, spec))
         {

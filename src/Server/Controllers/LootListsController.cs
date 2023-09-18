@@ -1197,7 +1197,7 @@ public class LootListsController : ApiControllerV1
                 e.Rank,
                 e.Heroic,
                 e.AutoPass,
-                Justification = (string?)e.Justification,
+                e.Justification,
                 e.LootList.Phase,
                 e.LootList.CharacterId
             })
@@ -1381,7 +1381,7 @@ public class LootListsController : ApiControllerV1
                 Won = e.DropId != null,
                 e.Rank,
                 e.AutoPass,
-                Justification = (string?)e.Justification,
+                e.Justification,
                 e.LootList.Phase,
                 e.LootList.CharacterId,
                 e.LootList.Size

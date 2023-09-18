@@ -16,7 +16,7 @@ public abstract class DiscordAuthorizationHandler<TRequirement> : AuthorizationH
 
     protected DiscordClientProvider DiscordClientProvider { get; }
 
-    protected override sealed async Task HandleRequirementAsync(AuthorizationHandlerContext context, TRequirement requirement)
+    protected sealed override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TRequirement requirement)
     {
         var discordId = context.User.GetDiscordId() ?? default;
 

@@ -9,5 +9,8 @@ namespace ValhallaLootList.Server.Controllers;
 [Route("[controller]"), AllowAnonymous]
 public class DiscordController : ControllerBase
 {
-    public IActionResult Get() => Redirect("https://discord.com/invite/DTrFTaG");
+    public IActionResult Get()
+    {
+        return Redirect("https://discord.com/invite/DTrFTaG");
+    }
 }

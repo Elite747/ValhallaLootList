@@ -266,7 +266,7 @@ public class LootListEntriesController : ApiControllerV1
 
                 if (!item.IsUnique)
                 {
-                    if (item.Slot == InventorySlot.Trinket || item.Slot == InventorySlot.Finger)
+                    if (item.Slot is InventorySlot.Trinket or InventorySlot.Finger)
                     {
                         // non-unique rings/trinkets
                         maxTotalCount = maxMSCount = 2;

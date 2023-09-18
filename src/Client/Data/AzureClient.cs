@@ -19,7 +19,10 @@ public sealed class AzureClient : IDisposable
         _domain = "valhallalootliststorage.blob.core.windows.net";
     }
 
-    public string GetDomain() => _domain;
+    public string GetDomain()
+    {
+        return _domain;
+    }
 
     public async Task<AzureContainerResponse> GetContainerAsync(string container, CancellationToken cancellationToken = default)
     {

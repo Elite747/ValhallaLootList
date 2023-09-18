@@ -16,7 +16,13 @@ internal class DpsWarriorsShouldOnlyUseTwoHandersRule : SimpleRule
         return item.Slot is InventorySlot.OneHand or InventorySlot.MainHand or InventorySlot.OffHand;
     }
 
-    protected override Specializations ApplicableSpecs() => Specializations.ArmsWarrior | Specializations.FuryWarrior;
+    protected override Specializations ApplicableSpecs()
+    {
+        return Specializations.ArmsWarrior | Specializations.FuryWarrior;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

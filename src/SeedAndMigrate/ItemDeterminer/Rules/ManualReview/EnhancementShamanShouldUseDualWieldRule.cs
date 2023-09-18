@@ -11,9 +11,18 @@ internal class EnhancementShamanShouldUseDualWieldRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.ManualReview;
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.TwoHand;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Slot == InventorySlot.TwoHand;
+    }
 
-    protected override Specializations ApplicableSpecs() => Specializations.EnhanceShaman;
+    protected override Specializations ApplicableSpecs()
+    {
+        return Specializations.EnhanceShaman;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

@@ -7,7 +7,10 @@ namespace ValhallaLootList.Client.Data;
 
 public class ApiClientInstances
 {
-    public ApiClientInstances(ApiClient client) => Client = client;
+    public ApiClientInstances(ApiClient client)
+    {
+        Client = client;
+    }
 
     public ApiClient Client { get; }
 

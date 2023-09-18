@@ -11,9 +11,18 @@ internal class QuelSerrarRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Id is 49495u or 49303u;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Id is 49495u or 49303u;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.Tank;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

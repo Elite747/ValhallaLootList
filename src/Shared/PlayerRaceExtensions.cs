@@ -50,13 +50,16 @@ public static class PlayerRaceExtensions
         };
     }
 
-    public static bool IsValidRace(this PlayerRace value) => value switch
+    public static bool IsValidRace(this PlayerRace value)
     {
-        PlayerRace.Human => true,
-        PlayerRace.Dwarf => true,
-        PlayerRace.NightElf => true,
-        PlayerRace.Gnome => true,
-        PlayerRace.Draenei => true,
-        _ => false
-    };
+        return value switch
+        {
+            PlayerRace.Human => true,
+            PlayerRace.Dwarf => true,
+            PlayerRace.NightElf => true,
+            PlayerRace.Gnome => true,
+            PlayerRace.Draenei => true,
+            _ => false
+        };
+    }
 }

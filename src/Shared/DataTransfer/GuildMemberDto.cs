@@ -29,5 +29,8 @@ public class GuildMemberDto
         set => _appRoles = value;
     }
 
-    public string GetDisplayName() => Nickname ?? Username ?? throw new Exception("No username or nickname was retrieved from Discord.");
+    public string GetDisplayName()
+    {
+        return Nickname ?? Username ?? throw new Exception("No username or nickname was retrieved from Discord.");
+    }
 }

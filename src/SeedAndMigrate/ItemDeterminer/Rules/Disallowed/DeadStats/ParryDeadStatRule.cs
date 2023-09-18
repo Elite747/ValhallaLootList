@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class ParryDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior | SpecializationGroups.TankDeathKnight);
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior | SpecializationGroups.TankDeathKnight);
+    }
 
-    protected override int GetStat(Item item) => item.Parry;
+    protected override int GetStat(Item item)
+    {
+        return item.Parry;
+    }
 
-    protected override string GetStatDisplayName() => "Parry";
+    protected override string GetStatDisplayName()
+    {
+        return "Parry";
+    }
 }

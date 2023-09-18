@@ -55,7 +55,7 @@ builder.Services.AddMemoryCache()
     .AddScoped<IAuthorizationHandler, AdminPolicyHandler>()
     .AddScoped<IAuthorizationHandler, MemberPolicyHandler>();
 
-builder.Services.Configure<JsonSerializerOptions>(options => SerializerOptions.ConfigureDefaultOptions(options));
+builder.Services.Configure<JsonSerializerOptions>(SerializerOptions.ConfigureDefaultOptions);
 
 builder.Services
     .AddApiAuthorization(options =>

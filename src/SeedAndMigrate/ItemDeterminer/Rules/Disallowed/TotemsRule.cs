@@ -21,7 +21,13 @@ internal class TotemsRule : Rule
         };
     }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Shaman;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Shaman;
+    }
 
-    protected override bool AppliesTo(Item item) => item.Type == ItemType.Totem;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Type == ItemType.Totem;
+    }
 }

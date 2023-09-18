@@ -28,9 +28,15 @@ internal abstract class Rule : IDeterminationRule
         }
     }
 
-    protected virtual bool AppliesTo(Item item) => true;
+    protected virtual bool AppliesTo(Item item)
+    {
+        return true;
+    }
 
-    protected virtual Specializations ApplicableSpecs() => SpecializationGroups.All;
+    protected virtual Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All;
+    }
 
     protected abstract ItemDetermination MakeDetermination(Item item, Specializations spec);
 }

@@ -11,9 +11,18 @@ internal class LastWordRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Id is 50179u or 50708u;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Id is 50179u or 50708u;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.Tank;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

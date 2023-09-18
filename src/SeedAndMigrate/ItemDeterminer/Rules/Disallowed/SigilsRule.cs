@@ -11,12 +11,18 @@ internal class SigilsRule : Rule
     {
         return item.Id switch
         {
-            45144u when spec != Specializations.BloodDeathKnightTank && spec != Specializations.FrostDeathKnightTank && spec != Specializations.UnholyDeathKnightTank => new(spec, DeterminationLevel.Disallowed, "Sigil of Deflection is meant for tanking death knights."),
+            45144u when spec is not Specializations.BloodDeathKnightTank and not Specializations.FrostDeathKnightTank and not Specializations.UnholyDeathKnightTank => new(spec, DeterminationLevel.Disallowed, "Sigil of Deflection is meant for tanking death knights."),
             _ => new(spec, DeterminationLevel.Allowed, string.Empty)
         };
     }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.DeathKnight;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.DeathKnight;
+    }
 
-    protected override bool AppliesTo(Item item) => item.Type == ItemType.Sigil;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Type == ItemType.Sigil;
+    }
 }

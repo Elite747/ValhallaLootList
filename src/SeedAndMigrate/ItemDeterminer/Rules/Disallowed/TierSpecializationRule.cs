@@ -13,9 +13,15 @@ internal class TierSpecializationRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => _tierSpecs.ContainsKey(item.Id);
+    protected override bool AppliesTo(Item item)
+    {
+        return _tierSpecs.ContainsKey(item.Id);
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => (_tierSpecs[item.Id] & spec) != 0;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return (_tierSpecs[item.Id] & spec) != 0;
+    }
 
     private static Dictionary<uint, Specializations> BuildTierSpecs()
     {

@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Text;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -348,7 +347,8 @@ public class TeamsController : ApiControllerV1
 
         if (member.OverrideStatus == dto.Status)
         {
-            return Problem($"Membership status is already set to {dto.Status switch {
+            return Problem($"Membership status is already set to {dto.Status switch
+            {
                 RaidMemberStatus.Member => "Member",
                 RaidMemberStatus.HalfTrial => "Half Trial",
                 RaidMemberStatus.FullTrial => "Full Trial",

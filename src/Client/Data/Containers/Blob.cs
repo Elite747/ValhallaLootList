@@ -54,5 +54,8 @@ public class Blob
         return false;
     }
 
-    private string[] GetNameParts() => Name?.Split('.', '-') ?? Array.Empty<string>();
+    private string[] GetNameParts()
+    {
+        return Name?.Split('.', '-') ?? Array.Empty<string>();
+    }
 }

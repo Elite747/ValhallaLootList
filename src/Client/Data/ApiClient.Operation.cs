@@ -41,15 +41,30 @@ public partial class ApiClient
 
         public Task Task => _task ?? Task.CompletedTask;
 
-        public void EnableCaching(Func<MemoryCacheEntryOptions> createEntryOptions) => _createCacheEntryOptions = createEntryOptions;
+        public void EnableCaching(Func<MemoryCacheEntryOptions> createEntryOptions)
+        {
+            _createCacheEntryOptions = createEntryOptions;
+        }
 
-        public void DisableCaching() => _createCacheEntryOptions = null;
+        public void DisableCaching()
+        {
+            _createCacheEntryOptions = null;
+        }
 
-        public void ConfigureFailure(Action<ProblemDetails> action) => _failureAction += action;
+        public void ConfigureFailure(Action<ProblemDetails> action)
+        {
+            _failureAction += action;
+        }
 
-        public void ConfigureSuccess(Action<TResult> action) => _typedSuccessAction += action;
+        public void ConfigureSuccess(Action<TResult> action)
+        {
+            _typedSuccessAction += action;
+        }
 
-        public void ConfigureSuccess(Action<HttpStatusCode> action) => _successAction += action;
+        public void ConfigureSuccess(Action<HttpStatusCode> action)
+        {
+            _successAction += action;
+        }
 
         public void SetSuccessTask(Func<HttpStatusCode, CancellationToken, Task> task)
         {
@@ -257,6 +272,9 @@ public partial class ApiClient
             return GetProblemInternal();
         }
 
-        private ProblemDetails GetProblemInternal() => _problem ?? new() { Detail = "An unknown error has occurred." };
+        private ProblemDetails GetProblemInternal()
+        {
+            return _problem ?? new() { Detail = "An unknown error has occurred." };
+        }
     }
 }

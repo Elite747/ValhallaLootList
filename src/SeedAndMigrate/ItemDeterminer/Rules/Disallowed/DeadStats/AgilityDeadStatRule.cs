@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class AgilityDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.CasterDps | SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.CasterDps | SpecializationGroups.Healer;
+    }
 
-    protected override int GetStat(Item item) => item.Agility;
+    protected override int GetStat(Item item)
+    {
+        return item.Agility;
+    }
 
-    protected override string GetStatDisplayName() => "Agility";
+    protected override string GetStatDisplayName()
+    {
+        return "Agility";
+    }
 }

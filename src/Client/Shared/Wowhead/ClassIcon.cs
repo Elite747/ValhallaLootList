@@ -9,7 +9,13 @@ public class ClassIcon : WowIcon
 {
     [Parameter] public Classes PlayerClass { get; set; }
 
-    protected override string GetIconId() => "class_" + PlayerClass.GetLowercaseName();
+    protected override string GetIconId()
+    {
+        return "class_" + PlayerClass.GetLowercaseName();
+    }
 
-    protected override string GetAltText() => PlayerClass.ToString();
+    protected override string GetAltText()
+    {
+        return PlayerClass.ToString();
+    }
 }

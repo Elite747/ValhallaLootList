@@ -97,18 +97,24 @@ internal class TrinketsRule : Rule
         return new(spec, DeterminationLevel.Allowed, string.Empty);
     }
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.Trinket;
-
-    private static string GetEffectDisplay(EffectCategory category) => category switch
+    protected override bool AppliesTo(Item item)
     {
-        EffectCategory.Healer => "healing",
-        EffectCategory.Tank => "tanking",
-        EffectCategory.Caster => "damaging spell",
-        EffectCategory.Physical => "physical damage",
-        EffectCategory.Melee => "melee damage",
-        EffectCategory.CasterOrHealer => "spell",
-        _ => throw new NotSupportedException()
-    };
+        return item.Slot == InventorySlot.Trinket;
+    }
+
+    private static string GetEffectDisplay(EffectCategory category)
+    {
+        return category switch
+        {
+            EffectCategory.Healer => "healing",
+            EffectCategory.Tank => "tanking",
+            EffectCategory.Caster => "damaging spell",
+            EffectCategory.Physical => "physical damage",
+            EffectCategory.Melee => "melee damage",
+            EffectCategory.CasterOrHealer => "spell",
+            _ => throw new NotSupportedException()
+        };
+    }
 
     private record TrinketInfo(EffectCategory Category, string Name, uint Id, uint? Id2 = null);
 

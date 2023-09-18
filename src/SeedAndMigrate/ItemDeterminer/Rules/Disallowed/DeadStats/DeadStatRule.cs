@@ -13,11 +13,17 @@ internal abstract class DeadStatRule : SimpleRule
 
     protected abstract int GetStat(Item item);
 
-    protected override sealed bool AppliesTo(Item item) => GetStat(item) > 0;
+    protected sealed override bool AppliesTo(Item item)
+    {
+        return GetStat(item) > 0;
+    }
 
-    protected override abstract Specializations ApplicableSpecs();
+    protected abstract override Specializations ApplicableSpecs();
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 
     protected abstract string GetStatDisplayName();
 }

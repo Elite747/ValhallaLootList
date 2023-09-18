@@ -11,13 +11,16 @@ internal class CanEquipOneHandWeaponRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
 
-    protected override bool AppliesTo(Item item) => item.Slot switch
+    protected override bool AppliesTo(Item item)
     {
-        InventorySlot.MainHand => true,
-        InventorySlot.OneHand => true,
-        InventorySlot.OffHand => item.Type is ItemType.Dagger or ItemType.Fist or ItemType.Axe or ItemType.Mace or ItemType.Sword,
-        _ => false
-    };
+        return item.Slot switch
+        {
+            InventorySlot.MainHand => true,
+            InventorySlot.OneHand => true,
+            InventorySlot.OffHand => item.Type is ItemType.Dagger or ItemType.Fist or ItemType.Axe or ItemType.Mace or ItemType.Sword,
+            _ => false
+        };
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

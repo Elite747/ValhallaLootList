@@ -11,9 +11,18 @@ internal class NibelungRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Id is 49992u or 50648u;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Id is 49992u or 50648u;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.CasterDps;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.CasterDps;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

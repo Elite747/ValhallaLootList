@@ -11,9 +11,18 @@ internal class ZodsRepeatingLongbowRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Id is 50034u or 50638u;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Id is 50034u or 50638u;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Hunter;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.Hunter;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

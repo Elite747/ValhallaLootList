@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class DefenseDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~SpecializationGroups.Tank;
+    }
 
-    protected override int GetStat(Item item) => item.Defense;
+    protected override int GetStat(Item item)
+    {
+        return item.Defense;
+    }
 
-    protected override string GetStatDisplayName() => "Defense";
+    protected override string GetStatDisplayName()
+    {
+        return "Defense";
+    }
 }

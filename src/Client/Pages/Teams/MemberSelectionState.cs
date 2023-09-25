@@ -5,7 +5,7 @@ namespace ValhallaLootList.Client.Pages.Teams;
 
 public enum MemberSelectionState
 {
-    Unselected,
-    Selected,
-    Standby
+    Unselected = 0,
+    Selected = 1,
+    Standby = 2
 }

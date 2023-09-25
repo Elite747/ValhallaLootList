@@ -7,14 +7,14 @@ namespace ValhallaLootList;
 public enum Classes
 {
     None = 0,
-    Warrior = 0b_0000_0000_0001,
-    Paladin = 0b_0000_0000_0010,
-    Hunter = 0b_0000_0000_0100,
-    Rogue = 0b_0000_0000_1000,
-    Priest = 0b_0000_0001_0000,
-    Shaman = 0b_0000_0100_0000,
-    Mage = 0b_0000_1000_0000,
-    Warlock = 0b_0001_0000_0000,
-    Druid = 0b_0100_0000_0000,
-    DeathKnight = 0b_0000_0010_0000
+    Warrior = 1 << 0,
+    Paladin = 1 << 1,
+    Hunter = 1 << 2,
+    Rogue = 1 << 3,
+    Priest = 1 << 4,
+    DeathKnight = 1 << 5,
+    Shaman = 1 << 6,
+    Mage = 1 << 7,
+    Warlock = 1 << 8,
+    Druid = 1 << 10
 }

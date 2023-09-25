@@ -5,9 +5,9 @@ namespace ValhallaLootList;
 
 public enum PlayerRace
 {
-    Human,
-    Dwarf,
-    NightElf,
-    Gnome,
-    Draenei
+    Human = 0,
+    Dwarf = 1,
+    NightElf = 2,
+    Gnome = 3,
+    Draenei = 4
 }

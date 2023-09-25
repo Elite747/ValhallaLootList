@@ -201,19 +201,16 @@ public partial class ApiClient
                             Title = response.ReasonPhrase
                         };
                     }
+                    else if (problem.Status.HasValue)
+                    {
+                        if (problem.Status.Value != (int)response.StatusCode)
+                        {
+                            throw new Exception("Problem details status code does not match the response status code.");
+                        }
+                    }
                     else
                     {
-                        if (problem.Status.HasValue)
-                        {
-                            if (problem.Status.Value != (int)response.StatusCode)
-                            {
-                                throw new Exception("Problem details status code does not match the response status code.");
-                            }
-                        }
-                        else
-                        {
-                            problem.Status = (int)response.StatusCode;
-                        }
+                        problem.Status = (int)response.StatusCode;
                     }
 
                     _problem = problem;

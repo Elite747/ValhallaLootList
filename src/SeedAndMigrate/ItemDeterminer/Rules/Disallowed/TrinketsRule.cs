@@ -120,11 +120,11 @@ internal class TrinketsRule : Rule
 
     private enum EffectCategory
     {
-        Healer,
-        Tank,
-        Caster,
-        Physical,
-        Melee,
-        CasterOrHealer
+        Healer = 0,
+        Tank = 1,
+        Caster = 2,
+        Physical = 3,
+        Melee = 4,
+        CasterOrHealer = 5
     }
 }

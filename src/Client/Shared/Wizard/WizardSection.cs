@@ -18,7 +18,10 @@ public class WizardSection : ComponentBase
 
     protected override void OnInitialized()
     {
-        if (WizardDialog is null) throw new Exception("WizardSection must be within a WizardDialog.");
+        if (WizardDialog is null)
+        {
+            throw new Exception("WizardSection must be within a WizardDialog.");
+        }
         WizardDialog.AddSection(this);
     }
 

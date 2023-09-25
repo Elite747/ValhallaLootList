@@ -1330,13 +1330,11 @@ public class LootListsController : ApiControllerV1
 
             foreach (var member in members)
             {
-                var passes = await _context.Drops.AsNoTracking()
+                passesByTeam[member.TeamId] = await _context.Drops.AsNoTracking()
                     .Where(drop => drop.EncounterKill.Raid.RaidTeamId == member.TeamId && drop.EncounterKill.KilledAt >= member.JoinedAt && drop.EncounterKill.Characters.Any(cek => cek.CharacterId == characterId))
                     .GroupBy(drop => drop.ItemId)
                     .Select(g => new { ItemId = g.Key, Count = g.Count() })
                     .ToDictionaryAsync(g => g.ItemId, g => g.Count);
-
-                passesByTeam[member.TeamId] = passes;
 
                 var bonusTable = await _context.GetBonusTableAsync(member.TeamId, now, characterId);
 

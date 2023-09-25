@@ -21,18 +21,12 @@ public class ItemProvider
 
     private async Task<Item> GetFromInteropAsync(uint id, CancellationToken cancellationToken)
     {
-        var response = await _wowheadClient.GetItemAsync(id, cancellationToken);
-
-        if (response is null)
+        return await _wowheadClient.GetItemAsync(id, cancellationToken) switch
         {
-            throw new Exception("Item does not exist.");
-        }
-
-        if (response is WowheadItemResponse item2)
-        {
-            return new Item(id, item2.Name, item2.Quality, item2.Icon, item2.Tooltip);
-        }
-
-        throw new Exception((response as WowheadErrorResponse)?.Error ?? "Could not retrieve item info.");
+            null => throw new Exception("Item does not exist"),
+            WowheadItemResponse item => new Item(id, item.Name, item.Quality, item.Icon, item.Tooltip),
+            WowheadErrorResponse error => throw new Exception(error.Error),
+            _ => throw new Exception("Could not retrieve item info.")
+        };
     }
 }

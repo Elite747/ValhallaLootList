@@ -12,7 +12,10 @@ public partial class KillsView
 {
     protected override void OnParametersSet()
     {
-        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        if (Raid is null)
+        {
+            throw new ArgumentNullException(nameof(Raid));
+        }
     }
 
     private async Task DeleteAsync(string encounterId, byte trashIndex)

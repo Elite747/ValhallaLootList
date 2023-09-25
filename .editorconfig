@@ -70,7 +70,6 @@ dotnet_remove_unnecessary_suppression_exclusions = none
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_allow_multiple_blank_lines_experimental = true:silent
 dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
-dotnet_diagnostic.RCS0044.severity = suggestion
 
 #### C# Coding Conventions ####
 [*.cs]
@@ -247,50 +246,90 @@ csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:si
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:silent
 
 # Roslynator
+roslynator_analyzers.enabled_by_default = true
+dotnet_analyzer_diagnostic.category-roslynator.severity = suggestion
 roslynator_new_line_at_end_of_file = true
 roslynator_binary_operator_new_line = before
 roslynator_conditional_operator_new_line = after
 roslynator_arrow_token_new_line = after
-dotnet_diagnostic.RCS0058.severity = suggestion
-dotnet_diagnostic.RCS0003.severity = suggestion
-dotnet_diagnostic.RCS0002.severity = suggestion
-dotnet_diagnostic.RCS0005.severity = suggestion
+roslynator_blank_line_between_using_directives = never
+roslynator_enum_flag_value_style = shift_operator
+roslynator_blank_line_after_file_scoped_namespace_declaration = true
+
+# RCS0009: Add blank line between declaration and documentation comment
 dotnet_diagnostic.RCS0009.severity = suggestion
+
+# RCS0010: Add blank line between declarations
 dotnet_diagnostic.RCS0010.severity = suggestion
+
+# RCS0015: Add/remove blank line between using directives
+dotnet_diagnostic.RCS0015.severity = suggestion
+
+# RCS0021: Format block's braces on a single line or multiple lines
 dotnet_diagnostic.RCS0021.severity = suggestion
+
+# RCS0023: Format type declaration's braces
 dotnet_diagnostic.RCS0023.severity = suggestion
+
+# RCS0027: Place new line after/before binary operator (requires roslynator_binary_operator_new_line)
 dotnet_diagnostic.RCS0027.severity = suggestion
+
+# RCS0028: Place new line after/before '?:' operator (requires roslynator_conditional_operator_new_line)
 dotnet_diagnostic.RCS0028.severity = suggestion
+
+# RCS0032: Place new line after/before arrow token (requires roslynator_arrow_token_new_line)
 dotnet_diagnostic.RCS0032.severity = suggestion
+
+# RCS0033: Add new line before statement
 dotnet_diagnostic.RCS0033.severity = suggestion
-dotnet_diagnostic.RCS0038.severity = suggestion
+
+# RCS0039: Remove new line before base list
 dotnet_diagnostic.RCS0039.severity = suggestion
+
+# RCS0041: Remove new line between 'if' keyword and 'else' keyword
 dotnet_diagnostic.RCS0041.severity = suggestion
+
+# RCS0042: Put auto-accessors on a single line
 dotnet_diagnostic.RCS0042.severity = suggestion
+
+# RCS0044: Use carriage return + linefeed as new line
+dotnet_diagnostic.RCS0044.severity = suggestion
+
+# RCS0050: Add blank line before top declaration
 dotnet_diagnostic.RCS0050.severity = suggestion
-#call chain formatting - bug in top-level-statement call chains
+
+# RCS0054: Fix formatting of a call chain
 dotnet_diagnostic.RCS0054.severity = suggestion
+
+# RCS0055: Fix formatting of a binary expression chain
 dotnet_diagnostic.RCS0055.severity = suggestion
 
-# RCS1090: Call 'ConfigureAwait(false)'.
-dotnet_diagnostic.RCS1090.severity = none
-
-# RCS1154: Sort enum members.
-dotnet_diagnostic.RCS1154.severity = none
-
-# IDE0073: The file header is missing or not located at the top of the file
-dotnet_diagnostic.IDE0073.severity = warning
+# RCS0060: Add/remove line after file scoped namespace declaration
+dotnet_diagnostic.RCS0060.severity = suggestion
 
 # RCS1173: Use coalesce expression instead of 'if'.
 dotnet_diagnostic.RCS1173.severity = silent
 
-# Default severity for all analyzer diagnostics
-dotnet_analyzer_diagnostic.severity = silent
+# RCS1201: Use method chaining.
+dotnet_diagnostic.RCS1201.severity = silent
 
+# RCS1211: Remove unnecessary else clause.
+dotnet_diagnostic.RCS1211.severity = silent
+
+# RCS1237: (deprecated) Use bit shift operator.
+dotnet_diagnostic.RCS1237.severity = none
+
+# CA2016: Forward the CancellationToken parameter to methods that take one
+dotnet_diagnostic.CA2016.severity = suggestion
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = suggestion
+
+csharp_style_prefer_method_group_conversion = true:silent
+csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_primary_constructors = true:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
 csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
 csharp_style_prefer_readonly_struct = true:suggestion
 csharp_style_prefer_readonly_struct_member = true:suggestion
-dotnet_diagnostic.CA2016.severity = suggestion

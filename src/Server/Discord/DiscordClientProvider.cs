@@ -50,7 +50,10 @@ public sealed class DiscordClientProvider : IDisposable
     public ValueTask EnsureStartedAsync()
     {
         CheckDisposed();
-        if (_started) return default;
+        if (_started)
+        {
+            return default;
+        }
 
         _started = true;
         return new(_client.ConnectAsync());
@@ -471,7 +474,10 @@ public sealed class DiscordClientProvider : IDisposable
 
     private void CheckDisposed()
     {
-        if (_disposed) throw new ObjectDisposedException(null, "The discord client has been disposed.");
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(null, "The discord client has been disposed.");
+        }
     }
 
     private void CheckStarted()

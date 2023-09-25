@@ -16,7 +16,10 @@ public sealed class DateTimeDisplay : ComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
-        if (TimeProvider is null) throw new ArgumentNullException(nameof(TimeProvider));
+        if (TimeProvider is null)
+        {
+            throw new ArgumentNullException(nameof(TimeProvider));
+        }
 
         TimeProvider.ModeChanged += StateHasChanged;
     }

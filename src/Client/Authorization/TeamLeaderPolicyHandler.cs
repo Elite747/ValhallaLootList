@@ -7,14 +7,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Authorization;
 
-public class TeamLeaderPolicyHandler : AuthorizationHandler<TeamLeaderRequirement>
+public class TeamLeaderPolicyHandler(PermissionManager permissionManager) : AuthorizationHandler<TeamLeaderRequirement>
 {
-    private readonly PermissionManager _permissionManager;
-
-    public TeamLeaderPolicyHandler(PermissionManager permissionManager)
-    {
-        _permissionManager = permissionManager;
-    }
+    private readonly PermissionManager _permissionManager = permissionManager;
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement)
     {

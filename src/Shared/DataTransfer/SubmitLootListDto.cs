@@ -9,7 +9,7 @@ public class SubmitLootListDto : TimestampDto
 
     public List<long> SubmitTo
     {
-        get => _submitTo ??= new();
+        get => _submitTo ??= [];
         set => _submitTo = value;
     }
 }

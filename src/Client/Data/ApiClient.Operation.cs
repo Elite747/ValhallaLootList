@@ -11,12 +11,12 @@ namespace ValhallaLootList.Client.Data;
 
 public partial class ApiClient
 {
-    private class Operation<TResult> : IApiClientOperation<TResult>
+    private class Operation<TResult>(HttpClient httpClient, IMemoryCache memoryCache, JsonSerializerOptions jsonSerializerOptions, HttpRequestMessage request) : IApiClientOperation<TResult>
     {
-        private readonly HttpClient _httpClient;
-        private readonly HttpRequestMessage _request;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
-        private readonly IMemoryCache _memoryCache;
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly HttpRequestMessage _request = request;
+        private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IMemoryCache _memoryCache = memoryCache;
         private Task? _task;
         private TResult? _result;
         private ProblemDetails? _problem;
@@ -28,14 +28,6 @@ public partial class ApiClient
         private Func<MemoryCacheEntryOptions>? _createCacheEntryOptions;
 
         public event Action? StatusChanged;
-
-        public Operation(HttpClient httpClient, IMemoryCache memoryCache, JsonSerializerOptions jsonSerializerOptions, HttpRequestMessage request)
-        {
-            _httpClient = httpClient;
-            _request = request;
-            _jsonSerializerOptions = jsonSerializerOptions;
-            _memoryCache = memoryCache;
-        }
 
         public ApiOperationStatus Status { get; private set; }
 

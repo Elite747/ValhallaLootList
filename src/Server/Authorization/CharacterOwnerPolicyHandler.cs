@@ -10,14 +10,9 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Authorization;
 
-public class CharacterOwnerPolicyHandler : DiscordAuthorizationHandler<CharacterOwnerRequirement>
+public class CharacterOwnerPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : DiscordAuthorizationHandler<CharacterOwnerRequirement>(discordClientProvider)
 {
-    private readonly ApplicationDbContext _context;
-
-    public CharacterOwnerPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : base(discordClientProvider)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     protected override async ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement, DiscordMember member)
     {

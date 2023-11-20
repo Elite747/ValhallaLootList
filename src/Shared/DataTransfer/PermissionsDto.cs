@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer;
 
 public class PermissionsDto
 {
-    public HashSet<long> Characters { get; set; } = new();
+    public HashSet<long> Characters { get; set; } = [];
 
-    public HashSet<long> Teams { get; set; } = new();
+    public HashSet<long> Teams { get; set; } = [];
 }

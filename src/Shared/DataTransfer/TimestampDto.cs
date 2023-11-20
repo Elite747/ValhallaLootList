@@ -5,7 +5,7 @@ namespace ValhallaLootList.DataTransfer;
 
 public class TimestampDto
 {
-    public byte[] Timestamp { get; set; } = Array.Empty<byte>();
+    public byte[] Timestamp { get; set; } = [];
 }
 
 public class LootListActionDto : TimestampDto

@@ -119,14 +119,14 @@ public partial class KillsView
                     {
                         if (!items.TryGetValue(entry.ItemId.Value, out var item))
                         {
-                            items[entry.ItemId.Value] = item = new();
+                            items[entry.ItemId.Value] = item = [];
                         }
 
                         var prio = entry.Rank + entry.Bonuses.Sum(b => b.Value) + list.Bonuses.Sum(b => b.Value);
 
                         if (!item.TryGetValue(prio, out var names))
                         {
-                            item[prio] = names = new();
+                            item[prio] = names = [];
                         }
 
                         names.Add(list.CharacterName);

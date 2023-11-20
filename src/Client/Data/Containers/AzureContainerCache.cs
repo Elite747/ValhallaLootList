@@ -5,12 +5,8 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ValhallaLootList.Client.Data.Containers;
 
-public class AzureContainerCache : Cache<AzureContainerResponse, string>
+public class AzureContainerCache(IMemoryCache memoryCache) : Cache<AzureContainerResponse, string>(memoryCache)
 {
-    public AzureContainerCache(IMemoryCache memoryCache) : base(memoryCache)
-    {
-    }
-
     protected override string GetKey(AzureContainerResponse item)
     {
         return item.ContainerName;

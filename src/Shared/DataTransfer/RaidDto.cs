@@ -24,13 +24,13 @@ public class RaidDto
 
     public List<AttendanceDto> Attendees
     {
-        get => _attendees ??= new();
+        get => _attendees ??= [];
         set => _attendees = value;
     }
 
     public List<EncounterKillDto> Kills
     {
-        get => _kills ??= new();
+        get => _kills ??= [];
         set => _kills = value;
     }
 }

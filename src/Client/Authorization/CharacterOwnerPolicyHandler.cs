@@ -7,14 +7,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Authorization;
 
-public class CharacterOwnerPolicyHandler : AuthorizationHandler<CharacterOwnerRequirement>
+public class CharacterOwnerPolicyHandler(PermissionManager permissionManager) : AuthorizationHandler<CharacterOwnerRequirement>
 {
-    private readonly PermissionManager _permissionManager;
-
-    public CharacterOwnerPolicyHandler(PermissionManager permissionManager)
-    {
-        _permissionManager = permissionManager;
-    }
+    private readonly PermissionManager _permissionManager = permissionManager;
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CharacterOwnerRequirement requirement)
     {

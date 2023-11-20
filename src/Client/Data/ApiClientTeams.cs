@@ -5,14 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientTeams
+public class ApiClientTeams(ApiClient client)
 {
-    public ApiClientTeams(ApiClient client)
-    {
-        Client = client;
-    }
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<List<TeamNameDto>> GetAllTeamNames()
     {

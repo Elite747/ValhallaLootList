@@ -10,14 +10,9 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Authorization;
 
-public class TeamLeaderPolicyHandler : DiscordAuthorizationHandler<TeamLeaderRequirement>
+public class TeamLeaderPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : DiscordAuthorizationHandler<TeamLeaderRequirement>(discordClientProvider)
 {
-    private readonly ApplicationDbContext _context;
-
-    public TeamLeaderPolicyHandler(ApplicationDbContext context, DiscordClientProvider discordClientProvider) : base(discordClientProvider)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     protected override async ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, TeamLeaderRequirement requirement, DiscordMember member)
     {

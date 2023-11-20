@@ -15,7 +15,7 @@ public class CharacterDto
 
     public bool Deactivated { get; set; }
 
-    public List<long> Teams { get; set; } = new();
+    public List<long> Teams { get; set; } = [];
 
     public bool Verified { get; set; }
 }

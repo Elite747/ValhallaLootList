@@ -5,16 +5,11 @@ using Microsoft.JSInterop;
 
 namespace ValhallaLootList.Client.Shared;
 
-public sealed class ThemeProvider : IThemeProvider
+public sealed class ThemeProvider(IJSRuntime js) : IThemeProvider
 {
-    private readonly IJSInProcessRuntime _js;
+    private readonly IJSInProcessRuntime _js = (IJSInProcessRuntime)js;
     private Theme? _selectedTheme;
     private bool _initialized;
-
-    public ThemeProvider(IJSRuntime js)
-    {
-        _js = (IJSInProcessRuntime)js;
-    }
 
     public Theme? SelectedTheme
     {

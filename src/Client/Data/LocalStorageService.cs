@@ -5,14 +5,9 @@ using Microsoft.JSInterop;
 
 namespace ValhallaLootList.Client.Data;
 
-public class LocalStorageService
+public class LocalStorageService(IJSRuntime js)
 {
-    private readonly IJSRuntime _js;
-
-    public LocalStorageService(IJSRuntime js)
-    {
-        _js = js;
-    }
+    private readonly IJSRuntime _js = js;
 
     public ValueTask<string?> GetAsync(string key)
     {

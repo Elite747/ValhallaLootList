@@ -7,8 +7,8 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
 
 internal class TrinketsRule : Rule
 {
-    private readonly List<TrinketInfo> _trinkets = new()
-    {
+    private readonly List<TrinketInfo> _trinkets =
+    [
         new(EffectCategory.Healer, "Althor's Abacus", 50359, 50366),
         new(EffectCategory.Physical, "Bandit's Insignia", 40371),
         new(EffectCategory.Healer, "Bauble of True Blood", 50354, 50726),
@@ -72,7 +72,7 @@ internal class TrinketsRule : Rule
         new(EffectCategory.Melee, "Victor's Call", 47725, 47948),
         new(EffectCategory.Physical, "Whispering Fanged Skull", 50342, 50343),
         new(EffectCategory.Physical, "Wrathstone", 45263),
-    };
+    ];
 
     protected override ItemDetermination MakeDetermination(Item item, Specializations spec)
     {

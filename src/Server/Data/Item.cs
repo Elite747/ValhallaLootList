@@ -9,10 +9,7 @@ public class Item
 {
     public Item(uint id)
     {
-        if (id == 0U)
-        {
-            throw new ArgumentOutOfRangeException(nameof(id));
-        }
+        ArgumentOutOfRangeException.ThrowIfEqual(id, 0U);
         Id = id;
     }
 

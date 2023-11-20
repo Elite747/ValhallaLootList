@@ -8,14 +8,9 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class ConfigController : ApiControllerV1
+public class ConfigController(ApplicationDbContext context) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-
-    public ConfigController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     [HttpGet("phases")]
     public async Task<ActionResult<PhaseConfigDto>> GetPhaseConfig()

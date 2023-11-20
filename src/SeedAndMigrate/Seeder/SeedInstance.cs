@@ -15,7 +15,7 @@ public class SeedInstance
 
     public List<SeedEncounter> Encounters
     {
-        get => _encounters ??= new();
+        get => _encounters ??= [];
         set => _encounters = value;
     }
 }

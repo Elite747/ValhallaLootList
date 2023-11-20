@@ -13,7 +13,7 @@ public class TeamDto
 
     public bool Inactive { get; set; }
 
-    public List<ScheduleDto> Schedules { get; set; } = new();
+    public List<ScheduleDto> Schedules { get; set; } = [];
 
-    public List<MemberDto> Roster { get; set; } = new();
+    public List<MemberDto> Roster { get; set; } = [];
 }

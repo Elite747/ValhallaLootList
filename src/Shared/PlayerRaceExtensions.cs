@@ -7,7 +7,7 @@ namespace ValhallaLootList;
 
 public static class PlayerRaceExtensions
 {
-    private static readonly PlayerRace[] _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei };
+    private static readonly PlayerRace[] _allRaces = [PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei];
 
     private static readonly Dictionary<PlayerRace, IEnumerable<Classes>> _classesByRace = new()
     {

@@ -11,18 +11,11 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class LootListEntriesController : ApiControllerV1
+public class LootListEntriesController(ApplicationDbContext context, IAuthorizationService authorizationService, TelemetryClient telemetry) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly TelemetryClient _telemetry;
-
-    public LootListEntriesController(ApplicationDbContext context, IAuthorizationService authorizationService, TelemetryClient telemetry)
-    {
-        _context = context;
-        _authorizationService = authorizationService;
-        _telemetry = telemetry;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly TelemetryClient _telemetry = telemetry;
 
     [HttpPost("{entryId:long}/autopass")]
     public async Task<IActionResult> PostSetAutoPass(long entryId, bool autoPass)

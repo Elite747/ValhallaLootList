@@ -17,25 +17,25 @@ public class SeedEncounter
 
     public List<uint> Items10
     {
-        get => _items10 ??= new();
+        get => _items10 ??= [];
         set => _items10 = value;
     }
 
     public List<uint> Items10H
     {
-        get => _items10H ??= new();
+        get => _items10H ??= [];
         set => _items10H = value;
     }
 
     public List<uint> Items25
     {
-        get => _items25 ??= new();
+        get => _items25 ??= [];
         set => _items25 = value;
     }
 
     public List<uint> Items25H
     {
-        get => _items25H ??= new();
+        get => _items25H ??= [];
         set => _items25H = value;
     }
 }

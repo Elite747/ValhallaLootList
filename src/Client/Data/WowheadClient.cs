@@ -9,19 +9,13 @@ using ValhallaLootList.Client.Data.Items;
 
 namespace ValhallaLootList.Client.Data;
 
-public sealed class WowheadClient : IDisposable
+public sealed class WowheadClient(IHttpClientFactory httpClientFactory, IOptions<JsonSerializerOptions> jsonOptions) : IDisposable
 {
     public const string HttpClientKey = "WowheadAPI";
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(HttpClientKey);
     private bool _disposedValue;
 
-    public WowheadClient(IHttpClientFactory httpClientFactory, IOptions<JsonSerializerOptions> jsonOptions)
-    {
-        _httpClient = httpClientFactory.CreateClient(HttpClientKey);
-        JsonSerializerOptions = jsonOptions.Value;
-    }
-
-    public JsonSerializerOptions JsonSerializerOptions { get; }
+    public JsonSerializerOptions JsonSerializerOptions { get; } = jsonOptions.Value;
 
     public async Task<object?> GetItemAsync(uint id, CancellationToken cancellationToken = default)
     {

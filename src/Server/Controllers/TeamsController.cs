@@ -15,20 +15,12 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class TeamsController : ApiControllerV1
+public class TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry, IAuthorizationService authorizationService) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeZoneInfo _serverTimeZone;
-    private readonly TelemetryClient _telemetry;
-    private readonly IAuthorizationService _authorizationService;
-
-    public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry, IAuthorizationService authorizationService)
-    {
-        _context = context;
-        _serverTimeZone = serverTimeZone;
-        _telemetry = telemetry;
-        _authorizationService = authorizationService;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TimeZoneInfo _serverTimeZone = serverTimeZone;
+    private readonly TelemetryClient _telemetry = telemetry;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     [HttpGet]
     public IAsyncEnumerable<TeamNameDto> Get()

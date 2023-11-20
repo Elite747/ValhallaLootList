@@ -19,7 +19,7 @@ public class TeamSubmissionDto
 
     public List<ScheduleSubmissionDto> Schedules
     {
-        get => _schedules ??= new();
+        get => _schedules ??= [];
         set => _schedules = value;
     }
 }

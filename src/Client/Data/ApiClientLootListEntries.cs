@@ -5,14 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientLootListEntries
+public class ApiClientLootListEntries(ApiClient client)
 {
-    public ApiClientLootListEntries(ApiClient client)
-    {
-        Client = client;
-    }
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<LootListEntryUpdateDto> Submit(long entryId, LootListEntrySubmissionDto dto)
     {

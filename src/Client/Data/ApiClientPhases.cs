@@ -5,14 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientPhases
+public class ApiClientPhases(ApiClient client)
 {
-    public ApiClientPhases(ApiClient client)
-    {
-        Client = client;
-    }
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<List<PhaseDto>> GetAll()
     {

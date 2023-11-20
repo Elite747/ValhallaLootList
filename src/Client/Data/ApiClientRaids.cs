@@ -5,14 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientRaids
+public class ApiClientRaids(ApiClient client)
 {
-    public ApiClientRaids(ApiClient client)
-    {
-        Client = client;
-    }
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<IList<RaidDto>> GetRecent()
     {

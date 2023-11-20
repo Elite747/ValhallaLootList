@@ -8,7 +8,7 @@ namespace ValhallaLootList.Client.Shared;
 
 public partial class ApiView : IDisposable
 {
-    private readonly List<IApiClientOperation> _operations = new();
+    private readonly List<IApiClientOperation> _operations = [];
     private object? _oldOperations;
     private bool _disposedValue, _contextChanged, _renderedSuccess;
 

@@ -5,7 +5,7 @@ namespace ValhallaLootList.Client.Pages.Teams.Graphs;
 
 public class CompByPositionGraph : CompGraph
 {
-    private readonly List<PieChartData> _data = new();
+    private readonly List<PieChartData> _data = [];
 
     protected override IList<PieChartData> GetData()
     {

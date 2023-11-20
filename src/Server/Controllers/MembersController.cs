@@ -9,14 +9,9 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class MembersController : ApiControllerV1
+public class MembersController(DiscordClientProvider discordClientProvider) : ApiControllerV1
 {
-    private readonly DiscordClientProvider _discordClientProvider;
-
-    public MembersController(DiscordClientProvider discordClientProvider)
-    {
-        _discordClientProvider = discordClientProvider;
-    }
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
 
     [HttpGet, Authorize(AppPolicies.Administrator)]
     public async Task<IEnumerable<GuildMemberDto>> Get([FromQuery] string[]? role, bool force = false)

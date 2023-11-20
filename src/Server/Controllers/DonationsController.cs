@@ -13,24 +13,16 @@ using ValhallaLootList.Server.Data;
 namespace ValhallaLootList.Server.Controllers;
 
 [Authorize(AppPolicies.Administrator)]
-public class DonationsController : ApiControllerV1
+public class DonationsController(
+    ApplicationDbContext context,
+    TimeZoneInfo serverTimeZone,
+    IIdGenerator<long> idGenerator,
+    TelemetryClient telemetry) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeZoneInfo _serverTimeZone;
-    private readonly IIdGenerator<long> _idGenerator;
-    private readonly TelemetryClient _telemetry;
-
-    public DonationsController(
-        ApplicationDbContext context,
-        TimeZoneInfo serverTimeZone,
-        IIdGenerator<long> idGenerator,
-        TelemetryClient telemetry)
-    {
-        _context = context;
-        _serverTimeZone = serverTimeZone;
-        _idGenerator = idGenerator;
-        _telemetry = telemetry;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TimeZoneInfo _serverTimeZone = serverTimeZone;
+    private readonly IIdGenerator<long> _idGenerator = idGenerator;
+    private readonly TelemetryClient _telemetry = telemetry;
 
     [HttpGet]
     public IAsyncEnumerable<DonationDto> Get(int month, int year)

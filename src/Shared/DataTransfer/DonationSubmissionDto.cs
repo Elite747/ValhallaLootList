@@ -33,7 +33,7 @@ public class DonationImportRecord
 
 public class DonationImportDto
 {
-    public List<DonationImportRecord> Records { get; set; } = new();
+    public List<DonationImportRecord> Records { get; set; } = [];
 
     [Range(1, 12)]
     public int TargetMonth { get; set; }

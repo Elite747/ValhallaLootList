@@ -109,7 +109,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             })
             .AsAsyncEnumerable())
         {
-            var bonuses = results[member.CharacterId] = new();
+            var bonuses = results[member.CharacterId] = [];
 
             int attendancesThisPhase = 0, attendancesTotal = 0;
 

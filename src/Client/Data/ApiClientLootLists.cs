@@ -5,14 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientLootLists
+public class ApiClientLootLists(ApiClient client)
 {
-    public ApiClientLootLists(ApiClient client)
-    {
-        Client = client;
-    }
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<List<LootListDto>> GetForCharacter(long id)
     {

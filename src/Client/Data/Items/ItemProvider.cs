@@ -3,16 +3,10 @@
 
 namespace ValhallaLootList.Client.Data.Items;
 
-public class ItemProvider
+public class ItemProvider(ItemCache itemCache, WowheadClient wowheadClient)
 {
-    private readonly ItemCache _itemCache;
-    private readonly WowheadClient _wowheadClient;
-
-    public ItemProvider(ItemCache itemCache, WowheadClient wowheadClient)
-    {
-        _itemCache = itemCache;
-        _wowheadClient = wowheadClient;
-    }
+    private readonly ItemCache _itemCache = itemCache;
+    private readonly WowheadClient _wowheadClient = wowheadClient;
 
     public ValueTask<Item> GetItemAsync(uint id, CancellationToken cancellationToken = default)
     {

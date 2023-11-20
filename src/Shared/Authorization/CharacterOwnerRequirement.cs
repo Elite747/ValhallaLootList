@@ -5,12 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ValhallaLootList;
 
-public class CharacterOwnerRequirement : IAuthorizationRequirement
+public class CharacterOwnerRequirement(bool allowAdmin) : IAuthorizationRequirement
 {
-    public CharacterOwnerRequirement(bool allowAdmin)
-    {
-        AllowAdmin = allowAdmin;
-    }
-
-    public bool AllowAdmin { get; }
+    public bool AllowAdmin { get; } = allowAdmin;
 }

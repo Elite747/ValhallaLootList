@@ -9,7 +9,7 @@ public class MultiTimestampDto
 
     public Dictionary<byte, byte[]> Timestamps
     {
-        get => _timestamps ??= new();
+        get => _timestamps ??= [];
         set => _timestamps = value;
     }
 

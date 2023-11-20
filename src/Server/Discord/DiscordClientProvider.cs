@@ -169,7 +169,7 @@ public sealed class DiscordClientProvider : IDisposable
 
     public bool HasAnyLeadershipRole(DiscordMember member)
     {
-        ReadOnlySpan<long> leadershipIds = stackalloc[] { _options.RaidLeaderRoleId, _options.LootMasterRoleId, _options.RecruiterRoleId, _options.LeadershipRoleId };
+        ReadOnlySpan<long> leadershipIds = [_options.RaidLeaderRoleId, _options.LootMasterRoleId, _options.RecruiterRoleId, _options.LeadershipRoleId];
 
         foreach (var role in member.Roles)
         {

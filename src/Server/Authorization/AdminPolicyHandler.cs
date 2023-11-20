@@ -7,12 +7,8 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Authorization;
 
-public class AdminPolicyHandler : DiscordAuthorizationHandler<AdminRequirement>
+public class AdminPolicyHandler(DiscordClientProvider discordClientProvider) : DiscordAuthorizationHandler<AdminRequirement>(discordClientProvider)
 {
-    public AdminPolicyHandler(DiscordClientProvider discordClientProvider) : base(discordClientProvider)
-    {
-    }
-
     protected override ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, AdminRequirement requirement, DiscordMember member)
     {
         if (DiscordClientProvider.HasAdminRole(member))

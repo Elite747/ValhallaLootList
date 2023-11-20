@@ -8,14 +8,9 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class ItemsController : ApiControllerV1
+public class ItemsController(ApplicationDbContext context) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-
-    public ItemsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<ActionResult<IEnumerable<ItemDto>>> Get(byte phase, byte size, bool includeTokens = false)
     {

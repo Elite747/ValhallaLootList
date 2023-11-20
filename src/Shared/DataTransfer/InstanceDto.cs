@@ -15,7 +15,7 @@ public class InstanceDto
 
     public List<EncounterDto> Encounters
     {
-        get => _encounters ??= new();
+        get => _encounters ??= [];
         set => _encounters = value;
     }
 }

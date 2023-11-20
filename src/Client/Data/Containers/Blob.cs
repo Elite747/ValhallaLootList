@@ -5,17 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ValhallaLootList.Client.Data.Containers;
 
-public class Blob
+public class Blob(string name, string url)
 {
-    public Blob(string name, string url)
-    {
-        Name = name;
-        Url = url;
-    }
+    public string Name { get; } = name;
 
-    public string Name { get; }
-
-    public string Url { get; }
+    public string Url { get; } = url;
 
     public string GetTitle()
     {
@@ -56,6 +50,6 @@ public class Blob
 
     private string[] GetNameParts()
     {
-        return Name?.Split('.', '-') ?? Array.Empty<string>();
+        return Name?.Split('.', '-') ?? [];
     }
 }

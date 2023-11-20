@@ -8,14 +8,9 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server;
 
-public class IdentityProfileService : DefaultProfileService
+public class IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger) : DefaultProfileService(logger)
 {
-    private readonly DiscordClientProvider _discordClientProvider;
-
-    public IdentityProfileService(DiscordClientProvider discordClientProvider, ILogger<DefaultProfileService> logger) : base(logger)
-    {
-        _discordClientProvider = discordClientProvider;
-    }
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
 
     public override async Task GetProfileDataAsync(ProfileDataRequestContext context)
     {

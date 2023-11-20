@@ -9,12 +9,8 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 
 namespace ValhallaLootList.Client;
 
-public class RolesClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
+public class RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : AccountClaimsPrincipalFactory<RemoteUserAccount>(accessor)
 {
-    public RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor)
-    {
-    }
-
     public override async ValueTask<ClaimsPrincipal> CreateUserAsync(RemoteUserAccount account, RemoteAuthenticationUserOptions options)
     {
         var user = await base.CreateUserAsync(account, options);

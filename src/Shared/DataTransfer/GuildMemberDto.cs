@@ -19,13 +19,13 @@ public class GuildMemberDto
 
     public List<string> DiscordRoles
     {
-        get => _discordRoles ??= new();
+        get => _discordRoles ??= [];
         set => _discordRoles = value;
     }
 
     public List<string> AppRoles
     {
-        get => _appRoles ??= new();
+        get => _appRoles ??= [];
         set => _appRoles = value;
     }
 

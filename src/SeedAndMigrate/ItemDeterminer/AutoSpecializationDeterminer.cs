@@ -12,7 +12,7 @@ internal class AutoSpecializationDeterminer
 
     public AutoSpecializationDeterminer()
     {
-        _rules = new List<IDeterminationRule>();
+        _rules = [];
 
         foreach (var type in GetType().Assembly.DefinedTypes.Where(type => !type.IsAbstract && type.ImplementedInterfaces.Contains(typeof(IDeterminationRule))))
         {

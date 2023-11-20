@@ -7,8 +7,8 @@ namespace ValhallaLootList;
 
 public static class ClassesExtensions
 {
-    private static readonly Classes[] _allClasses = new[]
-    {
+    private static readonly Classes[] _allClasses =
+    [
         Classes.DeathKnight,
         Classes.Druid,
         Classes.Hunter,
@@ -19,7 +19,7 @@ public static class ClassesExtensions
         Classes.Shaman,
         Classes.Warlock,
         Classes.Warrior
-    };
+    ];
 
     public static readonly Dictionary<Classes, IEnumerable<PlayerRace>> _raceLookup = new()
     {

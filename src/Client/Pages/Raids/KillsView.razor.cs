@@ -102,8 +102,9 @@ public partial class KillsView
 
     private async Task ExportAsync()
     {
-        var exporter = new Exporter(Api, Snackbar);
-        var code = await exporter.GetExportAsync(Raid.TeamId);
+        var operation = Api.LootLists.GetStandings(Raid.TeamId);
+        operation.SendErrorTo(Snackbar);
+        var code = await operation.ExecuteAndTryReturnAsync();
 
         if (code?.Length > 0)
         {

@@ -76,48 +76,40 @@ public class Exporter(ApiClient client, ISnackbar snackbar)
 
     private static async Task<string> MakePrintableAsync(Stream input, CancellationToken cancellationToken)
     {
-        var length = input.Length;
-        var lengthMinus2 = length - 2;
-        int i = 0;
-        using var bufferOwner = MemoryPool<char>.Shared.Rent((int)length * 2);
+        using var bufferOwner = MemoryPool<char>.Shared.Rent((int)input.Length * 2);
         using var bufferOwner2 = MemoryPool<byte>.Shared.Rent(3);
         var inputBuffer = bufferOwner2.Memory[..3];
         var outBuffer = bufferOwner.Memory;
         int outBufferSize = 0;
 
-        while (i <= lengthMinus2)
-        {
-            await input.ReadExactlyAsync(inputBuffer, cancellationToken);
-            Encode(inputBuffer.Span, outBuffer.Span[outBufferSize..]);
-            i += 3;
-            outBufferSize += 4;
-        }
+        int bytesRead = 0;
 
+        while ((bytesRead = await input.ReadAsync(inputBuffer, cancellationToken)) > 0)
         {
-            int cache = 0;
-            var cache_bitlen = 0;
-            await input.ReadAsync(inputBuffer, cancellationToken);
+            bool eof = bytesRead < 3;
 
-            while (i < length)
+            if (eof)
             {
-                var x = inputBuffer.Span[i];
-                cache = (cache + x) << cache_bitlen;
-                cache_bitlen += 8;
-                i++;
+                inputBuffer.Span[bytesRead..].Clear();
             }
 
-            while (cache_bitlen > 0)
+            outBufferSize += Encode(inputBuffer.Span, outBuffer.Span[outBufferSize..], bytesRead);
+
+            if (eof)
             {
-                var bit6 = cache % 64;
-                outBuffer.Span[outBufferSize++] = _byteTo6BitChar[bit6];
-                cache_bitlen -= 6;
+                break;
             }
         }
 
         return outBuffer[..outBufferSize].ToString();
 
-        static void Encode(ReadOnlySpan<byte> input, Span<char> output)
+        static int Encode(ReadOnlySpan<byte> input, Span<char> output, int bytesRead)
         {
+            if (bytesRead == 0)
+            {
+                return 0;
+            }
+
             var cache = input[0] + (input[1] * 256) + (input[2] * 65536);
             var b1 = cache % 64;
             cache = (cache - b1) / 64;
@@ -127,8 +119,21 @@ public class Exporter(ApiClient client, ISnackbar snackbar)
             var b4 = (cache - b3) / 64;
             output[0] = _byteTo6BitChar[b1];
             output[1] = _byteTo6BitChar[b2];
+
+            if (bytesRead == 1)
+            {
+                return 2;
+            }
+
             output[2] = _byteTo6BitChar[b3];
+
+            if (bytesRead == 2)
+            {
+                return 3;
+            }
+
             output[3] = _byteTo6BitChar[b4];
+            return 4;
         }
     }
 

@@ -8,20 +8,14 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Discord;
 
-public class MessageSender
+public class MessageSender(ApplicationDbContext context, DiscordClientProvider discordClientProvider, IHttpContextAccessor httpContextAccessor)
 {
-    private readonly ApplicationDbContext _context;
-    private readonly DiscordClientProvider _discordClientProvider;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ApplicationDbContext _context = context;
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private static readonly char[] _newLineChars = ['\r', '\n'];
 
     private readonly record struct DropData(uint ItemId, string ItemName, string? WinnerName, bool Disenchanted);
-
-    public MessageSender(ApplicationDbContext context, DiscordClientProvider discordClientProvider, IHttpContextAccessor httpContextAccessor)
-    {
-        _context = context;
-        _discordClientProvider = discordClientProvider;
-        _httpContextAccessor = httpContextAccessor;
-    }
 
     public async Task SendKillMessageAsync(long raidId, string encounterId, byte trashIndex)
     {
@@ -229,7 +223,7 @@ public class MessageSender
 
             if (!string.IsNullOrWhiteSpace(message))
             {
-                foreach (var line in message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var line in message.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries))
                 {
                     sb.AppendLine().Append("> ").Append(line);
                 }
@@ -291,7 +285,7 @@ public class MessageSender
 
             if (!string.IsNullOrWhiteSpace(message))
             {
-                foreach (var line in message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var line in message.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries))
                 {
                     sb.AppendLine().Append("> ").Append(line);
                 }

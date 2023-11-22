@@ -28,10 +28,10 @@ public class CompByArmorGraph : CompGraph
 
     private enum Weight
     {
-        Cloth,
-        Leather,
-        Mail,
-        Plate,
-        Unknown
+        Cloth = 0,
+        Leather = 1,
+        Mail = 2,
+        Plate = 3,
+        Unknown = 4
     }
 }

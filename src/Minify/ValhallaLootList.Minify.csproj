@@ -8,14 +8,8 @@
     <PackageReference Include="CommandLineParser" />
     <PackageReference Include="DartSassHost" />
     <PackageReference Include="JavaScriptEngineSwitcher.V8" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x86" />
     <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.win-arm64" />
     <PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.linux-arm" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.linux-arm64" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.osx-x64" />
-    <PackageReference Include="Microsoft.ClearScript.V8.Native.osx-arm64" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
     <PackageReference Include="NUglify" />
   </ItemGroup>

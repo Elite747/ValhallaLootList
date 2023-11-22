@@ -5,13 +5,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ValhallaLootList.Client.Data.Items;
 
-public class ItemCache : Cache<Item, uint>
+public class ItemCache(IMemoryCache memoryCache) : Cache<Item, uint>(memoryCache)
 {
-    public ItemCache(IMemoryCache memoryCache) : base(memoryCache)
+    protected override uint GetKey(Item item)
     {
+        return item.Id;
     }
 
-    protected override uint GetKey(Item item) => item.Id;
-
-    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(Item item) => base.CreateCacheEntryOptions(item).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(Item item)
+    {
+        return base.CreateCacheEntryOptions(item).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    }
 }

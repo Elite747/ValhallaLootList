@@ -8,14 +8,9 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class PermissionsController : ApiControllerV1
+public class PermissionsController(ApplicationDbContext context) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-
-    public PermissionsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<PermissionsDto> Get()
     {

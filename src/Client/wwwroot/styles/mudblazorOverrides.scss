@@ -1,4 +1,34 @@
-﻿.mud-dialog {
+﻿// Enables dense expand panels using a .dense flag on an expander. Used in Pages/Teams/TeamMembers.razor
+.mud-expand-panel.dense > .mud-expand-panel-header {
+    padding: 8px 12px;
+}
+
+// Enables non-button icons at the end of chips. Used in Shared/CharacterChip.razor
+.mud-chip.mud-chip-size-small .mud-chip-end-icon {
+    margin-right: -4px;
+    margin-left: 4px;
+    margin-inline-end: -4px;
+    margin-inline-start: 4px;
+}
+
+.mud-chip-end-icon {
+    padding: 1px;
+    margin-right: -4px;
+    margin-left: 6px;
+    margin-inline-end: -4px;
+    margin-inline-start: 6px;
+    height: 18px;
+    width: 18px;
+    color: inherit;
+
+    .mud-icon-size-small {
+        font-size: 1.15rem;
+    }
+}
+
+// Enables better scrolling for dialogs so that only the content scrolls, leaving the header and footer areas fixed.
+// Implicitly used in all dialogs.
+.mud-dialog {
     overflow: hidden;
     max-height: calc(100% - 2rem);
 
@@ -7,6 +37,13 @@
         flex-direction: column;
         max-height: 100%;
         overflow: hidden;
+
+        > :not(.fixed) {
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            overflow: hidden;
+        }
     }
 
     &-content {
@@ -22,10 +59,14 @@
     right: unset;
 }
 
+// Forces the page to a 100% height so that scrolling does not affect the page header.
+// Implicitly used in MudLayout in Shared/MainLayout.razor
 .mud-layout {
     height: 100vh;
 }
 
+// Forces icons to look more appropriately aligned when inline with text.
+// Used anywhere text and icons are shown inline.
 .text-icon {
     font-size: inherit;
     vertical-align: -0.125em;

@@ -26,7 +26,7 @@ public class CharacterLootList
     public long? ApprovedBy { get; set; }
 
     [Timestamp]
-    public byte[] Timestamp { get; set; } = Array.Empty<byte>();
+    public byte[] Timestamp { get; set; } = [];
 
     public virtual ICollection<LootListEntry> Entries { get; set; } = new HashSet<LootListEntry>();
 

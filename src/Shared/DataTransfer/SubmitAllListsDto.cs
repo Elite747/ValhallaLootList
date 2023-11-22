@@ -9,7 +9,7 @@ public class SubmitAllListsDto : MultiTimestampDto
 
     public List<long> SubmitTo
     {
-        get => _submitTo ??= new();
+        get => _submitTo ??= [];
         set => _submitTo = value;
     }
 }

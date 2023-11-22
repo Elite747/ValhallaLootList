@@ -92,7 +92,7 @@ public partial class ApiExecutor<T> : ComponentBase, IDisposable, IApiExecutor
 
         void BackgroundStatusChanged()
         {
-            if (op.Status == ApiOperationStatus.Failure || op.Status == ApiOperationStatus.Success)
+            if (op.Status is ApiOperationStatus.Failure or ApiOperationStatus.Success)
             {
                 op.StatusChanged -= BackgroundStatusChanged;
                 ActiveOperation = op;

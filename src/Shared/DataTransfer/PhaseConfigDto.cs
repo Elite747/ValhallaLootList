@@ -11,7 +11,7 @@ public class PhaseConfigDto
 
     public List<byte> Phases
     {
-        get => _phases ??= new();
+        get => _phases ??= [];
         set => _phases = value;
     }
 }
@@ -26,7 +26,7 @@ public class PhaseDto
 
     public List<BracketDto> Brackets
     {
-        get => _brackets ??= new();
+        get => _brackets ??= [];
         set => _brackets = value;
     }
 }

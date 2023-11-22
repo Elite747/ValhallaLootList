@@ -7,12 +7,8 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Authorization;
 
-public class MemberPolicyHandler : DiscordAuthorizationHandler<MemberRequirement>
+public class MemberPolicyHandler(DiscordClientProvider discordClientProvider) : DiscordAuthorizationHandler<MemberRequirement>(discordClientProvider)
 {
-    public MemberPolicyHandler(DiscordClientProvider discordClientProvider) : base(discordClientProvider)
-    {
-    }
-
     protected override ValueTask HandleRequirementAsync(AuthorizationHandlerContext context, MemberRequirement requirement, DiscordMember member)
     {
         context.Succeed(requirement);

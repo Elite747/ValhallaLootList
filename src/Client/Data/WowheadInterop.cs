@@ -5,14 +5,9 @@ using Microsoft.JSInterop;
 
 namespace ValhallaLootList.Client.Data;
 
-public class WowheadInterop
+public class WowheadInterop(IJSRuntime js)
 {
-    private readonly IJSRuntime _js;
-
-    public WowheadInterop(IJSRuntime js)
-    {
-        _js = js;
-    }
+    private readonly IJSRuntime _js = js;
 
     public ValueTask HideTooltipAsync(CancellationToken cancellationToken = default)
     {

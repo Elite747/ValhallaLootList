@@ -3,23 +3,31 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
-using MudBlazor;
 
 namespace ValhallaLootList.Client.Shared;
 
-public abstract class WowIcon : MudComponentBase
+public abstract class WowIcon : ComponentBase
 {
     [Parameter] public IconSize Size { get; set; }
     [Parameter] public int? Width { get; set; }
     [Parameter] public int? Height { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> UserAttributes { get; set; } = [];
 
     protected abstract string GetIconId();
 
-    protected virtual string GetAltText() => GetIconId();
+    protected virtual string GetAltText()
+    {
+        return GetIconId();
+    }
 
-    protected virtual bool IconReady() => true;
+    protected virtual bool IconReady()
+    {
+        return true;
+    }
 
-    protected override sealed void BuildRenderTree(RenderTreeBuilder builder)
+    protected sealed override void BuildRenderTree(RenderTreeBuilder builder)
     {
         builder.OpenElement(1, "img");
 
@@ -42,12 +50,15 @@ public abstract class WowIcon : MudComponentBase
         return "https://wow.zamimg.com/images/wow/icons/" + GetSizeName() + '/' + GetIconId() + (Size == IconSize.Tiny ? ".gif" : ".jpg");
     }
 
-    private string GetSizeName() => Size switch
+    private string GetSizeName()
     {
-        IconSize.Tiny => "tiny",
-        IconSize.Small => "small",
-        IconSize.Medium => "medium",
-        IconSize.Large => "large",
-        _ => throw new ArgumentOutOfRangeException(nameof(Size))
-    };
+        return Size switch
+        {
+            IconSize.Tiny => "tiny",
+            IconSize.Small => "small",
+            IconSize.Medium => "medium",
+            IconSize.Large => "large",
+            _ => throw new ArgumentOutOfRangeException(nameof(Size))
+        };
+    }
 }

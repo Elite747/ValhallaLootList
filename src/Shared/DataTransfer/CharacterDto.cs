@@ -5,10 +5,6 @@ namespace ValhallaLootList.DataTransfer;
 
 public class CharacterDto
 {
-    public CharacterDto()
-    {
-    }
-
     public long Id { get; set; }
 
     public string Name { get; set; } = string.Empty;
@@ -19,7 +15,7 @@ public class CharacterDto
 
     public bool Deactivated { get; set; }
 
-    public List<long> Teams { get; set; } = new();
+    public List<long> Teams { get; set; } = [];
 
     public bool Verified { get; set; }
 }

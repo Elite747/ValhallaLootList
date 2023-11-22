@@ -3,15 +3,9 @@
 
 namespace ValhallaLootList.Client.Data.Containers;
 
-public class AzureContainerResponse
+public class AzureContainerResponse(string containerName, List<Blob> blobs)
 {
-    public AzureContainerResponse(string containerName, List<Blob> blobs)
-    {
-        ContainerName = containerName;
-        Blobs = blobs;
-    }
+    public string ContainerName { get; } = containerName;
 
-    public string ContainerName { get; }
-
-    public List<Blob> Blobs { get; }
+    public List<Blob> Blobs { get; } = blobs;
 }

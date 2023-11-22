@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class Mp5DeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => Specializations.BearDruid | Specializations.CatDruid | SpecializationGroups.Rogue | SpecializationGroups.Warrior | SpecializationGroups.DeathKnight;
+    protected override Specializations ApplicableSpecs()
+    {
+        return Specializations.BearDruid | Specializations.CatDruid | SpecializationGroups.Rogue | SpecializationGroups.Warrior | SpecializationGroups.DeathKnight;
+    }
 
-    protected override int GetStat(Item item) => item.ManaPer5;
+    protected override int GetStat(Item item)
+    {
+        return item.ManaPer5;
+    }
 
-    protected override string GetStatDisplayName() => "MP5";
+    protected override string GetStatDisplayName()
+    {
+        return "MP5";
+    }
 }

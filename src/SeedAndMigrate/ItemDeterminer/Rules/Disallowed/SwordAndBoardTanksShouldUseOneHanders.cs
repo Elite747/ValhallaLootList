@@ -11,9 +11,18 @@ internal class SwordAndBoardTanksShouldUseOneHanders : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Slot is InventorySlot.TwoHand;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Slot is InventorySlot.TwoHand;
+    }
 
-    protected override Specializations ApplicableSpecs() => Specializations.ProtPaladin | Specializations.ProtWarrior;
+    protected override Specializations ApplicableSpecs()
+    {
+        return Specializations.ProtPaladin | Specializations.ProtWarrior;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

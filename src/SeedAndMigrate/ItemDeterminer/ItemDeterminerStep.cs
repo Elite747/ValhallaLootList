@@ -13,13 +13,13 @@ internal class ItemDeterminerStep
     private readonly ILogger<ItemDeterminerStep> _logger;
     private readonly ApplicationDbContext _context;
     private readonly List<IDeterminationRule> _rules;
-    private readonly IIdGenerator<long> _idGenerator = new IdGenerator(0);
+    private readonly IdGenerator _idGenerator = new(0);
 
     public ItemDeterminerStep(ILogger<ItemDeterminerStep> logger, ApplicationDbContext context)
     {
         _logger = logger;
         _context = context;
-        _rules = new List<IDeterminationRule>();
+        _rules = [];
 
         foreach (var type in GetType().Assembly.DefinedTypes.Where(type => !type.IsAbstract && type.ImplementedInterfaces.Contains(typeof(IDeterminationRule))))
         {

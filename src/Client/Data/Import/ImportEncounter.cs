@@ -7,7 +7,7 @@ namespace ValhallaLootList.Client.Data.Import;
 
 public sealed class ImportEncounter
 {
-    private ImportEncounter() : this(new())
+    private ImportEncounter() : this([])
     {
     }
 
@@ -27,7 +27,7 @@ public sealed class ImportEncounter
         DateTimeOffset? timestamp = kill.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(kill.Timestamp.Value) : null;
         var candidateEncounters = new List<ImportEncounter>();
 
-        var allDrops = kill.Drops?.ToList() ?? new();
+        var allDrops = kill.Drops?.ToList() ?? [];
 
         if (kill.Items?.Count > 0)
         {

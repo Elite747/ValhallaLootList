@@ -3,15 +3,9 @@
 
 namespace ValhallaLootList.Server.Data;
 
-public class PhaseDetails
+public class PhaseDetails(byte id, DateTimeOffset startsAt)
 {
-    public PhaseDetails(byte id, DateTimeOffset startsAt)
-    {
-        Id = id;
-        StartsAt = startsAt;
-    }
+    public byte Id { get; } = id;
 
-    public byte Id { get; }
-
-    public DateTimeOffset StartsAt { get; set; }
+    public DateTimeOffset StartsAt { get; set; } = startsAt;
 }

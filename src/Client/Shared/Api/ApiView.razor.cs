@@ -8,49 +8,12 @@ namespace ValhallaLootList.Client.Shared;
 
 public partial class ApiView : IDisposable
 {
-    private readonly List<IApiClientOperation> _operations = new();
+    private readonly List<IApiClientOperation> _operations = [];
+    private object? _oldOperations;
     private bool _disposedValue, _contextChanged, _renderedSuccess;
 
-#pragma warning disable BL0007 // Component parameters should be auto properties
-    [Parameter]
-    public IApiClientOperation Operation
-    {
-        get => _operations.Single();
-        set
-        {
-            Operations = Single(value);
-
-            static IEnumerable<IApiClientOperation> Single(IApiClientOperation c)
-            {
-                yield return c;
-            }
-        }
-    }
-
-    [Parameter]
-    public IEnumerable<IApiClientOperation> Operations
-#pragma warning restore BL0007 // Component parameters should be auto properties
-    {
-        get => _operations;
-        set
-        {
-            foreach (var oldContext in _operations)
-            {
-                oldContext.StatusChanged -= OnContextStateChanged;
-            }
-
-            _operations.Clear();
-            _contextChanged = true;
-            _renderedSuccess = false;
-
-            foreach (var newContext in value)
-            {
-                newContext.StatusChanged += OnContextStateChanged;
-                _operations.Add(newContext);
-            }
-        }
-    }
-
+    [Parameter] public IApiClientOperation? Operation { get; set; }
+    [Parameter] public IEnumerable<IApiClientOperation>? Operations { get; set; }
     [Parameter] public RenderFragment? NotStarted { get; set; }
     [Parameter] public RenderFragment? Running { get; set; }
     [Parameter] public RenderFragment? Success { get; set; }
@@ -65,11 +28,61 @@ public partial class ApiView : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    private void ClearOperations()
+    {
+        foreach (var oldContext in _operations)
+        {
+            oldContext.StatusChanged -= OnContextStateChanged;
+        }
+
+        _operations.Clear();
+        _contextChanged = true;
+        _renderedSuccess = false;
+    }
+
+    private void AddOperation(IApiClientOperation operation)
+    {
+        operation.StatusChanged += OnContextStateChanged;
+        _operations.Add(operation);
+    }
+
     protected override void OnParametersSet()
     {
         if (Success is not null && ChildContent is not null)
         {
             throw new ArgumentException("Either Success or ChildContent may be set, but not both.");
+        }
+
+        if (Operations is not null)
+        {
+            if (Operation is not null)
+            {
+                throw new ArgumentException("Either Operation or Operations may be set, but not both.");
+            }
+
+            if (_oldOperations != Operations)
+            {
+                _oldOperations = Operations;
+                ClearOperations();
+                foreach (var operation in Operations)
+                {
+                    AddOperation(operation);
+                }
+            }
+        }
+        else if (Operation is not null)
+        {
+            if (_oldOperations != Operation)
+            {
+                _oldOperations = Operation;
+                ClearOperations();
+                AddOperation(Operation);
+            }
+        }
+        else if (_oldOperations is not null)
+        {
+            _oldOperations = null;
+            ClearOperations();
         }
 
         if (_contextChanged)

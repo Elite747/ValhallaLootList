@@ -5,8 +5,8 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer;
 
 internal enum DeterminationLevel
 {
-    Allowed,
-    ManualReview,
-    Disallowed,
-    Unequippable
+    Allowed = 0,
+    ManualReview = 1,
+    Disallowed = 2,
+    Unequippable = 3
 }

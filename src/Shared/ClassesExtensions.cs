@@ -7,8 +7,8 @@ namespace ValhallaLootList;
 
 public static class ClassesExtensions
 {
-    private static readonly Classes[] _allClasses = new[]
-    {
+    private static readonly Classes[] _allClasses =
+    [
         Classes.DeathKnight,
         Classes.Druid,
         Classes.Hunter,
@@ -19,7 +19,7 @@ public static class ClassesExtensions
         Classes.Shaman,
         Classes.Warlock,
         Classes.Warrior
-    };
+    ];
 
     public static readonly Dictionary<Classes, IEnumerable<PlayerRace>> _raceLookup = new()
     {
@@ -54,80 +54,95 @@ public static class ClassesExtensions
         return _raceLookup.TryGetValue(playerClass, out races);
     }
 
-    public static string GetDisplayName(this Classes classes) => classes switch
+    public static string GetDisplayName(this Classes classes)
     {
-        Classes.Warrior => "Warrior",
-        Classes.Paladin => "Paladin",
-        Classes.Hunter => "Hunter",
-        Classes.Rogue => "Rogue",
-        Classes.Priest => "Priest",
-        Classes.Shaman => "Shaman",
-        Classes.Mage => "Mage",
-        Classes.Warlock => "Warlock",
-        Classes.Druid => "Druid",
-        Classes.DeathKnight => "Death Knight",
-        _ => "Unknown"
-    };
+        return classes switch
+        {
+            Classes.Warrior => "Warrior",
+            Classes.Paladin => "Paladin",
+            Classes.Hunter => "Hunter",
+            Classes.Rogue => "Rogue",
+            Classes.Priest => "Priest",
+            Classes.Shaman => "Shaman",
+            Classes.Mage => "Mage",
+            Classes.Warlock => "Warlock",
+            Classes.Druid => "Druid",
+            Classes.DeathKnight => "Death Knight",
+            _ => "Unknown"
+        };
+    }
 
-    public static string GetLowercaseName(this Classes classes) => classes switch
+    public static string GetLowercaseName(this Classes classes)
     {
-        Classes.Warrior => "warrior",
-        Classes.Paladin => "paladin",
-        Classes.Hunter => "hunter",
-        Classes.Rogue => "rogue",
-        Classes.Priest => "priest",
-        Classes.Shaman => "shaman",
-        Classes.Mage => "mage",
-        Classes.Warlock => "warlock",
-        Classes.Druid => "druid",
-        Classes.DeathKnight => "deathknight",
-        _ => "unknown"
-    };
+        return classes switch
+        {
+            Classes.Warrior => "warrior",
+            Classes.Paladin => "paladin",
+            Classes.Hunter => "hunter",
+            Classes.Rogue => "rogue",
+            Classes.Priest => "priest",
+            Classes.Shaman => "shaman",
+            Classes.Mage => "mage",
+            Classes.Warlock => "warlock",
+            Classes.Druid => "druid",
+            Classes.DeathKnight => "deathknight",
+            _ => "unknown"
+        };
+    }
 
-    public static string GetClassColor(this Classes classes) => classes switch
+    public static string GetClassColor(this Classes classes)
     {
-        Classes.Warrior => "#C69B6D",
-        Classes.Paladin => "#F48CBA",
-        Classes.Hunter => "#AAD372",
-        Classes.Rogue => "#FFF468",
-        Classes.Priest => "#FFFFFF",
-        Classes.Shaman => "#0070DD",
-        Classes.Mage => "#3FC7EB",
-        Classes.Warlock => "#8788EE",
-        Classes.Druid => "#FF7C0A",
-        Classes.DeathKnight => "#C41E3A",
-        _ => "#000000"
-    };
+        return classes switch
+        {
+            Classes.Warrior => "#C69B6D",
+            Classes.Paladin => "#F48CBA",
+            Classes.Hunter => "#AAD372",
+            Classes.Rogue => "#FFF468",
+            Classes.Priest => "#FFFFFF",
+            Classes.Shaman => "#0070DD",
+            Classes.Mage => "#3FC7EB",
+            Classes.Warlock => "#8788EE",
+            Classes.Druid => "#FF7C0A",
+            Classes.DeathKnight => "#C41E3A",
+            _ => "#000000"
+        };
+    }
 
-    public static bool IsSingleClass(this Classes playerClass) => playerClass switch
+    public static bool IsSingleClass(this Classes playerClass)
     {
-        Classes.Warrior => true,
-        Classes.Paladin => true,
-        Classes.Hunter => true,
-        Classes.Rogue => true,
-        Classes.Priest => true,
-        Classes.Shaman => true,
-        Classes.Mage => true,
-        Classes.Warlock => true,
-        Classes.Druid => true,
-        Classes.DeathKnight => true,
-        _ => false
-    };
+        return playerClass switch
+        {
+            Classes.Warrior => true,
+            Classes.Paladin => true,
+            Classes.Hunter => true,
+            Classes.Rogue => true,
+            Classes.Priest => true,
+            Classes.Shaman => true,
+            Classes.Mage => true,
+            Classes.Warlock => true,
+            Classes.Druid => true,
+            Classes.DeathKnight => true,
+            _ => false
+        };
+    }
 
-    public static Specializations ToSpecializations(this Classes playerClass) => playerClass switch
+    public static Specializations ToSpecializations(this Classes playerClass)
     {
-        Classes.Warrior => SpecializationGroups.Warrior,
-        Classes.Paladin => SpecializationGroups.Paladin,
-        Classes.Hunter => SpecializationGroups.Hunter,
-        Classes.Rogue => SpecializationGroups.Rogue,
-        Classes.Priest => SpecializationGroups.Priest,
-        Classes.Shaman => SpecializationGroups.Shaman,
-        Classes.Mage => SpecializationGroups.Mage,
-        Classes.Warlock => SpecializationGroups.Warlock,
-        Classes.Druid => SpecializationGroups.Druid,
-        Classes.DeathKnight => SpecializationGroups.DeathKnight,
-        _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
-    };
+        return playerClass switch
+        {
+            Classes.Warrior => SpecializationGroups.Warrior,
+            Classes.Paladin => SpecializationGroups.Paladin,
+            Classes.Hunter => SpecializationGroups.Hunter,
+            Classes.Rogue => SpecializationGroups.Rogue,
+            Classes.Priest => SpecializationGroups.Priest,
+            Classes.Shaman => SpecializationGroups.Shaman,
+            Classes.Mage => SpecializationGroups.Mage,
+            Classes.Warlock => SpecializationGroups.Warlock,
+            Classes.Druid => SpecializationGroups.Druid,
+            Classes.DeathKnight => SpecializationGroups.DeathKnight,
+            _ => throw new ArgumentOutOfRangeException(nameof(playerClass), "Parameter must be a single defined playable class."),
+        };
+    }
 
     public static int GetSortingIndex(this Classes classes)
     {

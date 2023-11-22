@@ -12,20 +12,12 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class DropsController : ApiControllerV1
+public class DropsController(ApplicationDbContext context, TelemetryClient telemetry, TimeZoneInfo realmTimeZone, IAuthorizationService authorizationService) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TelemetryClient _telemetry;
-    private readonly TimeZoneInfo _realmTimeZone;
-    private readonly IAuthorizationService _authorizationService;
-
-    public DropsController(ApplicationDbContext context, TelemetryClient telemetry, TimeZoneInfo realmTimeZone, IAuthorizationService authorizationService)
-    {
-        _context = context;
-        _telemetry = telemetry;
-        _realmTimeZone = realmTimeZone;
-        _authorizationService = authorizationService;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TelemetryClient _telemetry = telemetry;
+    private readonly TimeZoneInfo _realmTimeZone = realmTimeZone;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     [HttpGet]
     public IAsyncEnumerable<WonDropDto> Get(long characterId)

@@ -5,11 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientItems
+public class ApiClientItems(ApiClient client)
 {
-    public ApiClientItems(ApiClient client) => Client = client;
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<List<ItemDto>> Get(byte phase, byte size, bool includeTokens = false)
     {

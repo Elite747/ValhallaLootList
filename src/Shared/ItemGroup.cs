@@ -22,7 +22,10 @@ public readonly struct ItemGroup : IEquatable<ItemGroup>, IComparable<ItemGroup>
 
     private readonly byte _value;
 
-    private ItemGroup(byte value) => _value = value;
+    private ItemGroup(byte value)
+    {
+        _value = value;
+    }
 
     public ItemGroup(ItemType type, InventorySlot slot)
     {
@@ -80,19 +83,43 @@ public readonly struct ItemGroup : IEquatable<ItemGroup>, IComparable<ItemGroup>
         _ => "Unknown",
     };
 
-    public int CompareTo(ItemGroup other) => _value.CompareTo(other._value);
+    public int CompareTo(ItemGroup other)
+    {
+        return _value.CompareTo(other._value);
+    }
 
-    public int CompareTo(object? obj) => _value.CompareTo((obj as ItemGroup?)?._value ?? 0);
+    public int CompareTo(object? obj)
+    {
+        return _value.CompareTo((obj as ItemGroup?)?._value ?? 0);
+    }
 
-    public bool Equals(ItemGroup other) => other._value == _value;
+    public bool Equals(ItemGroup other)
+    {
+        return other._value == _value;
+    }
 
-    public override bool Equals(object? obj) => obj is ItemGroup itemGroup2 && Equals(itemGroup2);
+    public override bool Equals(object? obj)
+    {
+        return obj is ItemGroup itemGroup2 && Equals(itemGroup2);
+    }
 
-    public override int GetHashCode() => _value;
+    public override int GetHashCode()
+    {
+        return _value;
+    }
 
-    public override string ToString() => Name;
+    public override string ToString()
+    {
+        return Name;
+    }
 
-    public static bool operator ==(ItemGroup left, ItemGroup right) => left.Equals(right);
+    public static bool operator ==(ItemGroup left, ItemGroup right)
+    {
+        return left.Equals(right);
+    }
 
-    public static bool operator !=(ItemGroup left, ItemGroup right) => !(left == right);
+    public static bool operator !=(ItemGroup left, ItemGroup right)
+    {
+        return !(left == right);
+    }
 }

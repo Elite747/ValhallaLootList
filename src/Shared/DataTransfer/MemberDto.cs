@@ -23,7 +23,7 @@ public class MemberDto
 
     public List<MemberLootListDto> LootLists
     {
-        get => _lootLists ??= new();
+        get => _lootLists ??= [];
         set => _lootLists = value;
     }
 

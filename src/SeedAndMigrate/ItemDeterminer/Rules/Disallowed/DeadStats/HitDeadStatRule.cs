@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class HitDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Healer;
+    }
 
-    protected override int GetStat(Item item) => item.Hit;
+    protected override int GetStat(Item item)
+    {
+        return item.Hit;
+    }
 
-    protected override string GetStatDisplayName() => "Hit";
+    protected override string GetStatDisplayName()
+    {
+        return "Hit";
+    }
 }

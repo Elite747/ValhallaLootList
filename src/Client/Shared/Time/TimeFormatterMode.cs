@@ -5,7 +5,7 @@ namespace ValhallaLootList.Client.Shared;
 
 public enum TimeFormatterMode
 {
-    Original,
-    Local,
-    Utc
+    Original = 0,
+    Local = 1,
+    Utc = 2
 }

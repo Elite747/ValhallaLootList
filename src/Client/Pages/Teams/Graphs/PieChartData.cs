@@ -3,18 +3,11 @@
 
 namespace ValhallaLootList.Client.Pages.Teams.Graphs;
 
-public class PieChartData
+public class PieChartData(double data, string label, string? color = null)
 {
-    public PieChartData(double data, string label, string? color = null)
-    {
-        Label = label;
-        Color = color;
-        Data = data;
-    }
+    public double Data { get; } = data;
 
-    public double Data { get; }
+    public string Label { get; } = label;
 
-    public string Label { get; }
-
-    public string? Color { get; }
+    public string? Color { get; } = color;
 }

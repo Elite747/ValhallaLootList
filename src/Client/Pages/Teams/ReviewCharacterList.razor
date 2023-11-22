@@ -173,7 +173,7 @@
     {
         var result = await DialogService.Show<SetMessageDialog>("Approve Loot List").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await Api.LootLists.Approve(LootList, (string?)result.Data)
                 .OnSuccess(async (response, _) =>
@@ -199,7 +199,7 @@
     {
         var result = await DialogService.Show<SetMessageDialog>("Deny Loot List").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await Api.LootLists.Reject(LootList, (string?)result.Data)
                 .OnSuccess((_, _) =>

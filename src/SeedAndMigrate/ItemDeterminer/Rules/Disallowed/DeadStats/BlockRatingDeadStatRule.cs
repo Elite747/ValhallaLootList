@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class BlockRatingDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior);
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.All & ~(Specializations.ProtPaladin | Specializations.ProtWarrior);
+    }
 
-    protected override int GetStat(Item item) => item.BlockRating;
+    protected override int GetStat(Item item)
+    {
+        return item.BlockRating;
+    }
 
-    protected override string GetStatDisplayName() => "Block Rating";
+    protected override string GetStatDisplayName()
+    {
+        return "Block Rating";
+    }
 }

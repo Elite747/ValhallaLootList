@@ -5,11 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientPermissions
+public class ApiClientPermissions(ApiClient client)
 {
-    public ApiClientPermissions(ApiClient client) => Client = client;
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<PermissionsDto> Get()
     {

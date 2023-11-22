@@ -7,8 +7,8 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed;
 
 internal class TrinketsRule : Rule
 {
-    private readonly List<TrinketInfo> _trinkets = new()
-    {
+    private readonly List<TrinketInfo> _trinkets =
+    [
         new(EffectCategory.Healer, "Althor's Abacus", 50359, 50366),
         new(EffectCategory.Physical, "Bandit's Insignia", 40371),
         new(EffectCategory.Healer, "Bauble of True Blood", 50354, 50726),
@@ -72,7 +72,7 @@ internal class TrinketsRule : Rule
         new(EffectCategory.Melee, "Victor's Call", 47725, 47948),
         new(EffectCategory.Physical, "Whispering Fanged Skull", 50342, 50343),
         new(EffectCategory.Physical, "Wrathstone", 45263),
-    };
+    ];
 
     protected override ItemDetermination MakeDetermination(Item item, Specializations spec)
     {
@@ -97,28 +97,34 @@ internal class TrinketsRule : Rule
         return new(spec, DeterminationLevel.Allowed, string.Empty);
     }
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.Trinket;
-
-    private static string GetEffectDisplay(EffectCategory category) => category switch
+    protected override bool AppliesTo(Item item)
     {
-        EffectCategory.Healer => "healing",
-        EffectCategory.Tank => "tanking",
-        EffectCategory.Caster => "damaging spell",
-        EffectCategory.Physical => "physical damage",
-        EffectCategory.Melee => "melee damage",
-        EffectCategory.CasterOrHealer => "spell",
-        _ => throw new NotSupportedException()
-    };
+        return item.Slot == InventorySlot.Trinket;
+    }
+
+    private static string GetEffectDisplay(EffectCategory category)
+    {
+        return category switch
+        {
+            EffectCategory.Healer => "healing",
+            EffectCategory.Tank => "tanking",
+            EffectCategory.Caster => "damaging spell",
+            EffectCategory.Physical => "physical damage",
+            EffectCategory.Melee => "melee damage",
+            EffectCategory.CasterOrHealer => "spell",
+            _ => throw new NotSupportedException()
+        };
+    }
 
     private record TrinketInfo(EffectCategory Category, string Name, uint Id, uint? Id2 = null);
 
     private enum EffectCategory
     {
-        Healer,
-        Tank,
-        Caster,
-        Physical,
-        Melee,
-        CasterOrHealer
+        Healer = 0,
+        Tank = 1,
+        Caster = 2,
+        Physical = 3,
+        Melee = 4,
+        CasterOrHealer = 5
     }
 }

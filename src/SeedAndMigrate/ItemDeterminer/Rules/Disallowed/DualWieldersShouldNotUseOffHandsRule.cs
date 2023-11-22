@@ -11,9 +11,18 @@ internal class DualWieldersShouldNotUseOffHandsRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && (item.Type == ItemType.Other || item.Type == ItemType.Shield);
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Slot == InventorySlot.OffHand && (item.Type == ItemType.Other || item.Type == ItemType.Shield);
+    }
 
-    protected override Specializations ApplicableSpecs() => Specializations.FuryWarrior | Specializations.EnhanceShaman | SpecializationGroups.Rogue;
+    protected override Specializations ApplicableSpecs()
+    {
+        return Specializations.FuryWarrior | Specializations.EnhanceShaman | SpecializationGroups.Rogue;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

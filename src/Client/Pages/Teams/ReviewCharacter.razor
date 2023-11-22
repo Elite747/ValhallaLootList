@@ -90,7 +90,7 @@ else
     {
         var result = await DialogService.Show<AddMemberDialog>("Approve All Loot Lists").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var data = (AddMemberDialog.Response)result.Data;
             var lootLists = LootLists.ToList();
@@ -124,7 +124,7 @@ else
     {
         var result = await DialogService.Show<SetMessageDialog>("Reject All Loot Lists").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var lootLists = LootLists.ToList();
             await Api.LootLists.RejectAll(lootLists, Team, (string?)result.Data)

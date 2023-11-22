@@ -11,12 +11,12 @@ namespace ValhallaLootList.Client.Data;
 
 public partial class ApiClient
 {
-    private class Operation<TResult> : IApiClientOperation<TResult>
+    private class Operation<TResult>(HttpClient httpClient, IMemoryCache memoryCache, JsonSerializerOptions jsonSerializerOptions, HttpRequestMessage request) : IApiClientOperation<TResult>
     {
-        private readonly HttpClient _httpClient;
-        private readonly HttpRequestMessage _request;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
-        private readonly IMemoryCache _memoryCache;
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly HttpRequestMessage _request = request;
+        private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IMemoryCache _memoryCache = memoryCache;
         private Task? _task;
         private TResult? _result;
         private ProblemDetails? _problem;
@@ -29,27 +29,34 @@ public partial class ApiClient
 
         public event Action? StatusChanged;
 
-        public Operation(HttpClient httpClient, IMemoryCache memoryCache, JsonSerializerOptions jsonSerializerOptions, HttpRequestMessage request)
-        {
-            _httpClient = httpClient;
-            _request = request;
-            _jsonSerializerOptions = jsonSerializerOptions;
-            _memoryCache = memoryCache;
-        }
-
         public ApiOperationStatus Status { get; private set; }
 
         public Task Task => _task ?? Task.CompletedTask;
 
-        public void EnableCaching(Func<MemoryCacheEntryOptions> createEntryOptions) => _createCacheEntryOptions = createEntryOptions;
+        public void EnableCaching(Func<MemoryCacheEntryOptions> createEntryOptions)
+        {
+            _createCacheEntryOptions = createEntryOptions;
+        }
 
-        public void DisableCaching() => _createCacheEntryOptions = null;
+        public void DisableCaching()
+        {
+            _createCacheEntryOptions = null;
+        }
 
-        public void ConfigureFailure(Action<ProblemDetails> action) => _failureAction += action;
+        public void ConfigureFailure(Action<ProblemDetails> action)
+        {
+            _failureAction += action;
+        }
 
-        public void ConfigureSuccess(Action<TResult> action) => _typedSuccessAction += action;
+        public void ConfigureSuccess(Action<TResult> action)
+        {
+            _typedSuccessAction += action;
+        }
 
-        public void ConfigureSuccess(Action<HttpStatusCode> action) => _successAction += action;
+        public void ConfigureSuccess(Action<HttpStatusCode> action)
+        {
+            _successAction += action;
+        }
 
         public void SetSuccessTask(Func<HttpStatusCode, CancellationToken, Task> task)
         {
@@ -186,19 +193,16 @@ public partial class ApiClient
                             Title = response.ReasonPhrase
                         };
                     }
+                    else if (problem.Status.HasValue)
+                    {
+                        if (problem.Status.Value != (int)response.StatusCode)
+                        {
+                            throw new Exception("Problem details status code does not match the response status code.");
+                        }
+                    }
                     else
                     {
-                        if (problem.Status.HasValue)
-                        {
-                            if (problem.Status.Value != (int)response.StatusCode)
-                            {
-                                throw new Exception("Problem details status code does not match the response status code.");
-                            }
-                        }
-                        else
-                        {
-                            problem.Status = (int)response.StatusCode;
-                        }
+                        problem.Status = (int)response.StatusCode;
                     }
 
                     _problem = problem;
@@ -257,6 +261,9 @@ public partial class ApiClient
             return GetProblemInternal();
         }
 
-        private ProblemDetails GetProblemInternal() => _problem ?? new() { Detail = "An unknown error has occurred." };
+        private ProblemDetails GetProblemInternal()
+        {
+            return _problem ?? new() { Detail = "An unknown error has occurred." };
+        }
     }
 }

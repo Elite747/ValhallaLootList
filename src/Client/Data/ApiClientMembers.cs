@@ -6,11 +6,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientMembers
+public class ApiClientMembers(ApiClient client)
 {
-    public ApiClientMembers(ApiClient client) => Client = client;
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<IList<GuildMemberDto>> GetAll()
     {

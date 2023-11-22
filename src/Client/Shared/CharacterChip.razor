@@ -1,20 +1,22 @@
 ﻿@using MudBlazor.Extensions;
 
-<div class="@Classname" style="@ChipStyle" @onclick="OnClick">
-    @if (!HideIcon)
-    {
-        <MudAvatar Style="margin-left: -12px; margin-right: 4px" Size="Size.Small">
-            @if (Spec != Specializations.None)
-            {
-                <SpecIcon Spec="Spec" Size="IconSize.Medium" Width="24" Height="24" />
-            }
-            else
-            {
-                <ClassIcon PlayerClass="Character.Class" Size="IconSize.Medium" Width="24" Height="24" />
-            }
-        </MudAvatar>
-    }
-    <span class="mud-chip-content">
+<MudChip OnClick="OnClick" OnClose="OnClose" Class="@Class" Style="@ChipStyle" Variant="Variant.Outlined" Size="Size">
+    <AvatarContent>
+        @if (!HideIcon)
+        {
+            <MudAvatar Size="Size">
+                @if (Spec != Specializations.None)
+                {
+                    <SpecIcon Spec="Spec" Size="IconSize.Medium" Width="24" Height="24" />
+                }
+                else
+                {
+                    <ClassIcon PlayerClass="Character.Class" Size="IconSize.Medium" Width="24" Height="24" />
+                }
+            </MudAvatar>
+        }
+    </AvatarContent>
+    <ChildContent>
         @if (ChildContent is null)
         {
             @Character.Name
@@ -23,21 +25,22 @@
         {
             @ChildContent
         }
-        @if (Closeable)
+        @if (EndIcon?.Length > 0)
         {
-            <MudIconButton Class="mud-chip-close-button" Style="margin-right: -10px" Icon="@Icons.Material.Filled.Cancel" OnClick="OnClose" Size="Size.Small" />
+            <MudIcon Size="Size.Small" Icon="@EndIcon" Color="EndIconColor" Class="mud-chip-end-icon" />
         }
-    </span>
-</div>
+    </ChildContent>
+</MudChip>
 
 @code {
     [Parameter] public CharacterDto Character { get; set; } = null!;
     [Parameter] public Size Size { get; set; }
     [Parameter] public Specializations Spec { get; set; }
+    [Parameter] public string? EndIcon { get; set; }
+    [Parameter] public Color EndIconColor { get; set; }
     [Parameter] public string? Class { get; set; }
     [Parameter] public string? Style { get; set; }
     [Parameter] public bool Clickable { get; set; }
-    [Parameter] public bool Closeable { get; set; }
     [Parameter] public bool HideIcon { get; set; }
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
@@ -47,15 +50,6 @@
     protected string ChipStyle => new MudBlazor.Utilities.StyleBuilder()
         .AddStyle(Style)
         .AddStyle("--mud-palette-lines-inputs", $"var(--classcolor-{Character.Class.GetLowercaseName()})", Character.Class != Classes.Priest)
-        .Build();
-
-    protected string Classname => new MudBlazor.Utilities.CssBuilder("mud-chip")
-        .AddClass($"mud-chip-size-{Size.ToDescriptionString()}")
-        .AddClass("mud-chip-outlined")
-        .AddClass("mud-clickable", Clickable || OnClick.HasDelegate)
-        .AddClass($"mud-ripple", Clickable || OnClick.HasDelegate)
-        .AddClass("mud-disabled", Disabled)
-        .AddClass(Class)
         .Build();
 
     protected override void OnParametersSet()

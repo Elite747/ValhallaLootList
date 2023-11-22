@@ -17,7 +17,7 @@ public record TeamNameDto
 
     public List<ScheduleDto> Schedules
     {
-        get => _schedules ??= new();
+        get => _schedules ??= [];
         set => _schedules = value;
     }
 }

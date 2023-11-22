@@ -8,16 +8,10 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Discord;
 
-public class DiscordBackgroundService : BackgroundService
+public class DiscordBackgroundService(DiscordClientProvider discordClientProvider, IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly DiscordClientProvider _discordClientProvider;
-    private readonly IServiceProvider _serviceProvider;
-
-    public DiscordBackgroundService(DiscordClientProvider discordClientProvider, IServiceProvider serviceProvider)
-    {
-        _discordClientProvider = discordClientProvider;
-        _serviceProvider = serviceProvider;
-    }
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

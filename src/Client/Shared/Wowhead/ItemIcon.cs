@@ -14,11 +14,20 @@ public class ItemIcon : WowIcon
     [Inject] public ItemProvider Items { get; set; } = null!;
     [CascadingParameter] public ItemLinkContext? Context { get; set; }
 
-    protected override string GetIconId() => (Context?.Item ?? _item)?.Icon ?? string.Empty;
+    protected override string GetIconId()
+    {
+        return (Context?.Item ?? _item)?.Icon ?? string.Empty;
+    }
 
-    protected override string GetAltText() => (Context?.Item ?? _item)?.Name ?? string.Empty;
+    protected override string GetAltText()
+    {
+        return (Context?.Item ?? _item)?.Name ?? string.Empty;
+    }
 
-    protected override bool IconReady() => (Context?.Item ?? _item) is not null;
+    protected override bool IconReady()
+    {
+        return (Context?.Item ?? _item) is not null;
+    }
 
     protected override async Task OnParametersSetAsync()
     {

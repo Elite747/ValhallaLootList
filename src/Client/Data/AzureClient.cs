@@ -6,20 +6,17 @@ using ValhallaLootList.Client.Data.Containers;
 
 namespace ValhallaLootList.Client.Data;
 
-public sealed class AzureClient : IDisposable
+public sealed class AzureClient(IHttpClientFactory httpClientFactory) : IDisposable
 {
     public const string HttpClientKey = "AzureAPI";
-    private readonly HttpClient _httpClient;
-    private readonly string _domain;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(HttpClientKey);
+    private readonly string _domain = "valhallalootliststorage.blob.core.windows.net";
     private bool _disposedValue;
 
-    public AzureClient(IHttpClientFactory httpClientFactory)
+    public string GetDomain()
     {
-        _httpClient = httpClientFactory.CreateClient(HttpClientKey);
-        _domain = "valhallalootliststorage.blob.core.windows.net";
+        return _domain;
     }
-
-    public string GetDomain() => _domain;
 
     public async Task<AzureContainerResponse> GetContainerAsync(string container, CancellationToken cancellationToken = default)
     {

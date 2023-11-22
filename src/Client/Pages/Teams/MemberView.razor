@@ -108,7 +108,7 @@
     {
         var result = await DialogService.Show<SetMessageDialog>(Member.Enchanted ? "Remove Enchanted Bonus" : "Add Enchanted Bonus").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var dto = new UpdateEnchantedDto
             {
@@ -131,7 +131,7 @@
     {
         var result = await DialogService.Show<SetMessageDialog>(Member.Prepared ? "Remove Prepared Bonus" : "Add Prepared Bonus").Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var dto = new UpdatePreparedDto
             {
@@ -178,7 +178,7 @@
     {
         var result = await DialogService.Show<SetMessageDialog>("Override Membership Status for " + Member.Character.Name).Result;
 
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var dto = new UpdateMembershipDto
             {

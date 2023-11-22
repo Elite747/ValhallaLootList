@@ -1,7 +1,6 @@
 ﻿// Copyright (C) 2021 Donovan Sullivan
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-using System.Text.Json;
 using ValhallaLootList.Client.Data;
 using ValhallaLootList.Client.Shared;
 using ValhallaLootList.DataTransfer;
@@ -12,7 +11,10 @@ public partial class KillsView
 {
     protected override void OnParametersSet()
     {
-        if (Raid is null) throw new ArgumentNullException(nameof(Raid));
+        if (Raid is null)
+        {
+            throw new ArgumentNullException(nameof(Raid));
+        }
     }
 
     private async Task DeleteAsync(string encounterId, byte trashIndex)
@@ -100,51 +102,17 @@ public partial class KillsView
 
     private async Task ExportAsync()
     {
-        var operation = Api.LootLists.GetForTeam(Raid.TeamId, includeApplicants: false);
-        operation.SendErrorTo(Snackbar);
-        var lists = await operation.ExecuteAndTryReturnAsync();
+        var exporter = new Exporter(Api, Snackbar);
+        var code = await exporter.GetExportAsync(Raid.TeamId);
 
-        if (lists?.Count > 0)
+        if (code?.Length > 0)
         {
-            var items = new Dictionary<uint, Dictionary<int, HashSet<string>>>();
-
-            foreach (var list in lists.Where(l => l.RanksVisible))
-            {
-                foreach (var entry in list.Entries.Where(l => !l.AutoPass && !l.Won))
-                {
-                    if (entry.ItemId > 0)
-                    {
-                        if (!items.TryGetValue(entry.ItemId.Value, out var item))
-                        {
-                            items[entry.ItemId.Value] = item = new();
-                        }
-
-                        var prio = entry.Rank + entry.Bonuses.Sum(b => b.Value) + list.Bonuses.Sum(b => b.Value);
-
-                        if (!item.TryGetValue(prio, out var names))
-                        {
-                            item[prio] = names = new();
-                        }
-
-                        names.Add(list.CharacterName);
-                    }
-                }
-            }
-
-            var exportItems = items.Select(x => new ExportItem(x.Key, x.Value.Select(y => new ExportStanding(y.Key, y.Value.OrderBy(n => n).ToList())).OrderByDescending(s => s.Prio).ToList()))
-                .OrderBy(x => x.Id)
-                .ToList();
-
             await DialogService.ShowAsync<ExportStandingsDialog, object?>(
                 string.Empty,
                 parameters: new()
                 {
-                    [nameof(ExportStandingsDialog.Code)] = JsonSerializer.Serialize(exportItems)
+                    [nameof(ExportStandingsDialog.Code)] = code
                 });
         }
     }
-
-    record ExportItem(uint Id, List<ExportStanding> Standings);
-
-    record ExportStanding(int Prio, List<string> Names);
 }

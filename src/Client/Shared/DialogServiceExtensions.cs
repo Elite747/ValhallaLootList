@@ -15,11 +15,11 @@ public static class DialogServiceExtensions
         DialogOptions? options = null)
         where TComponent : ComponentBase
     {
-        var dialog = dialogService.Show<TComponent>(title, parameters ?? new(), options ?? new());
+        var dialog = dialogService.Show<TComponent>(title, parameters ?? [], options ?? new());
 
         var result = await dialog.Result;
 
-        if (result.Cancelled)
+        if (result.Canceled)
         {
             return default;
         }

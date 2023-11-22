@@ -9,14 +9,9 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class PhasesController : ApiControllerV1
+public class PhasesController(ApplicationDbContext context) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-
-    public PhasesController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     [HttpGet, Authorize(AppPolicies.Administrator)]
     public IAsyncEnumerable<PhaseDto> Get()

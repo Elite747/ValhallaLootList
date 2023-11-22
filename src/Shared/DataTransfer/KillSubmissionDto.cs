@@ -17,13 +17,13 @@ public class KillSubmissionDto
 
     public List<long> Characters
     {
-        get => _characters ??= new();
+        get => _characters ??= [];
         set => _characters = value;
     }
 
     public List<KillDropSubmissionDto> Drops
     {
-        get => _drops ??= new();
+        get => _drops ??= [];
         set => _drops = value;
     }
 }

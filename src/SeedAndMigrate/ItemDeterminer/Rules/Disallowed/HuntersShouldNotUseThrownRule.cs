@@ -11,9 +11,18 @@ internal class HuntersShouldNotUseThrownRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Disallowed;
 
-    protected override bool AppliesTo(Item item) => item.Type == ItemType.Thrown;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Type == ItemType.Thrown;
+    }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Hunter;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Hunter;
+    }
 
-    protected override bool IsAllowed(Item item, Specializations spec) => false;
+    protected override bool IsAllowed(Item item, Specializations spec)
+    {
+        return false;
+    }
 }

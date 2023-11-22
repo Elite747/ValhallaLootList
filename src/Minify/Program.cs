@@ -102,5 +102,5 @@ static TargetPaths[] Unglob(OptionsBase options, string defaultSuffix, string de
     matcher.AddIncludePatterns(options.Include);
     matcher.AddExcludePatterns(options.Exclude);
     var result = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(Directory.GetCurrentDirectory())));
-    return result.HasMatches ? result.Files.Select(f => new TargetPaths(f.Path, suffix, mapSuffix)).ToArray() : Array.Empty<TargetPaths>();
+    return result.HasMatches ? result.Files.Select(f => new TargetPaths(f.Path, suffix, mapSuffix)).ToArray() : [];
 }

@@ -7,9 +7,18 @@ namespace ValhallaLootList.SeedAndMigrate.ItemDeterminer.Rules.Disallowed.DeadSt
 
 internal class ExpertiseDeadStatRule : DeadStatRule
 {
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Healer | SpecializationGroups.CasterDps;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Healer | SpecializationGroups.CasterDps;
+    }
 
-    protected override int GetStat(Item item) => item.Expertise;
+    protected override int GetStat(Item item)
+    {
+        return item.Expertise;
+    }
 
-    protected override string GetStatDisplayName() => "Expertise";
+    protected override string GetStatDisplayName()
+    {
+        return "Expertise";
+    }
 }

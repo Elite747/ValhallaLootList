@@ -10,13 +10,13 @@ public class CharacterAdminDto
 
     public List<TeamRemovalDto> TeamRemovals
     {
-        get => _teamRemovals ??= new();
+        get => _teamRemovals ??= [];
         set => _teamRemovals = value;
     }
 
     public List<string> OtherCharacters
     {
-        get => _otherCharacters ??= new();
+        get => _otherCharacters ??= [];
         set => _otherCharacters = value;
     }
 

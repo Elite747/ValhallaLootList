@@ -21,7 +21,13 @@ internal class LibramsRule : Rule
         };
     }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Paladin;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Paladin;
+    }
 
-    protected override bool AppliesTo(Item item) => item.Type == ItemType.Libram;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Type == ItemType.Libram;
+    }
 }

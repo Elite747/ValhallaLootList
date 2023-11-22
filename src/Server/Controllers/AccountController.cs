@@ -12,18 +12,11 @@ using ValhallaLootList.Server.Discord;
 namespace ValhallaLootList.Server.Controllers;
 
 [Route("[controller]/[action]")]
-public class AccountController : ControllerBase
+public class AccountController(SignInManager<AppUser> signInManager, DiscordClientProvider discordClientProvider, ILogger<AccountController> logger) : ControllerBase
 {
-    private readonly SignInManager<AppUser> _signInManager;
-    private readonly DiscordClientProvider _discordClientProvider;
-    private readonly ILogger<AccountController> _logger;
-
-    public AccountController(SignInManager<AppUser> signInManager, DiscordClientProvider discordClientProvider, ILogger<AccountController> logger)
-    {
-        _signInManager = signInManager;
-        _discordClientProvider = discordClientProvider;
-        _logger = logger;
-    }
+    private readonly SignInManager<AppUser> _signInManager = signInManager;
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
+    private readonly ILogger<AccountController> _logger = logger;
 
     [HttpGet]
     public IActionResult Login(string returnUrl = "/")

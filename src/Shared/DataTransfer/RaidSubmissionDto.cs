@@ -17,13 +17,13 @@ public class RaidSubmissionDto : IValidatableObject
 
     public List<long> Attendees
     {
-        get => _attendees ??= new();
+        get => _attendees ??= [];
         set => _attendees = value;
     }
 
     public List<long> Standby
     {
-        get => _standby ?? new();
+        get => _standby ?? [];
         set => _standby = value;
     }
 

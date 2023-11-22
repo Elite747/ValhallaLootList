@@ -11,7 +11,10 @@ internal class CanEquipShieldRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
 
-    protected override bool AppliesTo(Item item) => item.Type == ItemType.Shield;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Type == ItemType.Shield;
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

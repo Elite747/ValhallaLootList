@@ -5,11 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientDrops
+public class ApiClientDrops(ApiClient client)
 {
-    public ApiClientDrops(ApiClient client) => Client = client;
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<IList<WonDropDto>> GetForCharacter(long characterId)
     {

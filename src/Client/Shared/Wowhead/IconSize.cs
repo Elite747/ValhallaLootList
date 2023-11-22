@@ -8,20 +8,20 @@ public enum IconSize
     /// <summary>
     /// 15x15
     /// </summary>
-    Tiny,
+    Tiny = 0,
 
     /// <summary>
     /// 18x18
     /// </summary>
-    Small,
+    Small = 1,
 
     /// <summary>
     /// 36x36
     /// </summary>
-    Medium,
+    Medium = 2,
 
     /// <summary>
     /// 56x56
     /// </summary>
-    Large
+    Large = 3
 }

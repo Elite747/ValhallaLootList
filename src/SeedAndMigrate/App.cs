@@ -6,20 +6,12 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.SeedAndMigrate;
 
-internal class App : IHostedService
+internal class App(ApplicationDbContext context, Seeder.SeederStep seeder, ItemDeterminer.ItemDeterminerStep itemDeterminer, IHostApplicationLifetime hostApplicationLifetime) : IHostedService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly Seeder.SeederStep _seeder;
-    private readonly ItemDeterminer.ItemDeterminerStep _itemDeterminer;
-    private readonly IHostApplicationLifetime _hostApplicationLifetime;
-
-    public App(ApplicationDbContext context, Seeder.SeederStep seeder, ItemDeterminer.ItemDeterminerStep itemDeterminer, IHostApplicationLifetime hostApplicationLifetime)
-    {
-        _context = context;
-        _seeder = seeder;
-        _itemDeterminer = itemDeterminer;
-        _hostApplicationLifetime = hostApplicationLifetime;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly Seeder.SeederStep _seeder = seeder;
+    private readonly ItemDeterminer.ItemDeterminerStep _itemDeterminer = itemDeterminer;
+    private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

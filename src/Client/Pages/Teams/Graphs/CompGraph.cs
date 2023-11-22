@@ -14,7 +14,11 @@ public abstract class CompGraph : SimplePieChart
 
     protected override void OnParametersSet()
     {
-        if (Team is null) throw new ArgumentNullException(nameof(Team));
+        if (Team is null)
+        {
+            throw new ArgumentNullException(nameof(Team));
+        }
+
         base.OnParametersSet();
     }
 }

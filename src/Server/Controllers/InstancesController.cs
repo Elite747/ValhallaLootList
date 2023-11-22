@@ -7,14 +7,9 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class InstancesController : ApiControllerV1
+public class InstancesController(ApplicationDbContext context) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-
-    public InstancesController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async IAsyncEnumerable<InstanceDto> Get()
     {

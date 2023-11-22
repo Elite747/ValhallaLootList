@@ -2,7 +2,6 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
-using System.Linq.Expressions;
 using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Extensions;
 using IdentityServer4.EntityFramework.Interfaces;
@@ -110,7 +109,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
             })
             .AsAsyncEnumerable())
         {
-            var bonuses = results[member.CharacterId] = new();
+            var bonuses = results[member.CharacterId] = [];
 
             int attendancesThisPhase = 0, attendancesTotal = 0;
 
@@ -318,5 +317,8 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<long
         builder.Entity<AppUser>().Property(e => e.Id).ValueGeneratedNever();
     }
 
-    Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();
+    Task<int> IPersistedGrantDbContext.SaveChangesAsync()
+    {
+        return base.SaveChangesAsync();
+    }
 }

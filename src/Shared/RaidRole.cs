@@ -5,8 +5,8 @@ namespace ValhallaLootList;
 
 public enum RaidRole
 {
-    Tank,
-    Healer,
-    Dps,
-    Unknown
+    Tank = 0,
+    Healer = 1,
+    Dps = 2,
+    Unknown = 3
 }

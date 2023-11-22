@@ -3,16 +3,10 @@
 
 namespace ValhallaLootList.Client.Data.Containers;
 
-public class AzureContainerProvider
+public class AzureContainerProvider(AzureContainerCache containerCache, AzureClient azureClient)
 {
-    private readonly AzureContainerCache _containerCache;
-    private readonly AzureClient _azureClient;
-
-    public AzureContainerProvider(AzureContainerCache containerCache, AzureClient azureClient)
-    {
-        _containerCache = containerCache;
-        _azureClient = azureClient;
-    }
+    private readonly AzureContainerCache _containerCache = containerCache;
+    private readonly AzureClient _azureClient = azureClient;
 
     public ValueTask<AzureContainerResponse> GetContainerAsync(string container, CancellationToken cancellationToken = default)
     {

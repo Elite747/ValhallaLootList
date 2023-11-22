@@ -7,7 +7,7 @@ namespace ValhallaLootList;
 
 public static class PlayerRaceExtensions
 {
-    private static readonly PlayerRace[] _allRaces = new[] { PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei };
+    private static readonly PlayerRace[] _allRaces = [PlayerRace.Human, PlayerRace.Dwarf, PlayerRace.NightElf, PlayerRace.Gnome, PlayerRace.Draenei];
 
     private static readonly Dictionary<PlayerRace, IEnumerable<Classes>> _classesByRace = new()
     {
@@ -50,13 +50,16 @@ public static class PlayerRaceExtensions
         };
     }
 
-    public static bool IsValidRace(this PlayerRace value) => value switch
+    public static bool IsValidRace(this PlayerRace value)
     {
-        PlayerRace.Human => true,
-        PlayerRace.Dwarf => true,
-        PlayerRace.NightElf => true,
-        PlayerRace.Gnome => true,
-        PlayerRace.Draenei => true,
-        _ => false
-    };
+        return value switch
+        {
+            PlayerRace.Human => true,
+            PlayerRace.Dwarf => true,
+            PlayerRace.NightElf => true,
+            PlayerRace.Gnome => true,
+            PlayerRace.Draenei => true,
+            _ => false
+        };
+    }
 }

@@ -11,7 +11,10 @@ internal class CanEquipRangedWeaponTypeRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.Ranged;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Slot == InventorySlot.Ranged;
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

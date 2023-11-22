@@ -5,6 +5,6 @@ namespace ValhallaLootList.Client.Shared;
 
 public enum Theme
 {
-    Light,
-    Dark
+    Light = 0,
+    Dark = 1
 }

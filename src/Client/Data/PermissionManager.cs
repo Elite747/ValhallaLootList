@@ -7,19 +7,12 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class PermissionManager
+public class PermissionManager(ApiClient api, IMemoryCache memoryCache, ISnackbar snackbar)
 {
-    private readonly ApiClient _api;
-    private readonly IMemoryCache _memoryCache;
-    private readonly ISnackbar _snackbar;
+    private readonly ApiClient _api = api;
+    private readonly IMemoryCache _memoryCache = memoryCache;
+    private readonly ISnackbar _snackbar = snackbar;
     private const string _cacheKey = "_permissions";
-
-    public PermissionManager(ApiClient api, IMemoryCache memoryCache, ISnackbar snackbar)
-    {
-        _api = api;
-        _memoryCache = memoryCache;
-        _snackbar = snackbar;
-    }
 
     public async Task<IEnumerable<long>> GetOwnedCharacterIdsAsync(CancellationToken cancellationToken = default)
     {

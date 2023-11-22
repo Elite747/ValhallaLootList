@@ -9,7 +9,10 @@ namespace ValhallaLootList.Serialization;
 
 public class PriorityBonusConverter : JsonConverter<PriorityBonusDto>
 {
-    public override bool CanConvert(Type typeToConvert) => typeof(PriorityBonusDto).IsAssignableFrom(typeToConvert);
+    public override bool CanConvert(Type typeToConvert)
+    {
+        return typeof(PriorityBonusDto).IsAssignableFrom(typeToConvert);
+    }
 
     public override PriorityBonusDto Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

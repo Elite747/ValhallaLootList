@@ -33,23 +33,23 @@ public class LootListDto
 
     public bool RanksVisible { get; set; }
 
-    public byte[] Timestamp { get; set; } = Array.Empty<byte>();
+    public byte[] Timestamp { get; set; } = [];
 
     public List<LootListEntryDto> Entries
     {
-        get => _entries ??= new List<LootListEntryDto>();
+        get => _entries ??= [];
         set => _entries = value;
     }
 
     public List<PriorityBonusDto> Bonuses
     {
-        get => _bonuses ??= new();
+        get => _bonuses ??= [];
         set => _bonuses = value;
     }
 
     public List<long> SubmittedTo
     {
-        get => _submittedTo ??= new();
+        get => _submittedTo ??= [];
         set => _submittedTo = value;
     }
 }

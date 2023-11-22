@@ -17,7 +17,7 @@ public class ItemPrioDto
 
     public List<PriorityBonusDto> Bonuses
     {
-        get => _bonuses ??= new();
+        get => _bonuses ??= [];
         set => _bonuses = value;
     }
 }

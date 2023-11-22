@@ -16,7 +16,10 @@ internal class TanksShouldUseHeaviestArmorRule : SimpleRule
         return item.Type is ItemType.Cloth or ItemType.Leather or ItemType.Mail or ItemType.Plate;
     }
 
-    protected override Specializations ApplicableSpecs() => SpecializationGroups.Tank;
+    protected override Specializations ApplicableSpecs()
+    {
+        return SpecializationGroups.Tank;
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

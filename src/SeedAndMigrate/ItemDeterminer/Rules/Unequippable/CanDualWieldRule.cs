@@ -11,7 +11,10 @@ internal class CanDualWieldRule : SimpleRule
 
     protected override DeterminationLevel DisallowLevel => DeterminationLevel.Unequippable;
 
-    protected override bool AppliesTo(Item item) => item.Slot == InventorySlot.OffHand && item.Type != ItemType.Other && item.Type != ItemType.Shield;
+    protected override bool AppliesTo(Item item)
+    {
+        return item.Slot == InventorySlot.OffHand && item.Type != ItemType.Other && item.Type != ItemType.Shield;
+    }
 
     protected override bool IsAllowed(Item item, Specializations spec)
     {

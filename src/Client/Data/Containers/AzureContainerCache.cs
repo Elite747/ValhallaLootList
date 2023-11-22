@@ -5,13 +5,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ValhallaLootList.Client.Data.Containers;
 
-public class AzureContainerCache : Cache<AzureContainerResponse, string>
+public class AzureContainerCache(IMemoryCache memoryCache) : Cache<AzureContainerResponse, string>(memoryCache)
 {
-    public AzureContainerCache(IMemoryCache memoryCache) : base(memoryCache)
+    protected override string GetKey(AzureContainerResponse item)
     {
+        return item.ContainerName;
     }
 
-    protected override string GetKey(AzureContainerResponse response) => response.ContainerName;
-
-    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(AzureContainerResponse response) => base.CreateCacheEntryOptions(response).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    protected override MemoryCacheEntryOptions CreateCacheEntryOptions(AzureContainerResponse item)
+    {
+        return base.CreateCacheEntryOptions(item).SetAbsoluteExpiration(TimeSpan.FromHours(1));
+    }
 }

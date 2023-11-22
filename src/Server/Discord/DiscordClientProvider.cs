@@ -50,7 +50,10 @@ public sealed class DiscordClientProvider : IDisposable
     public ValueTask EnsureStartedAsync()
     {
         CheckDisposed();
-        if (_started) return default;
+        if (_started)
+        {
+            return default;
+        }
 
         _started = true;
         return new(_client.ConnectAsync());
@@ -139,19 +142,34 @@ public sealed class DiscordClientProvider : IDisposable
         return false;
     }
 
-    public bool HasAdminRole(DiscordMember member) => HasDiscordRole(member, _options.AdminRoleId);
+    public bool HasAdminRole(DiscordMember member)
+    {
+        return HasDiscordRole(member, _options.AdminRoleId);
+    }
 
-    public bool HasMemberRole(DiscordMember member) => HasDiscordRole(member, _options.MemberRoleId);
+    public bool HasMemberRole(DiscordMember member)
+    {
+        return HasDiscordRole(member, _options.MemberRoleId);
+    }
 
-    public bool HasLootMasterRole(DiscordMember member) => HasDiscordRole(member, _options.LootMasterRoleId);
+    public bool HasLootMasterRole(DiscordMember member)
+    {
+        return HasDiscordRole(member, _options.LootMasterRoleId);
+    }
 
-    public bool HasRaidLeaderRole(DiscordMember member) => HasDiscordRole(member, _options.RaidLeaderRoleId);
+    public bool HasRaidLeaderRole(DiscordMember member)
+    {
+        return HasDiscordRole(member, _options.RaidLeaderRoleId);
+    }
 
-    public bool HasRecruiterRole(DiscordMember member) => HasDiscordRole(member, _options.RecruiterRoleId);
+    public bool HasRecruiterRole(DiscordMember member)
+    {
+        return HasDiscordRole(member, _options.RecruiterRoleId);
+    }
 
     public bool HasAnyLeadershipRole(DiscordMember member)
     {
-        ReadOnlySpan<long> leadershipIds = stackalloc[] { _options.RaidLeaderRoleId, _options.LootMasterRoleId, _options.RecruiterRoleId, _options.LeadershipRoleId };
+        ReadOnlySpan<long> leadershipIds = [_options.RaidLeaderRoleId, _options.LootMasterRoleId, _options.RecruiterRoleId, _options.LeadershipRoleId];
 
         foreach (var role in member.Roles)
         {
@@ -456,7 +474,10 @@ public sealed class DiscordClientProvider : IDisposable
 
     private void CheckDisposed()
     {
-        if (_disposed) throw new ObjectDisposedException(null, "The discord client has been disposed.");
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(null, "The discord client has been disposed.");
+        }
     }
 
     private void CheckStarted()

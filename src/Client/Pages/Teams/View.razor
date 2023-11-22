@@ -32,8 +32,8 @@
                                    ValueChanged="OnPhaseChanged"
                                    Label="Phase"
                                    Variant="Variant.Outlined"
-                                   OffsetX="false"
-                                   OffsetY="false"
+                                   AnchorOrigin="Origin.BottomLeft"
+                                   TransformOrigin="Origin.TopLeft"
                                    Dense="true"
                                    ToStringFunc="@(phase => $"Phase {phase} ({string.Join(", ", instances.Where(i => i.Phase == phase).OrderBy(i => i.Name).Select(i => i.Name))})")">
                             @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
@@ -50,8 +50,8 @@
                                    ValueChanged="OnPhaseChanged"
                                    Label="Phase"
                                    Variant="Variant.Filled"
-                                   OffsetX="false"
-                                   OffsetY="false"
+                                   AnchorOrigin="Origin.BottomLeft"
+                                   TransformOrigin="Origin.TopLeft"
                                    Dense="true"
                                    ToStringFunc="@(phase => $"Phase {phase}")">
                             @foreach (var phase in phaseConfig.Phases.OrderBy(p => p))
@@ -122,148 +122,131 @@
 
 @code {
     private StandingsView? _standings;
-            private IApiExecutor? _executor;
-            private TeamRaids? _teamRaids;
-            private Review? _review;
-            private LeadersView? _leadersView;
-            private string? _teamName;
-            private bool _teamChanged;
+    private IApiExecutor? _executor;
+    private TeamRaids? _teamRaids;
+    private Review? _review;
+    private LeadersView? _leadersView;
+    private string? _oldTeamName;
 
-    [Parameter]
-#pragma warning disable BL0007 // Component parameters should be auto properties
-            public string TeamName
-#pragma warning restore BL0007 // Component parameters should be auto properties
+    [Parameter] public string TeamName { get; set; } = string.Empty;
+
+    [Parameter] public int? Phase { get; set; }
+
+    [Parameter] public string? Tab { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (TeamName != _oldTeamName)
+        {
+            _oldTeamName = TeamName;
+            if (_executor is not null)
             {
-                get => _teamName ?? string.Empty;
-                set
-                {
-                    if (_teamName != value)
-                    {
-                        _teamName = value;
-                        _teamChanged = true;
-                    }
-                }
+                return _executor.RestartAsync(false);
             }
+        }
+        return Task.CompletedTask;
+    }
 
-            [Parameter]
-            public int? Phase { get; set; }
-
-            [Parameter]
-            public string? Tab { get; set; }
-
-            protected override Task OnParametersSetAsync()
+    private string GetTitle(TeamDto team)
+    {
+        if (Tab?.Length > 0)
+        {
+            string? tabName = null;
+            if (string.Equals(Tab, "roster", StringComparison.OrdinalIgnoreCase))
             {
-                if (_teamChanged)
-                {
-                    _teamChanged = false;
-                    if (_executor is not null)
-                    {
-                        return _executor.RestartAsync(false);
-                    }
-                }
-                return Task.CompletedTask;
+                tabName = "Roster";
             }
-
-            private string GetTitle(TeamDto team)
+            else if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
             {
-                if (Tab?.Length > 0)
-                {
-                    string? tabName = null;
-                    if (string.Equals(Tab, "roster", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Roster";
-                    }
-                    else if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Leaders";
-                    }
-                    else if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Charts";
-                    }
-                    else if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Standings";
-                    }
-                    else if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Raids";
-                    }
-                    else if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tabName = "Review";
-                    }
-                    if (tabName?.Length > 0)
-                    {
-                        return $"{tabName} - {team.Name}";
-                    }
-                }
-                return team.Name;
+                tabName = "Leaders";
             }
-
-            private int GetTabIndex()
+            else if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 1;
-                }
-                if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 2;
-                }
-                if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 3;
-                }
-                if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 4;
-                }
-                if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 5;
-                }
-                return 0;
+                tabName = "Charts";
             }
-
-            private string GetTabFromIndex(int index) => index switch
+            else if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
             {
-                1 => "leaders",
-                2 => "charts",
-                3 => "standings",
-                4 => "raids",
-                5 => "review",
-                _ => "roster"
-            };
-
-            private void OnTabChanged(int index, PhaseConfigDto phaseConfig)
-            {
-                string tabName = GetTabFromIndex(index);
-
-                if (!string.Equals(tabName, Tab, StringComparison.OrdinalIgnoreCase))
-                {
-                    Tab = tabName;
-                    Nav.NavigateTo($"teams/{TeamName}/phase/{GetSelectedPhase() ?? phaseConfig.CurrentPhase}/{GetTabFromIndex(index)}");
-                }
+                tabName = "Standings";
             }
-
-            private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
+            else if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
             {
-                var phase = GetSelectedPhase();
-                if (phase.HasValue)
-                {
-                    if (phaseConfig.Phases.Contains(phase.Value))
-                    {
-                        return phase.Value;
-                    }
-                }
-                return phaseConfig.CurrentPhase;
+                tabName = "Raids";
             }
-
-            private byte? GetSelectedPhase()
+            else if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
             {
-                return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
+                tabName = "Review";
             }
+            if (tabName?.Length > 0)
+            {
+                return $"{tabName} - {team.Name}";
+            }
+        }
+        return team.Name;
+    }
+
+    private int GetTabIndex()
+    {
+        if (string.Equals(Tab, "leaders", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1;
+        }
+        if (string.Equals(Tab, "charts", StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+        if (string.Equals(Tab, "standings", StringComparison.OrdinalIgnoreCase))
+        {
+            return 3;
+        }
+        if (string.Equals(Tab, "raids", StringComparison.OrdinalIgnoreCase))
+        {
+            return 4;
+        }
+        if (string.Equals(Tab, "review", StringComparison.OrdinalIgnoreCase))
+        {
+            return 5;
+        }
+        return 0;
+    }
+
+    private string GetTabFromIndex(int index) => index switch
+    {
+        1 => "leaders",
+        2 => "charts",
+        3 => "standings",
+        4 => "raids",
+        5 => "review",
+        _ => "roster"
+    };
+
+    private void OnTabChanged(int index, PhaseConfigDto phaseConfig)
+    {
+        string tabName = GetTabFromIndex(index);
+
+        if (!string.Equals(tabName, Tab, StringComparison.OrdinalIgnoreCase))
+        {
+            Tab = tabName;
+            Nav.NavigateTo($"teams/{TeamName}/phase/{GetSelectedPhase() ?? phaseConfig.CurrentPhase}/{GetTabFromIndex(index)}");
+        }
+    }
+
+    private byte GetDisplayPhase(PhaseConfigDto phaseConfig)
+    {
+        var phase = GetSelectedPhase();
+        if (phase.HasValue)
+        {
+            if (phaseConfig.Phases.Contains(phase.Value))
+            {
+                return phase.Value;
+            }
+        }
+        return phaseConfig.CurrentPhase;
+    }
+
+    private byte? GetSelectedPhase()
+    {
+        return Phase is > 0 and <= byte.MaxValue ? (byte)Phase : null;
+    }
 
     private void OnPhaseChanged(byte phase)
     {

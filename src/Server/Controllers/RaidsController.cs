@@ -10,22 +10,14 @@ using ValhallaLootList.DataTransfer;
 using ValhallaLootList.Helpers;
 using ValhallaLootList.Server.Data;
 using ValhallaLootList.Server.Discord;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class RaidsController : ApiControllerV1
+public class RaidsController(ApplicationDbContext context, IAuthorizationService authorizationService, TelemetryClient telemetry) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly TelemetryClient _telemetry;
-
-    public RaidsController(ApplicationDbContext context, IAuthorizationService authorizationService, TelemetryClient telemetry)
-    {
-        _context = context;
-        _authorizationService = authorizationService;
-        _telemetry = telemetry;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly TelemetryClient _telemetry = telemetry;
 
     public IAsyncEnumerable<RaidDto> Get([FromServices] TimeZoneInfo realmTimeZoneInfo, int? m = null, int? y = null, long? team = null)
     {
@@ -183,8 +175,8 @@ public class RaidsController : ApiControllerV1
                 d.EncounterKillEncounterId,
                 d.EncounterKillTrashIndex,
                 d.AwardedAt,
-                AwardedBy = (long?)d.AwardedBy,
-                WinnerId = (long?)d.WinnerId,
+                d.AwardedBy,
+                d.WinnerId,
                 d.ItemId,
                 ItemName = d.Item.Name,
                 d.Disenchanted

@@ -14,30 +14,20 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class LootListsController : ApiControllerV1
+public class LootListsController(
+    ApplicationDbContext context,
+    TimeZoneInfo serverTimeZoneInfo,
+    IAuthorizationService authorizationService,
+    TelemetryClient telemetry,
+    DiscordClientProvider discordClientProvider,
+    MessageSender messageSender) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeZoneInfo _serverTimeZoneInfo;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly TelemetryClient _telemetry;
-    private readonly DiscordClientProvider _discordClientProvider;
-    private readonly MessageSender _messageSender;
-
-    public LootListsController(
-        ApplicationDbContext context,
-        TimeZoneInfo serverTimeZoneInfo,
-        IAuthorizationService authorizationService,
-        TelemetryClient telemetry,
-        DiscordClientProvider discordClientProvider,
-        MessageSender messageSender)
-    {
-        _context = context;
-        _serverTimeZoneInfo = serverTimeZoneInfo;
-        _authorizationService = authorizationService;
-        _telemetry = telemetry;
-        _discordClientProvider = discordClientProvider;
-        _messageSender = messageSender;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TimeZoneInfo _serverTimeZoneInfo = serverTimeZoneInfo;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly TelemetryClient _telemetry = telemetry;
+    private readonly DiscordClientProvider _discordClientProvider = discordClientProvider;
+    private readonly MessageSender _messageSender = messageSender;
 
     [HttpGet]
     public async Task<ActionResult<IList<LootListDto>>> Get(long? characterId = null, long? teamId = null, bool? includeApplicants = null)
@@ -1144,7 +1134,7 @@ public class LootListsController : ApiControllerV1
 
         if (lootLists.Count == 0)
         {
-            return new();
+            return [];
         }
 
         var members = await _context.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId).ToListAsync();
@@ -1197,7 +1187,7 @@ public class LootListsController : ApiControllerV1
                 e.Rank,
                 e.Heroic,
                 e.AutoPass,
-                Justification = (string?)e.Justification,
+                e.Justification,
                 e.LootList.Phase,
                 e.LootList.CharacterId
             })
@@ -1309,7 +1299,7 @@ public class LootListsController : ApiControllerV1
 
         if (lootLists.Count == 0)
         {
-            return new();
+            return [];
         }
 
         var leaders = await _context.RaidTeamLeaders
@@ -1330,13 +1320,11 @@ public class LootListsController : ApiControllerV1
 
             foreach (var member in members)
             {
-                var passes = await _context.Drops.AsNoTracking()
+                passesByTeam[member.TeamId] = await _context.Drops.AsNoTracking()
                     .Where(drop => drop.EncounterKill.Raid.RaidTeamId == member.TeamId && drop.EncounterKill.KilledAt >= member.JoinedAt && drop.EncounterKill.Characters.Any(cek => cek.CharacterId == characterId))
                     .GroupBy(drop => drop.ItemId)
                     .Select(g => new { ItemId = g.Key, Count = g.Count() })
                     .ToDictionaryAsync(g => g.ItemId, g => g.Count);
-
-                passesByTeam[member.TeamId] = passes;
 
                 var bonusTable = await _context.GetBonusTableAsync(member.TeamId, now, characterId);
 
@@ -1381,7 +1369,7 @@ public class LootListsController : ApiControllerV1
                 Won = e.DropId != null,
                 e.Rank,
                 e.AutoPass,
-                Justification = (string?)e.Justification,
+                e.Justification,
                 e.LootList.Phase,
                 e.LootList.CharacterId,
                 e.LootList.Size

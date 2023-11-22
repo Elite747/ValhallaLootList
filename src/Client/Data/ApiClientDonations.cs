@@ -5,11 +5,9 @@ using ValhallaLootList.DataTransfer;
 
 namespace ValhallaLootList.Client.Data;
 
-public class ApiClientDonations
+public class ApiClientDonations(ApiClient client)
 {
-    public ApiClientDonations(ApiClient client) => Client = client;
-
-    public ApiClient Client { get; }
+    public ApiClient Client { get; } = client;
 
     public IApiClientOperation<List<DonationDto>> GetForMonth(int month, int year)
     {

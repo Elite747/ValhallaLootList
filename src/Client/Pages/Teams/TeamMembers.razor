@@ -11,7 +11,7 @@
         var member = m;
         var selected = member.Character.Id == _selectedMemberId;
         var phaseLootList = member.LootLists.Find(ll => ll.Phase == _phase);
-        <MudExpansionPanelEx DenseHeader="true" IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null" @key="member.Character.Id">
+        <MudExpansionPanel Class="dense" IsExpanded="selected" IsExpandedChanged="expanded => _selectedMemberId = expanded ? member.Character.Id : null" @key="member.Character.Id">
             <TitleContent>
                 <div class="d-flex align-center">
                     <PlayerIcon Race="member.Character.Race"
@@ -89,7 +89,7 @@
             <ChildContent>
                 <MemberView Team="Team" Member="member" Phase="_phase" MemberUpdated="StateHasChanged" />
             </ChildContent>
-        </MudExpansionPanelEx>
+        </MudExpansionPanel>
     }
 </MudExpansionPanels>
 

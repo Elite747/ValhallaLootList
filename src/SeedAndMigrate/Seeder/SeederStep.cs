@@ -9,18 +9,11 @@ using ValhallaLootList.Server.Data;
 
 namespace ValhallaLootList.SeedAndMigrate.Seeder;
 
-internal class SeederStep
+internal class SeederStep(ILogger<SeederStep> logger, IOptions<Config> config, ApplicationDbContext context)
 {
-    private readonly ILogger<SeederStep> _logger;
-    private readonly ApplicationDbContext _context;
-    private readonly Config _config;
-
-    public SeederStep(ILogger<SeederStep> logger, IOptions<Config> config, ApplicationDbContext context)
-    {
-        _logger = logger;
-        _context = context;
-        _config = config.Value;
-    }
+    private readonly ILogger<SeederStep> _logger = logger;
+    private readonly ApplicationDbContext _context = context;
+    private readonly Config _config = config.Value;
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {

@@ -14,18 +14,10 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class CharactersController : ApiControllerV1
+public class CharactersController(ApplicationDbContext context, TelemetryClient telemetry) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeZoneInfo _serverTimeZoneInfo;
-    private readonly TelemetryClient _telemetry;
-
-    public CharactersController(ApplicationDbContext context, TimeZoneInfo serverTimeZoneInfo, TelemetryClient telemetry)
-    {
-        _context = context;
-        _serverTimeZoneInfo = serverTimeZoneInfo;
-        _telemetry = telemetry;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TelemetryClient _telemetry = telemetry;
 
     [HttpGet]
     public IAsyncEnumerable<CharacterDto> Get(string? team = null, bool? inclDeactivated = null)
@@ -536,20 +528,20 @@ public class CharactersController : ApiControllerV1
             return NotFound();
         }
 
-        return character.Class switch
+        return (Specializations[])(character.Class switch
         {
-            Classes.Druid => new[] { Specializations.BalanceDruid, Specializations.BearDruid, Specializations.CatDruid, Specializations.RestoDruid },
-            Classes.Hunter => new[] { Specializations.BeastMasterHunter, Specializations.MarksmanHunter, Specializations.SurvivalHunter },
-            Classes.Mage => new[] { Specializations.ArcaneMage, Specializations.FireMage, Specializations.FrostMage },
-            Classes.Paladin => new[] { Specializations.HolyPaladin, Specializations.ProtPaladin, Specializations.RetPaladin },
-            Classes.Priest => new[] { Specializations.DiscPriest, Specializations.HolyPriest, Specializations.ShadowPriest },
-            Classes.Rogue => new[] { Specializations.AssassinationRogue, Specializations.CombatRogue, Specializations.SubtletyRogue },
-            Classes.Shaman => new[] { Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman },
-            Classes.Warlock => new[] { Specializations.AfflictionWarlock, Specializations.DemoWarlock, Specializations.DestroWarlock },
-            Classes.Warrior => new[] { Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior },
-            Classes.DeathKnight => new[] { Specializations.BloodDeathKnight, Specializations.BloodDeathKnightTank, Specializations.FrostDeathKnight, Specializations.FrostDeathKnightTank, Specializations.UnholyDeathKnight, Specializations.UnholyDeathKnightTank },
-            _ => Array.Empty<Specializations>()
-        };
+            Classes.Druid => [Specializations.BalanceDruid, Specializations.BearDruid, Specializations.CatDruid, Specializations.RestoDruid],
+            Classes.Hunter => [Specializations.BeastMasterHunter, Specializations.MarksmanHunter, Specializations.SurvivalHunter],
+            Classes.Mage => [Specializations.ArcaneMage, Specializations.FireMage, Specializations.FrostMage],
+            Classes.Paladin => [Specializations.HolyPaladin, Specializations.ProtPaladin, Specializations.RetPaladin],
+            Classes.Priest => [Specializations.DiscPriest, Specializations.HolyPriest, Specializations.ShadowPriest],
+            Classes.Rogue => [Specializations.AssassinationRogue, Specializations.CombatRogue, Specializations.SubtletyRogue],
+            Classes.Shaman => [Specializations.EleShaman, Specializations.EnhanceShaman, Specializations.RestoShaman],
+            Classes.Warlock => [Specializations.AfflictionWarlock, Specializations.DemoWarlock, Specializations.DestroWarlock],
+            Classes.Warrior => [Specializations.ArmsWarrior, Specializations.FuryWarrior, Specializations.ProtWarrior],
+            Classes.DeathKnight => [Specializations.BloodDeathKnight, Specializations.BloodDeathKnightTank, Specializations.FrostDeathKnight, Specializations.FrostDeathKnightTank, Specializations.UnholyDeathKnight, Specializations.UnholyDeathKnightTank],
+            _ => []
+        });
     }
 
     private void TrackTelemetry(string name, Character character)

@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Text;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,20 +15,12 @@ using ValhallaLootList.Server.Discord;
 
 namespace ValhallaLootList.Server.Controllers;
 
-public class TeamsController : ApiControllerV1
+public class TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry, IAuthorizationService authorizationService) : ApiControllerV1
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeZoneInfo _serverTimeZone;
-    private readonly TelemetryClient _telemetry;
-    private readonly IAuthorizationService _authorizationService;
-
-    public TeamsController(ApplicationDbContext context, TimeZoneInfo serverTimeZone, TelemetryClient telemetry, IAuthorizationService authorizationService)
-    {
-        _context = context;
-        _serverTimeZone = serverTimeZone;
-        _telemetry = telemetry;
-        _authorizationService = authorizationService;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly TimeZoneInfo _serverTimeZone = serverTimeZone;
+    private readonly TelemetryClient _telemetry = telemetry;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     [HttpGet]
     public IAsyncEnumerable<TeamNameDto> Get()
@@ -348,7 +339,8 @@ public class TeamsController : ApiControllerV1
 
         if (member.OverrideStatus == dto.Status)
         {
-            return Problem($"Membership status is already set to {dto.Status switch {
+            return Problem($"Membership status is already set to {dto.Status switch
+            {
                 RaidMemberStatus.Member => "Member",
                 RaidMemberStatus.HalfTrial => "Half Trial",
                 RaidMemberStatus.FullTrial => "Full Trial",

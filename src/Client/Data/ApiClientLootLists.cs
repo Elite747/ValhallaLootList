@@ -9,6 +9,11 @@ public class ApiClientLootLists(ApiClient client)
 {
     public ApiClient Client { get; } = client;
 
+    public IApiClientOperation<string> GetStandings(long teamId)
+    {
+        return Client.CreateRequest<string>(HttpMethod.Get, $"api/v1/lootlists/standings?teamId={teamId}");
+    }
+
     public IApiClientOperation<List<LootListDto>> GetForCharacter(long id)
     {
         return Client.CreateRequest<List<LootListDto>>(HttpMethod.Get, $"api/v1/lootlists?characterId={id}");

@@ -157,11 +157,18 @@ public partial class ApiClient
 
                     if (response.Content.Headers.ContentLength > 0 || typeof(TResult) != typeof(object))
                     {
-                        result = await response.Content.ReadFromJsonAsync<TResult>(_jsonSerializerOptions, cancellationToken);
-
-                        if (result is null)
+                        if (typeof(TResult) == typeof(string))
                         {
-                            throw new Exception($"No valid result of type {typeof(TResult).Name} could be read from the response.");
+                            result = (TResult)(object)await response.Content.ReadAsStringAsync(cancellationToken);
+                        }
+                        else
+                        {
+                            result = await response.Content.ReadFromJsonAsync<TResult>(_jsonSerializerOptions, cancellationToken);
+
+                            if (result is null)
+                            {
+                                throw new Exception($"No valid result of type {typeof(TResult).Name} could be read from the response.");
+                            }
                         }
 
                         _result = result;

@@ -2,7 +2,9 @@
 // GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,6 +67,56 @@ public class LootListsController(
         {
             return Problem(ex.Message, statusCode: 400);
         }
+    }
+
+    [HttpGet("Standings")]
+    public async Task<ActionResult<string>> GetStandingsExport(long teamId, CancellationToken cancellationToken)
+    {
+        var lootLists = await CreateDtosForTeamAsync(teamId, false);
+
+        if (lootLists is null)
+        {
+            return NotFound();
+        }
+
+        var items = new Dictionary<uint, Dictionary<int, HashSet<string>>>();
+
+        foreach (var list in lootLists.Where(l => l.RanksVisible))
+        {
+            foreach (var entry in list.Entries.Where(l => !l.AutoPass && !l.Won))
+            {
+                if (entry.ItemId > 0)
+                {
+                    if (!items.TryGetValue(entry.ItemId.Value, out var item))
+                    {
+                        items[entry.ItemId.Value] = item = [];
+                    }
+
+                    var prio = entry.Rank + entry.Bonuses.Sum(b => b.Value) + list.Bonuses.Sum(b => b.Value);
+
+                    if (!item.TryGetValue(prio, out var names))
+                    {
+                        item[prio] = names = [];
+                    }
+
+                    names.Add(list.CharacterName);
+                }
+            }
+        }
+
+        var exportItems = items.Select(x => new ExportItem(x.Key, x.Value.Select(y => new ExportStanding(y.Key, y.Value.OrderBy(n => n).ToList())).OrderByDescending(s => s.Prio).ToList()))
+            .OrderBy(x => x.Id)
+            .ToList();
+
+        await using var ms = new MemoryStream();
+
+        await using (var compressionStream = new DeflateStream(ms, CompressionMode.Compress, leaveOpen: true))
+        {
+            await JsonSerializer.SerializeAsync(compressionStream, exportItems, cancellationToken: cancellationToken);
+        }
+
+        ms.Seek(0, SeekOrigin.Begin);
+        return await WeakAurasEncoder.EncodeAsync(ms, cancellationToken);
     }
 
     [HttpPost]
@@ -1460,4 +1512,8 @@ public class LootListsController(
 
         return typedDtos;
     }
+
+    private record ExportItem(uint Id, List<ExportStanding> Standings);
+
+    private record ExportStanding(int Prio, List<string> Names);
 }

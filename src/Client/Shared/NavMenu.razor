@@ -2,12 +2,13 @@
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
     <MudNavLink Href="me" Icon="@Icons.Material.Filled.Person">Me</MudNavLink>
     <MudNavLink Href="about" Icon="@Icons.Material.Filled.Help">About</MudNavLink>
+    <MudNavLink Href="https://www.buymeacoffee.com/lyras" Target="_blank" rel="noopener noreferrer" Icon=@(CustomIcons.BuyMeACoffee) ForceLoad>Support Development</MudNavLink>
     <AuthorizeView>
         <Authorized>
             <AuthorizedNavMenu />
         </Authorized>
         <NotAuthorized>
-            <MudNavLink Href="discord" Target="_blank" Icon=@(Icons.Custom.Brands.Discord) ForceLoad>Discord</MudNavLink>
+            <MudNavLink Href="discord" Target="_blank" rel="noopener noreferrer" Icon=@(Icons.Custom.Brands.Discord) ForceLoad>Discord</MudNavLink>
         </NotAuthorized>
     </AuthorizeView>
 </MudNavMenu>
